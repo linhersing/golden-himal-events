@@ -4,12 +4,12 @@ Private development repository for the Golden Himal Palace event website.
 
 ## Current stage
 
-- Static website foundation and responsive private preview
+- Static website foundation and responsive public preview marked as in progress
 - Local Golden Himal brand identity asset
 - Venue, stage and restaurant photography slots awaiting approved on-site images
 - Golden Himal Voice overview for adults aged 18 and above
 - Registration status interaction only; no form data is collected or sent
-- No public deployment or GitHub Pages site
+- GitHub Pages deployment contains no active registration or data collection
 
 ## Local development
 
@@ -38,4 +38,4 @@ Before a release review, set `PRIVACY_FORBIDDEN_TERMS` to a JSON array of the pr
 
 ## Publishing boundary
 
-This repository must remain Private until the independent domain, approved public copy, final imagery and separate registration service have completed review. Never enable a public deployment directly from an unreviewed development branch.
+The source repository remains Private while its sanitized preview is published through GitHub Pages. Keep the in-progress notice, no-index directives and non-functional registration state until the independent domain, approved public copy, final imagery and separate registration service have completed review.

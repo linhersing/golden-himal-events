@@ -67,6 +67,25 @@ a {
   transform: translateY(0);
 }
 
+.build-banner {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 20px;
+  background: var(--wine-deep);
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.build-banner strong {
+  color: var(--gold-light);
+  letter-spacing: 0.12em;
+}
+
 .site-header,
 main,
 footer {
@@ -639,6 +658,13 @@ footer {
 }
 
 @media (max-width: 620px) {
+  .build-banner {
+    flex-direction: column;
+    gap: 2px;
+    padding-block: 9px;
+    line-height: 1.45;
+  }
+
   .site-header,
   main,
   footer {

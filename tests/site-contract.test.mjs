@@ -17,11 +17,18 @@ test('registration action never exposes a submit endpoint', async () => {
 
 test('homepage contains one primary action and semantic sections', async () => {
   const html = await homepage();
+  assert.match(html, /網站架構中/);
   assert.equal((html.match(/data-primary-action/g) ?? []).length, 1);
   for (const sectionId of ['place', 'venue', 'event', 'registration']) {
     assert.match(html, new RegExp(`<section[^>]+id=["']${sectionId}["']`, 'i'));
   }
   assert.match(html, /<a[^>]+href=["']#main-content["'][^>]*>[^<]+<\/a>/i);
+});
+
+test('homepage remains a preview without data collection', async () => {
+  const html = await homepage();
+  assert.match(html, /Private design preview/i);
+  assert.doesNotMatch(html, /<input\b|<textarea\b|<select\b/iu);
 });
 
 test('homepage contains no unapproved dates or prize claims', async () => {
