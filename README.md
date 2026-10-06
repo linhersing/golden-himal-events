@@ -1,6 +1,8 @@
 # Golden Himal Events
 
-Private development repository for the Golden Himal Palace event website.
+Development repository for the Golden Himal Palace event website.
+
+Public in-progress preview: https://linhersing.github.io/golden-himal-events/
 
 ## Current stage
 

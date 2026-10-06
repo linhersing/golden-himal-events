@@ -3,7 +3,7 @@
 ## Repository
 
 - [x] Repository visibility is Private.
-- [ ] GitHub Pages public preview is enabled and its live URL has been verified.
+- [x] GitHub Pages public preview is enabled and its live URL has been verified.
 - [x] Work is pushed only to `codex/initial-site` until review.
 
 ## Content and privacy
