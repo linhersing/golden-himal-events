@@ -1,59 +1,49 @@
 import { expect, test } from '@playwright/test';
 
-test('mobile layout has no horizontal overflow', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:1440,height:900}]){
+ test('no page-level horizontal overflow at '+viewport.width,async({page})=>{
+   await page.setViewportSize(viewport);
+   await page.goto('/');
+   await expect(page.locator('h1')).toBeVisible();
+   const widths=await page.evaluate(()=>({viewport:document.documentElement.clientWidth,content:document.documentElement.scrollWidth}));
+   expect(widths.content).toBeLessThanOrEqual(widths.viewport);
+ });
+}
+
+test('filter announcements',async({page})=>{
   await page.goto('/');
-
-  const dimensions = await page.evaluate(() => ({
-    clientWidth: document.documentElement.clientWidth,
-    scrollWidth: document.documentElement.scrollWidth
-  }));
-
-  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
-  await expect(page.locator('h1')).toBeVisible();
-  await expect(page.locator('[data-primary-action]')).toBeVisible();
+  await page.locator('[data-filter="shortlist"]').click();
+  await expect(page.locator('.news-card:not([hidden])')).toHaveCount(1);
+  await page.locator('[data-filter="all"]').click();
+  await expect(page.locator('.news-card:not([hidden])')).toHaveCount(3);
 });
 
-test('tablet cards do not overlap', async ({ page }) => {
-  await page.setViewportSize({ width: 768, height: 1024 });
+test('sample registration never sends a form request',async({page})=>{
   await page.goto('/');
-
-  const boxes = await page.locator('.venue-card').evaluateAll((cards) => cards.map((card) => {
-    const box = card.getBoundingClientRect();
-    return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
-  }));
-
-  for (const box of boxes) {
-    expect(box.left).toBeGreaterThanOrEqual(0);
-    expect(box.right).toBeLessThanOrEqual(768);
-  }
-
-  for (let first = 0; first < boxes.length; first += 1) {
-    for (let second = first + 1; second < boxes.length; second += 1) {
-      const a = boxes[first];
-      const b = boxes[second];
-      const overlaps = a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
-      expect(overlaps).toBe(false);
-    }
-  }
+  const writes=[];
+  page.on('request',request=>{if(!['GET','HEAD'].includes(request.method())) writes.push(request.url())});
+  await page.locator('#sample-fill').click();
+  await page.locator('#registration-form button[type="submit"]').click();
+  await expect(page.locator('#review-panel')).toBeVisible();
+  await page.locator('#sample-submit').click();
+  await expect(page.locator('#success-panel')).toBeVisible();
+  expect(writes).toEqual([]);
 });
 
-test('desktop hero and primary action are visible', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
+test('demo vote and reset work without real persistence',async({page})=>{
   await page.goto('/');
-
-  await expect(page.locator('.hero')).toBeVisible();
-  await expect(page.locator('.identity-card img')).toBeVisible();
-  await expect(page.locator('[data-primary-action]')).toBeVisible();
+  await page.locator('[data-vote="02"]').click();
+  await page.locator('#confirm-vote').click();
+  await expect(page.locator('#vote-count-02')).toHaveText('1');
+  await expect(page.locator('[data-vote="01"]')).toBeDisabled();
+  await page.locator('#reset-votes').click();
+  await expect(page.locator('#vote-count-02')).toHaveText('0');
 });
 
-test('registration control announces preview status without a request', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+test('Nepali and Chinese can be selected',async({page})=>{
   await page.goto('/');
-  const outgoing = [];
-  page.on('request', (request) => outgoing.push(request.url()));
-
-  await page.locator('[data-registration-preview]').click();
-  await expect(page.locator('[data-registration-status]')).toHaveText('Registration is not open yet. Updates will appear here.');
-  expect(outgoing).toEqual([]);
+  await page.locator('[data-lang="ne"]').click();
+  await expect(page.locator('html')).toHaveAttribute('lang','ne');
+  await page.locator('[data-lang="zh"]').click();
+  await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
 });
