@@ -1,7 +1,8 @@
-# PREVIEW ONLY: noindex until formal launch and privacy approval
+# Golden Himal Voice — DESIGN PREVIEW, no real personal data or vote API.
 /*
-  X-Robots-Tag: noindex, nofollow
+  X-Robots-Tag: noindex, nofollow, noarchive
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; upgrade-insecure-requests
