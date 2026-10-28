@@ -74,3 +74,18 @@ dialog{width:min(450px,calc(100% - 24px));border:1px solid #c99c57;background:va
 dialog{max-height:min(92vh,900px);overflow:auto}
 @media(max-width:1000px){.security-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.security-header{display:block}.security-header .section-side{margin-top:16px;max-width:680px}.security-card{min-height:200px}}
 @media(max-width:620px){.security-grid{grid-template-columns:1fr;gap:11px}.security-card{min-height:0;padding:20px;gap:10px}.security-card p{flex:auto}.security-foot{display:block}.security-foot p{margin-top:7px}.security-header{margin-bottom:22px}dialog{padding:19px}dialog h3{font-size:1.5rem}.vote-security-flow{padding:13px}}
+
+/* Draft 1 season planning — visibly distinct from official announcements. */
+.season-preview{background:linear-gradient(135deg,#fffaf0,#f1e5cf);border-bottom:1px solid var(--line)}
+.season-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.season-card{border:1px solid #dec9a7;background:#fffdf8;padding:22px 19px;display:flex;flex-direction:column;gap:9px;min-height:160px}
+.season-card>span{color:#aa864c;font:1.7rem Georgia,serif}.season-card strong{font:1.4rem Georgia,"Noto Serif Devanagari","Noto Serif TC",serif;line-height:1.35}.season-card small{font-size:.76rem;color:#755e42}
+.season-card-final{background:#422f29;color:#fff5e3;border-color:#8e7353}.season-card-final>span,.season-card-final small{color:#e3c48c}
+.season-disclaimer{margin-top:20px;padding:12px 17px;border-left:3px solid #b78944;background:#eee0c6;color:#6b492a;font-size:.83rem}
+.form-panel select{width:100%;height:48px;background:white;color:var(--ink);border:1px solid #cdbca4;border-radius:3px;padding:8px 12px;font-size:1rem;min-width:0}
+.payment-preview{background:#f6efe2;border:1px solid #d9c8ad;padding:15px 16px;margin:18px 0 13px}
+.payment-preview strong{display:block;color:#543b27;font-size:.91rem}
+.payment-preview p{font-size:.8rem;line-height:1.7;color:#6c5a48;margin-top:6px}
+.payment-preview small{display:block;font-size:.74rem;color:#8b423a;margin-top:6px;font-weight:700}
+@media(max-width:900px){.season-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.season-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.season-card{padding:16px 12px;min-height:146px}.season-card strong{font-size:1.1rem}.season-disclaimer{font-size:.77rem}}
