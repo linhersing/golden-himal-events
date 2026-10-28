@@ -1,43 +1,45 @@
-# Golden Himal Events
+# Golden Himal Voice — design preview
 
-Development repository for the Golden Himal Palace event website.
+This repository contains a public **design preview**, not an operational event registration or voting service.
 
-Public in-progress preview: https://linhersing.github.io/golden-himal-events/
+## Preview
 
-## Current stage
+- Preview address: https://linhersing.github.io/golden-himal-events/
+- Source branch: codex/initial-site
+- Brand: Golden Himal Palace / Golden Himal Voice, Chitwan, Nepal
+- Experience: English, Nepali and Traditional Chinese
+- Features: announcement-category filtering, sample registration review, sample audience voting with reset, venue placeholders, responsive design
+- Sharing: Open Graph and neutral favicon; custom domain is not configured
+- SEO: deliberately noindex until release approval
+- Photo policy: the approved brand asset is used; internal planning posters and unapproved people/venue photographs are not published
 
-- Static website foundation and responsive public preview marked as in progress
-- Local Golden Himal brand identity asset
-- Venue, stage and restaurant photography slots awaiting approved on-site images
-- Golden Himal Voice overview for adults aged 18 and above
-- Registration status interaction only; no form data is collected or sent
-- GitHub Pages deployment contains no active registration or data collection
+## Boundaries
 
-## Local development
+**Do not submit real personal information.** Sample registration fields are never transmitted or stored. Sample votes exist only for the current open tab, reset on reload, and have no anti-fraud or official-scoring capability. Announcement cards are static placeholders. There is no database, authentication, email delivery, file upload, or operational admin panel yet.
 
-Requirements: Node.js 24 and pnpm.
+No date, prize, shortlist, finalist number, organizer/legal entity, scoring weight, or sponsor is publicly claimed until verified and approved. The private project planning infographic must never be included in a public release.
 
-```bash
+## Run locally
+
+Node 24 / pnpm 11:
+
+~~~sh
 pnpm install
 pnpm dev
-```
-
-Open the local address printed by Vite.
-
-## Verification
-
-```bash
-pnpm build
 pnpm test
-pnpm test:e2e
+pnpm build
 pnpm privacy:source
 pnpm privacy:dist
-```
+pnpm test:e2e
+~~~
 
-The browser suite checks mobile, tablet and desktop layouts and verifies that the registration-status control does not create a network request.
+## Launch blockers
 
-Before a release review, set `PRIVACY_FORBIDDEN_TERMS` to a JSON array of the private source identifiers supplied by the project owner, then run both privacy commands. The private values stay in the local process environment and are never committed.
+1. Confirm organization and domain isolation. Public GitHub account metadata can expose associations, so a neutral site identity is needed for stronger separation.
+2. Obtain approved rules, application privacy notice, deadline, eligibility and sharing permissions.
+3. Build private, authenticated server-side registration storage and email handling; test with fictional data first.
+4. Confirm voting eligibility and use verified identity plus atomic server-side counting, rate limiting and audit. Never trust browser counters or public Sheets API keys.
+5. Review photo rights and social OG screenshot for LINE/Facebook; use own-hosted assets and neutral external domains.
+6. Complete mobile and accessible interaction tests before turning off noindex.
 
-## Publishing boundary
-
-The source repository remains Private while its sanitized preview is published through GitHub Pages. Keep the in-progress notice, no-index directives and non-functional registration state until the independent domain, approved public copy, final imagery and separate registration service have completed review.
+Documentation and source status belong in project-controlled, private records. Never put private links, credentials, personal contacts or internal organization names into this public repository.
