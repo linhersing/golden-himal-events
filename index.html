@@ -1,151 +1,174 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Golden Himal Palace presents a new gathering place and a future stage for young voices in Chitwan, Nepal.">
-    <meta name="robots" content="noindex, nofollow, noarchive">
-    <title>Golden Himal Palace · Website in progress</title>
-    <link rel="stylesheet" href="/src/styles/site.css">
-  </head>
-  <body>
-    <a class="skip-link" href="#main-content">Skip to main content</a>
-
-    <div class="build-banner" role="status">
-      <strong>網站架構中</strong>
-      <span>Website in progress · Content and registration details are not final.</span>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#32231f">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="description" content="Golden Himal Voice — an upcoming singing event at Golden Himal Palace in Chitwan, Nepal. Explore the stage, announcements and preview participation.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Golden Himal Voice">
+  <meta property="og:title" content="Golden Himal Voice | Your voice. Your moment.">
+  <meta property="og:description" content="A new stage for voices, celebration and connection in Chitwan, Nepal. Event details are in preparation.">
+  <meta property="og:image" content="https://linhersing.github.io/golden-himal-events/images/brand-identity.png">
+  <meta property="og:image:alt" content="Golden Himal Palace official mountain and Nepal flag brand identity">
+  <meta property="og:url" content="https://linhersing.github.io/golden-himal-events/">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>Golden Himal Voice | Official Preview</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="stylesheet" href="/src/styles/site.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<div class="preview-ribbon"><span class="ribbon-dot" aria-hidden="true"></span><span data-i18n="ribbon">DESIGN PREVIEW · Registration and voting are simulations only. Do not enter real personal information.</span></div>
+<header class="site-header">
+  <div class="site-shell header-inner">
+    <a class="brand" href="#home" aria-label="Golden Himal Voice home">
+      <img src="./images/brand-identity.png" width="78" height="56" alt="Golden Himal Palace logo">
+      <span class="brand-title"><strong>Golden Himal</strong><small>PALACE · CHITWAN</small></span>
+    </a>
+    <nav class="main-nav" aria-label="Sections">
+      <a href="#event" data-i18n="navEvent">The Event</a>
+      <a href="#updates" data-i18n="navUpdates">Updates</a>
+      <a href="#registration" data-i18n="navRegister">Registration</a>
+      <a href="#voting" data-i18n="navVote">Audience Choice</a>
+      <a href="#venue" data-i18n="navVenue">Venue</a>
+    </nav>
+    <div class="lang-switch" role="group" aria-label="Choose language">
+      <button type="button" class="lang-button active" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" class="lang-button" data-lang="ne" aria-pressed="false">ने</button>
+      <button type="button" class="lang-button" data-lang="zh" aria-pressed="false">中</button>
     </div>
-
-    <header class="site-header">
-      <a class="brand" href="#place" aria-label="Golden Himal Palace home">
-        <span class="brand__seal" aria-hidden="true">GH</span>
-        <span>
-          <strong>Golden Himal</strong>
-          <small>Palace · Chitwan</small>
-        </span>
-      </a>
-      <nav aria-label="Preview navigation">
-        <a href="#venue">The place</a>
-        <a href="#event">The event</a>
-        <a href="#registration">Updates</a>
-      </nav>
-    </header>
-
-    <main id="main-content">
-      <section class="hero" id="place" aria-labelledby="hero-title">
-        <div class="hero__glow" aria-hidden="true"></div>
-        <div class="hero__copy">
-          <p class="eyebrow">Chitwan · Nepal</p>
-          <h1 id="hero-title">A place to gather,<br><em>celebrate</em> and connect.</h1>
-          <p class="hero__lead">Golden Himal Palace is being shaped as a warm destination for shared tables, remarkable occasions and a new generation of creative voices.</p>
-          <a class="button button--gold" href="#event" data-primary-action>Discover Golden Himal Voice</a>
-          <p class="preview-note"><span aria-hidden="true"></span>Private design preview · Details are still being prepared</p>
+  </div>
+</header>
+<main id="main-content">
+  <section id="home" class="hero">
+    <div class="site-shell hero-grid">
+      <div class="hero-copy">
+        <p class="overline overline-light" data-i18n="heroEyebrow">CHITWAN, NEPAL · A NEW STAGE IS COMING</p>
+        <h1>Golden Himal<br><em>Voice.</em></h1>
+        <span class="fine-rule" aria-hidden="true"></span>
+        <p class="hero-slogan" data-i18n="slogan">Where love meets, and talent shines.</p>
+        <p class="hero-description" data-i18n="heroDescription">Singing, shared celebrations and new connections. An upcoming experience from Golden Himal Palace.</p>
+        <div class="hero-actions">
+          <a class="button button-gold" href="#registration"><span data-i18n="heroApply">Explore registration</span><span aria-hidden="true">↗</span></a>
+          <a class="button button-outline" href="#voting"><span data-i18n="heroVote">Explore audience choice</span><span aria-hidden="true">↗</span></a>
         </div>
-        <figure class="identity-card">
-          <div class="identity-card__frame">
-            <img src="/images/brand-identity.png" alt="Golden Himal Palace brand identity">
-          </div>
-          <figcaption>Official brand identity</figcaption>
-        </figure>
-      </section>
-
-      <section class="intro" aria-labelledby="intro-title">
-        <p class="eyebrow eyebrow--dark">Hospitality · Culture · Music</p>
-        <h2 id="intro-title">One destination, many reasons to arrive.</h2>
-        <p>Designed for weddings, banquets, performances and community gatherings, the venue brings generous space and a welcoming atmosphere together under one roof.</p>
-      </section>
-
-      <section class="venue" id="venue" aria-labelledby="venue-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow eyebrow--dark">The place</p>
-            <h2 id="venue-title">Made for memorable moments.</h2>
-          </div>
-          <p>Actual restaurant, hall and stage photography will be added after the next on-site review. These panels describe the intended experience without presenting concept art as completed work.</p>
-        </div>
-
-        <div class="venue-grid">
-          <article class="venue-card venue-card--wide">
-            <div class="venue-card__visual venue-card__visual--hall" role="img" aria-label="Photography placeholder for the banquet hall">
-              <span>Venue photography in preparation</span>
-            </div>
-            <div class="venue-card__body">
-              <p class="card-number">01 · The hall</p>
-              <h3>Room to celebrate well</h3>
-              <p>A flexible gathering space planned for dining, ceremonies and large shared occasions.</p>
-            </div>
-          </article>
-
-          <article class="venue-card">
-            <div class="venue-card__visual venue-card__visual--stage" role="img" aria-label="Photography placeholder for the performance stage">
-              <span>Stage photography in preparation</span>
-            </div>
-            <div class="venue-card__body">
-              <p class="card-number">02 · The stage</p>
-              <h3>A platform for new voices</h3>
-              <p>A dedicated setting for live music, performance and creative exchange.</p>
-            </div>
-          </article>
-
-          <article class="venue-card">
-            <div class="venue-card__visual venue-card__visual--table" role="img" aria-label="Photography placeholder for restaurant hospitality">
-              <span>Restaurant photography in preparation</span>
-            </div>
-            <div class="venue-card__body">
-              <p class="card-number">03 · The table</p>
-              <h3>Hospitality that feels personal</h3>
-              <p>A place where guests can slow down, share food and stay for conversation.</p>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="voice" id="event" aria-labelledby="voice-title">
-        <div class="voice__title">
-          <p class="eyebrow">A future singing event</p>
-          <span class="voice__mark" aria-hidden="true">VOICE</span>
-          <h2 id="voice-title">Golden Himal Voice</h2>
-          <p>A welcoming stage for singers aged 18 and above—built around accessible Karaoke performance and a simple mobile Demo pre-screening.</p>
-        </div>
-
-        <ol class="process" aria-label="Planned participation journey">
-          <li>
-            <span>01</span>
-            <div><strong>Share your interest</strong><small>Registration details will appear here after approval.</small></div>
-          </li>
-          <li>
-            <span>02</span>
-            <div><strong>Prepare a mobile Demo</strong><small>Clear voice, simple setup, easy to review.</small></div>
-          </li>
-          <li>
-            <span>03</span>
-            <div><strong>Step onto the stage</strong><small>Selected singers will receive the next instructions directly.</small></div>
-          </li>
-        </ol>
-      </section>
-
-      <section class="registration" id="registration" aria-labelledby="registration-title">
-        <div>
-          <p class="eyebrow eyebrow--dark">Stay close</p>
-          <h2 id="registration-title">Be ready when the first call opens.</h2>
-          <p>This preview does not collect names, phone numbers, files or any other personal information.</p>
-        </div>
-        <div class="registration__action">
-          <button class="button button--ink" type="button" data-registration-preview aria-describedby="registration-help">Check registration status</button>
-          <p id="registration-help">No information will be submitted.</p>
-          <p class="status-message" data-registration-status tabindex="-1" role="status" hidden></p>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <div class="brand brand--footer">
-        <span class="brand__seal" aria-hidden="true">GH</span>
-        <span><strong>Golden Himal Palace</strong><small>Chitwan · Nepal</small></span>
+        <p class="hero-foot" data-i18n="heroFoot">Event dates and regulations will be announced after approval.</p>
       </div>
-      <p>Website in progress · Registration is not open.</p>
-    </footer>
-
-    <script type="module" src="/src/scripts/main.js"></script>
-  </body>
+      <div class="hero-poster" aria-label="Golden Himal Voice brand art">
+        <div class="poster-inner">
+          <p class="poster-top">GOLDEN HIMAL PALACE PRESENTS</p>
+          <img src="./images/brand-identity.png" width="480" height="320" alt="Golden Himal Palace mountain brand mark">
+          <span class="poster-divider" aria-hidden="true"></span>
+          <p class="poster-word">VOICE</p>
+          <p class="poster-slogan">YOUR VOICE. YOUR MOMENT.</p>
+          <small data-i18n="posterNote">Concept design · Not a venue photograph</small>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="three-steps" aria-label="Participation journey">
+    <div class="site-shell steps-grid">
+      <div class="step"><span>01</span><div><strong data-i18n="step1">Share your voice</strong><small>REGISTRATION</small></div></div>
+      <div class="step"><span>02</span><div><strong data-i18n="step2">Cheer for a favorite</strong><small>AUDIENCE CHOICE</small></div></div>
+      <div class="step"><span>03</span><div><strong data-i18n="step3">Celebrate on stage</strong><small>ANNOUNCEMENTS</small></div></div>
+    </div>
+  </section>
+  <section id="event" class="site-shell section event-intro">
+    <div class="section-intro">
+      <p class="overline" data-i18n="introOverline">THE STORY BEHIND THE STAGE</p>
+      <h2 data-i18n="introTitle">A stage for more than a song.</h2>
+    </div>
+    <div class="intro-right">
+      <p data-i18n="introBody">Golden Himal Voice brings people together through music and a shared sense of occasion. We are preparing a welcoming platform for emerging voices in Chitwan.</p>
+      <p class="muted" data-i18n="introNote">Participation details, eligibility and judging will be published when finalized.</p>
+    </div>
+  </section>
+  <section id="updates" class="section section-warm">
+    <div class="site-shell">
+      <div class="section-top">
+        <div><p class="overline">THE LATEST</p><h2 data-i18n="newsTitle">Every moment, in one place.</h2></div>
+        <p class="section-side" data-i18n="newsLead">Follow event preparation, future shortlisted performers and official results. Nothing is announced before it is confirmed.</p>
+      </div>
+      <div class="filter-row" role="group" aria-label="Filter announcements">
+        <button class="filter active" type="button" data-filter="all" aria-pressed="true" data-i18n="filterAll">All news</button>
+        <button class="filter" type="button" data-filter="event" aria-pressed="false" data-i18n="filterEvent">Event news</button>
+        <button class="filter" type="button" data-filter="shortlist" aria-pressed="false" data-i18n="filterShortlist">Shortlist</button>
+        <button class="filter" type="button" data-filter="award" aria-pressed="false" data-i18n="filterAward">Results</button>
+      </div>
+      <div class="news-grid" id="news-list">
+        <article class="news-card" data-category="event"><span class="tag" data-i18n="newsTag1">PREPARATION</span><h3 data-i18n="newsCard1Title">A new stage is taking shape.</h3><p data-i18n="newsCard1Body">Our event experience is in preparation. Official entry details will follow.</p><span class="card-trail">GOLDEN HIMAL VOICE <span aria-hidden="true">↗</span></span></article>
+        <article class="news-card" data-category="shortlist"><span class="tag" data-i18n="newsTag2">TO BE ANNOUNCED</span><h3 data-i18n="newsCard2Title">The next voices to be heard.</h3><p data-i18n="newsCard2Body">No shortlist has been published. Confirmed performers will be shown here after review.</p><span class="card-trail">SHORTLIST <span aria-hidden="true">↗</span></span></article>
+        <article class="news-card" data-category="award"><span class="tag" data-i18n="newsTag3">TO BE ANNOUNCED</span><h3 data-i18n="newsCard3Title">An evening to remember.</h3><p data-i18n="newsCard3Body">Official results and awards will be published only after approval. Audience choice and final awards may differ.</p><span class="card-trail">OFFICIAL RESULTS <span aria-hidden="true">↗</span></span></article>
+      </div>
+      <p class="sr-only" id="news-status" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+  <section class="section registration-section" id="registration">
+    <div class="site-shell register-grid">
+      <div class="register-aside">
+        <p class="overline">TAKE THE FIRST STEP</p>
+        <h2 data-i18n="registerTitle">Your stage begins here.</h2>
+        <p data-i18n="registerLead">Try the registration journey with sample data. The official form is not accepting applications yet.</p>
+        <ol class="timeline">
+          <li><b>01</b><span><strong data-i18n="regStep1">Enter basic information</strong><small data-i18n="regSub1">Use fictional information in this preview.</small></span></li>
+          <li><b>02</b><span><strong data-i18n="regStep2">Add a performance link</strong><small data-i18n="regSub2">A short video demo is planned for screening.</small></span></li>
+          <li><b>03</b><span><strong data-i18n="regStep3">Review your submission</strong><small data-i18n="regSub3">Preview only; nothing is saved or sent.</small></span></li>
+        </ol>
+        <div class="soft-note" data-i18n="demoWarning">TEST MODE — No registration, emails, or uploads occur on this site.</div>
+      </div>
+      <div class="form-panel">
+        <div class="form-head"><div><small>REGISTRATION</small><h3 data-i18n="formTitle">Start your story</h3></div><span class="tag">DEMO</span></div>
+        <form id="registration-form" autocomplete="off">
+          <p class="form-hint" data-i18n="formHint">Please use “Fill sample data”. Do not enter your actual personal details.</p>
+          <div class="field-grid">
+            <label><span data-i18n="fieldName">Display name</span><input name="stageName" type="text" maxlength="40" required placeholder="Demo Singer"></label>
+            <label><span data-i18n="fieldCity">City</span><input name="city" type="text" maxlength="60" required placeholder="Chitwan"></label>
+          </div>
+          <label><span data-i18n="fieldEmail">Email (sample only)</span><input name="email" type="email" maxlength="100" required placeholder="demo@example.com"></label>
+          <label><span data-i18n="fieldLink">Performance link (sample only)</span><input name="performance" type="url" maxlength="400" required placeholder="https://example.com/demo"></label>
+          <label class="consent"><input name="consent" type="checkbox" required><span data-i18n="fieldConsent">I understand this is an interface preview using fictional details, not a real registration.</span></label>
+          <div class="form-actions"><button class="button button-wine" type="submit" data-i18n="reviewButton">Review sample details ↗</button><button class="text-button" type="button" id="sample-fill" data-i18n="fillButton">Fill sample data</button></div>
+        </form>
+        <div id="review-panel" hidden tabindex="-1"><span class="tag">STEP 02 · REVIEW</span><h3 data-i18n="reviewTitle">One last look.</h3><p id="review-copy" class="summary-box"></p><p class="form-hint" data-i18n="reviewNote">The next button only simulates completion; no data leaves your browser.</p><div class="form-actions"><button type="button" class="button button-wine" id="sample-submit" data-i18n="submitButton">Complete preview</button><button type="button" class="text-button" id="sample-edit" data-i18n="editButton">Edit</button></div></div>
+        <div id="success-panel" hidden tabindex="-1"><span class="tag">DEMO ONLY</span><h3 data-i18n="successTitle">Preview complete.</h3><p class="summary-box" data-i18n="successText">Sample number: DEMO-001. No application was received, stored or emailed.</p><button type="button" class="button button-wine" id="sample-again" data-i18n="againButton">Try again</button></div>
+      </div>
+    </div>
+  </section>
+  <section id="voting" class="site-shell section voting-section">
+    <div class="section-top">
+      <div><p class="overline">AUDIENCE CHOICE</p><h2 data-i18n="voteTitle">Give your favorite voice the spotlight.</h2></div>
+      <p class="section-side" data-i18n="voteLead">These are placeholder candidates, not real entrants. This demo does not collect votes, identify people, or determine awards.</p>
+    </div>
+    <div class="candidate-grid">
+      <article class="candidate" data-candidate="01"><div class="portrait"><span>01</span><div class="silhouette" aria-hidden="true"></div><small data-i18n="portraitLabel">PHOTO PLACEHOLDER</small></div><div class="candidate-body"><small class="overline">DEMO CONTESTANT</small><h3 data-i18n="candidate1">Sample performer 01</h3><p data-i18n="candidateBody">Official approved portraits and performances will appear here.</p><div class="vote-footer"><div><strong id="vote-count-01">0</strong><small data-i18n="sampleVotes">SAMPLE VOTES</small></div><button type="button" class="button button-small" data-vote="01"><span data-i18n="voteButton">Choose</span> 01</button></div></div></article>
+      <article class="candidate" data-candidate="02"><div class="portrait"><span>02</span><div class="silhouette" aria-hidden="true"></div><small data-i18n="portraitLabel">PHOTO PLACEHOLDER</small></div><div class="candidate-body"><small class="overline">DEMO CONTESTANT</small><h3 data-i18n="candidate2">Sample performer 02</h3><p data-i18n="candidateBody">Official approved portraits and performances will appear here.</p><div class="vote-footer"><div><strong id="vote-count-02">0</strong><small data-i18n="sampleVotes">SAMPLE VOTES</small></div><button type="button" class="button button-small" data-vote="02"><span data-i18n="voteButton">Choose</span> 02</button></div></div></article>
+      <article class="candidate" data-candidate="03"><div class="portrait"><span>03</span><div class="silhouette" aria-hidden="true"></div><small data-i18n="portraitLabel">PHOTO PLACEHOLDER</small></div><div class="candidate-body"><small class="overline">DEMO CONTESTANT</small><h3 data-i18n="candidate3">Sample performer 03</h3><p data-i18n="candidateBody">Official approved portraits and performances will appear here.</p><div class="vote-footer"><div><strong id="vote-count-03">0</strong><small data-i18n="sampleVotes">SAMPLE VOTES</small></div><button type="button" class="button button-small" data-vote="03"><span data-i18n="voteButton">Choose</span> 03</button></div></div></article>
+    </div>
+    <div class="vote-note"><span id="vote-status" role="status" aria-live="polite" data-i18n="voteNote">Try one sample vote. Counts reset when you reload; there is no real anti-fraud system.</span><button class="text-button" id="reset-votes" type="button" data-i18n="resetVotes">Reset sample votes</button></div>
+  </section>
+  <section id="venue" class="section venue-section">
+    <div class="site-shell">
+      <div class="section-top"><div><p class="overline">THE PLACE WE WILL MEET</p><h2 data-i18n="venueTitle">More than a performance. A place to gather.</h2></div><p class="section-side" data-i18n="venueLead">Golden Himal Palace · Chitwan, Nepal. Real venue photography will be added once approved.</p></div>
+      <div class="venue-grid">
+        <div class="venue-card"><div class="arch-outline"></div><strong>The Banquet Hall</strong><small data-i18n="venue1">Hall photography pending</small></div>
+        <div class="venue-card"><div class="arch-outline"></div><strong>The Stage</strong><small data-i18n="venue2">Stage photography pending</small></div>
+        <div class="venue-card"><div class="arch-outline"></div><strong>The Gathering</strong><small data-i18n="venue3">Event photography pending</small></div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="footer">
+  <div class="site-shell footer-grid">
+    <div><strong>Golden Himal Voice</strong><p>A Golden Himal Palace initiative · Chitwan, Nepal</p></div>
+    <div class="footer-right"><p data-i18n="footerNote">Design preview · No live registration, voting, or official results.</p><small>PREVIEW V0.3 · OCTOBER 2026</small></div>
+  </div>
+</footer>
+<dialog id="vote-dialog" aria-labelledby="vote-dialog-title">
+  <span class="tag">SAMPLE VOTE</span><h3 id="vote-dialog-title" data-i18n="dialogTitle">Confirm your demo choice</h3><p id="vote-dialog-choice"></p><p class="muted" data-i18n="dialogDescription">This vote only changes numbers in your open browser tab.</p>
+  <div class="form-actions"><button type="button" class="button button-wine" id="confirm-vote" data-i18n="dialogConfirm">Confirm sample vote</button><button type="button" class="text-button" id="cancel-vote" data-i18n="dialogCancel">Cancel</button></div>
+</dialog>
+<script type="module" src="/src/scripts/main.js"></script>
+</body>
 </html>
