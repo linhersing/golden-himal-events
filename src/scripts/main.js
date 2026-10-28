@@ -140,6 +140,55 @@ const translations = {
     reviewName:"顯示名稱",reviewCity:"城市",reviewEmail:"測試信箱",reviewLink:"測試連結",newsCount:"目前顯示公告數："
   }
 };
+
+Object.assign(translations.en,{
+  dialogStep1:"Verify voter identity",dialogStep1Note:"Official version: one-time code to a verified address.",
+  dialogStep2:"Check voting eligibility",dialogStep2Note:"Official version: server blocks duplicate votes in the same round.",
+  dialogStep3:"Count only valid votes",dialogStep3Note:"Official version: transactional database and audit logs.",
+  sampleEmailLabel:"Example verified email — read-only test data",sampleCodeLabel:"Enter sample verification code: 246810",
+  dialogDescription:"No email is sent. This is a mock verification only, and cannot protect real votes.",
+  dialogConfirm:"Verify sample code & vote",verifyError:"Incorrect sample code. For this demo, enter 246810.",
+  trustOverline:"FAIRNESS · PRIVACY · RESILIENCE",trustTitle:"A fairer stage. Built with care.",
+  trustLead:"Security is more than a button: verified voters, protected counting, reviewable records and a recovery plan. These protections are in development—not yet active.",
+  trustVerify:"Voter verification",trustVerifyBody:"Planned one-time verification. No automatic votes from anonymous clicks.",
+  trustOne:"One eligible vote per round",trustOneBody:"Server checks duplicate submissions before a vote can count.",
+  trustBot:"Automated abuse controls",trustBotBody:"Bot verification, rate limits and human review for unusual behavior.",
+  trustBackups:"Backups and recovery",trustBackupsBody:"Independent exports, restoration drills and event-day fallback procedures.",
+  trustPending:"PLANNED · NOT ACTIVE",trustPromise:"No real voting is open.",
+  trustPromiseBody:"A privacy notice and voting rules will be available before registration or audience voting starts. Participation is not consent to marketing."
+});
+Object.assign(translations.ne,{
+  dialogStep1:"मतदाताको पहिचान पुष्टि",dialogStep1Note:"वास्तविक संस्करणमा प्रमाणित इमेलमा एकपटक प्रयोग हुने कोड पठाइनेछ।",
+  dialogStep2:"मतदान योग्यता जाँच",dialogStep2Note:"एकै चरणमा दोहोरिएको मत सर्भरले अस्वीकार गर्नेछ।",
+  dialogStep3:"मान्य मत मात्र गणना",dialogStep3Note:"लेनदेनमा आधारित डेटाबेस र लेखापरीक्षण रेकर्ड प्रयोग हुनेछ।",
+  sampleEmailLabel:"नमुना प्रमाणित इमेल — परिवर्तन गर्न नमिल्ने",sampleCodeLabel:"नमुना पुष्टि कोड लेख्नुहोस्: 246810",
+  dialogDescription:"कुनै इमेल पठाइँदैन। यो केवल अभ्यास हो, वास्तविक मतदान सुरक्षित गर्दैन।",
+  dialogConfirm:"नमुना कोड जाँच र मत",verifyError:"नमुना कोड मिलेन। 246810 लेख्नुहोस्।",
+  trustOverline:"निष्पक्षता · गोपनीयता · विश्वसनीयता",trustTitle:"निष्पक्ष मञ्च, जिम्मेवारीका साथ।",
+  trustLead:"वास्तविक सुरक्षाका लागि पहिचान पुष्टि, सुरक्षित मतगणना, समीक्षा गर्न सकिने रेकर्ड र पुनर्स्थापनाको योजना चाहिन्छ। यी सुविधा अझै सक्रिय छैनन्।",
+  trustVerify:"मतदाता प्रमाणीकरण",trustVerifyBody:"एकपटक प्रयोग हुने प्रमाणीकरण योजना। केवल क्लिकले मत गणना हुँदैन।",
+  trustOne:"प्रति चरण एक योग्य मत",trustOneBody:"सर्भरले दोहोरो मत रोकेपछि मात्र गणना हुन्छ।",
+  trustBot:"स्वचालित दुरुपयोग नियन्त्रण",trustBotBody:"बट जाँच, अनुरोध सीमा र असामान्य गतिविधिको मानव समीक्षा।",
+  trustBackups:"ब्याकअप र पुनर्स्थापना",trustBackupsBody:"स्वतन्त्र निर्यात, पुनर्स्थापना अभ्यास र कार्यक्रम-दिनको वैकल्पिक प्रक्रिया।",
+  trustPending:"योजनामा · सक्रिय छैन",trustPromise:"वास्तविक मतदान खुलेको छैन।",
+  trustPromiseBody:"दर्ता वा मतदान सुरु हुनुअघि गोपनीयता नीति र नियम प्रकाशित हुनेछन्। सहभागी हुनु विज्ञापनको सहमति होइन।"
+});
+Object.assign(translations.zh,{
+  dialogStep1:"驗證投票者身分",dialogStep1Note:"正式版將寄送一次性驗證碼到經確認的信箱。",
+  dialogStep2:"確認投票資格",dialogStep2Note:"伺服器拒絕同一輪的重複投票。",
+  dialogStep3:"只計入有效票數",dialogStep3Note:"正式版使用交易型資料庫及稽核紀錄。",
+  sampleEmailLabel:"已驗證信箱示例（唯讀測試資料）",sampleCodeLabel:"輸入示範驗證碼：246810",
+  dialogDescription:"不會寄出 Email；此處只示範驗證流程，不能保護真實票數。",
+  dialogConfirm:"驗證示範碼並投票",verifyError:"示範驗證碼錯誤，請輸入 246810。",
+  trustOverline:"公平 · 隱私 · 系統可靠性",trustTitle:"讓每一份支持，都有公平的保障。",
+  trustLead:"安全不只是按鈕：需要驗證身分、可靠計票、可稽核的紀錄與復原計畫。這些保護措施仍在開發，尚未啟用。",
+  trustVerify:"投票資格驗證",trustVerifyBody:"規劃一次性驗證，不接受匿名點擊直接計票。",
+  trustOne:"每輪有效投票限制",trustOneBody:"後端檢查重複提交，避免同一資格重複計票。",
+  trustBot:"防機器人與異常監控",trustBotBody:"結合機器人驗證、限流及異常行為人工審查。",
+  trustBackups:"備份與災難復原",trustBackupsBody:"獨立資料匯出、還原演練與活動當日應變方案。",
+  trustPending:"規劃中 · 尚未啟用",trustPromise:"目前沒有開放真實投票。",
+  trustPromiseBody:"正式開放前將公布隱私告知與票選規則。參與投票不代表同意接收行銷訊息。"
+});
 let language='en',currentFilter='all',voted=false,selected=null,dialogOpener=null;
 const root=document.documentElement;
 const qs=(s)=>document.querySelector(s);
@@ -189,12 +238,25 @@ qsa('[data-vote]').forEach(button=>button.addEventListener('click',()=>{
   if(voted)return;
   selected=button.dataset.vote;dialogOpener=button;
   qs('#vote-dialog-choice').textContent=tr('voteChoice')+selected+'.';
+  qs('#voter-demo-code').value='';
+  qs('#voter-demo-error').hidden=true;
   if(typeof dialog.showModal==='function')dialog.showModal();
+  qs('#voter-demo-code').focus();
 }));
 qs('#cancel-vote').addEventListener('click',()=>dialog.close());
 dialog.addEventListener('close',()=>{selected=null;if(dialogOpener)dialogOpener.focus()});
 qs('#confirm-vote').addEventListener('click',()=>{
   if(voted||!selected)return;
+  // UI-only exercise. The real system MUST verify a server-issued code.
+  const entered=qs('#voter-demo-code').value.trim();
+  if(entered!=='246810'){
+    const error=qs('#voter-demo-error');
+    error.textContent=tr('verifyError');
+    error.hidden=false;
+    qs('#voter-demo-code').focus();
+    return;
+  }
+  qs('#voter-demo-error').hidden=true;
   const chosen=selected;
   voted=true;qs('#vote-count-'+chosen).textContent='1';
   qs('#vote-status').textContent=tr('voted')+chosen+tr('demoOnly');
