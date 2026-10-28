@@ -192,6 +192,44 @@ Object.assign(translations.zh,{
   trustPending:"規劃中 · 尚未啟用",trustPromise:"目前沒有開放真實投票。",
   trustPromiseBody:"正式開放前將公布隱私告知與票選規則。參與投票不代表同意接收行銷訊息。"
 });
+
+/* 2027 planning: localized, clearly labelled Draft 1; never infer public approval. */
+Object.assign(translations.en,{
+  seasonOverline:"2027 · PROPOSED SEASON / DRAFT 1",seasonTitle:"One season. Many voices.",
+  seasonIntro:"A working proposal for three qualifying events and a year-end celebration. Dates, formats and rules are not official until approved.",
+  seasonMarch:"March 2027",seasonJune:"June 2027",seasonSept:"September 2027",seasonDec:"December 2027",
+  seasonQualify:"Proposed qualifier",seasonFinal:"Proposed annual finale",
+  seasonDisclaimer:"WORKING DRAFT · This is not an invitation to apply or pay. Official terms and registration dates are pending organizer approval.",
+  fieldCategory:"Category (sample)",chooseCategory:"Choose a category",universityCategory:"University students",communityCategory:"Open / community",
+  fieldRound:"Qualifying round (sample)",chooseRound:"Choose a proposed round",
+  paymentTitle:"Payment verification — planned",paymentBody:"The final application will include fee-payment verification. No payment or receipt upload is accepted in this design preview.",
+  paymentWarning:"Do not send money or upload identity/payment documents using this preview.",
+  reviewCategory:"Category",reviewRound:"Round"
+});
+Object.assign(translations.ne,{
+  seasonOverline:"२०२७ · प्रस्तावित योजना / मस्यौदा १",seasonTitle:"एक वर्ष, धेरै स्वरहरू।",
+  seasonIntro:"तीनवटा प्रारम्भिक चरण र वर्षको अन्त्यमा फाइनलको प्रस्ताव। आयोजकले स्वीकृत नगरेसम्म मिति वा नियम आधिकारिक होइनन्।",
+  seasonMarch:"मार्च २०२७",seasonJune:"जुन २०२७",seasonSept:"सेप्टेम्बर २०२७",seasonDec:"डिसेम्बर २०२७",
+  seasonQualify:"प्रस्तावित प्रारम्भिक चरण",seasonFinal:"प्रस्तावित वार्षिक फाइनल",
+  seasonDisclaimer:"मस्यौदा मात्र · अहिले दर्ता वा भुक्तानी खुला छैन। आयोजकको स्वीकृतिपछि मात्र आधिकारिक सूचना जारी हुनेछ।",
+  fieldCategory:"समूह (नमुना)",chooseCategory:"समूह छान्नुहोस्",universityCategory:"विश्वविद्यालय विद्यार्थी",communityCategory:"सामान्य / समुदाय",
+  fieldRound:"प्रारम्भिक चरण (नमुना)",chooseRound:"प्रस्तावित चरण छान्नुहोस्",
+  paymentTitle:"भुक्तानी प्रमाण जाँच — योजना मात्र",paymentBody:"औपचारिक दर्तामा शुल्क पुष्टि गर्ने प्रक्रिया हुनेछ। यस नमुना वेबसाइटले पैसा वा रसिद लिँदैन।",
+  paymentWarning:"यस नमुना साइटमा पैसा नपठाउनुहोस् वा व्यक्तिगत/भुक्तानी कागजात अपलोड नगर्नुहोस्।",
+  reviewCategory:"समूह",reviewRound:"चरण"
+});
+Object.assign(translations.zh,{
+  seasonOverline:"2027年 · 賽季規劃草案 Draft 1",seasonTitle:"一整年的舞台，讓歌聲相遇。",
+  seasonIntro:"規劃三場初賽與年底決賽。月份、辦法與參與資格仍待主辦單位確認，尚非正式公告。",
+  seasonMarch:"2027年3月",seasonJune:"2027年6月",seasonSept:"2027年9月",seasonDec:"2027年12月",
+  seasonQualify:"規劃中的初賽",seasonFinal:"規劃中的年度決賽",
+  seasonDisclaimer:"討論草案 · 目前尚未開放報名或繳費。正式賽程及辦法須待主辦單位核定。",
+  fieldCategory:"參賽組別（示範）",chooseCategory:"選擇組別",universityCategory:"大學組",communityCategory:"社會組",
+  fieldRound:"初賽場次（示範）",chooseRound:"選擇規劃場次",
+  paymentTitle:"報名費與繳費證明查核 — 規劃中",paymentBody:"正式流程將有繳費證明與人工核對，本頁不收款、不提供正式繳費證明上傳。",
+  paymentWarning:"請勿透過此測試頁面匯款或上傳身分、繳費文件。",
+  reviewCategory:"組別",reviewRound:"場次"
+});
 let language='en',currentFilter='all',voted=false,selected=null,dialogOpener=null;
 const root=document.documentElement;
 const qs=(s)=>document.querySelector(s);
@@ -217,6 +255,8 @@ const fields=()=>Object.fromEntries(new FormData(form).entries());
 qs('#sample-fill').addEventListener('click',()=>{
   form.elements.stageName.value='Demo Singer';
   form.elements.city.value='Chitwan';
+  form.elements.category.value='university';
+  form.elements.round.value='mar2027';
   form.elements.email.value='demo@example.com';
   form.elements.performance.value='https://example.com/demo';
   form.elements.consent.checked=true;
@@ -227,7 +267,7 @@ form.addEventListener('submit',event=>{
   if(!form.reportValidity())return;
   const data=fields();
   if(!data.stageName.trim()||!data.city.trim())return;
-  const summaries=[['reviewName',data.stageName],['reviewCity',data.city],['reviewEmail',data.email],['reviewLink',data.performance]];
+  const summaries=[['reviewName',data.stageName],['reviewCity',data.city],['reviewCategory',data.category],['reviewRound',data.round],['reviewEmail',data.email],['reviewLink',data.performance]];
   qs('#review-copy').textContent=summaries.map(([label,value])=>tr(label)+': '+value).join('  |  ');
   form.hidden=true;success.hidden=true;review.hidden=false;review.focus();
 });
