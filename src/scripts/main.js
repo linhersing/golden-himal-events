@@ -142,6 +142,7 @@ const translations = {
 };
 
 Object.assign(translations.en,{
+  navTrust:"Fair Voting",
   dialogStep1:"Verify voter identity",dialogStep1Note:"Official version: one-time code to a verified address.",
   dialogStep2:"Check voting eligibility",dialogStep2Note:"Official version: server blocks duplicate votes in the same round.",
   dialogStep3:"Count only valid votes",dialogStep3Note:"Official version: transactional database and audit logs.",
@@ -158,6 +159,7 @@ Object.assign(translations.en,{
   trustPromiseBody:"A privacy notice and voting rules will be available before registration or audience voting starts. Participation is not consent to marketing."
 });
 Object.assign(translations.ne,{
+  navTrust:"निष्पक्ष मतदान",
   dialogStep1:"मतदाताको पहिचान पुष्टि",dialogStep1Note:"वास्तविक संस्करणमा प्रमाणित इमेलमा एकपटक प्रयोग हुने कोड पठाइनेछ।",
   dialogStep2:"मतदान योग्यता जाँच",dialogStep2Note:"एकै चरणमा दोहोरिएको मत सर्भरले अस्वीकार गर्नेछ।",
   dialogStep3:"मान्य मत मात्र गणना",dialogStep3Note:"लेनदेनमा आधारित डेटाबेस र लेखापरीक्षण रेकर्ड प्रयोग हुनेछ।",
@@ -174,6 +176,7 @@ Object.assign(translations.ne,{
   trustPromiseBody:"दर्ता वा मतदान सुरु हुनुअघि गोपनीयता नीति र नियम प्रकाशित हुनेछन्। सहभागी हुनु विज्ञापनको सहमति होइन।"
 });
 Object.assign(translations.zh,{
+  navTrust:"公平投票",
   dialogStep1:"驗證投票者身分",dialogStep1Note:"正式版將寄送一次性驗證碼到經確認的信箱。",
   dialogStep2:"確認投票資格",dialogStep2Note:"伺服器拒絕同一輪的重複投票。",
   dialogStep3:"只計入有效票數",dialogStep3Note:"正式版使用交易型資料庫及稽核紀錄。",
