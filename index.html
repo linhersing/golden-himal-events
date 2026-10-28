@@ -148,6 +148,21 @@
     </div>
     <div class="vote-note"><span id="vote-status" role="status" aria-live="polite" data-i18n="voteNote">Try one sample vote. Counts reset when you reload; there is no real anti-fraud system.</span><button class="text-button" id="reset-votes" type="button" data-i18n="resetVotes">Reset sample votes</button></div>
   </section>
+  <section class="section security-section" id="trust">
+    <div class="site-shell">
+      <div class="security-header">
+        <div><p class="overline" data-i18n="trustOverline">FAIRNESS · PRIVACY · RESILIENCE</p><h2 data-i18n="trustTitle">A fairer stage. Built with care.</h2></div>
+        <p class="section-side" data-i18n="trustLead">Security is more than a button: verified voters, protected counting, reviewable records and a recovery plan. These protections are in development—not yet active.</p>
+      </div>
+      <div class="security-grid">
+        <article class="security-card"><span aria-hidden="true">✉</span><strong data-i18n="trustVerify">Voter verification</strong><p data-i18n="trustVerifyBody">Planned one-time verification. No automatic votes from anonymous clicks.</p><small data-i18n="trustPending">PLANNED · NOT ACTIVE</small></article>
+        <article class="security-card"><span aria-hidden="true">✓</span><strong data-i18n="trustOne">One eligible vote per round</strong><p data-i18n="trustOneBody">Server checks duplicate submissions before a vote can count.</p><small data-i18n="trustPending">PLANNED · NOT ACTIVE</small></article>
+        <article class="security-card"><span aria-hidden="true">◈</span><strong data-i18n="trustBot">Automated abuse controls</strong><p data-i18n="trustBotBody">Bot verification, rate limits and human review for unusual behavior.</p><small data-i18n="trustPending">PLANNED · NOT ACTIVE</small></article>
+        <article class="security-card"><span aria-hidden="true">⟳</span><strong data-i18n="trustBackups">Backups and recovery</strong><p data-i18n="trustBackupsBody">Independent exports, restoration drills and event-day fallback procedures.</p><small data-i18n="trustPending">PLANNED · NOT ACTIVE</small></article>
+      </div>
+      <div class="security-foot"><strong data-i18n="trustPromise">No real voting is open.</strong><p data-i18n="trustPromiseBody">A privacy notice and voting rules will be available before registration or audience voting starts. Participation is not consent to marketing.</p></div>
+    </div>
+  </section>
   <section id="venue" class="section venue-section">
     <div class="site-shell">
       <div class="section-top"><div><p class="overline">THE PLACE WE WILL MEET</p><h2 data-i18n="venueTitle">More than a performance. A place to gather.</h2></div><p class="section-side" data-i18n="venueLead">Golden Himal Palace · Chitwan, Nepal. Real venue photography will be added once approved.</p></div>
@@ -162,12 +177,30 @@
 <footer class="footer">
   <div class="site-shell footer-grid">
     <div><strong>Golden Himal Voice</strong><p>A Golden Himal Palace initiative · Chitwan, Nepal</p></div>
-    <div class="footer-right"><p data-i18n="footerNote">Design preview · No live registration, voting, or official results.</p><small>PREVIEW V0.3 · OCTOBER 2026</small></div>
+    <div class="footer-right"><p data-i18n="footerNote">Design preview · No live registration, voting, or official results.</p><small>PREVIEW V0.4 · OCTOBER 2026</small></div>
   </div>
 </footer>
 <dialog id="vote-dialog" aria-labelledby="vote-dialog-title">
-  <span class="tag">SAMPLE VOTE</span><h3 id="vote-dialog-title" data-i18n="dialogTitle">Confirm your demo choice</h3><p id="vote-dialog-choice"></p><p class="muted" data-i18n="dialogDescription">This vote only changes numbers in your open browser tab.</p>
-  <div class="form-actions"><button type="button" class="button button-wine" id="confirm-vote" data-i18n="dialogConfirm">Confirm sample vote</button><button type="button" class="text-button" id="cancel-vote" data-i18n="dialogCancel">Cancel</button></div>
+  <span class="tag">SECURE VOTE · INTERACTION DEMO</span>
+  <h3 id="vote-dialog-title" data-i18n="dialogTitle">Confirm your demo choice</h3>
+  <p id="vote-dialog-choice"></p>
+  <div class="vote-security-flow" role="list">
+    <div role="listitem"><span class="security-step-number">01</span><div><strong data-i18n="dialogStep1">Verify voter identity</strong><small data-i18n="dialogStep1Note">Official version: one-time code to a verified address.</small></div></div>
+    <div role="listitem"><span class="security-step-number">02</span><div><strong data-i18n="dialogStep2">Check voting eligibility</strong><small data-i18n="dialogStep2Note">Official version: server blocks duplicate votes in the same round.</small></div></div>
+    <div role="listitem"><span class="security-step-number">03</span><div><strong data-i18n="dialogStep3">Count only valid votes</strong><small data-i18n="dialogStep3Note">Official version: transactional database and audit logs.</small></div></div>
+  </div>
+  <div class="demo-verify-field">
+    <label for="voter-preview-email" data-i18n="sampleEmailLabel">Example verified email — read-only test data</label>
+    <input id="voter-preview-email" type="email" value="demo@example.com" readonly aria-readonly="true">
+    <label for="voter-demo-code" data-i18n="sampleCodeLabel">Enter sample verification code: 246810</label>
+    <input id="voter-demo-code" type="text" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="246810" pattern="[0-9]{6}">
+    <small data-i18n="dialogDescription">No email is sent. This is a mock verification only, and cannot protect real votes.</small>
+  </div>
+  <p id="voter-demo-error" role="status" aria-live="polite" class="verification-error" hidden></p>
+  <div class="form-actions">
+    <button type="button" class="button button-wine" id="confirm-vote" data-i18n="dialogConfirm">Verify sample code &amp; vote</button>
+    <button type="button" class="text-button" id="cancel-vote" data-i18n="dialogCancel">Cancel</button>
+  </div>
 </dialog>
 <script type="module" src="/src/scripts/main.js"></script>
 </body>
