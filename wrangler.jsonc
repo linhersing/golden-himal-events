@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "golden-himal-voice-preview",
+  "compatibility_date": "2026-10-28",
+  "assets": {
+    "directory": "./dist"
+  },
+  "observability": {
+    "enabled": false
+  }
+}
