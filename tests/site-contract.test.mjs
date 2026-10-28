@@ -2,36 +2,43 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const htmlUrl = new URL('../index.html', import.meta.url);
+const read = path => readFile(new URL('../'+path,import.meta.url),'utf8');
 
-async function homepage() {
-  return readFile(htmlUrl, 'utf8');
-}
-
-test('registration action never exposes a submit endpoint', async () => {
-  const html = await homepage();
-  assert.doesNotMatch(html, /<form\b/i);
-  assert.doesNotMatch(html, /\baction\s*=|fetch\s*\(|xmlhttprequest|webhook/iu);
-  assert.match(html, /data-registration-preview/);
+test('all three public-facing experiences exist as semantic sections',async()=>{
+  const html=await read('index.html');
+  for(const id of ['event','updates','registration','voting','venue'])assert.match(html,new RegExp('id="'+id+'"'));
+  assert.match(html,/<form id="registration-form"/);
+  assert.match(html,/id="vote-dialog"/);
+  assert.match(html,/data-filter="shortlist"/);
 });
 
-test('homepage contains one primary action and semantic sections', async () => {
-  const html = await homepage();
-  assert.match(html, /網站架構中/);
-  assert.equal((html.match(/data-primary-action/g) ?? []).length, 1);
-  for (const sectionId of ['place', 'venue', 'event', 'registration']) {
-    assert.match(html, new RegExp(`<section[^>]+id=["']${sectionId}["']`, 'i'));
-  }
-  assert.match(html, /<a[^>]+href=["']#main-content["'][^>]*>[^<]+<\/a>/i);
+test('preview form is explicitly non-collecting and has no submission endpoint',async()=>{
+  const html=await read('index.html');
+  const js=await read('src/scripts/main.js');
+  assert.match(html,/simulations only/);
+  assert.match(html,/not accepting applications yet/i);
+  assert.doesNotMatch(html,/<form[^>]+action\s*=/i);
+  assert.doesNotMatch(js,/\bfetch\s*\(|\bXMLHttpRequest\b|localStorage|sessionStorage|navigator\.sendBeacon/);
+  assert.match(js,/event\.preventDefault\(\)/);
 });
 
-test('homepage remains a preview without data collection', async () => {
-  const html = await homepage();
-  assert.match(html, /Private design preview/i);
-  assert.doesNotMatch(html, /<input\b|<textarea\b|<select\b/iu);
+test('public preview does not announce unapproved numbers or organizational identity',async()=>{
+  const html=await read('index.html');
+  assert.doesNotMatch(html,/\b(?:CMA|Chinese Mission Alliance|wanjun|cma-mission\.com)\b/i);
+  assert.doesNotMatch(html,/\b(?:NPR|NT\$|USD)\s*[\d,]+/i);
+  assert.doesNotMatch(html,/\b(?:12|15)\s*(?:finalists|強)/i);
 });
 
-test('homepage contains no unapproved dates or prize claims', async () => {
-  const html = await homepage();
-  assert.doesNotMatch(html, /\b20\d{2}[-/.]\d{1,2}|\b(?:usd|npr|nt\$)\b|\bfirst prize\b|\bgrand final\b/iu);
+test('social metadata references only the independent preview brand',async()=>{
+  const html=await read('index.html');
+  assert.match(html,/property="og:title"/);
+  assert.match(html,/property="og:image"/);
+  assert.match(html,/\/images\/brand-identity\.png/);
+  assert.match(html,/noindex,nofollow,noarchive/);
+});
+
+test('language switch offers English Nepali and Chinese',async()=>{
+  const html=await read('index.html');
+  const js=await read('src/scripts/main.js');
+  for(const lang of ['en','ne','zh']){assert.match(html,new RegExp('data-lang="'+lang+'"'));assert.match(js,new RegExp('\\b'+lang+':\\s*\\{'));}
 });
