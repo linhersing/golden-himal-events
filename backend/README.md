@@ -50,3 +50,20 @@ Copy \`wrangler.example.toml\` and fill out your actual D1 database ID and names
 D1 Time Travel is not a substitute for independent backups. Export data before major changes and at agreed intervals to encrypted restricted storage, including schema version, UTC timestamp, checksum and row counts. Maintain a separate manifest and periodically restore a copy to staging to check completeness. Time Travel retention depends on plan; verify current documented Free/Paid limits. Never place real personal or voting data in this public repository or public Google Sheets.
 
 Live protection additionally requires Cloudflare WAF/Bot management, observability, incident response, independent admin authentication, strict permissions, and legal privacy review.
+
+## Fair-voting redesign: eligibility before email (decision pending)
+
+On October 28, 2026 an additional **proposal**, not a production feature, was added in `migrations/0002_eligibility_credentials.sql`. It changes the trust unit from an Email account to an independently verified **one-person-one-eligibility per round** record. Each verified eligibility may receive only one voting credential and submit one counted vote per round, guarded by database UNIQUE constraints and a voting-round/contestant guard trigger.
+
+The SQLite fixture in `tests/eligibility-credential.test.mjs` deliberately tries to use 20 accounts/tokens with the *same vetted person digest*. It verifies duplicates are rejected. **This does not prove protection against 20 unrelated Gmail accounts in the real world**: the independent eligibility issuance process is not yet implemented, and if a person tricks the issuer into producing 20 different identity digests, the database cannot identify that fraud. Avoid promotional claims of guaranteed one-person-one-vote until issuance has been reviewed and verified under adversarial testing.
+
+Proposed rollout:
+1. Conduct *private* registration of eligible voters using minimal lawful data. Define an impartial issuance authority, an exception/review procedure, and clear retention rules.
+2. A verifier, independent of a contestant or vote counter, establishes unique eligibility and creates an HMAC key for it. Never base this digest on Email alone.
+3. On-site visitors may use a single-use QR/printed credential; remote voters need a defensible identity verification method with an accessible alternative. No raw ID numbers/photos in public GitHub.
+4. The voter privately receives the credential. Public voting endpoint validates its hash; exact credential never appears in public logs.
+5. Server validates anti-bot evidence and rate limits; D1 atomically accepts only one vote for the eligibility in its round. Separate voter identity from ballot choices where feasible.
+6. Public dashboards disclose rules, eligible-voter issuance totals, valid/rejected ballot counts and independent audit summaries in aggregate. Do not publish individual voter identities or link ballot choices to people.
+7. Review privacy, dispute appeals, fraud investigations and disaster recovery with the local organizing team before production.
+
+The existing API at `src/index.js` **still uses email-derived hashes**. It has **not** been upgraded to the credential issuance workflow. Both migrations are DRAFT and remain isolated until that service, the admin backend and a neutral hosting account are available.
