@@ -86,6 +86,21 @@
       <p class="muted" data-i18n="introNote">Participation details, eligibility and judging will be published when finalized.</p>
     </div>
   </section>
+  <section id="season" class="section season-preview">
+    <div class="site-shell">
+      <div class="section-top">
+        <div><p class="overline" data-i18n="seasonOverline">2027 · PROPOSED SEASON / DRAFT 1</p><h2 data-i18n="seasonTitle">One season. Many voices.</h2></div>
+        <p class="section-side" data-i18n="seasonIntro">A working proposal for three qualifying events and a year-end celebration. Dates, formats and rules are not official until approved.</p>
+      </div>
+      <div class="season-grid">
+        <article class="season-card"><span>01</span><strong data-i18n="seasonMarch">March 2027</strong><small data-i18n="seasonQualify">Proposed qualifier</small></article>
+        <article class="season-card"><span>02</span><strong data-i18n="seasonJune">June 2027</strong><small data-i18n="seasonQualify">Proposed qualifier</small></article>
+        <article class="season-card"><span>03</span><strong data-i18n="seasonSept">September 2027</strong><small data-i18n="seasonQualify">Proposed qualifier</small></article>
+        <article class="season-card season-card-final"><span>04</span><strong data-i18n="seasonDec">December 2027</strong><small data-i18n="seasonFinal">Proposed annual finale</small></article>
+      </div>
+      <p class="season-disclaimer" data-i18n="seasonDisclaimer">WORKING DRAFT · This is not an invitation to apply or pay. Official terms and registration dates are pending organizer approval.</p>
+    </div>
+  </section>
   <section id="updates" class="section section-warm">
     <div class="site-shell">
       <div class="section-top">
@@ -127,8 +142,17 @@
             <label><span data-i18n="fieldName">Display name</span><input name="stageName" type="text" maxlength="40" required placeholder="Demo Singer"></label>
             <label><span data-i18n="fieldCity">City</span><input name="city" type="text" maxlength="60" required placeholder="Chitwan"></label>
           </div>
+          <div class="field-grid">
+            <label><span data-i18n="fieldCategory">Category (sample)</span><select name="category" required><option value="" data-i18n="chooseCategory">Choose a category</option><option value="university" data-i18n="universityCategory">University students</option><option value="community" data-i18n="communityCategory">Open / community</option></select></label>
+            <label><span data-i18n="fieldRound">Qualifying round (sample)</span><select name="round" required><option value="" data-i18n="chooseRound">Choose a proposed round</option><option value="mar2027" data-i18n="seasonMarch">March 2027</option><option value="jun2027" data-i18n="seasonJune">June 2027</option><option value="sep2027" data-i18n="seasonSept">September 2027</option></select></label>
+          </div>
           <label><span data-i18n="fieldEmail">Email (sample only)</span><input name="email" type="email" maxlength="100" required placeholder="demo@example.com"></label>
           <label><span data-i18n="fieldLink">Performance link (sample only)</span><input name="performance" type="url" maxlength="400" required placeholder="https://example.com/demo"></label>
+          <div class="payment-preview">
+            <strong data-i18n="paymentTitle">Payment verification — planned</strong>
+            <p data-i18n="paymentBody">The final application will include fee-payment verification. No payment or receipt upload is accepted in this design preview.</p>
+            <small data-i18n="paymentWarning">Do not send money or upload identity/payment documents using this preview.</small>
+          </div>
           <label class="consent"><input name="consent" type="checkbox" required><span data-i18n="fieldConsent">I understand this is an interface preview using fictional details, not a real registration.</span></label>
           <div class="form-actions"><button class="button button-wine" type="submit" data-i18n="reviewButton">Review sample details ↗</button><button class="text-button" type="button" id="sample-fill" data-i18n="fillButton">Fill sample data</button></div>
         </form>
