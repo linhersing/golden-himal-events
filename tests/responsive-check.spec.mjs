@@ -33,6 +33,11 @@ test('sample registration never sends a form request',async({page})=>{
 test('demo vote and reset work without real persistence',async({page})=>{
   await page.goto('/');
   await page.locator('[data-vote="02"]').click();
+  await page.locator('#voter-demo-code').fill('000000');
+  await page.locator('#confirm-vote').click();
+  await expect(page.locator('#voter-demo-error')).toBeVisible();
+  await expect(page.locator('#vote-count-02')).toHaveText('0');
+  await page.locator('#voter-demo-code').fill('246810');
   await page.locator('#confirm-vote').click();
   await expect(page.locator('#vote-count-02')).toHaveText('1');
   await expect(page.locator('[data-vote="01"]')).toBeDisabled();
