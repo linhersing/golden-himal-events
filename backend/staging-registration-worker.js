@@ -1,4 +1,3 @@
-import {verifyCiIdentity} from './ci-oidc.js';
 /*
  * Golden Himal Voice — SAFE STAGING SMOKE TEST ONLY.
  *
@@ -67,8 +66,6 @@ async function handleSampleRead(request,env) {
     return json({ok:true,testOnly:true,source:'d1-staging',sample:row});
   }catch{return failure('test_database_unavailable',503)}
 }
-// CI-only smoke test: GitHub-issued OIDC identity, fixed fictional row,
-// no caller-provided data, never a public participant registration endpoint.
 async function handleCiFixtureRead(request,env){
   if(request.method!=='GET')return failure('method_not_allowed',405);
   if(!env.DB)return failure('database_not_bound',503);
@@ -80,32 +77,6 @@ async function handleCiFixtureRead(request,env){
     ).bind(SAMPLE.display_name,SAMPLE.round_code).first();
     if(!row)return failure('ci_fixture_missing',404);
     return json({ok:true,testOnly:true,source:'d1-staging',sample:row});
-  }catch{return failure('test_database_unavailable',503)}
-}
-async function handleCiFixtureWrite(request,env){
-  if(request.method!=='POST')return failure('method_not_allowed',405);
-  if(!env.DB)return failure('database_not_bound',503);
-  const bearer=request.headers.get('Authorization');
-  if(!bearer?.startsWith('Bearer '))return failure('ci_identity_required',401);
-  if(request.headers.get('content-length') && request.headers.get('content-length')!=='0')
-    return failure('body_not_allowed',400);
-  let reason='unknown';
-  if(!await verifyCiIdentity(bearer.slice(7),{onFailure:r=>{reason=r}}))
-    return json({ok:false,error:'ci_identity_invalid',stage:reason},403);
-  if(!await tableReady(env.DB))return failure('test_table_missing',503);
-  try{
-    await env.DB.prepare(
-      'INSERT INTO ghv_test_registrations (display_name,category,round_code) '+
-      'SELECT ?,?,? WHERE NOT EXISTS (SELECT 1 FROM ghv_test_registrations '+
-      'WHERE display_name=? AND round_code=?)'
-    ).bind(SAMPLE.display_name,SAMPLE.category,SAMPLE.round_code,
-      SAMPLE.display_name,SAMPLE.round_code).run();
-    const row=await env.DB.prepare(
-      'SELECT id,display_name,category,round_code,status FROM ghv_test_registrations '+
-      'WHERE display_name=? AND round_code=? ORDER BY id ASC LIMIT 1'
-    ).bind(SAMPLE.display_name,SAMPLE.round_code).first();
-    if(!row)return failure('test_row_not_found',503);
-    return json({ok:true,testOnly:true,source:'ci-oidc',stored:row});
   }catch{return failure('test_database_unavailable',503)}
 }
 async function handleSampleRegistration(request,env) {
@@ -154,7 +125,6 @@ export default {
     if(pathname==='/api/staging/health')return handleHealth(request,env);
     if(pathname==='/api/staging/sample-read')return handleSampleRead(request,env);
     if(pathname==='/api/staging/ci-read')return handleCiFixtureRead(request,env);
-    if(pathname==='/api/staging/ci-fixture-write')return handleCiFixtureWrite(request,env);
     if(pathname==='/api/staging/registration-test')return handleSampleRegistration(request,env);
     if(pathname.startsWith('/api/'))return failure('not_found',404);
     return env.ASSETS.fetch(request);

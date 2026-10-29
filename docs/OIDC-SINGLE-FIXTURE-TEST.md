@@ -1,3 +1,12 @@
+# COMPLETED AND REMOVED — One-time authenticated D1 write
+
+Evidence: GitHub Actions Run 40811874921, retry attempt 2, job log at 2026-10-29T03:25:23Z:
+PASS live OIDC-authenticated D1 synthetic INSERT + independent SELECT readback.
+
+The only written record was TEST-SINGER-API-001 in ghv-staging. The OAuth/OIDC CI write endpoint and id-token: write permission were subsequently removed from the deployed branch in the cleanup PR. Public staging writes remain disabled. Do NOT use the following historical procedure to send any new writes.
+
+---
+
 # One-time D1 INSERT/SELECT via GitHub OIDC
 
 STAGING-ONLY. This test never accepts customer information, uploads, payments or votes.

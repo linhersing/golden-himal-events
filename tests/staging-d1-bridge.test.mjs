@@ -112,3 +112,21 @@ test('read-only sample route fails closed without DB binding or fixture',async()
   assert.equal((await worker.fetch(new Request(host+'/api/staging/sample-read'),env)).status,503);
  }finally{db.close()}
 });
+
+
+test('synthetic CI row remains readable after write endpoint is removed',async()=>{
+ const {db,env}=setup();
+ try{
+  db.prepare('INSERT INTO ghv_test_registrations(display_name,category,round_code) VALUES (?,?,?)')
+    .run('TEST-SINGER-API-001','university','2027-03');
+  const read=await worker.fetch(new Request(host+'/api/staging/ci-read'),env);
+  assert.equal(read.status,200);
+  const result=await read.json();
+  assert.equal(result.testOnly,true);
+  assert.equal(result.sample.display_name,'TEST-SINGER-API-001');
+  assert.equal(result.sample.category,'university');
+  const forbidden=await worker.fetch(req('/api/staging/ci-fixture-write',{}),env);
+  assert.equal(forbidden.status,404);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM ghv_test_registrations').get().n,1);
+ }finally{db.close()}
+});
