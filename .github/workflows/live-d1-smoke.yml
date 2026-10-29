@@ -1,0 +1,21 @@
+name: Verify live Cloudflare D1 staging connection
+on:
+  push:
+    branches:
+      - codex/initial-site
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cloudflare-read-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verify D1 readback and reject synthetic writes
+        run: node scripts/live-d1-smoke.mjs

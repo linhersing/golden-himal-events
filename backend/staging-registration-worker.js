@@ -51,6 +51,21 @@ async function handleHealth(request,env) {
   return json({ok:ready, testOnly:true, tableReady:ready,
     canWrite:env.STAGING_TEST_WRITE_ENABLED==='true'});
 }
+// Read-only end-to-end evidence from the manually-created fictional D1 row.
+// This never returns real registrations or allows user-supplied search terms.
+async function handleSampleRead(request,env) {
+  if(request.method!=='GET') return failure('method_not_allowed',405);
+  if(!env.DB) return failure('database_not_bound',503);
+  if(!await tableReady(env.DB)) return failure('test_table_missing',503);
+  try {
+    const row=await env.DB.prepare(
+      'SELECT id,display_name,category,round_code,status FROM ghv_test_registrations '+
+      'WHERE display_name=? AND round_code=? ORDER BY id ASC LIMIT 1'
+    ).bind('TEST-SINGER-001','2027-03').first();
+    if(!row)return failure('fictional_fixture_missing',404);
+    return json({ok:true,testOnly:true,source:'d1-staging',sample:row});
+  }catch{return failure('test_database_unavailable',503)}
+}
 async function handleSampleRegistration(request,env) {
   if(request.method!=='POST') return failure('method_not_allowed',405);
   if(!env.DB) return failure('database_not_bound',503);
@@ -95,6 +110,7 @@ export default {
   async fetch(request,env) {
     const pathname=new URL(request.url).pathname;
     if(pathname==='/api/staging/health')return handleHealth(request,env);
+    if(pathname==='/api/staging/sample-read')return handleSampleRead(request,env);
     if(pathname==='/api/staging/registration-test')return handleSampleRegistration(request,env);
     if(pathname.startsWith('/api/'))return failure('not_found',404);
     return env.ASSETS.fetch(request);

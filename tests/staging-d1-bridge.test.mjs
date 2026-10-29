@@ -84,3 +84,31 @@ test('Wrangler configuration binds staging only with writes disabled',async()=>{
  assert.deepEqual(cfg.assets.run_worker_first,['/api/staging/*']);
  assert.equal(JSON.stringify(cfg).includes('backend/src/index.js'),false);
 });
+
+
+test('read-only D1 sample route returns exactly the fictional record',async()=>{
+ const {db,env}=setup();
+ try {
+  db.prepare('INSERT INTO ghv_test_registrations(display_name,category,round_code) VALUES (?,?,?)')
+   .run('TEST-SINGER-001','university','2027-03');
+  const response=await worker.fetch(new Request(host+'/api/staging/sample-read'),env);
+  assert.equal(response.status,200);
+  const data=await response.json();
+  assert.deepEqual(data,{ok:true,testOnly:true,source:'d1-staging',sample:{
+   id:1,display_name:'TEST-SINGER-001',category:'university',
+   round_code:'2027-03',status:'pending'
+  }});
+  assert.equal(response.headers.get('Cache-Control'),'no-store, max-age=0');
+  const wrongMethod=await worker.fetch(req('/api/staging/sample-read',{}),env);
+  assert.equal(wrongMethod.status,405);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM ghv_test_registrations').get().n,1);
+ }finally{db.close()}
+});
+test('read-only sample route fails closed without DB binding or fixture',async()=>{
+ const {db,env}=setup();
+ try{
+  assert.equal((await worker.fetch(new Request(host+'/api/staging/sample-read'),env)).status,404);
+  delete env.DB;
+  assert.equal((await worker.fetch(new Request(host+'/api/staging/sample-read'),env)).status,503);
+ }finally{db.close()}
+});
