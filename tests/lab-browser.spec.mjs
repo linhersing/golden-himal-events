@@ -44,6 +44,20 @@ test('sandbox front/back registration → review → announcement → vote → r
  expect(writes).toEqual([]);
 });
 
+test('one-click full mock rehearsal reports PASS and never submits external data',async({page})=>{
+ await page.route('**/api/staging/**',route=>route.fulfill({status:503,body:'{"ok":false}',contentType:'application/json'}));
+ const writes=[];
+ page.on('request',req=>{if(!['GET','HEAD'].includes(req.method()))writes.push(req.url())});
+ await page.goto('/test-lab.html');
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#tab-reports').click();
+ await page.locator('#run-all').click();
+ await expect(page.locator('#auto-result')).toContainText('本機模擬 PASS');
+ await expect(page.locator('#local-count')).toHaveText('6');
+ await expect(page.locator('#d1-count')).toHaveText('—');
+ expect(writes).toEqual([]);
+});
+
 test('mobile sandbox shows usable tabs without horizontal page overflow',async({page},testInfo)=>{
  await page.setViewportSize({width:390,height:844});
  await page.route('**/api/staging/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{"ok":false}'}));
