@@ -89,3 +89,11 @@ dialog{max-height:min(92vh,900px);overflow:auto}
 .payment-preview small{display:block;font-size:.74rem;color:#8b423a;margin-top:6px;font-weight:700}
 @media(max-width:900px){.season-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.season-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.season-card{padding:16px 12px;min-height:146px}.season-card strong{font-size:1.1rem}.season-disclaimer{font-size:.77rem}}
+
+/* Staging D1 smoke-test compartment: visually separate from participant form. */
+.d1-staging-panel{margin-top:24px;padding:20px;border:1px dashed #b38e51;background:#f8f0df}
+.d1-staging-panel .tag{margin-bottom:11px}
+.d1-staging-panel p{color:#695640;font-size:.82rem;line-height:1.75}
+.d1-staging-panel .form-actions{margin-top:14px;gap:11px}
+.d1-staging-panel .button:disabled,.d1-staging-panel .text-button:disabled{opacity:.48;cursor:not-allowed;transform:none}
+.d1-staging-status{margin-top:13px;background:#eee2cd;border-left:3px solid #b68b4b;padding:10px 13px;overflow-wrap:anywhere}
