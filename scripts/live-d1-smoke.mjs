@@ -56,6 +56,14 @@ async function authenticatedFixtureWrite() {
   method:'POST',headers:{Authorization:'Bearer '+token},
   signal:AbortSignal.timeout(15000)
  });
+ if(response.status===403){
+   // Only log public workflow metadata, NEVER the token, subject, actor or signature.
+   const middle=token.split('.')[1];
+   const metadata=JSON.parse(Buffer.from(middle,'base64url').toString('utf8'));
+   const keys=['iss','aud','repository','repository_id','ref','event_name','workflow_ref','iat','exp','nbf'];
+   const summary=Object.fromEntries(keys.map(key=>[key,metadata[key]]));
+   console.log('OIDC safe public claim diagnostics: '+JSON.stringify(summary));
+ }
  if(!response.ok)throw new Error('OIDC staging write returned HTTP '+response.status);
  const body=await response.json();
  assert.equal(body.ok,true);
@@ -71,7 +79,7 @@ async function authenticatedFixtureWrite() {
  console.log('PASS live OIDC-authenticated D1 synthetic INSERT + independent SELECT readback.');
 }
 let error;
-for(let i=0;i<20;i++){
+for(let i=0;i<3;i++){
   try {
     await check();
     await authenticatedFixtureWrite();
@@ -79,8 +87,8 @@ for(let i=0;i<20;i++){
   }catch(e){
     error=e;
     console.log('Live staging check attempt '+(i+1)+'/20: '+String(e.message));
-    if(i<19)await pause(12000);
+    if(i<2)await pause(10000);
   }
 }
-console.error('FAIL live D1 smoke test after Cloudflare rollout: '+String(error?.message));
+console.error('FAIL OIDC diagnostic smoke test: '+String(error?.message));
 process.exitCode=1;
