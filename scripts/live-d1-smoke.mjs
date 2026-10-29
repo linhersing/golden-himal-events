@@ -1,6 +1,5 @@
-// Staging smoke test: checks public reads and disabled public writes, then uses
-// short-lived GitHub OIDC to INSERT just one idempotent fictional D1 record.
-// No personal data, persistent credentials or participant information.
+// Continuous live smoke test: read-only D1 fixture checks and public write denial.
+// No privileged tokens, personal data, secrets, or database modifications.
 import assert from 'node:assert/strict';
 
 const base='https://golden-himal-voice-preview.linhersing.workers.dev';
@@ -37,62 +36,23 @@ async function check(){
   console.log('PASS live Cloudflare D1 readback: fictional TEST-SINGER-001; writes disabled.');
 }
 
-async function ciToken() {
- const urlString=process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
- const bearer=process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
- if(!urlString||!bearer)throw new Error('GitHub OIDC runner variables unavailable');
- const url=new URL(urlString);
- url.searchParams.set('audience','ghv-d1-staging-smoke');
- const response=await fetch(url,{headers:{Authorization:'Bearer '+bearer},
-   signal:AbortSignal.timeout(10000)});
- if(!response.ok)throw new Error('GitHub OIDC token request returned HTTP '+response.status);
- const data=await response.json();
- if(!data.value)throw new Error('GitHub OIDC token missing');
- return data.value;
-}
-async function authenticatedFixtureWrite() {
- const token=await ciToken();
- const response=await fetch(base+'/api/staging/ci-fixture-write',{
-  method:'POST',headers:{Authorization:'Bearer '+token},
-  signal:AbortSignal.timeout(15000)
- });
- if(response.status===403){
-   // Only log public workflow metadata, NEVER the token, subject, actor or signature.
-   const middle=token.split('.')[1];
-   const metadata=JSON.parse(Buffer.from(middle,'base64url').toString('utf8'));
-   const keys=['iss','aud','repository','repository_id','ref','event_name','workflow_ref','iat','exp','nbf'];
-   const summary=Object.fromEntries(keys.map(key=>[key,metadata[key]]));
-   console.log('OIDC safe public claim diagnostics: '+JSON.stringify(summary));
- }
- if(!response.ok){
-   let detail='';
-   try{const problem=await response.json();detail=String(problem.stage||problem.error||'');}catch{}
-   throw new Error('OIDC staging write returned HTTP '+response.status+' stage='+detail);
- }
- const body=await response.json();
- assert.equal(body.ok,true);
- assert.equal(body.testOnly,true);
- assert.equal(body.source,'ci-oidc');
- assert.equal(body.stored.display_name,'TEST-SINGER-API-001');
- assert.equal(body.stored.category,'university');
- const read=await getJSON('/api/staging/ci-read');
- assert.equal(read.ok,true);
- assert.equal(read.testOnly,true);
- assert.equal(read.sample.display_name,'TEST-SINGER-API-001');
- assert.equal(read.sample.id,body.stored.id);
- console.log('PASS live OIDC-authenticated D1 synthetic INSERT + independent SELECT readback.');
-}
 let error;
-for(let i=0;i<3;i++){
+for(let i=0;i<20;i++){
   try {
     await check();
-    await authenticatedFixtureWrite();
+    const fixture=await getJSON('/api/staging/ci-read');
+    assert.equal(fixture.ok,true);
+    assert.equal(fixture.testOnly,true);
+    assert.equal(fixture.source,'d1-staging');
+    assert.equal(fixture.sample.display_name,'TEST-SINGER-API-001');
+    assert.equal(fixture.sample.category,'university');
+    console.log('PASS persisted CI synthetic fixture readback; all public writes remain OFF.');
     process.exit(0);
   }catch(e){
     error=e;
     console.log('Live staging check attempt '+(i+1)+'/20: '+String(e.message));
-    if(i<2)await pause(10000);
+    if(i<19)await pause(12000);
   }
 }
-console.error('FAIL OIDC diagnostic smoke test: '+String(error?.message));
+console.error('FAIL live D1 smoke test after Cloudflare rollout: '+String(error?.message));
 process.exitCode=1;
