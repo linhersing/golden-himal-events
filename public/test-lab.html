@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="robots" content="noindex,nofollow,noarchive">
+ <meta name="theme-color" content="#392820">
+ <title>Golden Himal Voice｜營運測試實驗室（非正式）</title>
+ <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+ <link rel="stylesheet" href="./test-lab.css">
+</head>
+<body>
+ <a href="#main" class="skip">跳至主要內容</a>
+ <div class="warning" role="note"><strong>TEST ONLY · 僅供內部演練</strong><span>不是正式報名、付款或投票入口；請勿輸入個人資料。</span></div>
+ <header class="topbar">
+   <div class="wrap topbar-inner">
+    <a class="brand" href="/" title="返回 Golden Himal Voice 預覽首頁"><img src="./images/brand-identity.png" alt="Golden Himal Palace" width="65" height="53"><span><strong>Golden Himal Voice</strong><small>OPERATIONS TEST LAB · 2027</small></span></a>
+    <a class="back" href="/">← 返回公開預覽</a>
+   </div>
+ </header>
+ <main id="main" class="wrap">
+  <section class="hero">
+   <div><span class="eyebrow">PRE-LAUNCH QA • GHV / D1</span><h1>讓每個流程在<br><em>正式營運前</em>先跑過。</h1>
+    <p>這裡可以反覆練習報名、測試檔案、審核、公告與投票。所有測試人物、郵件與資料均為虛構。</p>
+   </div>
+   <div class="hero-card" aria-label="實驗室模式"><span>目前模式</span><strong>STAGING · MOCK</strong><small>操作紀錄只保存在此瀏覽器；D1 雲端統計另外讀取。</small></div>
+  </section>
+  <section class="readiness" aria-label="測試隔離與雲端連線">
+   <div class="status-item"><span class="dot" aria-hidden="true"></span><div><strong>瀏覽器模擬沙盒</strong><small>前台／後台可以互動、刷新後保存於本機</small></div></div>
+   <div class="status-item"><span class="dot" aria-hidden="true"></span><div><strong>真正 D1 僅讀取</strong><small id="cloud-state" role="status">尚未檢查雲端資料庫</small></div></div>
+   <button type="button" id="cloud-refresh" class="subtle">重新檢查 D1 ↻</button>
+  </section>
+  <div class="tabs" role="tablist" aria-label="演練工作區">
+   <button class="tab active" role="tab" id="tab-applicant" aria-selected="true" aria-controls="panel-applicant" data-tab="applicant">01 前台報名</button>
+   <button class="tab" role="tab" id="tab-admin" aria-selected="false" aria-controls="panel-admin" data-tab="admin">02 後台審核</button>
+   <button class="tab" role="tab" id="tab-news" aria-selected="false" aria-controls="panel-news" data-tab="news">03 公告預演</button>
+   <button class="tab" role="tab" id="tab-votes" aria-selected="false" aria-controls="panel-votes" data-tab="votes">04 投票預演</button>
+   <button class="tab" role="tab" id="tab-reports" aria-selected="false" aria-controls="panel-reports" data-tab="reports">05 數據／重置</button>
+  </div>
+  <section id="panel-applicant" class="panel" role="tabpanel" aria-labelledby="tab-applicant">
+   <div class="panel-heading"><div><span class="eyebrow">FRONT DESK · SIMULATION</span><h2>模擬參賽者報名</h2></div><span class="pill">無真實個資</span></div>
+   <p class="lead">使用系統提供的虛構人物演練。報名按鈕會建立一筆「本機測試紀錄」，不會傳送姓名或 Email 至 D1。</p>
+   <form id="lab-form" autocomplete="off">
+    <div class="fields">
+     <label>虛構人物 <select id="candidate" required><option value="">選擇測試人物</option><option value="T001">TEST-001｜山谷之聲</option><option value="T002">TEST-002｜晨曦之歌</option><option value="T003">TEST-003｜雪峰旋律</option><option value="T004">TEST-004｜河畔樂手</option><option value="T005">TEST-005｜星光演唱</option><option value="T006">TEST-006｜金色舞台</option></select></label>
+     <label>初賽場次 <select id="round" required><option value="2027-03">2027年3月</option><option value="2027-06">2027年6月</option><option value="2027-09">2027年9月</option></select></label>
+     <label>參賽組別 <select id="category" required><option value="university">大學組（虛構）</option><option value="community">社會組（虛構）</option></select></label>
+     <label>Demo 測試檔 <select id="demo" required><option value="demo-a">系統產生｜TEST-demo-a.mp4（假檔名）</option><option value="demo-b">系統產生｜TEST-demo-b.mp4（假檔名）</option></select></label>
+     <label>繳費證明（純模擬）<select id="payment"><option value="mock-pending">未審核（不會扣款）</option><option value="mock-receipt">TEST-RECEIPT（無真實交易）</option></select></label>
+     <label>通知 Email（固定範例）<input value="test-applicant@example.invalid" readonly aria-label="只能使用固定虛構信箱"></label>
+    </div>
+    <p class="hint">※ 這裡不接受真實影片上傳或實際金流；正式 R2 收件與報名資料 API 尚待後續串接。</p>
+    <div class="actions"><button type="submit" class="primary">新增虛構報名</button><span id="form-status" role="status" aria-live="polite"></span></div>
+   </form>
+   <div class="process"><div><b>1</b> 模擬送件</div><span>→</span><div><b>2</b> 後台審核</div><span>→</span><div><b>3</b> 晉級公告</div><span>→</span><div><b>4</b> 投票演練</div></div>
+  </section>
+  <section id="panel-admin" class="panel" role="tabpanel" aria-labelledby="tab-admin" hidden>
+   <div class="panel-heading"><div><span class="eyebrow">OPERATOR VIEW · SIMULATION</span><h2>測試審核後台</h2></div><span class="pill">本機假資料</span></div>
+   <div id="stats" class="cards" aria-label="本機模擬數據"></div>
+   <div class="toolbar"><label>按狀態篩選 <select id="filter"><option value="all">全部</option><option value="pending">待審核</option><option value="approved">已通過</option><option value="rejected">退件</option></select></label><button type="button" id="seed" class="subtle">產生 6 筆範例資料</button></div>
+   <div class="table-scroll"><table><thead><tr><th scope="col">測試編號</th><th scope="col">組別／月份</th><th scope="col">測試檔</th><th scope="col">狀態</th><th scope="col">操作</th></tr></thead><tbody id="registration-rows"></tbody></table></div>
+   <p class="hint">審核按鈕只是模擬工作流程，不是 D1 的管理員操作。正式後台必須有身分與角色權限。</p>
+  </section>
+  <section id="panel-news" class="panel" role="tabpanel" aria-labelledby="tab-news" hidden>
+   <div class="panel-heading"><div><span class="eyebrow">PUBLISHING WORKFLOW · SIMULATION</span><h2>公告發佈預演</h2></div><span class="pill">不會公開上站</span></div>
+   <p class="lead">測試從「草稿 → 公告已發佈」的流程。只有虛構內容，不會改動正式網站新聞。</p>
+   <div class="actions"><button type="button" class="primary" id="publish">發佈範例公告（模擬）</button><button type="button" class="subtle" id="unpublish">收回範例公告</button></div>
+   <article class="notice" id="notice"><span class="eyebrow">TEST ANNOUNCEMENT</span><h3>TEST｜2027 初賽名單示範公告</h3><p id="notice-content">請先建立並審核虛構報名紀錄。此處絕不代表真實晉級名單。</p><small id="notice-state">狀態：草稿</small></article>
+  </section>
+  <section id="panel-votes" class="panel" role="tabpanel" aria-labelledby="tab-votes" hidden>
+   <div class="panel-heading"><div><span class="eyebrow">AUDIENCE CHOICE · SIMULATION</span><h2>投票及重複投票演練</h2></div><span class="pill">非正式計票</span></div>
+   <p class="lead">用虛構選手測試投票流程和「同一測試識別每輪限投一次」的介面效果，測試資料僅存在瀏覽器。這不代表真人防灌票已通過。</p>
+   <div class="fields"><label>測試投票識別<select id="voter"><option value="V001">VOTER-TEST-001</option><option value="V002">VOTER-TEST-002</option><option value="V003">VOTER-TEST-003</option><option value="V004">VOTER-TEST-004</option></select></label>
+   <label>投給虛構選手<select id="vote-candidate"></select></label></div>
+   <div class="actions"><button type="button" id="vote" class="primary">送出測試投票</button><span id="vote-status" role="status" aria-live="polite"></span></div>
+   <div class="table-scroll"><table><thead><tr><th>模擬選手</th><th>本機測試票數</th></tr></thead><tbody id="vote-rows"></tbody></table></div>
+   <p class="hint">注意：TikTok／官網投票規則仍未核定，未連接正式投票 API，也沒有真正的身分驗證。</p>
+  </section>
+  <section id="panel-reports" class="panel" role="tabpanel" aria-labelledby="tab-reports" hidden>
+   <div class="panel-heading"><div><span class="eyebrow">QA CONTROL ROOM</span><h2>測試報告與資料重置</h2></div><span class="pill">僅測試資料</span></div>
+   <div class="compare">
+    <article class="result"><span class="eyebrow">BROWSER MOCK</span><h3>本機完整流程</h3><strong id="local-count" class="big">0</strong><small>筆虛構報名，由本機儲存及模擬審核</small></article>
+    <article class="result"><span class="eyebrow">REAL CLOUDFLARE D1</span><h3>D1 真正存放的測試紀錄</h3><strong id="d1-count" class="big">—</strong><small id="d1-details">尚未連線，僅顯示 TEST- 前綴的測試資料統計</small></article>
+   </div>
+   <div class="checks" id="checks" aria-live="polite"></div>
+   <div class="actions"><button type="button" id="download" class="subtle">下載本機模擬 JSON</button><button type="button" id="reset" class="danger">清空本機測試資料</button></div>
+   <p class="hint">「清空」僅刪除此瀏覽器的測試資料；不會動 Cloudflare D1、Google Drive 或 GitHub。D1 真正資料的刪除須由受權後台進行。</p>
+  </section>
+ </main>
+ <footer class="footer"><div class="wrap">Golden Himal Voice · Sandbox Build · TEST DATA ONLY ｜ <a href="/">返回官方預覽</a></div></footer>
+ <script type="module" src="./test-lab.js"></script>
+</body></html>
