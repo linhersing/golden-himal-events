@@ -1,5 +1,6 @@
-// Continuous deployment smoke test: performs ONLY public read checks and verifies
-// a synthetic write cannot be made. No personal data, secrets or DB mutations.
+// Staging smoke test: checks public reads and disabled public writes, then uses
+// short-lived GitHub OIDC to INSERT just one idempotent fictional D1 record.
+// No personal data, persistent credentials or participant information.
 import assert from 'node:assert/strict';
 
 const base='https://golden-himal-voice-preview.linhersing.workers.dev';
