@@ -1,0 +1,26 @@
+name: Validate D1 staging bridge PR
+on:
+  pull_request:
+    branches:
+      - codex/initial-site
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm privacy:dist
