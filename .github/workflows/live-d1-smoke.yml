@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   cloudflare-read-only:
@@ -18,5 +17,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Verify D1 readback, deny public POST and write one OIDC-authenticated fixture
+      - name: Verify existing D1 fixtures without writing
         run: node scripts/live-d1-smoke.mjs
