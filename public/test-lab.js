@@ -1,16 +1,10 @@
+import {PEOPLE,blank,addSyntheticRegistration,reviewSynthetic,castSyntheticVote} from './test-lab-model.mjs';
 /* GHV browser-only simulation lab.
  * Mock registrations, mock receipts, announcements and votes NEVER leave this browser.
  * The only network operations are READ-ONLY GETs to fixed staging D1 endpoints.
  * Do not use personal information. Do not count these as real applications or votes.
  */
 const STORAGE_KEY='ghv_internal_synthetic_lab_v1';
-const PEOPLE=Object.freeze({
- T001:'TEST-001｜山谷之聲',T002:'TEST-002｜晨曦之歌',
- T003:'TEST-003｜雪峰旋律',T004:'TEST-004｜河畔樂手',
- T005:'TEST-005｜星光演唱',T006:'TEST-006｜金色舞台'
-});
-const $=id=>document.getElementById(id);
-const blank=()=>({version:1,next:1,registrations:[],votes:[],published:false});
 let state=blank();
 try{
  const raw=localStorage.getItem(STORAGE_KEY);
@@ -65,18 +59,9 @@ document.querySelectorAll('[data-tab]').forEach(button=>{
  });
 });
 function makeRegistration(person,round,category,demo,payment){
- if(!PEOPLE[person]||!['2027-03','2027-06','2027-09'].includes(round)||
-    !['university','community'].includes(category))return {error:'測試選項無效'};
- if(state.registrations.some(r=>r.person===person&&r.round===round))return {error:'此虛構人物在同一場次已報名，不能重複送件。'};
- // Max 6 fixed fictional personas * 3 seasons; no arbitrary PII.
- if(state.registrations.length>=18)return {error:'已達沙盒上限（18筆）。請清空後重新測試。'};
- const now=new Date().toISOString();
- const record={
-  id:'GHV-TEST-'+String(state.next++).padStart(4,'0'),
-  person,round,category,demo,payment,status:'pending',created:now
- };
- state.registrations.push(record);persist();render();
- return {record};
+ const result=addSyntheticRegistration(state,person,round,category,demo,payment,new Date().toISOString());
+ if(result.record){persist();render()}
+ return result;
 }
 $('lab-form').addEventListener('submit',event=>{
  event.preventDefault();
@@ -87,11 +72,7 @@ $('lab-form').addEventListener('submit',event=>{
  text(output,result.record.id+' 已建立（僅本機測試）');
 });
 function updateRegistration(id,newStatus){
- const row=state.registrations.find(r=>r.id===id);
- if(!row)return;
- row.status=newStatus;
- if(newStatus!=='approved')state.votes=state.votes.filter(v=>v.person!==row.person);
- persist();render();
+ if(reviewSynthetic(state,id,newStatus)){persist();render()}
 }
 function renderStats(){
  const stats=[
@@ -179,15 +160,9 @@ function renderVote(){
 }
 $('vote').addEventListener('click',()=>{
  const voter=$('voter').value,person=$('vote-candidate').value,output=$('vote-status');
- if(!/^V00[1-4]$/.test(voter)||!candidatesForVote().some(a=>a[0]===person)){
-  text(output,'必須選擇已核准的虛構選手。');output.classList.add('error');return
- }
- // The lab simulates one vote per identity. No real authentication is performed.
- if(state.votes.some(v=>v.voter===voter)){
-  text(output,'重複投票已被模擬流程拒絕（不代表真人防灌票已通過）。');output.classList.add('error');return;
- }
- state.votes.push({voter,person});persist();render();
- text(output,'測試票已記錄在本機（不是正式投票）。');output.classList.remove('error');
+ const result=castSyntheticVote(state,voter,person);
+ if(result.error){text(output,result.error+'（不代表真人防灌票已通過）。');output.classList.add('error');return}
+ persist();render();text(output,'測試票已記錄在本機（不是正式投票）。');output.classList.remove('error');
 });
 function checkLine(textContent,cls){
  const p=document.createElement('p');p.className=cls;text(p,textContent);return p;
