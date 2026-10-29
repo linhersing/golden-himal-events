@@ -69,6 +69,19 @@ async function handleSampleRead(request,env) {
 }
 // CI-only smoke test: GitHub-issued OIDC identity, fixed fictional row,
 // no caller-provided data, never a public participant registration endpoint.
+async function handleCiFixtureRead(request,env){
+  if(request.method!=='GET')return failure('method_not_allowed',405);
+  if(!env.DB)return failure('database_not_bound',503);
+  if(!await tableReady(env.DB))return failure('test_table_missing',503);
+  try{
+    const row=await env.DB.prepare(
+      'SELECT id,display_name,category,round_code,status FROM ghv_test_registrations '+
+      'WHERE display_name=? AND round_code=? ORDER BY id ASC LIMIT 1'
+    ).bind(SAMPLE.display_name,SAMPLE.round_code).first();
+    if(!row)return failure('ci_fixture_missing',404);
+    return json({ok:true,testOnly:true,source:'d1-staging',sample:row});
+  }catch{return failure('test_database_unavailable',503)}
+}
 async function handleCiFixtureWrite(request,env){
   if(request.method!=='POST')return failure('method_not_allowed',405);
   if(!env.DB)return failure('database_not_bound',503);
@@ -138,6 +151,7 @@ export default {
     const pathname=new URL(request.url).pathname;
     if(pathname==='/api/staging/health')return handleHealth(request,env);
     if(pathname==='/api/staging/sample-read')return handleSampleRead(request,env);
+    if(pathname==='/api/staging/ci-read')return handleCiFixtureRead(request,env);
     if(pathname==='/api/staging/ci-fixture-write')return handleCiFixtureWrite(request,env);
     if(pathname==='/api/staging/registration-test')return handleSampleRegistration(request,env);
     if(pathname.startsWith('/api/'))return failure('not_found',404);
