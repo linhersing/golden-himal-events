@@ -22,21 +22,43 @@ export function addSyntheticRegistration(state,person,round,category,demo,paymen
  state.registrations.push(record);
  return {record};
 }
+
+// A fictional ballot belongs to one approved registration and one round.
+// This intentionally simulates per-round vote isolation, NOT voter authentication.
 export function reviewSynthetic(state,id,newStatus){
  if(!['pending','approved','rejected'].includes(newStatus))return false;
  const row=state.registrations.find(r=>r.id===id);
  if(!row)return false;
  row.status=newStatus;
- if(newStatus!=='approved')state.votes=state.votes.filter(v=>v.person!==row.person);
+ if(newStatus!=='approved')
+   state.votes=state.votes.filter(v=>v.registrationId!==id);
  if(!state.registrations.some(r=>r.status==='approved'))state.published=false;
  return true;
 }
-export function castSyntheticVote(state,voter,person) {
+export function castSyntheticVote(state,voter,registrationId) {
  if(!/^V00[1-4]$/.test(voter))return {error:'無效的測試投票識別'};
- if(!state.registrations.some(r=>r.person===person&&r.status==='approved'))
-   return {error:'必須選擇已核准的虛構選手。'};
- if(state.votes.some(v=>v.voter===voter))
-   return {error:'重複投票已拒絕'};
- state.votes.push({voter,person});
+ const record=state.registrations.find(r=>r.id===registrationId && r.status==='approved');
+ if(!record)return {error:'必須選擇已核准的虛構選手與場次。'};
+ if(state.votes.some(v=>v.voter===voter && v.round===record.round))
+   return {error:'此測試識別在本場次已投票，重複投票已拒絕'};
+ state.votes.push({voter,registrationId:record.id,round:record.round});
  return {ok:true};
+}
+// Only for old browser-local mock data. The old format lacked a round; if a
+// ballot is ambiguous, discard it instead of silently assigning it to a round.
+export function migrateSyntheticVotes(state){
+ if(!Array.isArray(state.votes)||!Array.isArray(state.registrations))return;
+ const seen=new Set(),migrated=[];
+ for(const old of state.votes){
+  if(!/^V00[1-4]$/.test(old?.voter))continue;
+  const possibilities=typeof old.registrationId==='string'
+   ? state.registrations.filter(r=>r.id===old.registrationId && r.status==='approved')
+   : state.registrations.filter(r=>r.person===old.person && r.status==='approved');
+  if(possibilities.length!==1)continue;
+  const candidate=possibilities[0],key=old.voter+':'+candidate.round;
+  if(seen.has(key))continue;
+  migrated.push({voter:old.voter,registrationId:candidate.id,round:candidate.round});
+  seen.add(key);
+ }
+ state.votes=migrated;
 }
