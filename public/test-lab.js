@@ -5,6 +5,7 @@ import {PEOPLE,blank,addSyntheticRegistration,reviewSynthetic,castSyntheticVote}
  * Do not use personal information. Do not count these as real applications or votes.
  */
 const STORAGE_KEY='ghv_internal_synthetic_lab_v1';
+const $=id=>document.getElementById(id);
 let state=blank();
 try{
  const raw=localStorage.getItem(STORAGE_KEY);
