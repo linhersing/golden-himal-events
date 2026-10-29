@@ -23,6 +23,17 @@ async function check(){
   assert.equal(sample.sample.category,'university');
   assert.equal(sample.sample.round_code,'2027-03');
   assert.equal(sample.sample.status,'pending');
+  const dashboard=await getJSON('/api/staging/dashboard');
+  assert.equal(dashboard.ok,true);
+  assert.equal(dashboard.testOnly,true);
+  assert.equal(dashboard.source,'cloudflare-d1');
+  assert.equal(dashboard.canWrite,false);
+  assert.equal(dashboard.scope,'2027-03 / synthetic only');
+  assert.ok(Number.isInteger(dashboard.stats.registered) && dashboard.stats.registered>=1);
+  assert.ok(Number.isInteger(dashboard.stats.university) && dashboard.stats.university>=0);
+  assert.ok(Number.isInteger(dashboard.stats.community) && dashboard.stats.community>=0);
+  assert.equal(dashboard.stats.university+dashboard.stats.community,dashboard.stats.registered);
+
   // Verify the public Worker cannot accept any registrations.
   const denied=await fetch(base+'/api/staging/registration-test',{
     method:'POST',
