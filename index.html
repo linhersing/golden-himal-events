@@ -157,7 +157,17 @@
           <div class="form-actions"><button class="button button-wine" type="submit" data-i18n="reviewButton">Review sample details ↗</button><button class="text-button" type="button" id="sample-fill" data-i18n="fillButton">Fill sample data</button></div>
         </form>
         <div id="review-panel" hidden tabindex="-1"><span class="tag">STEP 02 · REVIEW</span><h3 data-i18n="reviewTitle">One last look.</h3><p id="review-copy" class="summary-box"></p><p class="form-hint" data-i18n="reviewNote">The next button only simulates completion; no data leaves your browser.</p><div class="form-actions"><button type="button" class="button button-wine" id="sample-submit" data-i18n="submitButton">Complete preview</button><button type="button" class="text-button" id="sample-edit" data-i18n="editButton">Edit</button></div></div>
-        <div id="success-panel" hidden tabindex="-1"><span class="tag">DEMO ONLY</span><h3 data-i18n="successTitle">Preview complete.</h3><p class="summary-box" data-i18n="successText">Sample number: DEMO-001. No application was received, stored or emailed.</p><button type="button" class="button button-wine" id="sample-again" data-i18n="againButton">Try again</button></div>
+        <div id="success-panel" hidden tabindex="-1"><span class="tag">DEMO ONLY</span><h3 data-i18n="successTitle">Preview complete.</h3><p class="summary-box" data-i18n="successText">Sample number: DEMO-001. No application was received, stored or emailed.</p><button type="button" class="button button-wine" id="sample-again" data-i18n="againButton">Try again</button>
+          <div class="d1-staging-panel">
+            <span class="tag" data-i18n="dbTestBadge">D1 STAGING CONNECTION · TEST ONLY</span>
+            <p data-i18n="dbTestIntro">Separately test D1 using one fixed fictional record. Your form fields, email and performance link are never transmitted.</p>
+            <div class="form-actions">
+              <button type="button" class="text-button" id="d1-health-check" data-i18n="dbTestHealth">Check D1 connection</button>
+              <button type="button" class="button button-small" id="d1-send-test" data-i18n="dbTestWrite" disabled>Send fixed fictional record</button>
+            </div>
+            <p id="d1-staging-status" aria-live="polite" role="status" class="d1-staging-status" data-i18n="dbTestInactive">Demo is not connected yet. Check Cloudflare staging status first.</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
