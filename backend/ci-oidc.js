@@ -44,10 +44,9 @@ export async function verifyCiIdentity(token,{
       (claims.nbf!=null&&(!Number.isInteger(claims.nbf)||claims.nbf>now+30)))
       return reject('time_window');
     stage='jwks_fetch';
-    const response=await fetchImpl(JWKS,{
-      headers:{Accept:'application/json'},
-      redirect:'error',signal:AbortSignal.timeout(4500)
-    });
+    const response=await fetchImpl(JWKS,{headers:{Accept:'application/json'}});
+    if(response.url && new URL(response.url).origin!=='https://token.actions.githubusercontent.com')
+      return reject('jwks_untrusted_redirect');
     if(!response.ok)return reject('jwks_http_'+response.status);
     stage='jwks_parse';
     const {keys}=await response.json();
@@ -62,6 +61,6 @@ export async function verifyCiIdentity(token,{
     const good=await crypto.subtle.verify('RSASSA-PKCS1-v1_5',key,
       signatureBytes(parts[2]),new TextEncoder().encode(parts[0]+'.'+parts[1]));
     return good||reject('invalid_signature');
-  }catch(error){return reject(stage+'_'+(error?.name||'Error'))}
+  }catch(error){return reject(stage+'_'+(error?.name||'Error')+'_'+String(error?.message||'').slice(0,120).replace(/[^a-zA-Z0-9_-]/g,'_'))}
 }
 export const ciTestAudience=AUDIENCE;
