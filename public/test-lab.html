@@ -69,10 +69,10 @@
   <section id="panel-votes" class="panel" role="tabpanel" aria-labelledby="tab-votes" hidden>
    <div class="panel-heading"><div><span class="eyebrow">AUDIENCE CHOICE · SIMULATION</span><h2>投票及重複投票演練</h2></div><span class="pill">非正式計票</span></div>
    <p class="lead">用虛構選手測試投票流程和「同一測試識別每輪限投一次」的介面效果，測試資料僅存在瀏覽器。這不代表真人防灌票已通過。</p>
-   <div class="fields"><label>測試投票識別<select id="voter"><option value="V001">VOTER-TEST-001</option><option value="V002">VOTER-TEST-002</option><option value="V003">VOTER-TEST-003</option><option value="V004">VOTER-TEST-004</option></select></label>
+   <div class="fields"><label>投票場次<select id="vote-round"><option value="2027-03">2027年3月</option><option value="2027-06">2027年6月</option><option value="2027-09">2027年9月</option></select></label><label>測試投票識別<select id="voter"><option value="V001">VOTER-TEST-001</option><option value="V002">VOTER-TEST-002</option><option value="V003">VOTER-TEST-003</option><option value="V004">VOTER-TEST-004</option></select></label>
    <label>投給虛構選手<select id="vote-candidate"></select></label></div>
    <div class="actions"><button type="button" id="vote" class="primary">送出測試投票</button><span id="vote-status" role="status" aria-live="polite"></span></div>
-   <div class="table-scroll"><table><thead><tr><th>模擬選手</th><th>本機測試票數</th></tr></thead><tbody id="vote-rows"></tbody></table></div>
+   <div class="table-scroll"><table><thead><tr><th>本場次模擬選手</th><th>本場次測試票數</th></tr></thead><tbody id="vote-rows"></tbody></table></div>
    <p class="hint">注意：TikTok／官網投票規則仍未核定，未連接正式投票 API，也沒有真正的身分驗證。</p>
   </section>
   <section id="panel-reports" class="panel" role="tabpanel" aria-labelledby="tab-reports" hidden>
