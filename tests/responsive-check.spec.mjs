@@ -52,3 +52,26 @@ test('Nepali and Chinese can be selected',async({page})=>{
   await page.locator('[data-lang="zh"]').click();
   await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
 });
+
+test('separate D1 staging test never transmits typed form data',async({page})=>{
+  await page.goto('/');
+  const captured=[];
+  await page.route('**/api/staging/health',route=>route.fulfill({
+    status:200,contentType:'application/json',
+    body:JSON.stringify({ok:true,testOnly:true,tableReady:true,canWrite:true})
+  }));
+  await page.route('**/api/staging/registration-test',route=>{
+    captured.push(JSON.parse(route.request().postData()));
+    return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+      ok:true,testOnly:true,stored:{id:2,display_name:'TEST-SINGER-API-001',status:'pending'}
+    })});
+  });
+  await page.locator('#sample-fill').click();
+  await page.locator('#registration-form button[type="submit"]').click();
+  await page.locator('#sample-submit').click();
+  await page.locator('#d1-health-check').click();
+  await expect(page.locator('#d1-send-test')).toBeEnabled();
+  await page.locator('#d1-send-test').click();
+  await expect(page.locator('#d1-staging-status')).toContainText('TEST-SINGER-API-001');
+  expect(captured).toEqual([{sample:'TEST-SINGER-API-001'}]);
+});
