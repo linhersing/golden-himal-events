@@ -1,4 +1,4 @@
-import {PEOPLE,blank,addSyntheticRegistration,reviewSynthetic,castSyntheticVote} from './test-lab-model.mjs';
+import {PEOPLE,blank,addSyntheticRegistration,reviewSynthetic,castSyntheticVote,migrateSyntheticVotes} from './test-lab-model.mjs';
 /* GHV browser-only simulation lab.
  * Mock registrations, mock receipts, announcements and votes NEVER leave this browser.
  * The only network operations are READ-ONLY GETs to fixed staging D1 endpoints.
@@ -14,7 +14,7 @@ try{
    if(parsed&&parsed.version===1&&Array.isArray(parsed.registrations)&&Array.isArray(parsed.votes)
      &&parsed.registrations.length<=60&&parsed.votes.length<=100&&
      parsed.registrations.every(r=>PEOPLE[r.person]&&/^2027-(03|06|09)$/.test(r.round)))
-      state=parsed;
+      {state=parsed;migrateSyntheticVotes(state)}
  }
 }catch{ /* sandbox still works when storage is disabled */ }
 let cloudStats=null;
@@ -135,35 +135,40 @@ $('publish').addEventListener('click',()=>{
  state.published=true;persist();render();
 });
 $('unpublish').addEventListener('click',()=>{state.published=false;persist();render()});
-function candidatesForVote(){
- return [...new Map(state.registrations.filter(r=>r.status==='approved')
-   .map(r=>[r.person,PEOPLE[r.person]])).entries()];
+function candidatesForVote(round){
+ return state.registrations.filter(r=>r.status==='approved'&&r.round===round);
 }
 function renderVote(){
+ const round=$('vote-round').value;
  const select=$('vote-candidate');const current=select.value;select.replaceChildren();
- const approved=candidatesForVote();
+ const approved=candidatesForVote(round);
  if(!approved.length){
-  const empty=new Option('請先核准一位測試選手','');select.add(empty);
- }else {
-  approved.forEach(([key,label])=>select.add(new Option(label,key)));
-  if(approved.some(a=>a[0]===current))select.value=current;
+  select.add(new Option('請先核准此場次的測試選手',''));
+ }else{
+  approved.forEach(r=>select.add(new Option(PEOPLE[r.person],r.id)));
+  if(approved.some(r=>r.id===current))select.value=current;
  }
  $('vote').disabled=approved.length===0;
  const root=$('vote-rows');root.replaceChildren();
  if(!approved.length){
-  const tr=document.createElement('tr');const td=cell('目前沒有已核准的虛構選手。');
+  const tr=document.createElement('tr'),td=cell('目前沒有此場次已核准的虛構選手。');
   td.colSpan=2;td.className='empty';tr.append(td);root.append(tr);return;
  }
- for(const [id,name] of approved){
+ for(const r of approved){
   const row=document.createElement('tr');
-  row.append(cell(name),cell(state.votes.filter(v=>v.person===id).length));root.append(row);
+  row.append(cell(PEOPLE[r.person]),cell(state.votes.filter(v=>v.registrationId===r.id&&v.round===round).length));
+  root.append(row);
  }
 }
+$('vote-round').addEventListener('change',()=>{
+ text($('vote-status'),'已切換投票場次，顯示該場次的虛構選手與票數。');
+ renderVote();
+});
 $('vote').addEventListener('click',()=>{
- const voter=$('voter').value,person=$('vote-candidate').value,output=$('vote-status');
- const result=castSyntheticVote(state,voter,person);
+ const voter=$('voter').value,registrationId=$('vote-candidate').value,output=$('vote-status');
+ const result=castSyntheticVote(state,voter,registrationId);
  if(result.error){text(output,result.error+'（不代表真人防灌票已通過）。');output.classList.add('error');return}
- persist();render();text(output,'測試票已記錄在本機（不是正式投票）。');output.classList.remove('error');
+ persist();render();text(output,'本場次測試票已記錄於本機（不是正式投票）。');output.classList.remove('error');
 });
 function checkLine(textContent,cls){
  const p=document.createElement('p');p.className=cls;text(p,textContent);return p;
@@ -205,8 +210,8 @@ $('run-all').addEventListener('click',()=>{
   ?'PASS 後台核准與退件':'FAIL 審核狀態');
  state.published=true;
  checks.push(state.published&&countApproved()===2?'PASS 範例晉級公告':'FAIL 公告');
- const vote=castSyntheticVote(state,'V001','T001');
- const duplicate=castSyntheticVote(state,'V001','T001');
+ const vote=castSyntheticVote(state,'V001',state.registrations[0].id);
+ const duplicate=castSyntheticVote(state,'V001',state.registrations[0].id);
  checks.push(vote.ok&&duplicate.error&&state.votes.length===1
   ?'PASS 模擬投票及重複投票阻擋':'FAIL 投票演練');
  persist();render();
