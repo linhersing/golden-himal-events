@@ -13,7 +13,7 @@ test('user can safely simulate a full applicant -> approval -> vote workflow',()
  assert.equal(s.registrations[0].status,'approved');
  assert.deepEqual(castSyntheticVote(s,'V001',data.record.id),{ok:true});
  assert.equal(s.votes.length,1);
- assert.equal(castSyntheticVote(s,'V001',data.record.id).error,'重複投票已拒絕');
+ assert.match(castSyntheticVote(s,'V001',data.record.id).error,/重複投票已拒絕/);
  assert.equal(s.votes.length,1);
 });
 test('duplicate people and round rejected; new round allowed',()=>{
