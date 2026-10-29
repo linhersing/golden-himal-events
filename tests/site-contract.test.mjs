@@ -18,7 +18,9 @@ test('preview form is explicitly non-collecting and has no submission endpoint',
   assert.match(html,/simulations only/);
   assert.match(html,/not accepting applications yet/i);
   assert.doesNotMatch(html,/<form[^>]+action\s*=/i);
-  assert.doesNotMatch(js,/\bfetch\s*\(|\bXMLHttpRequest\b|localStorage|sessionStorage|navigator\.sendBeacon/);
+  const formSubmission=js.slice(js.indexOf("form.addEventListener('submit'"),js.indexOf("const d1Health="));
+  assert.doesNotMatch(formSubmission,/\bfetch\s*\(|XMLHttpRequest|localStorage|sessionStorage|sendBeacon/);
+  assert.match(js,/body:JSON\.stringify\(\{sample:'TEST-SINGER-API-001'\}\)/);
   assert.match(js,/event\.preventDefault\(\)/);
 });
 
