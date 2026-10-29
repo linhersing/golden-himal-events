@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {blank,PEOPLE,addSyntheticRegistration,reviewSynthetic,castSyntheticVote} from '../public/test-lab-model.mjs';
+import {blank,PEOPLE,addSyntheticRegistration,reviewSynthetic,castSyntheticVote,migrateSyntheticVotes} from '../public/test-lab-model.mjs';
 
 test('user can safely simulate a full applicant -> approval -> vote workflow',()=>{
  const s=blank();
@@ -11,9 +11,9 @@ test('user can safely simulate a full applicant -> approval -> vote workflow',()
  assert.equal(s.registrations.length,1);
  assert.equal(reviewSynthetic(s,data.record.id,'approved'),true);
  assert.equal(s.registrations[0].status,'approved');
- assert.deepEqual(castSyntheticVote(s,'V001','T001'),{ok:true});
+ assert.deepEqual(castSyntheticVote(s,'V001',data.record.id),{ok:true});
  assert.equal(s.votes.length,1);
- assert.equal(castSyntheticVote(s,'V001','T001').error,'重複投票已拒絕');
+ assert.equal(castSyntheticVote(s,'V001',data.record.id).error,'重複投票已拒絕');
  assert.equal(s.votes.length,1);
 });
 test('duplicate people and round rejected; new round allowed',()=>{
@@ -34,12 +34,50 @@ test('invalid arbitrary identities, uploaded evidence and payment fields rejecte
 test('voting for pending/rejected fake participants denied and revoked on rejection',()=>{
  const s=blank();
  const reg=addSyntheticRegistration(s,'T003','2027-09','university','demo-b','mock-receipt').record;
- assert.ok(castSyntheticVote(s,'V001','T003').error);
+ assert.ok(castSyntheticVote(s,'V001',reg.id).error);
  assert.equal(reviewSynthetic(s,reg.id,'approved'),true);
- assert.deepEqual(castSyntheticVote(s,'V001','T003'),{ok:true});
+ assert.deepEqual(castSyntheticVote(s,'V001',reg.id),{ok:true});
  assert.equal(reviewSynthetic(s,reg.id,'rejected'),true);
  assert.equal(s.votes.length,0);
- assert.ok(castSyntheticVote(s,'V002','T003').error);
+ assert.ok(castSyntheticVote(s,'V002',reg.id).error);
+});
+test('a rejected June application NEVER removes March votes of the same fake person',()=>{
+ const s=blank();
+ const march=addSyntheticRegistration(s,'T001','2027-03','university','demo-a','mock-pending').record;
+ const june=addSyntheticRegistration(s,'T001','2027-06','university','demo-b','mock-pending').record;
+ reviewSynthetic(s,march.id,'approved');
+ reviewSynthetic(s,june.id,'approved');
+ assert.deepEqual(castSyntheticVote(s,'V001',march.id),{ok:true});
+ assert.deepEqual(castSyntheticVote(s,'V001',june.id),{ok:true});
+ assert.equal(s.votes.length,2);
+ assert.equal(reviewSynthetic(s,june.id,'rejected'),true);
+ assert.deepEqual(s.votes,[{voter:'V001',registrationId:march.id,round:'2027-03'}]);
+ assert.ok(castSyntheticVote(s,'V001',march.id).error);
+ assert.ok(castSyntheticVote(s,'V002',june.id).error);
+});
+test('each mock voter casts at most one ballot per round, across contestants',()=>{
+ const s=blank();
+ const a=addSyntheticRegistration(s,'T001','2027-03','university','demo-a','mock-pending').record;
+ const b=addSyntheticRegistration(s,'T002','2027-03','community','demo-a','mock-pending').record;
+ const c=addSyntheticRegistration(s,'T002','2027-06','community','demo-a','mock-pending').record;
+ for(const r of [a,b,c])reviewSynthetic(s,r.id,'approved');
+ assert.deepEqual(castSyntheticVote(s,'V002',a.id),{ok:true});
+ assert.match(castSyntheticVote(s,'V002',b.id).error,/重複投票/);
+ assert.deepEqual(castSyntheticVote(s,'V002',c.id),{ok:true});
+ assert.deepEqual(s.votes.map(v=>v.round),['2027-03','2027-06']);
+});
+test('legacy browser votes migrate conservatively without assigning ambiguous rounds',()=>{
+ const s=blank();
+ const a=addSyntheticRegistration(s,'T001','2027-03','university','demo-a','mock-pending').record;
+ reviewSynthetic(s,a.id,'approved');
+ s.votes=[{voter:'V001',person:'T001'},{voter:'V001',person:'T001'}];
+ migrateSyntheticVotes(s);
+ assert.deepEqual(s.votes,[{voter:'V001',registrationId:a.id,round:'2027-03'}]);
+ const b=addSyntheticRegistration(s,'T001','2027-06','university','demo-b','mock-pending').record;
+ reviewSynthetic(s,b.id,'approved');
+ s.votes=[{voter:'V002',person:'T001'}];
+ migrateSyntheticVotes(s);
+ assert.deepEqual(s.votes,[],'Ambiguous legacy ballot must be discarded instead of falsely attributed.');
 });
 test('sandbox is bounded by six fictional people and three rounds',()=>{
  const s=blank();
