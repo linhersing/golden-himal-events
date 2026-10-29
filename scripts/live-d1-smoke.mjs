@@ -33,6 +33,11 @@ async function check(){
   assert.equal(denied.status,503,'staging writes unexpectedly enabled');
   const body=await denied.json();
   assert.equal(body.error,'staging_write_disabled');
+  // The temporary OIDC fixture writer must be absent after test completion.
+  const retired=await fetch(base+'/api/staging/ci-fixture-write',{
+    method:'POST',signal:AbortSignal.timeout(10000)
+  });
+  assert.equal(retired.status,404,'temporary CI write endpoint was not retired');
   console.log('PASS live Cloudflare D1 readback: fictional TEST-SINGER-001; writes disabled.');
 }
 
