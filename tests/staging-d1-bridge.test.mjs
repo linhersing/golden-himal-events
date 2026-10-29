@@ -130,3 +130,25 @@ test('synthetic CI row remains readable after write endpoint is removed',async()
   assert.equal(db.prepare('SELECT COUNT(*) n FROM ghv_test_registrations').get().n,1);
  }finally{db.close()}
 });
+
+
+test('staging dashboard discloses ONLY aggregate fictional D1 stats, no PII',async()=>{
+ const {db,env}=setup();
+ try {
+  const insert=db.prepare('INSERT INTO ghv_test_registrations(display_name,category,round_code) VALUES (?,?,?)');
+  insert.run('TEST-SINGER-001','university','2027-03');
+  insert.run('TEST-SINGER-API-001','university','2027-03');
+  insert.run('TEST-SINGER-OLD','community','2027-06');
+  const res=await worker.fetch(new Request(host+'/api/staging/dashboard'),env);
+  assert.equal(res.status,200);
+  const data=await res.json();
+  assert.deepEqual(data,{
+    ok:true,testOnly:true,source:'cloudflare-d1',
+    stats:{registered:2,university:2,community:0},
+    scope:'2027-03 / synthetic only',canWrite:false
+  });
+  assert.doesNotMatch(JSON.stringify(data),/TEST-SINGER-001/);
+  assert.equal((await worker.fetch(req('/api/staging/dashboard',{}),env)).status,405);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM ghv_test_registrations').get().n,3);
+ }finally{db.close()}
+});
