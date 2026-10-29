@@ -183,6 +183,37 @@ function renderReports(){
   checkLine('● 正式管理權限、真實選手驗證、防灌票及壓測：待後續驗收','no'));
 }
 function render(){renderStats();renderRegistrations();renderNotice();renderVote();renderReports()}
+$('run-all').addEventListener('click',()=>{
+ if(!confirm('執行完整虛構測試會取代此瀏覽器目前的沙盒資料；確定要繼續嗎？'))return;
+ state=blank();
+ const checks=[];
+ for(let i=1;i<=6;i++){
+  const person='T'+String(i).padStart(3,'0');
+  const r=addSyntheticRegistration(state,person,'2027-03',i%2?'university':'community',
+    i%2?'demo-a':'demo-b',i%2?'mock-pending':'mock-receipt',new Date().toISOString());
+  if(!r.record)checks.push('FAIL 新增報名 '+person);
+ }
+ checks.push(state.registrations.length===6?'PASS 六位虛構報名':'FAIL 報名筆數');
+ checks.push(!!addSyntheticRegistration(state,'T001','2027-03','university','demo-a','mock-pending').error
+  ?'PASS 同場重複報名拒絕':'FAIL 同場重複報名');
+ reviewSynthetic(state,state.registrations[0].id,'approved');
+ reviewSynthetic(state,state.registrations[1].id,'approved');
+ reviewSynthetic(state,state.registrations[2].id,'rejected');
+ checks.push(state.registrations.filter(r=>r.status==='approved').length===2&&
+  state.registrations.filter(r=>r.status==='rejected').length===1
+  ?'PASS 後台核准與退件':'FAIL 審核狀態');
+ state.published=true;
+ checks.push(state.published&&countApproved()===2?'PASS 範例晉級公告':'FAIL 公告');
+ const vote=castSyntheticVote(state,'V001','T001');
+ const duplicate=castSyntheticVote(state,'V001','T001');
+ checks.push(vote.ok&&duplicate.error&&state.votes.length===1
+  ?'PASS 模擬投票及重複投票阻擋':'FAIL 投票演練');
+ persist();render();
+ const pass=checks.every(x=>x.startsWith('PASS'));
+ text($('auto-result'),(pass?'本機模擬 PASS：':'本機模擬 FAIL：')+checks.join('；')+
+  '。此結果不是 D1 寫入、R2 上傳或正式防灌票驗收。');
+ $('auto-result').classList.toggle('error',!pass);
+});
 $('reset').addEventListener('click',()=>{
  if(!confirm('確定清除「此瀏覽器」的所有虛構報名、公告與示範投票？Cloudflare D1 不會被清除。'))return;
  state=blank();persist();$('filter').value='all';
