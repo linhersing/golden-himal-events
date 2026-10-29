@@ -35,10 +35,45 @@ async function check(){
   assert.equal(body.error,'staging_write_disabled');
   console.log('PASS live Cloudflare D1 readback: fictional TEST-SINGER-001; writes disabled.');
 }
+
+async function ciToken() {
+ const urlString=process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
+ const bearer=process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
+ if(!urlString||!bearer)throw new Error('GitHub OIDC runner variables unavailable');
+ const url=new URL(urlString);
+ url.searchParams.set('audience','ghv-d1-staging-smoke');
+ const response=await fetch(url,{headers:{Authorization:'Bearer '+bearer},
+   signal:AbortSignal.timeout(10000)});
+ if(!response.ok)throw new Error('GitHub OIDC token request returned HTTP '+response.status);
+ const data=await response.json();
+ if(!data.value)throw new Error('GitHub OIDC token missing');
+ return data.value;
+}
+async function authenticatedFixtureWrite() {
+ const token=await ciToken();
+ const response=await fetch(base+'/api/staging/ci-fixture-write',{
+  method:'POST',headers:{Authorization:'Bearer '+token},
+  signal:AbortSignal.timeout(15000)
+ });
+ if(!response.ok)throw new Error('OIDC staging write returned HTTP '+response.status);
+ const body=await response.json();
+ assert.equal(body.ok,true);
+ assert.equal(body.testOnly,true);
+ assert.equal(body.source,'ci-oidc');
+ assert.equal(body.stored.display_name,'TEST-SINGER-API-001');
+ assert.equal(body.stored.category,'university');
+ const read=await getJSON('/api/staging/ci-read');
+ assert.equal(read.ok,true);
+ assert.equal(read.testOnly,true);
+ assert.equal(read.sample.display_name,'TEST-SINGER-API-001');
+ assert.equal(read.sample.id,body.stored.id);
+ console.log('PASS live OIDC-authenticated D1 synthetic INSERT + independent SELECT readback.');
+}
 let error;
 for(let i=0;i<20;i++){
   try {
     await check();
+    await authenticatedFixtureWrite();
     process.exit(0);
   }catch(e){
     error=e;
