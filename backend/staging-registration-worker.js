@@ -89,7 +89,9 @@ async function handleCiFixtureWrite(request,env){
   if(!bearer?.startsWith('Bearer '))return failure('ci_identity_required',401);
   if(request.headers.get('content-length') && request.headers.get('content-length')!=='0')
     return failure('body_not_allowed',400);
-  if(!await verifyCiIdentity(bearer.slice(7)))return failure('ci_identity_invalid',403);
+  let reason='unknown';
+  if(!await verifyCiIdentity(bearer.slice(7),{onFailure:r=>{reason=r}}))
+    return json({ok:false,error:'ci_identity_invalid',stage:reason},403);
   if(!await tableReady(env.DB))return failure('test_table_missing',503);
   try{
     await env.DB.prepare(
