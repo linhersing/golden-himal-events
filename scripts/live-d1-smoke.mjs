@@ -64,7 +64,11 @@ async function authenticatedFixtureWrite() {
    const summary=Object.fromEntries(keys.map(key=>[key,metadata[key]]));
    console.log('OIDC safe public claim diagnostics: '+JSON.stringify(summary));
  }
- if(!response.ok)throw new Error('OIDC staging write returned HTTP '+response.status);
+ if(!response.ok){
+   let detail='';
+   try{const problem=await response.json();detail=String(problem.stage||problem.error||'');}catch{}
+   throw new Error('OIDC staging write returned HTTP '+response.status+' stage='+detail);
+ }
  const body=await response.json();
  assert.equal(body.ok,true);
  assert.equal(body.testOnly,true);
