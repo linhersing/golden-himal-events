@@ -1,0 +1,41 @@
+name: Verify staging front/back sandbox in browser
+on:
+  pull_request:
+    branches:
+      - codex/initial-site
+  push:
+    branches:
+      - codex/initial-site
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Chrome Playwright dependencies
+        run: pnpm exec playwright install --with-deps chrome
+      - name: Full front/back sandbox browser run (desktop and mobile)
+        run: pnpm exec playwright test tests/lab-browser.spec.mjs
+      - name: Preserve visual evidence (QA screenshots, no private data)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghv-sandbox-browser-screenshots
+          path: |
+            test-results/**/*.png
+            test-results/**/*.zip
+          if-no-files-found: warn
+          retention-days: 30

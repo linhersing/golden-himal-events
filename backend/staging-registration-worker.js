@@ -79,6 +79,27 @@ async function handleCiFixtureRead(request,env){
     return json({ok:true,testOnly:true,source:'d1-staging',sample:row});
   }catch{return failure('test_database_unavailable',503)}
 }
+// Test-only public aggregate. NEVER query or reveal real applications.
+async function handleTestDashboard(request,env) {
+  if(request.method!=='GET')return failure('method_not_allowed',405);
+  if(!env.DB)return failure('database_not_bound',503);
+  if(!await tableReady(env.DB))return failure('test_table_missing',503);
+  try{
+    const row=await env.DB.prepare(
+      "SELECT COUNT(*) AS registered, "+
+      "SUM(CASE WHEN category='university' THEN 1 ELSE 0 END) AS university, "+
+      "SUM(CASE WHEN category='community' THEN 1 ELSE 0 END) AS community "+
+      "FROM ghv_test_registrations WHERE display_name LIKE 'TEST-%' AND round_code='2027-03'"
+    ).first();
+    return json({
+      ok:true,testOnly:true,source:'cloudflare-d1',
+      stats:{registered:Number(row?.registered||0),
+        university:Number(row?.university||0),
+        community:Number(row?.community||0)},
+      scope:'2027-03 / synthetic only',canWrite:false
+    });
+  }catch{return failure('test_database_unavailable',503)}
+}
 async function handleSampleRegistration(request,env) {
   if(request.method!=='POST') return failure('method_not_allowed',405);
   if(!env.DB) return failure('database_not_bound',503);
@@ -123,6 +144,7 @@ export default {
   async fetch(request,env) {
     const pathname=new URL(request.url).pathname;
     if(pathname==='/api/staging/health')return handleHealth(request,env);
+    if(pathname==='/api/staging/dashboard')return handleTestDashboard(request,env);
     if(pathname==='/api/staging/sample-read')return handleSampleRead(request,env);
     if(pathname==='/api/staging/ci-read')return handleCiFixtureRead(request,env);
     if(pathname==='/api/staging/registration-test')return handleSampleRegistration(request,env);
