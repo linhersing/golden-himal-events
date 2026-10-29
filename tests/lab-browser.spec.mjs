@@ -58,6 +58,33 @@ test('one-click full mock rehearsal reports PASS and never submits external data
  expect(writes).toEqual([]);
 });
 
+test('cross-round ballot isolation in actual test-lab browser',async({page})=>{
+ await page.route('**/api/staging/**',r=>r.fulfill({status:503,contentType:'application/json',body:'{"ok":false}'}));
+ await page.goto('/test-lab.html');
+ await page.locator('#candidate').selectOption('T001');
+ await page.locator('#lab-form button[type=submit]').click();
+ await page.locator('#round').selectOption('2027-06');
+ await page.locator('#lab-form button[type=submit]').click();
+ await page.locator('#tab-admin').click();
+ for(const round of ['2027-03','2027-06']){
+  await page.locator('#registration-rows tr').filter({hasText:round}).getByRole('button',{name:'核准'}).click();
+ }
+ await page.locator('#tab-votes').click();
+ for(const round of ['2027-03','2027-06']){
+  await page.locator('#vote-round').selectOption(round);
+  await page.locator('#vote').click();
+  await expect(page.locator('#vote-rows')).toContainText('1');
+ }
+ await page.locator('#tab-admin').click();
+ await page.locator('#registration-rows tr').filter({hasText:'2027-06'}).getByRole('button',{name:'退件'}).click();
+ await page.locator('#tab-votes').click();
+ await page.locator('#vote-round').selectOption('2027-03');
+ await expect(page.locator('#vote-rows')).toContainText('1');
+ await page.reload();
+ await page.locator('#tab-votes').click();
+ await expect(page.locator('#vote-rows')).toContainText('1');
+});
+
 test('mobile sandbox shows usable tabs without horizontal page overflow',async({page},testInfo)=>{
  await page.setViewportSize({width:390,height:844});
  await page.route('**/api/staging/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{"ok":false}'}));
