@@ -230,6 +230,43 @@ Object.assign(translations.zh,{
   paymentWarning:"請勿透過此測試頁面匯款或上傳身分、繳費文件。",
   reviewCategory:"組別",reviewRound:"場次"
 });
+
+/* Isolated staging bridge: not a real registration form or vote API. */
+Object.assign(translations.en,{
+ dbTestBadge:"D1 STAGING CONNECTION · TEST ONLY",
+ dbTestIntro:"Separately test D1 using one fixed fictional record. Your form fields, email and performance link are never transmitted.",
+ dbTestHealth:"Check D1 connection",dbTestWrite:"Send fixed fictional record",
+ dbTestInactive:"Demo is not connected yet. Check Cloudflare staging status first.",
+ dbTestConnected:"D1 table connected. Synthetic writes remain disabled.",
+ dbTestReady:"D1 table connected. You may send ONE fixed fictional record.",
+ dbTestMissing:"D1 not connected or the test table is missing.",
+ dbTestFailed:"Staging connection unavailable. No real data was sent.",
+ dbTestSaved:"D1 confirmed test record: ",
+ dbTestSaveFailed:"No test record was saved. See Cloudflare staging configuration."
+});
+Object.assign(translations.ne,{
+ dbTestBadge:"D1 परीक्षण जडान · नमुना मात्र",
+ dbTestIntro:"एक काल्पनिक रेकर्ड मात्र जाँचिन्छ। तपाईंको फारम, इमेल वा भिडियो लिंक पठाइँदैन।",
+ dbTestHealth:"D1 जडान जाँच",dbTestWrite:"काल्पनिक रेकर्ड पठाउनुहोस्",
+ dbTestInactive:"D1 जडान जाँच गर्न बाँकी छ।",dbTestConnected:"D1 जडान छ। नमुना लेख्ने सुविधा बन्द छ।",
+ dbTestReady:"D1 तयार छ। एउटा काल्पनिक रेकर्ड पठाउन सकिन्छ।",
+ dbTestMissing:"D1 जडान वा परीक्षण तालिका भेटिएन।",
+ dbTestFailed:"परीक्षण जडान उपलब्ध छैन। वास्तविक डाटा पठाइएन।",
+ dbTestSaved:"D1 ले नमुना रेकर्ड पुष्टि गर्‍यो: ",
+ dbTestSaveFailed:"नमुना रेकर्ड सुरक्षित भएन। Cloudflare सेटिङ जाँच गर्नुहोस्।"
+});
+Object.assign(translations.zh,{
+ dbTestBadge:"D1 測試資料庫連線 · 非正式報名",
+ dbTestIntro:"獨立檢查 D1，只傳送一筆固定虛構資料。剛才表單內的姓名、Email 和影片連結都不會傳送。",
+ dbTestHealth:"檢查 D1 連線",dbTestWrite:"寫入固定虛構測試資料",
+ dbTestInactive:"尚未確認 D1 連線。請先檢查 Cloudflare 測試環境。",
+ dbTestConnected:"D1 測試表已連線，但寫入功能仍關閉。",
+ dbTestReady:"D1 測試表已連線，可寫入一筆固定虛構資料。",
+ dbTestMissing:"D1 未連接，或測試資料表尚不存在。",
+ dbTestFailed:"測試連線暫時不可用，沒有傳送真實資料。",
+ dbTestSaved:"D1 已確認測試記錄：",
+ dbTestSaveFailed:"沒有成功寫入測試資料，請查看 Cloudflare 測試設定。"
+});
 let language='en',currentFilter='all',voted=false,selected=null,dialogOpener=null;
 const root=document.documentElement;
 const qs=(s)=>document.querySelector(s);
@@ -276,6 +313,47 @@ qs('#sample-submit').addEventListener('click',()=>{
   review.hidden=true;success.hidden=false;form.reset();qs('#review-copy').textContent='';success.focus();
 });
 qs('#sample-again').addEventListener('click',()=>{success.hidden=true;form.hidden=false;qs('#sample-fill').focus()});
+
+const d1Health=qs('#d1-health-check'), d1Send=qs('#d1-send-test'),d1Status=qs('#d1-staging-status');
+d1Health.addEventListener('click',async()=>{
+  d1Health.disabled=true;
+  d1Send.disabled=true;
+  d1Status.textContent=tr('dbTestInactive');
+  try{
+    const response=await fetch('/api/staging/health',{method:'GET',cache:'no-store'});
+    if(!response.ok)throw new Error('health_unavailable');
+    const data=await response.json();
+    if(!data.ok||!data.testOnly||!data.tableReady){
+      d1Status.textContent=tr('dbTestMissing');
+      return;
+    }
+    d1Send.disabled=data.canWrite!==true;
+    d1Status.textContent=tr(data.canWrite===true?'dbTestReady':'dbTestConnected');
+  }catch{
+    d1Status.textContent=tr('dbTestFailed');
+  }finally{d1Health.disabled=false}
+});
+d1Send.addEventListener('click',async()=>{
+  if(d1Send.disabled)return;
+  d1Send.disabled=true;
+  try{
+    // Deliberately NEVER include form values: no participant PII leaves this preview.
+    const response=await fetch('/api/staging/registration-test',{
+      method:'POST',credentials:'same-origin',cache:'no-store',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({sample:'TEST-SINGER-API-001'})
+    });
+    if(!response.ok)throw new Error('write_failed');
+    const data=await response.json();
+    if(!data.ok||!data.testOnly||data.stored?.display_name!=='TEST-SINGER-API-001')
+      throw new Error('bad_response');
+    d1Status.textContent=tr('dbTestSaved')+data.stored.display_name+
+      ' · #'+data.stored.id+' · '+data.stored.status;
+  }catch{
+    d1Status.textContent=tr('dbTestSaveFailed');
+  }
+});
+
 const dialog=qs('#vote-dialog');
 qsa('[data-vote]').forEach(button=>button.addEventListener('click',()=>{
   if(voted)return;
