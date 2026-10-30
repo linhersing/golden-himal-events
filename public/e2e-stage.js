@@ -161,7 +161,16 @@ function progress(){
   el.classList.toggle('current',match);
  }
 }
-const visible=x=>{$('signin').hidden=x;$('workspace').hidden=!x};
+// Clear previously rendered sensitive test details on logout or expired sessions.
+// CSS hidden state is also respected under print media.
+const visible=x=>{
+ $('signin').hidden=x;$('workspace').hidden=!x;
+ if(!x){
+  for(const id of ['welcome','applications','finalists','queue','admin-apps','standings']){
+   const target=$(id);if(target)target.replaceChildren();
+  }
+ }
+};
 async function session(){
  try{
   const data=await api('me');account=data.account;

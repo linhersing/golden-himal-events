@@ -135,7 +135,7 @@ a{overflow-wrap:anywhere}
  .shell{width:100%;max-width:none}
  .page-head{padding:0;margin-bottom:10mm}
  .page-head h1{font-size:20pt}
- #workspace{display:block!important}
+ #workspace:not([hidden]){display:block!important}
  .panel,.entry{box-shadow:none!important;border:1px solid #999;border-radius:0;margin:10px 0;padding:9px;break-inside:avoid}
  .entry a{color:#000;text-decoration:none}
  .entry .meta{grid-template-columns:repeat(3,minmax(0,1fr))}
