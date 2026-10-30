@@ -7,9 +7,14 @@ export function newMockOrder(data,registration){
  if(!validRegistration(registration))return {error:'invalid_test_registration'};
  if(!Array.isArray(data.orders)||!Number.isInteger(data.sequence))return {error:'invalid_test_state'};
  const previous=data.orders.find(o=>o.registrationId===registration.id);
- if(previous)return {order:previous,existing:true};
+ if(previous){
+  // A reused TEST registration number must never inherit another person's paid state.
+  if(previous.person!==registration.person||previous.round!==registration.round)
+   return {error:'stale_payment_order_reset_required'};
+  return {order:previous,existing:true};
+ }
  const order={id:'PAY-TEST-'+String(data.sequence++).padStart(4,'0'),
-  registrationId:registration.id,round:registration.round,
+  registrationId:registration.id,person:registration.person,round:registration.round,
   amount:ENTRY_FEE_NPR,currency:'NPR',state:'pending',attempt:1,mode:'TEST_ONLY'};
  data.orders.push(order);
  data.events.push({type:'created',orderId:order.id});
