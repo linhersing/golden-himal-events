@@ -141,10 +141,45 @@ async function handleSampleRegistration(request,env) {
     return failure('test_database_unavailable',503);
   }
 }
+// Public, read-only STAGING infrastructure check. Reports booleans, never
+// secrets, token values, domains, emails, SQL contents, bucket names or data.
+async function handleE2EReadiness(request,env){
+ if(request.method!=='GET')return failure('method_not_allowed',405);
+ const databaseBound=Boolean(env.E2E_DB);
+ const mediaBound=Boolean(env.STAGING_MEDIA);
+ const emailBound=Boolean(env.EMAIL);
+ const senderSet=Boolean(env.STAGING_FROM_EMAIL);
+ const allowlistSet=Boolean(env.STAGING_ALLOWED_EMAILS);
+ const secretSet=typeof env.STAGING_IDENTITY_SECRET==='string'&&env.STAGING_IDENTITY_SECRET.length>=32;
+ let schemaReady=false;
+ if(databaseBound){
+  try{
+   const row=await env.E2E_DB.prepare(
+    "SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN ('e2e_accounts','e2e_email_challenges','e2e_sessions','e2e_applications','e2e_payment_events','e2e_judge_scores','e2e_live_scores','e2e_final_votes','e2e_promotion_events')"
+   ).first();
+   schemaReady=Number(row?.n)===9;
+  }catch{schemaReady=false}
+ }
+ const otpEnabled=env.STAGING_E2E_ENABLED==='true';
+ const ready=databaseBound&&schemaReady&&mediaBound&&emailBound&&senderSet&&allowlistSet&&secretSet&&otpEnabled;
+ return json({
+  ok:true,testOnly:true,readiness:ready?'READY_FOR_INVITED_OTP_TEST':'BLOCKED',
+  resources:{databaseBound,schemaReady,privateMediaBound:mediaBound,emailBound,
+   senderConfigured:senderSet,memberAllowlistConfigured:allowlistSet,
+   identitySecretConfigured:secretSet,explicitTestModeEnabled:otpEnabled},
+  note:'Read-only capability flags. READY does not prove an email was delivered, a record saved, or a file uploaded.'
+ });
+}
 export default {
   async fetch(request,env) {
     const pathname=new URL(request.url).pathname;
-    if(pathname.startsWith('/api/e2e/'))return handleE2E(request,env);
+    if(pathname.startsWith('/api/e2e/')){
+      // Do not mix new applicant/OTP data with the legacy synthetic D1 fixture.
+      // E2E_DB auto-provisions separately from the existing ghv-staging DB.
+      if(!env.E2E_DB)return failure('e2e_database_not_bound',503);
+      return handleE2E(request,{...env,DB:env.E2E_DB});
+    }
+    if(pathname==='/api/staging/e2e-readiness')return handleE2EReadiness(request,env);
     if(pathname==='/api/staging/health')return handleHealth(request,env);
     if(pathname==='/api/staging/dashboard')return handleTestDashboard(request,env);
     if(pathname==='/api/staging/sample-read')return handleSampleRead(request,env);

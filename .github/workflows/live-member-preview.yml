@@ -17,3 +17,5 @@ jobs:
           node-version: 24
       - name: GET live Cloudflare UI and JS; verify full TEST member path deployed
         run: node scripts/live-member-preview-smoke.mjs
+      - name: REPORT ONLY - separate D1, private R2 and email readiness (BLOCKED is not successful OTP)
+        run: node scripts/cloudflare-live-readiness.mjs
