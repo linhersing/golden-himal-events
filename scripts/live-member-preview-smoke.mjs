@@ -9,7 +9,11 @@ const checks=[
   ['/member-portal-model.mjs',['PERSONAS','blankPortal','@example.invalid']],
   ['/member-login.html',['TEST ONLY','Member sign in','singer-001@example.invalid','data-lang="zh"','id="login-username"','id="login-password"','id="dashboard-view"','member-login.js']],
   ['/member-login.js',['GHV-TEST-2027','ghv_member_sandbox_v1','ghv_demo_active_member_v1','renderDashboard','會員登入','ghv_ui_language_v1']],
-  ['/member-login.css',['auth-layout','dashboard-main','summary-grid']]
+  ['/member-login.css',['auth-layout','dashboard-main','summary-grid']],
+  ['/e2e-stage.html',['data-role="member"','id="send-form"','id="application-form"','id="applications"']],
+  ['/judge-stage.html',['data-role="reviewer"','id="send-form"','id="queue"']],
+  ['/e2e-stage.js',['/api/e2e/','mock-payment','reviewer-queue','delete-my-data']],
+  ['/e2e-stage.css',['.entry','.score-fields','.safety']]
 ];
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function checkOnce(){
