@@ -73,21 +73,29 @@ test('Alan V2: verified email -> real DB audition -> R2 proofs -> mock fee -> 3 
   assert.equal(docDenied.status,404);
   assert.equal((await handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'qualifier'},org),env)).status,409);
   for(const cookie of reviewers){
-   const s=await handleE2E(req('/api/e2e/score',{application_id:appId,technique:50,interpretation:30,no_conflict:true},cookie),env);
+   const s=await handleE2E(req('/api/e2e/score',{application_id:appId,phase:'demo',technique:50,interpretation:30,no_conflict:true},cookie),env);
    assert.equal(s.status,200);
    assert.equal((await s.json()).phase,'demo');
   }
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_judge_scores').get().n,3);
+  // An April retry may be opened before the January results are known.
+  const april=await handleE2E(req('/api/e2e/applications',{...request,round_code:'2027-04'},member),env);
+  assert.equal(april.status,201);const aprilId=(await april.json()).application_id;
   const toLive=await handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'qualifier'},org),env);
   assert.equal(toLive.status,200);assert.equal((await toLive.json()).phase,'qualifier');
   assert.equal((await (await handleE2E(get('/api/e2e/reviewer-queue',reviewers[0]),env)).json()).queue[0].phase,'qualifier');
-  assert.equal((await handleE2E(req('/api/e2e/score',{application_id:appId,technique:50,interpretation:30,no_conflict:true},reviewers[0]),env)).status,422);
+  assert.equal((await handleE2E(req('/api/e2e/score',{application_id:appId,phase:'demo',technique:50,interpretation:30,no_conflict:true},reviewers[0]),env)).status,422);
   for(const cookie of reviewers){
-   const s=await handleE2E(req('/api/e2e/score',{application_id:appId,technique:33,interpretation:26,stage_presence:14,appearance:7,no_conflict:true},cookie),env);
+   const s=await handleE2E(req('/api/e2e/score',{application_id:appId,phase:'qualifier',technique:33,interpretation:26,stage_presence:14,appearance:7,no_conflict:true},cookie),env);
    assert.equal(s.status,200);assert.equal((await s.json()).score,80);
   }
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM e2e_live_scores WHERE stage='qualifier'").get().n,3);
   assert.equal((await handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'final'},org),env)).status,200);
+  // D1 itself prevents two finalist seats for the same account.
+  db.prepare("UPDATE e2e_applications SET phase='qualifier' WHERE id=?").run(aprilId);
+  assert.throws(()=>db.prepare("UPDATE e2e_applications SET phase='final' WHERE id=?").run(aprilId),/member_already_has_finalist_entry/);
+  const stale=await handleE2E(req('/api/e2e/score',{application_id:appId,phase:'qualifier',technique:30,interpretation:20,stage_presence:14,appearance:7,no_conflict:true},reviewers[0]),env);
+  assert.equal(stale.status,409,'stale qualifier form may not become a final score');
   assert.equal((await handleE2E(req('/api/e2e/applications',{...request,round_code:'2027-04'},member),env)).status,409);
   const voter=await auth('voter@test.invalid','member');
   assert.equal((await (await handleE2E(get('/api/e2e/finalists',voter),env)).json()).finalists.length,1);
@@ -97,7 +105,7 @@ test('Alan V2: verified email -> real DB audition -> R2 proofs -> mock fee -> 3 
   let standings=(await (await handleE2E(get('/api/e2e/standings',org),env)).json()).standings;
   assert.equal(standings[0].total_score,null,'final jurors have not yet scored');
   for(const cookie of reviewers){
-   const s=await handleE2E(req('/api/e2e/score',{application_id:appId,technique:33,interpretation:26,stage_presence:14,appearance:7,no_conflict:true},cookie),env);
+   const s=await handleE2E(req('/api/e2e/score',{application_id:appId,phase:'final',technique:33,interpretation:26,stage_presence:14,appearance:7,no_conflict:true},cookie),env);
    assert.equal(s.status,200);assert.equal((await s.json()).phase,'final');
   }
   standings=(await (await handleE2E(get('/api/e2e/standings',org),env)).json()).standings;
