@@ -17,6 +17,13 @@ export const blankPortal=()=>({
  members:[],applications:[],orders:[],audit:[]
 });
 const persona=code=>PERSONAS.find(p=>p.code===code);
+const MAX_AUDIT_EVENTS=200;
+function recordAudit(s,event,ref){
+ // A bounded ring-style history: never let a verbose TEST session wipe members.
+ s.audit.push({event,ref});
+ if(s.audit.length>MAX_AUDIT_EVENTS)
+  s.audit.splice(0,s.audit.length-MAX_AUDIT_EVENTS);
+}
 export function signUpMock(s,code){
  const p=persona(code);
  if(!p)return {error:'請從20位固定虛構人物中選擇。'};
@@ -28,7 +35,7 @@ export function signUpMock(s,code){
  const member={id,person:code,alias:p.alias,email:p.email,age:p.age,
   category:p.category,emailVerified:'MOCK_ONLY'};
  s.members.push(member);
- s.audit.push({event:'fake_signup',ref:id});
+ recordAudit(s,'fake_signup',id);
  return {member};
 }
 export function applyMock(s,memberId,round,demo){
@@ -44,7 +51,7 @@ export function applyMock(s,memberId,round,demo){
  const application={id:'APP-TEST-'+String(s.applicationSeq++).padStart(4,'0'),
   memberId,round,category:member.category,demo,status:'submitted',
   feeRequiredNpr:FEE_NPR};
- s.applications.push(application);s.audit.push({event:'fake_application',ref:application.id});
+ s.applications.push(application);recordAudit(s,'fake_application',application.id);
  return {application};
 }
 export function getOrCreateOrder(s,appId){
@@ -54,7 +61,7 @@ export function getOrCreateOrder(s,appId){
  if(existing)return {order:existing,existing:true};
  const order={id:'ORD-TEST-'+String(s.orderSeq++).padStart(4,'0'),applicationId:app.id,
   amountNpr:FEE_NPR,currency:'NPR',status:'unpaid',mode:'FAKE_NO_BANK'};
- s.orders.push(order);s.audit.push({event:'fake_order',ref:order.id});
+ s.orders.push(order);recordAudit(s,'fake_order',order.id);
  return {order,existing:false};
 }
 export function simulatePayment(s,orderId,event){
@@ -74,7 +81,7 @@ export function simulatePayment(s,orderId,event){
   return {error:'不允許這項測試付款狀態轉換。'};
  }
  order.status=next;
- s.audit.push({event:'fake_payment_'+event,ref:order.id});
+ recordAudit(s,'fake_payment_'+event,order.id);
  return {order,duplicate:false};
 }
 export function reviewMock(s,appId,next){
@@ -91,7 +98,7 @@ export function reviewMock(s,appId,next){
   return {error:'必須先通過Demo初篩，不能直接進入年度決賽。'};
  // This is an operator mock. No role authentication is implied.
  app.status=next;
- s.audit.push({event:'fake_review_'+next,ref:app.id});
+ recordAudit(s,'fake_review_'+next,app.id);
  return {application:app};
 }
 export function summary(s){
@@ -123,7 +130,7 @@ export function safeParsePortal(raw){
   const p=JSON.parse(raw);
   if(!p||p.version!==1||!Array.isArray(p.members)||!Array.isArray(p.applications)||
    !Array.isArray(p.orders)||!Array.isArray(p.audit)||
-   p.members.length>20||p.applications.length>60||p.orders.length>60||p.audit.length>400||
+   p.members.length>20||p.applications.length>60||p.orders.length>60||
    !Number.isSafeInteger(p.memberSeq)||p.memberSeq<1||p.memberSeq>100||
    !Number.isSafeInteger(p.applicationSeq)||p.applicationSeq<1||p.applicationSeq>100||
    !Number.isSafeInteger(p.orderSeq)||p.orderSeq<1||p.orderSeq>100)return blankPortal();
@@ -159,6 +166,8 @@ export function safeParsePortal(raw){
   }
   if(!p.audit.every(x=>typeof x.event==='string'&&/^fake_/.test(x.event)&&
     typeof x.ref==='string'&&x.ref.length<64))return blankPortal();
+  if(p.audit.length>MAX_AUDIT_EVENTS)
+   p.audit=p.audit.slice(-MAX_AUDIT_EVENTS); // preserve valid old sessions with >400 logs
   return p;
  }catch{return blankPortal();}
 }
