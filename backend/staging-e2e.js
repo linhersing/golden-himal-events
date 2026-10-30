@@ -187,6 +187,9 @@ async function eraseMember(env,a){
  const rows=await env.DB.prepare('SELECT media_key FROM e2e_applications WHERE account_id=?').bind(a.id).all();
  if(rows.results?.some(x=>x.media_key)&&!env.STAGING_MEDIA)return deny('r2_cleanup_unavailable',503);
  for(const row of rows.results||[])if(row.media_key)await env.STAGING_MEDIA.delete(row.media_key);
+ // Remove pending verification challenges too. Otherwise an unused emailed OTP
+ // could recreate the just-deleted TEST member until its expiry.
+ await env.DB.prepare('DELETE FROM e2e_email_challenges WHERE email_fingerprint=(SELECT email_fingerprint FROM e2e_accounts WHERE id=?)').bind(a.id).run();
  await env.DB.prepare('DELETE FROM e2e_accounts WHERE id=?').bind(a.id).run();
  return json({ok:true,deletedTestData:true},200,{'Set-Cookie':cookie('',0)});
 }
