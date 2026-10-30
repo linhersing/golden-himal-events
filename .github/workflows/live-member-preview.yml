@@ -1,0 +1,19 @@
+name: Verify live Cloudflare member TEST portal
+on:
+  push:
+    branches:
+      - codex/initial-site
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cloudflare-member-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: GET live Cloudflare UI and JS; verify full TEST member path deployed
+        run: node scripts/live-member-preview-smoke.mjs
