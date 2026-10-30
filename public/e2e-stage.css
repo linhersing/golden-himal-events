@@ -38,3 +38,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .danger{border-color:#ca9a93}.danger button{border-color:#bd8681}
 .foot{border-top:1px solid #e8dac4;text-align:center;font-size:.65rem;color:#827058;padding:24px 10px}
 @media(max-width:600px){.head{padding:12px 0;min-height:68px}.brand strong{font-size:1.1rem}.brand small{font-size:.55rem}.langs button{font-size:.72rem;min-width:33px;padding:7px}.page-head{padding-top:27px}.two,.score-fields{grid-template-columns:1fr}.entry .meta{grid-template-columns:1fr 1fr}.summary{align-items:flex-start}.safety span{line-height:1.55}}
+
+.micro{font-size:.79rem;color:#755d42;line-height:1.6}
+.actions label{display:flex;flex-direction:column;gap:6px;min-width:min(100%,280px);margin:12px 0 4px}
+.actions button{align-self:flex-start}
+@media(min-width:760px){.score-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
