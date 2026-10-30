@@ -56,6 +56,11 @@ test('real D1-style SQLite adapter persists OTP, entry, simulated fee and score 
   assert.equal(ownDownload.status,200);
   assert.equal((await ownDownload.arrayBuffer()).byteLength,512);
   assert.equal((await handleE2E(get('/api/e2e/demo-download?application='+appId),env)).status,401);
+  // Category is locked by a D1 trigger, including direct SQL writers and
+  // concurrent Worker requests; a second round cannot change group.
+  assert.throws(()=>db.prepare('INSERT INTO e2e_applications(id,account_id,round_code,category,stage_name,demo_url,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)')
+    .run('group-cheat',db.prepare('SELECT account_id FROM e2e_applications LIMIT 1').get().account_id,
+     '2027-06','community','TEST','https://youtu.be/test123',1,1),/annual_category_locked/);
   const duplicate=await handleE2E(req('/api/e2e/applications',{round_code:'2027-03',category:'university',stage_name:'TEST SINGER',demo_url:'https://youtu.be/test123',adult_confirmed:true},cookie),env);
   assert.equal(duplicate.status,409);
   const paid=await handleE2E(req('/api/e2e/mock-payment',{application_id:appId},cookie),env);
@@ -83,5 +88,23 @@ test('real D1-style SQLite adapter persists OTP, entry, simulated fee and score 
   assert.equal(db.prepare('SELECT count(*) AS n FROM e2e_applications').get().n,0);
   assert.equal(db.prepare('SELECT count(*) AS n FROM e2e_judge_scores').get().n,0);
   assert.equal(db.prepare('SELECT count(*) AS n FROM e2e_accounts').get().n,1);
+ }finally{db.close()}
+});
+
+test('OTP challenge refuses the correct code after five attempts are consumed',async()=>{
+ const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ let sent;
+ const env={STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'B'.repeat(64),
+ STAGING_ALLOWED_EMAILS:'participant@test.invalid',STAGING_FROM_EMAIL:'tests@test.invalid',
+ DB:adapter(db),EMAIL:{async send(x){sent=x;return {id:'test'}}}};
+ try{
+  const response=await handleE2E(req('/api/e2e/request-code',{email:'participant@test.invalid',role:'member'}),env);
+  assert.equal(response.status,200);
+  const id=(await response.json()).challenge_id;
+  const code=sent.text.match(/\b\d{6}\b/)[0];
+  db.prepare('UPDATE e2e_email_challenges SET attempts=5 WHERE id=?').run(id);
+  const rejected=await handleE2E(req('/api/e2e/verify-code',{challenge_id:id,code}),env);
+  assert.equal(rejected.status,401);
+  assert.equal(db.prepare('SELECT count(*) AS n FROM e2e_sessions').get().n,0);
  }finally{db.close()}
 });
