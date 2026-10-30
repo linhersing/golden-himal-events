@@ -1,0 +1,38 @@
+// Future provisioning only: NOT the active Cloudflare Workers Builds config.
+// Confirm account rights and bucket/DB existence before deploying or using this file.
+// See docs/CLOUDFLARE-E2E-PROVISION-AND-ACCEPTANCE.md
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "golden-himal-voice-preview",
+  "main": "./backend/staging-registration-worker.js",
+  "compatibility_date": "2026-10-28",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/staging/*",
+      "/api/e2e/*"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ghv-staging",
+      "database_id": "93f23f1e-0c2b-41a6-8d8d-fb1a35d4a93a"
+    },
+    {
+      "binding": "E2E_DB"
+    }
+  ],
+  "vars": {
+    "STAGING_TEST_WRITE_ENABLED": "false"
+  },
+  "observability": {
+    "enabled": false
+  },
+  "r2_buckets": [
+    {
+      "binding": "STAGING_MEDIA"
+    }
+  ]
+}
