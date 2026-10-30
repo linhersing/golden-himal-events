@@ -9,34 +9,34 @@
 </head>
 <body>
 <a href="#main" class="skip-link">Skip to content</a>
-<div class="test-banner" role="note"><strong>TEST ONLY · NOT REAL AUTHENTICATION</strong><span data-i18n="testBanner">Use only the displayed fictional test account and demo passcode. Never enter a real password, personal information, or payment details.</span></div>
+<div class="test-banner" role="note"><strong data-i18n="demoHeading">TEST ONLY · NOT REAL AUTHENTICATION</strong><span data-i18n="testBanner">Use only the displayed fictional test account and demo passcode. Never enter a real password, personal information, or payment details.</span></div>
 <header class="site-header">
  <div class="shell header-inner">
   <a class="brand" href="./"><img src="./images/brand-identity.png" width="62" height="54" alt="Golden Himal Palace"><span><strong>Golden Himal Voice</strong><small>CHITWAN · 2027 MEMBER PREVIEW</small></span></a>
   <div class="header-actions">
    <a href="./" class="header-link" data-i18n="backHome">← Event home</a>
-   <div class="languages" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true">EN</button><button type="button" data-lang="ne" aria-pressed="false">नेपाली</button></div>
+   <div class="languages" role="group" aria-label="Select member page language"><button type="button" data-lang="en" aria-label="English" aria-pressed="true">EN</button><button type="button" data-lang="ne" aria-label="नेपाली" aria-pressed="false">नेपाली</button><button type="button" data-lang="zh" aria-label="繁體中文" aria-pressed="false">中文</button></div>
   </div>
  </div>
 </header>
 <main id="main" class="shell">
  <section id="auth-view" class="auth-layout" aria-labelledby="auth-title">
   <div class="auth-intro">
-   <span class="eyebrow">THE CONTESTANT JOURNEY · TEST PREVIEW</span>
+   <span class="eyebrow" data-i18n="introEyebrow">CONTESTANT AREA · TEST PREVIEW</span>
    <h1 id="auth-title" data-i18n="welcome">Your stage.<br>Your account.</h1>
    <p data-i18n="welcomeText">Sign in to your personal area to see your competition entry, demo submission, mock NPR 500 payment and screening progress — all in one place.</p>
    <div class="steps"><div><b>01</b><span data-i18n="step1">Create a test account</span></div><div><b>02</b><span data-i18n="step2">Submit a demo & test payment</span></div><div><b>03</b><span data-i18n="step3">Return here to track your result</span></div></div>
    <p class="intro-caption" data-i18n="sameDevice">Test entries remain on this browser and website address only; they are not real Cloudflare member accounts.</p>
   </div>
   <div class="auth-card">
-   <div class="card-top"><span class="eyebrow">MEMBER ACCESS</span><span class="pill">SANDBOX</span></div>
+   <div class="card-top"><span class="eyebrow" data-i18n="cardEyebrow">MEMBER ACCESS</span><span class="pill" data-i18n="sandboxBadge">TEST PREVIEW</span></div>
    <h2 data-i18n="signInTitle">Member sign in</h2>
    <p class="muted" data-i18n="signInIntro">Already registered in this browser's member test? Use the fictional ID and shared demo passcode below.</p>
    <form id="login-form" autocomplete="off">
     <label for="login-username" data-i18n="usernameLabel">Test account name / Member ID / test email</label>
     <input id="login-username" name="test-username" type="text" spellcheck="false" value="TEST-SINGER-001" maxlength="80" required autocomplete="off">
     <label for="login-password" data-i18n="passwordLabel">Demo password (not a real password)</label>
-    <div class="password-row"><input id="login-password" name="test-passcode" type="password" maxlength="32" required autocomplete="off" placeholder="Demo code only"><button type="button" id="show-password" data-i18n="toggleReveal" aria-label="Show demo passcode">Show</button></div>
+    <div class="password-row"><input id="login-password" name="test-passcode" type="password" maxlength="32" required autocomplete="off" placeholder="GHV-TEST-2027"><button type="button" id="show-password" data-i18n="toggleReveal">Show</button></div>
     <div class="demo-credentials"><span data-i18n="testCredentials">Use only these public demonstration credentials:</span><strong>TEST-SINGER-001</strong><code>GHV-TEST-2027</code></div>
     <button type="submit" class="btn primary" data-i18n="signInBtn">Sign in to my test account</button>
     <p id="login-feedback" class="feedback" role="status" aria-live="polite"></p>
@@ -64,7 +64,7 @@
   </div>
   <div class="dashboard-main">
    <section class="next-action" aria-labelledby="action-title">
-    <span class="eyebrow">YOUR NEXT STEP</span><h2 id="action-title" data-i18n="nextAction">What should I do next?</h2>
+    <span class="eyebrow" data-i18n="actionEyebrow">YOUR NEXT STEP</span><h2 id="action-title" data-i18n="nextAction">What should I do next?</h2>
     <p id="action-text"></p>
     <a id="action-link" href="./member-portal.html" class="btn primary" data-i18n="continueApplication">Continue my test application</a>
    </section>
@@ -74,13 +74,13 @@
    </section>
   </div>
   <section class="applications" aria-labelledby="entries-title">
-   <div class="section-heading"><div><span class="eyebrow">MY SUBMISSIONS</span><h2 id="entries-title" data-i18n="myEntries">My registrations and demos</h2></div><a class="text-link" href="./member-portal.html" data-i18n="manageEntries">Manage test submission →</a></div>
+   <div class="section-heading"><div><span class="eyebrow" data-i18n="submissionsEyebrow">MY SUBMISSIONS</span><h2 id="entries-title" data-i18n="myEntries">My registrations and demos</h2></div><a class="text-link" href="./member-portal.html" data-i18n="manageEntries">Manage test submission →</a></div>
    <div id="entries-list" class="entries-list"></div>
   </section>
   <div class="dashboard-footer"><a href="./member-portal.html" data-i18n="testRegistration">Registration & mock payment lab</a><a href="./" data-i18n="backEvent">Back to event homepage</a></div>
  </section>
 </main>
-<footer class="site-footer">GOLDEN HIMAL VOICE · MEMBER JOURNEY SANDBOX · <strong>TEST ONLY</strong></footer>
+<footer class="site-footer"><span data-i18n="footerDemo">GOLDEN HIMAL VOICE · MEMBER JOURNEY TEST ONLY</span></footer>
 <script type="module" src="./member-login.js"></script>
 </body>
 </html>
