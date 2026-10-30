@@ -5,6 +5,13 @@ import {PEOPLE,blank,addSyntheticRegistration,reviewSynthetic,castSyntheticVote,
  * Do not use personal information. Do not count these as real applications or votes.
  */
 const STORAGE_KEY='ghv_internal_synthetic_lab_v1';
+const PAYMENT_MOCK_KEY='ghv_payment_mock_v1';
+function discardDependentMockPayments(){
+ // The registration IDs restart at 0001 after reset. Retire all dependent
+ // browser-only payment orders first so a new applicant cannot inherit paid state.
+ try{localStorage.removeItem(PAYMENT_MOCK_KEY)}catch{}
+}
+
 const $=id=>document.getElementById(id);
 let state=blank();
 try{
@@ -191,6 +198,7 @@ function renderReports(){
 function render(){renderStats();renderRegistrations();renderNotice();renderVote();renderReports()}
 $('run-all').addEventListener('click',()=>{
  if(!confirm('執行完整虛構測試會取代此瀏覽器目前的沙盒資料；確定要繼續嗎？'))return;
+ discardDependentMockPayments();
  state=blank();
  const checks=[];
  for(let i=1;i<=6;i++){
@@ -222,6 +230,7 @@ $('run-all').addEventListener('click',()=>{
 });
 $('reset').addEventListener('click',()=>{
  if(!confirm('確定清除「此瀏覽器」的所有虛構報名、公告與示範投票？Cloudflare D1 不會被清除。'))return;
+ discardDependentMockPayments();
  state=blank();persist();$('filter').value='all';
  text($('form-status'),'已重置本機沙盒。Cloudflare D1 未變更。');render();
 });
