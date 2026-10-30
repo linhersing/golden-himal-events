@@ -59,3 +59,12 @@ test('payment page is visibly TEST ONLY, has no actual bank post nor card fields
  assert.doesNotMatch(script,/fetch\s*\(/);
  assert.doesNotMatch(script,/https?:\/\//);
 });
+
+test('recycled registration ID with a different TEST person cannot inherit a paid mock order',()=>{
+ const s=emptyPayments();const old=newMockOrder(s,reg()).order;
+ mockProviderEvent(s,old.id,'succeeded');
+ const reused={id:reg().id,person:'T002',round:'2027-03'};
+ assert.equal(newMockOrder(s,reused).error,'stale_payment_order_reset_required');
+ assert.equal(s.orders.length,1);
+ assert.equal(mockPaymentSummary(s).grossNpr,500);
+});
