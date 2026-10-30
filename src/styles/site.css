@@ -145,3 +145,12 @@ dialog{max-height:min(92vh,900px);overflow:auto}
 .demo-no-record strong{display:block;font-size:1.12rem}
 .demo-no-record p{margin:8px 0 17px;color:#6b5436;font-size:.88rem;line-height:1.7}
 .demo-no-record .button{display:inline-flex;min-height:45px;align-items:center}
+
+/* Alan V2: five-stage season with accessible enrollment test entry. */
+@media(min-width:901px){.season-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.v2-stage-cta{margin:16px 0 18px;padding:20px;border:2px solid #b58c46;background:linear-gradient(145deg,#fff8e6,#fffdf5);border-radius:15px}
+.v2-stage-cta strong{font-size:1rem;color:#654324}
+.v2-stage-cta p{margin:7px 0 14px;color:#65543a;font-size:.88rem}
+.v2-stage-cta div{display:flex;gap:11px;flex-wrap:wrap}
+.v2-stage-cta a{display:inline-flex;align-items:center;min-height:45px;padding:10px 16px;border:1px solid #8d6536;border-radius:9px;font-weight:700;text-decoration:none;background:#fff;color:#664521}
+.v2-stage-cta a:first-child{background:#694629;color:#fff}
