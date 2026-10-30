@@ -116,6 +116,23 @@ zh:{
  deleted:'測試會員已刪除。',reviewerOnly:'只限受邀評審登入',memberOnly:'此頁只限參賽測試會員',organizerOnly:'需要受邀管理員權限',
  confirmDelete:'確定刪除所有測試會員資料？無法復原。',user:'測試會員',contestRules:'V2 模擬章程',noFunds:'不要在這裡上傳真實證件或匯款。'
 }};
+// Common, low-cognitive-load, mobile-first onboarding copy in the three locales.
+const mobileCopy={
+ en:{introEyebrow:'INVITED TEST · NO OFFICIAL ENTRY',stepEmail:'Email',stepVerify:'Verify',stepAccount:'My account',
+ emailHint:'Use your invited TEST mailbox. We send one code to confirm you own the email address. No real IDs or payments.',
+ codeHint:'Enter the 6-digit code from your TEST inbox. It is valid for 10 minutes.',changeEmail:'Use another email',
+ codeSentTo:'Code sent to',stepTitle:'Step 1 of 3: Email verification'},
+ ne:{introEyebrow:'निमन्त्रित परीक्षण · आधिकारिक दर्ता होइन',stepEmail:'इमेल',stepVerify:'प्रमाणित',stepAccount:'मेरो खाता',
+ emailHint:'आमन्त्रित परीक्षण इमेल मात्र प्रयोग गर्नुहोस्। इमेल तपाईंको हो भन्ने पुष्टि गर्न एक कोड पठाइन्छ। वास्तविक प्रमाणपत्र वा रकम नदिनुहोस्।',
+ codeHint:'परीक्षण इमेलमा आएको ६-अङ्क कोड लेख्नुहोस्। कोड १० मिनेट मान्य हुन्छ।',changeEmail:'अर्को इमेल प्रयोग गर्नुहोस्',
+ codeSentTo:'कोड पठाइएको',stepTitle:'पहिलो चरण: इमेल प्रमाणिकरण'},
+ zh:{introEyebrow:'受邀測試 · 非正式報名',stepEmail:'Email',stepVerify:'驗證',stepAccount:'個人中心',
+ emailHint:'僅限受邀測試信箱。一次性驗證碼用來確認這個 Email 確實屬於你；請勿提供真實證件或匯款。',
+ codeHint:'輸入測試信箱收到的6位驗證碼，有效期限10分鐘。',changeEmail:'更換 Email 信箱',
+ codeSentTo:'驗證碼已寄至',stepTitle:'第一步：確認測試信箱'}
+};
+for(const l of ['en','ne','zh'])Object.assign(dict[l],mobileCopy[l]);
+
 let lang='en';try{const p=localStorage.getItem('ghv_ui_language_v1');if(dict[p])lang=p}catch{}
 let challenge='',account=null;
 const t=k=>dict[lang][k]||dict.en[k]||k;
@@ -126,6 +143,7 @@ function locale(l){
  try{localStorage.setItem('ghv_ui_language_v1',lang)}catch{}
  for(const el of document.querySelectorAll('[data-lang]'))el.setAttribute('aria-pressed',String(el.dataset.lang===lang));
  for(const el of document.querySelectorAll('[data-i18n]'))el.textContent=t(el.dataset.i18n);
+ progress();
  if(account)workspace();
 }
 async function api(path,options={}){
@@ -135,14 +153,22 @@ async function api(path,options={}){
  return data;
 }
 const post=(path,obj)=>api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+function progress(){
+ const phase=account?'account':$('verify-form').hidden?'email':'verify';
+ for(const el of document.querySelectorAll('.access-step')){
+  const match=el.dataset.step===phase;
+  if(match)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');
+  el.classList.toggle('current',match);
+ }
+}
 const visible=x=>{$('signin').hidden=x;$('workspace').hidden=!x};
 async function session(){
  try{
   const data=await api('me');account=data.account;
   if(account.role!==role){account=null;visible(false);message(t(role==='reviewer'?'reviewerOnly':role==='organizer'?'organizerOnly':'memberOnly'),true);return}
-  visible(true);$('welcome').textContent=t('signedIn')+' · '+account.id.slice(0,8);
+  visible(true);progress();$('welcome').textContent=t('signedIn')+' · '+account.id.slice(0,8);
   message(t('saved'));await workspace();
- }catch(error){account=null;visible(false);message(error.message==='e2e_not_configured'?t('restart'):t('signinText'),error.message==='e2e_not_configured')}
+ }catch(error){account=null;visible(false);progress();message(error.message==='e2e_not_configured'?t('restart'):t('signinText'),error.message==='e2e_not_configured')}
 }
 async function workspace(){
  if(role==='reviewer')await judging();
@@ -272,7 +298,7 @@ async function organizer(){
 $('send-form').onsubmit=async ev=>{
  ev.preventDefault();const btn=$('send-form').querySelector('button');btn.disabled=true;
  try{const result=await post('request-code',{email:$('email').value,role});challenge=result.challenge_id;
-   $('verify-form').hidden=false;$('code').focus();message(t('sendSuccess'))}
+   $('send-form').hidden=true;$('verify-form').hidden=false;$('verify-mailbox').textContent=t('codeSentTo')+' '+$('email').value.trim();progress();$('code').focus();message(t('sendSuccess'))}
  catch(err){message(t('failed')+err.message,true)}finally{btn.disabled=false}
 };
 $('verify-form').onsubmit=async ev=>{
@@ -281,7 +307,7 @@ $('verify-form').onsubmit=async ev=>{
  catch(err){message(t('failed')+err.message,true)}finally{btn.disabled=false}
 };
 $('logout').onclick=async()=>{
- try{await post('logout',{});account=null;visible(false);$('verify-form').hidden=true;message(t('signinText'))}
+ try{await post('logout',{});account=null;visible(false);$('verify-form').hidden=true;$('send-form').hidden=false;progress();message(t('signinText'))}
  catch(err){message(t('failed')+err.message,true)}
 };
 if($('application-form'))$('application-form').onsubmit=async ev=>{
@@ -300,6 +326,9 @@ if($('delete-account'))$('delete-account').onclick=async()=>{
  if(!confirm(t('confirmDelete')))return;
  try{await post('delete-my-data',{});account=null;visible(false);message(t('deleted'))}
  catch(err){message(t('failed')+err.message,true)}
+};
+$('change-email').onclick=()=>{
+ $('verify-form').hidden=true;$('send-form').hidden=false;challenge='';$('code').value='';progress();$('email').focus();
 };
 for(const b of document.querySelectorAll('[data-lang]'))b.onclick=()=>locale(b.dataset.lang);
 locale(lang);session();
