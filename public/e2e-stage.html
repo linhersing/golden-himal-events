@@ -32,14 +32,25 @@
  <section class="panel" aria-labelledby="apply-heading"><span class="eyebrow">STEP 02 · PERSISTENT D1 ENTRY</span>
  <h2 id="apply-heading" data-i18n="applyTitle">Submit my audition demo</h2>
  <form id="application-form">
- <div class="two"><div><label for="stage" data-i18n="stageName">Stage name (test only)</label><input id="stage" required maxlength="80" value="TEST SINGER"></div>
- <div><label for="round" data-i18n="round">Qualifying round</label><select id="round"><option value="2027-03">March 2027</option><option value="2027-06">June 2027</option><option value="2027-09">September 2027</option></select></div></div>
- <label for="category" data-i18n="category">Category</label><select id="category"><option value="university">University</option><option value="community">Community / Open</option></select>
- <label for="demo" data-i18n="demo">YouTube / TikTok demo URL</label><input id="demo" type="url" required placeholder="https://youtu.be/..." autocomplete="off">
- <label class="check"><input id="adult" type="checkbox" required><span data-i18n="adult">I confirm this fictional test participant is 18 or older. Not identity verification.</span></label>
+ <div class="two"><div><label for="stage" data-i18n="stageName">Fictional singer name</label><input id="stage" required maxlength="80" value="TEST SINGER"></div>
+ <div><label for="round" data-i18n="round">Online audition window</label><select id="round"><option value="2027-01" data-i18n="janWindow">January 1–31, 2027</option><option value="2027-04" data-i18n="aprWindow">April 1–30, 2027</option></select></div></div>
+ <div class="two"><div><label for="category" data-i18n="category">Contest category</label><select id="category"><option value="university">University</option><option value="community">Community</option></select></div>
+ <div><label for="province" data-i18n="province">Eligible province</label><select id="province"><option value="bagmati">Bagmati Province</option><option value="gandaki">Gandaki Province</option></select></div></div>
+ <div class="two"><div><label for="basis" data-i18n="basis">Location basis</label><select id="basis"><option value="residence">Residence</option><option value="study">Study</option><option value="work">Work</option></select></div>
+ <div><label for="affiliation" data-i18n="affiliation">TEST school / occupation</label><input id="affiliation" required maxlength="100" value="TEST SCHOOL"></div></div>
+ <div class="two"><div><label for="song" data-i18n="song">Song title</label><input id="song" required maxlength="100" value="TEST SONG"></div>
+ <div><label for="artist" data-i18n="artist">Original artist</label><input id="artist" required maxlength="100" value="TEST ARTIST"></div></div>
+ <div class="two"><div><label for="song-language" data-i18n="songLanguage">Song language</label><input id="song-language" required maxlength="100" value="Nepali"></div>
+ <div><label for="song-key" data-i18n="songKey">Key / transposition</label><input id="song-key" required maxlength="100" value="C"></div></div>
+ <label for="demo" data-i18n="demo">YouTube/TikTok Demo URL (or private TEST video upload after creating application)</label><input id="demo" type="url" placeholder="https://youtu.be/..." autocomplete="off">
+ <p class="micro" data-i18n="demoRule">V2 Demo: one continuous 60–90 second performance, clearly showing the contestant's face and voice; no lip-sync, pitch editing or splicing. Test files only.</p>
+ <label class="check"><input id="adult" type="checkbox"><span data-i18n="adult">For COMMUNITY group only: fictional test contestant is 18+ at audition close.</span></label>
+ <label class="check"><input id="student" type="checkbox"><span data-i18n="student">For UNIVERSITY group only: fictional test contestant is currently enrolled.</span></label>
+ <label class="check"><input id="contract" type="checkbox" required><span data-i18n="contract">Fictional participant has no conflicting exclusive artist contract.</span></label>
  <button class="primary" type="submit" data-i18n="submit">Submit to D1 staging</button></form>
  </section>
  <section class="panel" aria-labelledby="entries-title"><span class="eyebrow">STEP 03 · PAYMENT REHEARSAL</span><h2 id="entries-title" data-i18n="entries">My saved submissions</h2><div id="applications"></div></section>
+ <section class="panel" aria-labelledby="vote-stage-title"><span class="eyebrow">FINAL · WEBSITE VOTE REHEARSAL</span><h2 id="vote-stage-title" data-i18n="voteStageTitle">Verified test account · 51% website vote</h2><p data-i18n="voteStageNote">One test vote per verified account, only after a participant is manually promoted to the September final. Official voter eligibility and limits remain subject to announcement.</p><div id="finalists"></div></section>
  <section class="panel danger"><h2 data-i18n="deleteTitle">Delete my staging account</h2><p data-i18n="deleteText">Delete all my saved TEST entries, scores, sessions and private media. Cannot be undone.</p><button id="delete-account" class="secondary" data-i18n="delete">Delete TEST account and records</button></section>
  </section>
  <div class="notice"><p data-i18n="notLive">Staging has actual D1 records when enabled. It is not public registration, not verified eligibility and not real payment. Review scores are for functional testing only.</p></div>
