@@ -141,3 +141,19 @@ test('old valid localStorage with >400 audit messages migrates without erasing m
  assert.equal(upgraded.orders.length,1);
  assert.equal(upgraded.audit.length,200);
 });
+
+
+test('four-screen member preview is local-only and never fabricates an official receipt',async()=>{
+ const html=await readFile(new URL('../public/member-portal.html',import.meta.url),'utf8');
+ const js=await readFile(new URL('../public/member-portal.js',import.meta.url),'utf8');
+ for(const screen of ['pass','application','payment','profile']){
+  assert.match(html,new RegExp('data-dossier="'+screen+'"'));
+ }
+ assert.match(html,/一鍵準備成年測試參賽者/);
+ assert.match(html,/第20號 TEST-SINGER-020 仍為17歲拒絕案例/);
+ assert.match(js,/signUpMock\(state,'T019'\)/);
+ assert.match(js,/支付商交易序號','不存在（純模擬）/);
+ assert.match(js,/沒有驗證身分、密碼登入或真人個資/);
+ assert.doesNotMatch(html,/Ayush Adhikari|BMC-2023|TX-KHALTI-202703/);
+ assert.doesNotMatch(js,/fetch\s*\(|\.post\s*\(/);
+});
