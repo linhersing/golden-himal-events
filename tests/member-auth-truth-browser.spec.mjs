@@ -38,7 +38,7 @@ test('multi-round member dashboard opens correct unpaid application at checkout'
  await page.locator('#round').selectOption('2027-06');
  await page.locator('#apply').click();
  await expect(page.locator('#pay-app')).toHaveValue('APP-TEST-0002');
- await expect(page.locator('#checkout-card')).toContainText('尚未付款');
+ await expect(page.locator('#checkout-card')).toContainText('未建立訂單');
  await page.goto('/member-login.html');
  await expect(page.locator('#summary-payment')).toContainText('No test order');
  await expect(page.locator('#action-link')).toHaveAttribute('href','./member-portal.html?step=checkout&application=APP-TEST-0002');
