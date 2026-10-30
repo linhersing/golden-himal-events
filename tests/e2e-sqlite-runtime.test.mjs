@@ -84,7 +84,7 @@ test('Alan V2: verified email -> real DB audition -> R2 proofs -> mock fee -> 3 
   const toLive=await handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'qualifier'},org),env);
   assert.equal(toLive.status,200);assert.equal((await toLive.json()).phase,'qualifier');
   assert.equal((await (await handleE2E(get('/api/e2e/reviewer-queue',reviewers[0]),env)).json()).queue[0].phase,'qualifier');
-  assert.equal((await handleE2E(req('/api/e2e/score',{application_id:appId,phase:'demo',technique:50,interpretation:30,no_conflict:true},reviewers[0]),env)).status,422);
+  assert.equal((await handleE2E(req('/api/e2e/score',{application_id:appId,phase:'qualifier',technique:50,interpretation:30,no_conflict:true},reviewers[0]),env)).status,422);
   for(const cookie of reviewers){
    const s=await handleE2E(req('/api/e2e/score',{application_id:appId,phase:'qualifier',technique:33,interpretation:26,stage_presence:14,appearance:7,no_conflict:true},cookie),env);
    assert.equal(s.status,200);assert.equal((await s.json()).score,80);
