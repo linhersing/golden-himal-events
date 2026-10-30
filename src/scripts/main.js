@@ -258,6 +258,30 @@ Object.assign(translations.zh,{
   v2VoucherNote:"V2提出符合繳費與資格審核者，每年可領一次 NPR 10,000 餐飲折抵券；此測試不發出可兌換餐券，也不收取任何款項。"
 });
 
+/* Main-site entry: distinguish real Cloudflare acceptance route from the historical
+   browser-only demonstration. Never imply live signups are open. */
+Object.assign(translations.en,{
+ cloudEntryTitle:"Testing the Cloudflare member journey?",
+ cloudEntryBody:"Invited TEST emails only. Registration is not yet open; actual verification needs Cloudflare setup.",
+ cloudEntryButton:"Email login test",
+ cloudEntryPrint:"Print A4 event overview",
+ localDemoTag:"BROWSER DEMO"
+});
+Object.assign(translations.ne,{
+ cloudEntryTitle:"Cloudflare सदस्य परीक्षण यहाँबाट",
+ cloudEntryBody:"स्वीकृत परीक्षण इमेल मात्र। आधिकारिक दर्ता खुलेको छैन; इमेल सेवा जोडिएपछि मात्र कोड आउँछ।",
+ cloudEntryButton:"इमेल लगइन परीक्षण",
+ cloudEntryPrint:"A4 कार्यक्रम सारांश छाप्नुहोस्",
+ localDemoTag:"ब्राउजर नमुना"
+});
+Object.assign(translations.zh,{
+ cloudEntryTitle:"Cloudflare 會員驗收從這裡進入",
+ cloudEntryBody:"僅限受邀測試信箱。尚未開放正式註冊；真實驗證碼須先完成 Cloudflare 寄件設定。",
+ cloudEntryButton:"Email 驗證登入測試",
+ cloudEntryPrint:"A4 王老師展示簡報",
+ localDemoTag:"舊版瀏覽器示範"
+});
+
 /* Isolated staging bridge: not a real registration form or vote API. */
 Object.assign(translations.en,{
  dbTestBadge:"D1 STAGING CONNECTION · TEST ONLY",

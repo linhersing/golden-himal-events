@@ -13,19 +13,29 @@
 <button data-lang="en" type="button">EN</button><button data-lang="ne" type="button">नेपाली</button><button data-lang="zh" type="button">中文</button>
 </div></div></header>
 <main class="shell" id="main">
-<div class="page-head"><span class="eyebrow">CLOUDFLARE D1 · END-TO-END STAGING</span>
+<div class="page-head"><span class="eyebrow" data-i18n="introEyebrow">PRIVATE TEST · NOT OFFICIAL REGISTRATION</span>
 <h1 data-i18n="judgeTitle">Reviewer access & scorecards</h1>
 <p data-i18n="pageIntro">This is a controlled acceptance rehearsal with persistent server records, not browser localStorage. Email OTP is used for testing; production password management is not active.</p>
 </div>
-<div id="status" role="status" aria-live="polite" class="status">Checking your staging session…</div>
+<nav class="access-steps" aria-label="Test login progress" data-stepper>
+ <span class="access-step" data-step="email" aria-current="step"><b>1</b><span data-i18n="stepEmail">Email</span></span>
+ <span class="access-step" data-step="verify"><b>2</b><span data-i18n="stepVerify">Verify code</span></span>
+ <span class="access-step" data-step="account"><b>3</b><span data-i18n="stepAccount">My account</span></span>
+</nav>
+<div id="status" role="status" aria-live="polite" class="status" tabindex="-1">Checking your staging session…</div>
 <section id="signin" class="panel" aria-labelledby="signin-heading">
  <span class="eyebrow">STEP 01 · VERIFIED EMAIL</span><h2 id="signin-heading" data-i18n="signinTitle">Sign in with a one-time email code</h2>
  <p data-i18n="signinText">Use an organizer-approved test mailbox. The system will actually send a verification email when configured.</p>
- <form id="send-form"><label for="email" data-i18n="email">Test email address</label><input type="email" id="email" required autocomplete="email" placeholder="test-singer@example.org" maxlength="250">
+ <form id="send-form"><label for="email" data-i18n="email">Test email address</label><input type="email" id="email" required autocomplete="email" placeholder="name@example.com" maxlength="250" aria-describedby="email-hint">
+ <p id="email-hint" class="field-help" data-i18n="emailHint">Only organizer-invited TEST mailboxes can receive a verification code. Never send real identity documents.</p>
  <button type="submit" class="primary" data-i18n="sendCode">Send verification email</button></form>
- <form id="verify-form" hidden><label for="code" data-i18n="code">6-digit code from email</label>
+ <form id="verify-form" hidden>
+ <p class="verify-mailbox" id="verify-mailbox" aria-live="polite"></p>
+ <label for="code" data-i18n="code">6-digit code from email</label>
  <input id="code" type="text" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required placeholder="000000">
- <button type="submit" class="primary" data-i18n="verify">Verify and open my page</button></form>
+ <p class="field-help" data-i18n="codeHint">Enter the six-digit code sent to your TEST mailbox. It expires after ten minutes.</p>
+ <button type="submit" class="primary" data-i18n="verify">Verify and open my page</button>
+ <button type="button" class="text-action" id="change-email" data-i18n="changeEmail">Use another email address</button></form>
 </section>
 <section id="workspace" hidden>
  <div class="summary"><h2 id="welcome"></h2><button id="logout" type="button" class="secondary" data-i18n="logout">Log out</button></div>

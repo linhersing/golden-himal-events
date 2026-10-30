@@ -159,3 +159,56 @@ dialog{max-height:min(92vh,900px);overflow:auto}
 .v2-rule-summary strong{font-size:1rem;color:#654322}
 .v2-rule-summary p{font-size:.85rem;color:#5e523e;line-height:1.65;margin:8px 0}
 .v2-rule-summary p:last-child{font-size:.77rem}
+
+
+/* Mobile-first acceptance entry: clearly separate legacy browser demo from
+   actual Cloudflare gated OTP staging without replacing any original URLs. */
+.cloudflare-onboarding{background:#fff9eb;border-bottom:1px solid #d7ba8a}
+.cloudflare-entry-inner{padding:13px 0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center}
+.cloudflare-entry-copy strong{display:block;color:#614224;font-size:1.02rem;line-height:1.35}
+.cloudflare-entry-copy p{color:#745c39;font-size:.76rem;margin:5px 0 0;max-width:530px;line-height:1.5}
+.cloudflare-entry-actions{display:flex;flex-direction:column;gap:5px;align-items:stretch}
+.cloudflare-entry-button{display:flex;align-items:center;justify-content:center;text-align:center;background:#684728;color:#fff;border-radius:12px;padding:11px 18px;font-size:.91rem;line-height:1.35;min-height:54px;min-width:185px;font-weight:800;text-decoration:none;box-shadow:0 4px 14px #3523111c}
+.cloudflare-entry-print{text-align:center;font-size:.74rem;color:#6c4b29;font-weight:700;padding:5px;text-underline-offset:3px}
+.cloudflare-entry-button:hover,.cloudflare-entry-button:focus-visible{background:#86613e;color:#fff}
+.header-actions .member-gateway{flex-wrap:wrap;gap:4px;min-height:54px}
+.header-actions .member-gateway .member-demo-label{width:100%;font-size:.57rem;font-weight:800;letter-spacing:.04em;color:#fff0ca}
+@media(max-width:860px){
+ .cloudflare-entry-inner{grid-template-columns:1fr;gap:9px}
+ .cloudflare-entry-actions{display:flex;align-items:stretch}
+ .cloudflare-entry-button{min-height:54px;width:100%;font-size:1rem}
+ .cloudflare-entry-print{min-height:38px;display:grid;place-items:center}
+}
+@media(max-width:660px){
+ .header-actions .member-gateway{min-height:52px}
+ .cloudflare-entry-inner{padding:11px 0}
+ .cloudflare-entry-copy strong{font-size:.93rem}
+ .cloudflare-entry-copy p{font-size:.75rem}
+ .cloudflare-entry-button{font-size:1rem;min-height:54px}
+ .header-actions .lang-button{min-height:44px;min-width:44px;font-size:.75rem}
+ .header-actions .member-gateway .member-demo-label{font-size:.53rem}
+ .season-card strong{font-size:clamp(.9rem,4vw,1.15rem)}
+ .season-card{min-height:134px}
+}
+@media(max-width:390px){
+ .header-actions .lang-button{min-width:40px;min-height:44px;padding:5px}
+ .header-actions .member-gateway{font-size:.8rem;padding:8px}
+ .header-actions .member-icon{display:none}
+}
+@media print{
+ @page{size:A4;margin:13mm}
+ .preview-ribbon,.main-nav,.header-actions,.cloudflare-onboarding,.hero-actions,.v2-stage-cta,
+ .form-panel,.vote-security-flow,.vote-note,button,.footer-test-links,.skip-link{display:none!important}
+ .site-shell{width:100%!important;max-width:none}
+ html,body{font-size:10pt;color:#111;background:#fff}
+ .hero-grid,.event-intro,.register-grid,.section-top{display:block!important}
+ .hero-grid{padding:9mm 0!important}
+ .hero-poster{display:none!important}
+ .hero-copy{text-align:left!important}
+ .hero h1{font-size:38pt!important}
+ .section{padding:6mm 0!important;break-inside:avoid}
+ .season-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .season-card,.news-card,.v2-rule-summary{box-shadow:none!important;break-inside:avoid;border:1px solid #999!important}
+ .season-card{min-height:0!important;padding:8px!important}
+ .site-footer{display:none}
+}

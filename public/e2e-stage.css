@@ -43,3 +43,102 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .actions label{display:flex;flex-direction:column;gap:6px;min-width:min(100%,280px);margin:12px 0 4px}
 .actions button{align-self:flex-start}
 @media(min-width:760px){.score-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* 2026-10-30 mobile-first acceptance UX: Nepal participant journey.
+   Applies equally to member, invited judge, and organizer; no JS frameworks. */
+:root{color-scheme:light}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
+body{min-width:0;overflow-wrap:anywhere;-webkit-text-size-adjust:100%}
+.page-head{padding:22px 0 11px}
+.page-head h1{font-size:clamp(1.85rem,7vw,3.05rem);margin:9px 0 12px;letter-spacing:-.025em}
+.page-head p{font-size:.94rem;line-height:1.7;margin:0}
+.page-head .eyebrow{font-size:.73rem;letter-spacing:.07em}
+.safety{flex-direction:column;gap:1px;padding:8px 14px;font-size:.74rem;line-height:1.45}
+.safety strong{font-size:.76rem;letter-spacing:.04em}
+.header{border-bottom:1px solid #d7c3a5}
+.head{min-height:64px;gap:11px;padding-block:8px}
+.brand strong{font-size:clamp(1.05rem,4vw,1.4rem)}
+.brand small{font-size:.65rem}
+.langs{flex-shrink:0;gap:3px;border-radius:12px;padding:3px}
+.langs button{min-width:44px;min-height:44px;padding:7px 8px;font-size:.85rem;border-radius:9px}
+.panel{margin:16px 0;padding:clamp(18px,4.5vw,30px)}
+#signin{border:2px solid #b9965b;box-shadow:0 12px 36px #6a492b15}
+#signin .eyebrow{font-size:.75rem}
+#signin h2{margin-top:8px}
+#signin form{max-width:none}
+#signin form label{font-size:1rem}
+#signin input{font-size:16px;min-height:54px}
+#signin .primary{width:100%;min-height:54px;font-size:1rem;margin-top:10px}
+#signin button,#signin input{border-radius:11px}
+#code{letter-spacing:.18em;font-weight:750;font-variant-numeric:tabular-nums;text-align:center;font-size:1.4rem!important}
+.field-help{font-size:.82rem!important;color:#745c3f;line-height:1.58;margin:0 0 3px;font-weight:400}
+.verify-mailbox{font-weight:750;color:#624523;background:#fff5e1;padding:10px;border-radius:9px;margin:3px 0;overflow-wrap:anywhere}
+.text-action{min-height:44px;border:0;background:transparent;color:#704622;text-decoration:underline;text-underline-offset:3px;font-size:.94rem;font-weight:700}
+.access-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:11px 0 11px;max-width:740px}
+.access-step{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:9px 4px;min-width:0;border-radius:11px;border:1px solid #e2d5bd;background:#f5efe2;color:#6a5c4a;font-size:.77rem;font-weight:700}
+.access-step b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1px solid #cbb18a;background:#fffef9;color:#62462c;font-size:.85rem}
+.access-step[aria-current="step"]{border:2px solid #725033;background:#e9d6b4;color:#3c2e22;box-shadow:0 3px 13px #77533118}
+.access-step[aria-current="step"] b{color:#fff;background:#67452c;border-color:#67452c}
+#status{margin:13px 0 14px;line-height:1.55}
+.entry .actions{align-items:stretch}
+.entry .actions label{max-width:100%}
+.entry .actions button{min-height:48px}
+.entry .meta{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.entry .meta small{font-size:.74rem}
+.entry .meta strong{font-size:.85rem}
+input[type=file]::file-selector-button{background:#f3e7d2;color:#543b22;border:1px solid #b79360;border-radius:8px;padding:10px 12px;font-size:.85rem;min-height:44px}
+input:not([type=checkbox]),select{font-size:16px;min-height:52px}
+button.primary,button.secondary{min-height:50px;font-size:.94rem}
+a{overflow-wrap:anywhere}
+@media(max-width:600px){
+ .shell{width:calc(100% - 28px)}
+ .head{gap:8px}
+ .brand strong{font-size:1.03rem}
+ .brand small{font-size:.54rem}
+ .langs button{min-width:44px;min-height:44px;padding:7px}
+ .page-head{padding-top:18px}
+ .page-head h1{font-size:clamp(1.75rem,8vw,2.3rem)}
+ .page-head p{font-size:.87rem}
+ .panel{padding:20px 16px;border-radius:14px}
+ .access-steps{gap:5px}
+ .access-step{font-size:.73rem}
+ .summary{display:grid;grid-template-columns:1fr;gap:5px}
+ .summary .secondary{width:100%}
+ .entry .meta{grid-template-columns:1fr 1fr}
+ .entry .actions{display:grid;grid-template-columns:1fr}
+ .entry .actions label{min-width:0}
+ .entry .actions button{width:100%;min-height:50px}
+ .score-fields{grid-template-columns:1fr}
+}
+@media(max-width:350px){
+ .brand strong{font-size:.92rem}
+ .langs button{min-width:42px;font-size:.75rem}
+ .access-step{font-size:.7rem}
+ .access-step b{width:26px;height:26px}
+ .entry .meta{grid-template-columns:1fr}
+}
+@media(min-width:920px){
+ main.shell:has(#signin:not([hidden])){display:grid;grid-template-columns:minmax(0,.91fr) minmax(0,1.09fr);column-gap:40px;align-items:start}
+ main.shell:has(#signin:not([hidden])) .page-head{grid-area:1/1/4/2;padding-top:66px}
+ main.shell:has(#signin:not([hidden])) .access-steps{grid-area:1/2;padding-top:0;margin-top:35px}
+ main.shell:has(#signin:not([hidden])) #status{grid-area:2/2}
+ main.shell:has(#signin:not([hidden])) #signin{grid-area:3/2;margin-top:0}
+ main.shell:has(#signin:not([hidden])) .notice{grid-column:1/-1}
+ .page-head h1{font-size:clamp(2.35rem,3.3vw,3.2rem)}
+ .access-step{flex-direction:row;padding:12px 6px;gap:10px;font-size:.86rem}
+}
+@media print{
+ @page{size:A4;margin:13mm}
+ body{background:#fff;color:#1d1d1d;font-size:10pt}
+ .header,.safety,.langs,.access-steps,#status,#signin,#logout,.foot,.notice,.danger,button,form,.entry .actions{display:none!important}
+ .shell{width:100%;max-width:none}
+ .page-head{padding:0;margin-bottom:10mm}
+ .page-head h1{font-size:20pt}
+ #workspace{display:block!important}
+ .panel,.entry{box-shadow:none!important;border:1px solid #999;border-radius:0;margin:10px 0;padding:9px;break-inside:avoid}
+ .entry a{color:#000;text-decoration:none}
+ .entry .meta{grid-template-columns:repeat(3,minmax(0,1fr))}
+ h1,h2,h3{color:#111}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
