@@ -205,42 +205,51 @@ Object.assign(translations.zh,{
   trustPromiseBody:"正式開放前將公布隱私告知與票選規則。參與投票不代表同意接收行銷訊息。"
 });
 
-/* 2027 planning: localized, clearly labelled Draft 1; never infer public approval. */
+/* Alan V2 (2026-10-29): preview only; bilingual public UI and internal Chinese. */
 Object.assign(translations.en,{
-  seasonOverline:"2027 · PROPOSED SEASON / DRAFT 1",seasonTitle:"One season. Many voices.",
-  seasonIntro:"A working proposal for three qualifying events and a year-end celebration. Dates, formats and rules are not official until approved.",
-  seasonMarch:"March 2027",seasonJune:"June 2027",seasonSept:"September 2027",seasonDec:"December 2027",
-  seasonQualify:"Proposed qualifier",seasonFinal:"Proposed annual finale",
-  seasonDisclaimer:"WORKING DRAFT · This is not an invitation to apply or pay. Official terms and registration dates are pending organizer approval.",
-  fieldCategory:"Category (sample)",chooseCategory:"Choose a category",universityCategory:"University students",communityCategory:"Open / community",
-  fieldRound:"Qualifying round (sample)",chooseRound:"Choose a proposed round",
-  paymentTitle:"Payment verification — planned",paymentBody:"The final application will include fee-payment verification. No payment or receipt upload is accepted in this design preview.",
-  paymentWarning:"Do not send money or upload identity/payment documents using this preview.",
-  reviewCategory:"Category",reviewRound:"Round"
+  seasonOverline:"2027 · ALAN V2 · STAGING PREVIEW",seasonTitle:"Two online auditions. One grand final.",
+  seasonIntro:"January and April are online entry windows; March and June are live qualifiers. The final is in early September. No official enrolment or payments are open.",
+  seasonJan:"Jan 1–31, 2027",seasonApr:"Apr 1–30, 2027",seasonMarch:"Mid-March 2027",seasonJune:"June 2027",seasonSept:"Early September 2027",
+  seasonOnline:"Online audition · 60–90 sec Demo",seasonQualify:"Live qualifier 1",seasonQualify2:"Live qualifier 2",seasonFinal:"Grand final · 32 performers",
+  seasonDisclaimer:"V2 REHEARSAL ONLY · Not official registration. Trial payments do not move any money.",
+  fieldCategory:"Category (test)",chooseCategory:"Choose category",universityCategory:"University",communityCategory:"Community",
+  fieldRound:"Online audition window (test)",chooseRound:"Select audition window",
+  paymentTitle:"NPR 500 per audition · simulation only",paymentBody:"Organizer approval and receipt checking are not active on this sample homepage. Use the separate D1 acceptance page for a controlled end-to-end test.",
+  paymentWarning:"Do not send any real funds or documents using this preview.",
+  reviewCategory:"Category",reviewRound:"Online audition",
+  v2TesterTitle:"V2 · Connected Cloudflare acceptance test",
+  v2TesterNote:"Invited fictional accounts only. After Cloudflare email, D1 and R2 are configured, these paths support persistent testing; they are not official registration.",
+  v2TesterMember:"Participant test ↗",v2TesterJudge:"Invited reviewer test ↗"
 });
 Object.assign(translations.ne,{
-  seasonOverline:"२०२७ · प्रस्तावित योजना / मस्यौदा १",seasonTitle:"एक वर्ष, धेरै स्वरहरू।",
-  seasonIntro:"तीनवटा प्रारम्भिक चरण र वर्षको अन्त्यमा फाइनलको प्रस्ताव। आयोजकले स्वीकृत नगरेसम्म मिति वा नियम आधिकारिक होइनन्।",
-  seasonMarch:"मार्च २०२७",seasonJune:"जुन २०२७",seasonSept:"सेप्टेम्बर २०२७",seasonDec:"डिसेम्बर २०२७",
-  seasonQualify:"प्रस्तावित प्रारम्भिक चरण",seasonFinal:"प्रस्तावित वार्षिक फाइनल",
-  seasonDisclaimer:"मस्यौदा मात्र · अहिले दर्ता वा भुक्तानी खुला छैन। आयोजकको स्वीकृतिपछि मात्र आधिकारिक सूचना जारी हुनेछ।",
-  fieldCategory:"समूह (नमुना)",chooseCategory:"समूह छान्नुहोस्",universityCategory:"विश्वविद्यालय विद्यार्थी",communityCategory:"सामान्य / समुदाय",
-  fieldRound:"प्रारम्भिक चरण (नमुना)",chooseRound:"प्रस्तावित चरण छान्नुहोस्",
-  paymentTitle:"भुक्तानी प्रमाण जाँच — योजना मात्र",paymentBody:"औपचारिक दर्तामा शुल्क पुष्टि गर्ने प्रक्रिया हुनेछ। यस नमुना वेबसाइटले पैसा वा रसिद लिँदैन।",
-  paymentWarning:"यस नमुना साइटमा पैसा नपठाउनुहोस् वा व्यक्तिगत/भुक्तानी कागजात अपलोड नगर्नुहोस्।",
-  reviewCategory:"समूह",reviewRound:"चरण"
+  seasonOverline:"२०२७ · एलन V2 · परीक्षण पूर्वावलोकन",seasonTitle:"दुई अनलाइन छनोट, एक फाइनल।",
+  seasonIntro:"जनवरी र अप्रिल अनलाइन दर्ताका चरण हुन्, मार्च र जुन प्रत्यक्ष छनोट हुन्, र फाइनल सेप्टेम्बरको सुरुमा हुन्छ। अहिले आधिकारिक दर्ता वा भुक्तानी खुला छैन।",
+  seasonJan:"जनवरी १–३१, २०२७",seasonApr:"अप्रिल १–३०, २०२७",seasonMarch:"मार्च २०२७ को मध्य",seasonJune:"जुन २०२७",seasonSept:"सेप्टेम्बर २०२७ को सुरु",
+  seasonOnline:"अनलाइन छनोट · ६०–९० सेकेन्ड Demo",seasonQualify:"प्रत्यक्ष छनोट १",seasonQualify2:"प्रत्यक्ष छनोट २",seasonFinal:"फाइनल · ३२ जना",
+  seasonDisclaimer:"V2 परीक्षण मात्र · आधिकारिक दर्ता होइन। नमुना भुक्तानीमा पैसा कट्दैन।",
+  fieldCategory:"समूह (परीक्षण)",chooseCategory:"समूह छान्नुहोस्",universityCategory:"विश्वविद्यालय",communityCategory:"सामान्य",
+  fieldRound:"अनलाइन छनोट (परीक्षण)",chooseRound:"चरण छान्नुहोस्",
+  paymentTitle:"प्रति छनोट NPR 500 · परीक्षण मात्र",paymentBody:"यो नमुना पृष्ठले भुक्तानी वा प्रमाणपत्र स्वीकार गर्दैन। वास्तविक D1 परीक्षणका लागि छुट्टै पृष्ठ प्रयोग गर्नुहोस्।",
+  paymentWarning:"यो पूर्वावलोकन प्रयोग गरी वास्तविक पैसा वा कागजात नपठाउनुहोस्।",
+  reviewCategory:"समूह",reviewRound:"अनलाइन छनोट",
+  v2TesterTitle:"V2 · Cloudflare परीक्षण वातावरण",
+  v2TesterNote:"आमन्त्रित काल्पनिक खाताका लागि मात्र। Cloudflare सेवाहरू तयार भएपछि परीक्षण डाटा D1 मा रहन्छ, यो आधिकारिक दर्ता होइन।",
+  v2TesterMember:"सहभागी परीक्षण ↗",v2TesterJudge:"निर्णायक परीक्षण ↗"
 });
 Object.assign(translations.zh,{
-  seasonOverline:"2027年 · 賽季規劃草案 Draft 1",seasonTitle:"一整年的舞台，讓歌聲相遇。",
-  seasonIntro:"規劃三場初賽與年底決賽。月份、辦法與參與資格仍待主辦單位確認，尚非正式公告。",
-  seasonMarch:"2027年3月",seasonJune:"2027年6月",seasonSept:"2027年9月",seasonDec:"2027年12月",
-  seasonQualify:"規劃中的初賽",seasonFinal:"規劃中的年度決賽",
-  seasonDisclaimer:"討論草案 · 目前尚未開放報名或繳費。正式賽程及辦法須待主辦單位核定。",
-  fieldCategory:"參賽組別（示範）",chooseCategory:"選擇組別",universityCategory:"大學組",communityCategory:"社會組",
-  fieldRound:"初賽場次（示範）",chooseRound:"選擇規劃場次",
-  paymentTitle:"報名費與繳費證明查核 — 規劃中",paymentBody:"正式流程將有繳費證明與人工核對，本頁不收款、不提供正式繳費證明上傳。",
-  paymentWarning:"請勿透過此測試頁面匯款或上傳身分、繳費文件。",
-  reviewCategory:"組別",reviewRound:"場次"
+  seasonOverline:"2027年 · Alan V2 · 驗收模擬",seasonTitle:"兩次線上海選，九月年度決賽。",
+  seasonIntro:"1月、4月為線上報名及 Demo 海選；3月、6月為實體初賽；9月初舉行決賽。目前僅供功能驗收，不接受正式報名或實際匯款。",
+  seasonJan:"2027年1月1日至31日",seasonApr:"2027年4月1日至30日",seasonMarch:"2027年3月中旬",seasonJune:"2027年6月",seasonSept:"2027年9月初",
+  seasonOnline:"線上海選 · 60–90秒 Demo",seasonQualify:"實體初賽一",seasonQualify2:"實體初賽二",seasonFinal:"年度決賽 · 32強",
+  seasonDisclaimer:"僅供 V2 驗收模擬 · 不提供正式報名與實際繳費。",
+  fieldCategory:"組別（測試）",chooseCategory:"選擇組別",universityCategory:"大學組",communityCategory:"社會組",
+  fieldRound:"線上海選（測試）",chooseRound:"選擇海選窗口",
+  paymentTitle:"每次 NPR 500 · 僅模擬付款",paymentBody:"首頁為視覺示範，並不收取付款憑證。真正的 D1 端到端測試請使用獨立的 Cloudflare 驗收入口。",
+  paymentWarning:"切勿在預覽網站實際匯款或上傳真實證件。",
+  reviewCategory:"組別",reviewRound:"線上海選",
+  v2TesterTitle:"V2 · Cloudflare 真資料庫驗收",
+  v2TesterNote:"僅供受邀測試帳號使用。Cloudflare 寄信、D1 及 R2 配置完成後可持久保存測試資料；此入口不是正式報名。",
+  v2TesterMember:"參賽者驗收入口 ↗",v2TesterJudge:"受邀評審驗收 ↗"
 });
 
 /* Isolated staging bridge: not a real registration form or vote API. */
