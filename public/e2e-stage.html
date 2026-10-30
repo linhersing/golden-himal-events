@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Golden Himal Voice — Participant Staging Acceptance</title>
+<link rel="stylesheet" href="./e2e-stage.css"></head>
+<body data-role="member">
+<a class="skip" href="#main">Skip to content</a>
+<div class="safety"><strong>STAGING · REAL DATABASE · NOT AN OFFICIAL APPLICATION</strong><span data-i18n="safety">Only invite-listed test email addresses and test media. Payments never charge money.</span></div>
+<header class="header"><div class="shell head">
+<a class="brand" href="./"><strong>Golden Himal Voice</strong><small>CHITWAN · 2027</small></a>
+<div class="langs" role="group" aria-label="Language">
+<button data-lang="en" type="button">EN</button><button data-lang="ne" type="button">नेपाली</button><button data-lang="zh" type="button">中文</button>
+</div></div></header>
+<main class="shell" id="main">
+<div class="page-head"><span class="eyebrow">CLOUDFLARE D1 · END-TO-END STAGING</span>
+<h1 data-i18n="memberTitle">My real database test account</h1>
+<p data-i18n="pageIntro">This is a controlled acceptance rehearsal with persistent server records, not browser localStorage. Email OTP is used for testing; production password management is not active.</p>
+</div>
+<div id="status" role="status" aria-live="polite" class="status">Checking your staging session…</div>
+<section id="signin" class="panel" aria-labelledby="signin-heading">
+ <span class="eyebrow">STEP 01 · VERIFIED EMAIL</span><h2 id="signin-heading" data-i18n="signinTitle">Sign in with a one-time email code</h2>
+ <p data-i18n="signinText">Use an organizer-approved test mailbox. The system will actually send a verification email when configured.</p>
+ <form id="send-form"><label for="email" data-i18n="email">Test email address</label><input type="email" id="email" required autocomplete="email" placeholder="test-singer@example.org" maxlength="250">
+ <button type="submit" class="primary" data-i18n="sendCode">Send verification email</button></form>
+ <form id="verify-form" hidden><label for="code" data-i18n="code">6-digit code from email</label>
+ <input id="code" type="text" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required placeholder="000000">
+ <button type="submit" class="primary" data-i18n="verify">Verify and open my page</button></form>
+</section>
+<section id="workspace" hidden>
+ <div class="summary"><h2 id="welcome"></h2><button id="logout" type="button" class="secondary" data-i18n="logout">Log out</button></div>
+ <section class="panel" aria-labelledby="apply-heading"><span class="eyebrow">STEP 02 · PERSISTENT D1 ENTRY</span>
+ <h2 id="apply-heading" data-i18n="applyTitle">Submit my audition demo</h2>
+ <form id="application-form">
+ <div class="two"><div><label for="stage" data-i18n="stageName">Stage name (test only)</label><input id="stage" required maxlength="80" value="TEST SINGER"></div>
+ <div><label for="round" data-i18n="round">Qualifying round</label><select id="round"><option value="2027-03">March 2027</option><option value="2027-06">June 2027</option><option value="2027-09">September 2027</option></select></div></div>
+ <label for="category" data-i18n="category">Category</label><select id="category"><option value="university">University</option><option value="community">Community / Open</option></select>
+ <label for="demo" data-i18n="demo">YouTube / TikTok demo URL</label><input id="demo" type="url" required placeholder="https://youtu.be/..." autocomplete="off">
+ <label class="check"><input id="adult" type="checkbox" required><span data-i18n="adult">I confirm this fictional test participant is 18 or older. Not identity verification.</span></label>
+ <button class="primary" type="submit" data-i18n="submit">Submit to D1 staging</button></form>
+ </section>
+ <section class="panel" aria-labelledby="entries-title"><span class="eyebrow">STEP 03 · PAYMENT REHEARSAL</span><h2 id="entries-title" data-i18n="entries">My saved submissions</h2><div id="applications"></div></section>
+ <section class="panel danger"><h2 data-i18n="deleteTitle">Delete my staging account</h2><p data-i18n="deleteText">Delete all my saved TEST entries, scores, sessions and private media. Cannot be undone.</p><button id="delete-account" class="secondary" data-i18n="delete">Delete TEST account and records</button></section>
+ </section>
+ <div class="notice"><p data-i18n="notLive">Staging has actual D1 records when enabled. It is not public registration, not verified eligibility and not real payment. Review scores are for functional testing only.</p></div>
+</main><footer class="foot">GOLDEN HIMAL VOICE · RESTRICTED ACCEPTANCE · TEST ONLY</footer>
+<script type="module" src="./e2e-stage.js"></script>
+</body></html>
