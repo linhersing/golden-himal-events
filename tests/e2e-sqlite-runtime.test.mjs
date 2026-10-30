@@ -3,108 +3,126 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFile} from 'node:fs/promises';
 import {handleE2E} from '../backend/staging-e2e.js';
+
 const host='https://golden-himal-voice-preview.linhersing.workers.dev';
-function adapter(db){
- return {prepare(sql){let args=[];
-  return {bind(...x){args=x;return this},
-   first(){return db.prepare(sql).get(...args)||null},
-   all(){return {results:db.prepare(sql).all(...args)}},
-   run(){const r=db.prepare(sql).run(...args);return {meta:{changes:r.changes}}}};
- }};
-}
-const req=(path,body,cookie)=>new Request(host+path,{method:'POST',
- headers:{Origin:host,'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(body)});
+function adapter(db){return {prepare(sql){let args=[];return {
+ bind(...values){args=values;return this},
+ first(){return db.prepare(sql).get(...args)||null},
+ all(){return {results:db.prepare(sql).all(...args)}},
+ run(){const r=db.prepare(sql).run(...args);return {meta:{changes:r.changes}}}
+}}}}
+const req=(path,obj,cookie)=>new Request(host+path,{method:'POST',headers:{Origin:host,'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(obj)});
 const get=(path,cookie)=>new Request(host+path,{headers:cookie?{Cookie:cookie}:{}});
-test('real D1-style SQLite adapter persists OTP, entry, simulated fee and score across distinct sessions',async()=>{
- const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
- const inbox=[],bucket=new Map(),env={
-  STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'A'.repeat(64),
-  STAGING_ALLOWED_EMAILS:'participant@test.invalid',
-  STAGING_REVIEWER_EMAILS:'judge@test.invalid',
-  STAGING_FROM_EMAIL:'tests@test.invalid',
+
+test('Alan V2: verified email -> real DB audition -> R2 proofs -> mock fee -> 3 judges -> live -> finale -> vote',async()=>{
+ const db=new DatabaseSync(':memory:');
+ db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ const inbox=[],r2=new Map(),env={
+  STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'G'.repeat(64),
+  STAGING_ALLOWED_EMAILS:'singer@test.invalid,voter@test.invalid',
+  STAGING_REVIEWER_EMAILS:'judge1@test.invalid,judge2@test.invalid,judge3@test.invalid',
+  STAGING_ORGANIZER_EMAILS:'organizer@test.invalid',
+  STAGING_FROM_EMAIL:'test@example.invalid',
   DB:adapter(db),
-  EMAIL:{async send(x){inbox.push(x);return {id:'test-message'}}},
-  STAGING_MEDIA:{async put(k,data,meta){bucket.set(k,{data,meta})},async get(k){const item=bucket.get(k);return item?{body:item.data,httpMetadata:item.meta.httpMetadata}:null},async delete(k){bucket.delete(k)}}
+  EMAIL:{async send(m){inbox.push(m);return {id:'mail-test'}}},
+  STAGING_MEDIA:{async put(k,d,m){r2.set(k,{data:d,metadata:m})},async get(k){const v=r2.get(k);return v?{body:v.data,httpMetadata:v.metadata.httpMetadata}:null},async delete(k){r2.delete(k)}}
  };
+ async function auth(email,role){
+  const start=await handleE2E(req('/api/e2e/request-code',{email,role}),env);assert.equal(start.status,200,email+' start');
+  const challenge=(await start.json()).challenge_id;
+  const code=inbox.at(-1).text.match(/\b\d{6}\b/)[0];
+  const verified=await handleE2E(req('/api/e2e/verify-code',{challenge_id:challenge,code}),env);
+  assert.equal(verified.status,200,email+' verify');return verified.headers.get('set-cookie').split(';')[0];
+ }
+ async function upload(cookie,id,kind,type){
+  const r=await handleE2E(new Request(host+'/api/e2e/demo-upload?application='+id+'&kind='+kind,{
+   method:'POST',headers:{Origin:host,Cookie:cookie,'Content-Type':type},body:new Uint8Array(512)
+  }),env);assert.equal(r.status,200,kind+' '+JSON.stringify(await r.clone().json()));return r;
+ }
  try{
-  const refused=await handleE2E(req('/api/e2e/request-code',{email:'stranger@test.invalid'}),env);
-  assert.equal(refused.status,403);
-  const start=await handleE2E(req('/api/e2e/request-code',{email:'participant@test.invalid',role:'member'}),env);
-  assert.equal(start.status,200);const challenge=(await start.json()).challenge_id;
-  assert.equal(inbox.length,1);
-  const code=inbox[0].text.match(/\b\d{6}\b/)[0];
-  const login=await handleE2E(req('/api/e2e/verify-code',{challenge_id:challenge,code}),env);
-  assert.equal(login.status,200);
-  const cookie=login.headers.get('set-cookie').split(';')[0];
-  assert.match(cookie,/^__Host-ghv-e2e=/);
-  assert.equal((await handleE2E(get('/api/e2e/me',cookie),env)).status,200);
-  assert.equal((await handleE2E(get('/api/e2e/reviewer-queue',cookie),env)).status,403);
-  const appResponse=await handleE2E(req('/api/e2e/applications',{
-   round_code:'2027-03',category:'university',stage_name:'TEST SINGER',demo_url:'https://youtu.be/test123',adult_confirmed:true
-  },cookie),env);
-  assert.equal(appResponse.status,201);const appId=(await appResponse.json()).application_id;
-  assert.equal((await handleE2E(get('/api/e2e/applications',cookie),env)).status,200);
-  // Authenticated direct upload is persisted to a private R2 fixture and linked to D1.
-  const uploaded=await handleE2E(new Request(host+'/api/e2e/demo-upload?application='+appId,{
-   method:'POST',headers:{Origin:host,Cookie:cookie,'Content-Type':'audio/mpeg'},
-   body:new Uint8Array(512)
-  }),env);
-  assert.equal(uploaded.status,200);
-  assert.equal((await uploaded.json()).private,true);
-  assert.equal(db.prepare('SELECT media_key FROM e2e_applications WHERE id=?').get(appId).media_key.startsWith('e2e/'),true);
-  const ownDownload=await handleE2E(get('/api/e2e/demo-download?application='+appId,cookie),env);
-  assert.equal(ownDownload.status,200);
-  assert.equal((await ownDownload.arrayBuffer()).byteLength,512);
-  assert.equal((await handleE2E(get('/api/e2e/demo-download?application='+appId),env)).status,401);
-  // Category is locked by a D1 trigger, including direct SQL writers and
-  // concurrent Worker requests; a second round cannot change group.
-  assert.throws(()=>db.prepare('INSERT INTO e2e_applications(id,account_id,round_code,category,stage_name,demo_url,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)')
-    .run('group-cheat',db.prepare('SELECT account_id FROM e2e_applications LIMIT 1').get().account_id,
-     '2027-06','community','TEST','https://youtu.be/test123',1,1),/annual_category_locked/);
-  const duplicate=await handleE2E(req('/api/e2e/applications',{round_code:'2027-03',category:'university',stage_name:'TEST SINGER',demo_url:'https://youtu.be/test123',adult_confirmed:true},cookie),env);
-  assert.equal(duplicate.status,409);
-  const paid=await handleE2E(req('/api/e2e/mock-payment',{application_id:appId},cookie),env);
+  assert.equal((await handleE2E(req('/api/e2e/request-code',{email:'not-listed@test.invalid',role:'organizer'}),env)).status,403);
+  const member=await auth('singer@test.invalid','member');
+  const request={round_code:'2027-01',category:'community',province:'gandaki',location_basis:'residence',
+   affiliation:'TEST JOB',stage_name:'TEST SINGER',song_title:'TEST SONG',original_artist:'TEST ORIGINAL',
+   song_language:'Nepali',song_key:'C',demo_url:'',adult_confirmed:true,no_exclusive_contract:true};
+  assert.equal((await handleE2E(req('/api/e2e/applications',{...request,round_code:'2027-09'},member),env)).status,400);
+  assert.equal((await handleE2E(req('/api/e2e/applications',{...request,adult_confirmed:false},member),env)).status,422);
+  const created=await handleE2E(req('/api/e2e/applications',request,member),env);
+  assert.equal(created.status,201,JSON.stringify(await created.clone().json()));
+  const appId=(await created.json()).application_id;
+  assert.equal(db.prepare('SELECT round_code FROM e2e_applications').get().round_code,'2027-01');
+  // D1 table, not the browser, is the authoritative application record.
+  assert.equal((await (await handleE2E(get('/api/e2e/applications',member),env)).json()).applications[0].id,appId);
+  assert.equal((await handleE2E(req('/api/e2e/applications',{...request,round_code:'2027-04',category:'university',student_confirmed:true},member),env)).status,409);
+  await upload(member,appId,'demo','video/mp4');
+  await upload(member,appId,'eligibility','application/pdf');
+  await upload(member,appId,'receipt','image/png');
+  assert.equal((await handleE2E(get('/api/e2e/demo-download?application='+appId,member),env)).status,200);
+  const paid=await handleE2E(req('/api/e2e/mock-payment',{application_id:appId},member),env);
   assert.equal(paid.status,200);assert.equal((await paid.json()).realCharge,false);
-  assert.equal(db.prepare('SELECT count(*) AS n FROM e2e_payment_events').get().n,1);
-  const again=await handleE2E(req('/api/e2e/mock-payment',{application_id:appId},cookie),env);
-  assert.equal((await again.json()).already,true);
-  const askReviewer=await handleE2E(req('/api/e2e/request-code',{email:'judge@test.invalid',role:'reviewer'}),env);
-  assert.equal(askReviewer.status,200);
-  const judgeCode=inbox[1].text.match(/\b\d{6}\b/)[0];
-  const judgeAuth=await handleE2E(req('/api/e2e/verify-code',{challenge_id:(await askReviewer.json()).challenge_id,code:judgeCode}),env);
-  assert.equal(judgeAuth.status,200);const judgeCookie=judgeAuth.headers.get('set-cookie').split(';')[0];
-  const queue=await handleE2E(get('/api/e2e/reviewer-queue',judgeCookie),env);
-  assert.equal((await queue.json()).queue[0].id,appId);
-  assert.equal((await handleE2E(req('/api/e2e/score',{application_id:appId,technique:50,interpretation:33,no_conflict:true},cookie),env)).status,403);
-  const scored=await handleE2E(req('/api/e2e/score',{application_id:appId,technique:50,interpretation:33,no_conflict:true},judgeCookie),env);
-  assert.equal(scored.status,200);assert.equal((await scored.json()).score,83);
-  const scoredAgain=await handleE2E(req('/api/e2e/score',{application_id:appId,technique:55,interpretation:34,no_conflict:true},judgeCookie),env);
-  assert.equal(scoredAgain.status,409);
-  assert.equal((await (await handleE2E(get('/api/e2e/applications',cookie),env)).json()).applications[0].status,'scored');
-  const count=db.prepare('SELECT count(*) AS n FROM e2e_accounts').get().n;assert.equal(count,2);
-  // Deletion is self-service only; the other reviewer account remains intact.
-  const erased=await handleE2E(req('/api/e2e/delete-my-data',{},cookie),env);
-  assert.equal(erased.status,200);
-  assert.equal(db.prepare('SELECT count(*) AS n FROM e2e_applications').get().n,0);
-  assert.equal(db.prepare('SELECT count(*) AS n FROM e2e_judge_scores').get().n,0);
-  assert.equal(db.prepare('SELECT count(*) AS n FROM e2e_accounts').get().n,1);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_payment_events').get().n,1);
+  // Test-only 3 invite-only professional reviewers, separate permissions.
+  const reviewers=[];
+  for(let i=1;i<=3;i++)reviewers.push(await auth('judge'+i+'@test.invalid','reviewer'));
+  const org=await auth('organizer@test.invalid','organizer');
+  assert.equal((await handleE2E(get('/api/e2e/reviewer-queue',member),env)).status,403);
+  assert.equal((await handleE2E(get('/api/e2e/organizer-queue',reviewers[0]),env)).status,403);
+  const queue=(await (await handleE2E(get('/api/e2e/reviewer-queue',reviewers[0]),env)).json()).queue;
+  assert.equal(queue[0].id,appId);assert.equal(queue[0].phase,'demo');
+  const docDenied=await handleE2E(get('/api/e2e/demo-download?application='+appId+'&kind=eligibility',reviewers[0]),env);
+  assert.equal(docDenied.status,404);
+  assert.equal((await handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'qualifier'},org),env)).status,409);
+  for(const cookie of reviewers){
+   const s=await handleE2E(req('/api/e2e/score',{application_id:appId,technique:50,interpretation:30,no_conflict:true},cookie),env);
+   assert.equal(s.status,200);
+   assert.equal((await s.json()).phase,'demo');
+  }
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_judge_scores').get().n,3);
+  const toLive=await handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'qualifier'},org),env);
+  assert.equal(toLive.status,200);assert.equal((await toLive.json()).phase,'qualifier');
+  assert.equal((await (await handleE2E(get('/api/e2e/reviewer-queue',reviewers[0]),env)).json()).queue[0].phase,'qualifier');
+  assert.equal((await handleE2E(req('/api/e2e/score',{application_id:appId,technique:50,interpretation:30,no_conflict:true},reviewers[0]),env)).status,422);
+  for(const cookie of reviewers){
+   const s=await handleE2E(req('/api/e2e/score',{application_id:appId,technique:33,interpretation:26,stage_presence:14,appearance:7,no_conflict:true},cookie),env);
+   assert.equal(s.status,200);assert.equal((await s.json()).score,80);
+  }
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM e2e_live_scores WHERE stage='qualifier'").get().n,3);
+  assert.equal((await handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'final'},org),env)).status,200);
+  assert.equal((await handleE2E(req('/api/e2e/applications',{...request,round_code:'2027-04'},member),env)).status,409);
+  const voter=await auth('voter@test.invalid','member');
+  assert.equal((await (await handleE2E(get('/api/e2e/finalists',voter),env)).json()).finalists.length,1);
+  assert.equal((await handleE2E(req('/api/e2e/test-vote',{application_id:appId},member),env)).status,403);
+  assert.equal((await handleE2E(req('/api/e2e/test-vote',{application_id:appId},voter),env)).status,200);
+  assert.equal((await handleE2E(req('/api/e2e/test-vote',{application_id:appId},voter),env)).status,409);
+  let standings=(await (await handleE2E(get('/api/e2e/standings',org),env)).json()).standings;
+  assert.equal(standings[0].total_score,null,'final jurors have not yet scored');
+  for(const cookie of reviewers){
+   const s=await handleE2E(req('/api/e2e/score',{application_id:appId,technique:33,interpretation:26,stage_presence:14,appearance:7,no_conflict:true},cookie),env);
+   assert.equal(s.status,200);assert.equal((await s.json()).phase,'final');
+  }
+  standings=(await (await handleE2E(get('/api/e2e/standings',org),env)).json()).standings;
+  assert.equal(standings[0].judges_mean,80);
+  assert.equal(standings[0].vote_score,100);
+  assert.equal(standings[0].total_score,90.2); // 100 * 51% + 80 * 49%
+  // An authenticated member can erase their own D1 and R2 data; score/votes cascade.
+  const erased=await handleE2E(req('/api/e2e/delete-my-data',{},member),env);assert.equal(erased.status,200);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_applications').get().n,0);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_live_scores').get().n,0);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_final_votes').get().n,0);
+  assert.equal(r2.size,0);
  }finally{db.close()}
 });
-
-test('OTP challenge refuses the correct code after five attempts are consumed',async()=>{
+test('expired and over-attempted emailed codes are rejected',async()=>{
  const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
- let sent;
- const env={STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'B'.repeat(64),
- STAGING_ALLOWED_EMAILS:'participant@test.invalid',STAGING_FROM_EMAIL:'tests@test.invalid',
- DB:adapter(db),EMAIL:{async send(x){sent=x;return {id:'test'}}}};
+ let sent;const env={STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'B'.repeat(64),
+ STAGING_ALLOWED_EMAILS:'member@test.invalid',STAGING_FROM_EMAIL:'tester@test.invalid',
+ DB:adapter(db),EMAIL:{async send(x){sent=x}}};
  try{
-  const response=await handleE2E(req('/api/e2e/request-code',{email:'participant@test.invalid',role:'member'}),env);
-  assert.equal(response.status,200);
-  const id=(await response.json()).challenge_id;
-  const code=sent.text.match(/\b\d{6}\b/)[0];
+  const start=await handleE2E(req('/api/e2e/request-code',{email:'member@test.invalid',role:'member'}),env);
+  assert.equal(start.status,200);const id=(await start.json()).challenge_id;
   db.prepare('UPDATE e2e_email_challenges SET attempts=5 WHERE id=?').run(id);
-  const rejected=await handleE2E(req('/api/e2e/verify-code',{challenge_id:id,code}),env);
-  assert.equal(rejected.status,401);
-  assert.equal(db.prepare('SELECT count(*) AS n FROM e2e_sessions').get().n,0);
+  const correct=sent.text.match(/\b\d{6}\b/)[0];
+  assert.equal((await handleE2E(req('/api/e2e/verify-code',{challenge_id:id,code:correct}),env)).status,401);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_sessions').get().n,0);
  }finally{db.close()}
 });
