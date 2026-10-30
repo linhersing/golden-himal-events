@@ -219,7 +219,7 @@ async function judging(){
    const submit=node('button',t('score'),'primary');submit.type='submit';form.append(submit);
    form.onsubmit=async ev=>{
     ev.preventDefault();submit.disabled=true;
-    const body={application_id:a.id,technique:Number(inputs.technique.value),interpretation:Number(inputs.interpretation.value),no_conflict:check.checked};
+    const body={application_id:a.id,phase:a.phase,technique:Number(inputs.technique.value),interpretation:Number(inputs.interpretation.value),no_conflict:check.checked};
     if(!demo){body.stage_presence=Number(inputs.stagePresence.value);body.appearance=Number(inputs.appearance.value)}
     try{await post('score',body);message(t('scoreSaved'));await judging()}
     catch(err){message(t('failed')+err.message,true)}finally{submit.disabled=false}
