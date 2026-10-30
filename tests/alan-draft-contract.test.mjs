@@ -5,7 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
-test('2027 stages and category fields are explicitly drafts, not payment collection',async()=>{
+test('Alan V2 stages and category fields are explicitly simulated, never collecting actual funds',async()=>{
  const [html,js]=await Promise.all([read('index.html'),read('src/scripts/main.js')]);
  for(const val of ['season-preview','seasonDisclaimer','name="category"','name="round"','payment-preview']){
    assert.ok(html.includes(val),val);
@@ -13,7 +13,13 @@ test('2027 stages and category fields are explicitly drafts, not payment collect
  assert.match(html,/This is not an invitation to apply or pay/);
  assert.match(html,/No payment or receipt upload is accepted/);
  assert.doesNotMatch(html,/<input[^>]*type="file"/i);
- assert.doesNotMatch(html,/NPR\s*500|51\s*%|49\s*%|12\s*finalists/i);
+ assert.match(html,/data-i18n="seasonJan"/);
+ assert.match(html,/data-i18n="seasonApr"/);
+ assert.match(html,/value="jan2027"/);
+ assert.match(html,/value="apr2027"/);
+ assert.match(html,/class="v2-rule-summary"/);
+ assert.match(html,/not issue vouchers/i);
+ assert.doesNotMatch(html,/12\s*finalists/i);
  for(const lang of ['en','ne','zh']){
    assert.match(js,new RegExp('Object\\.assign\\(translations\\.'+lang+'\\s*,'));
  }
