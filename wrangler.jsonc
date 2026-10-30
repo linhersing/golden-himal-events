@@ -16,6 +16,11 @@
       "binding": "DB",
       "database_name": "ghv-staging",
       "database_id": "93f23f1e-0c2b-41a6-8d8d-fb1a35d4a93a"
+    },
+    {
+      "binding": "E2E_DB",
+      "database_name": "golden-himal-voice-preview-e2e-db",
+      "database_id": "2f7851ec-fb0b-43be-9958-b63bf04a9c6b"
     }
   ],
   "vars": {

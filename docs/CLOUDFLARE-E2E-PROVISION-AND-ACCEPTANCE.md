@@ -13,6 +13,20 @@ Cloudflare 帳戶所有者、已授權的 ChatGPT Work / Gemini 測試代理。�
 **Old DB remains unchanged:** DB -> existing `ghv-staging`, id `93f23f1e-0c2b-41a6-8d8d-fb1a35d4a93a`, holds legacy synthetic fixtures. Do not migrate E2E tables into the old DB or enable STAGING_TEST_WRITE_ENABLED.
 **CURRENT BLOCKER 2026-10-30:** GitHub commit `ec3f7e5` attempted Wrangler auto-provision for isolated `E2E_DB` and private `STAGING_MEDIA`; the Cloudflare Workers Builds check returned **FAILURE** (build ID `08276796-afda-4b2e-9237-9f34576ba5eb`), and live GET /api/staging/e2e-readiness returned HTTP 404 twice. The actual build log is available only to the authenticated Cloudflare account operator. Do **not** assume database or bucket creation happened. To restore green deployments, the unfinished bindings were removed from the active root `wrangler.jsonc` and preserved as **inactive template** `wrangler.e2e.provision.jsonc`. Open the Cloudflare build log, verify your rights/billing and select resources before enabling bindings in active config. The existing D1 remains untouched, and the new E2E API stays fail-closed.
 
+## Verified desktop update — 2026年10月30日 (supersedes the historical blocker above)
+
+An authorized local Chrome session inspected Build `08276796-afda-4b2e-9237-9f34576ba5eb`. Its deploy log confirms D1 creation **succeeded**; deployment failed with Cloudflare error **10057**: `inherit binding 'STAGING_MEDIA' is invalid: previous version does not have binding named 'STAGING_MEDIA'`. R2 must be explicitly created and named before enabling its binding; do not retry the inactive template unchanged.
+
+The account contains the distinct database `golden-himal-voice-preview-e2e-db`, UUID `2f7851ec-fb0b-43be-9958-b63bf04a9c6b`. Before migration, its console showed only Cloudflare's internal `_cf_KV` table. A pre-migration Time Travel bookmark was recorded privately in the shared Drive handover. This is a rollback point, not a downloaded SQL export. The V2 migration was then applied to **this new database only**. Console readback verified all **9 application tables, 5 triggers and 4 explicit indexes**, with zero accounts, applications, payment events, scores and votes. The legacy database was not modified. Do not re-run the initial migration over this now-existing schema.
+
+This configuration pins that verified resource as `E2E_DB`; the remote Worker binding and `schemaReady` flags still require successful deployment and live readback. This is schema provisioning, **not** a verified member login or end-to-end application test.
+
+Account-level blockers observed in the actual dashboard:
+- R2 is not activated. Its activation accepts a renewing usage-based subscription, with a free allowance and overage billing. The activation button was **not** clicked; owner approval is required first.
+- Email Sending offers **Purchase Workers Paid**. No plan upgrade was purchased.
+- The account's Domains overview shows **No data available**. No event-authorized sending domain is configured. Do not add an unrelated organization's domain or invent a sender/test inbox.
+- `STAGING_E2E_ENABLED` remains unset; no R2 or Email binding is enabled and no fixed-code login bypass is introduced.
+
 ## Step 1: verify actual Cloudflare account bindings (no writes)
 1. Open Cloudflare dashboard for the account that hosts `golden-himal-voice-preview`. First inspect failed Workers Build `08276796-afda-4b2e-9237-9f34576ba5eb`, identify the **actual error**, and save a redacted error excerpt to GPT/Gemini BRIDGE.
 2. Workers & Pages → golden-himal-voice-preview → Settings → Bindings and Deployments: inspect E2E_DB and STAGING_MEDIA (if any were auto-created before the build failed). Also inspect D1 > Databases and R2 buckets. Confirm any new E2E_DB points to **a distinct new database**, not `ghv-staging`, and R2 bucket is private with no public r2.dev / custom-domain access.
@@ -29,7 +43,7 @@ Cloudflare 帳戶所有者、已授權的 ChatGPT Work / Gemini 測試代理。�
 5. If the SQL import fails, stop and record the error; do not delete a live D1, reset tables, or overwrite the old database. The readiness endpoint should report `schemaReady=true` only after 9 E2E tables exist; this is a structural test, not a full migration integrity check.
 
 ## Step 3: private R2 for testing
-1. Confirm STAGING_MEDIA binding to the new private R2 (Cloudflare auto-provisioning); no public domain is attached. Backfill the exact bucket_name in `wrangler.jsonc` after account verification.
+1. After the owner approves account-level R2 activation, create a new private bucket and explicitly set its verified `bucket_name` for STAGING_MEDIA. Do not rely on the failed implicit/inherited binding. Confirm that no public domain is attached before deploying it.
 2. Do NOT put actual Nepalese participant identity scans in stage. Use generated fictional PDF/image receipts, and a silent original video recorded/generated specifically for tests. Files are only readable by their owner or explicitly authorized organizer; reviewers see demo media only.
 3. Verify uploading a TEST MP4/WebM up to 20 MB, eligibility PDF/image up to 5 MB, receipt PDF/image up to 5 MB. Real back-end blob readback and authorized/unauthorized access must be verified before PASS.
 
@@ -55,4 +69,4 @@ E. Three separate test judges score each stage; organizer promotes after scores;
 F. Any error -> BLOCKED/FAIL, no fake PAID or official voucher. User specifically dislikes inbox clutter: use dedicated inbox and clean TEST mail after recording results, do not touch normal business mail.
 
 ## Work mode handoff
-**Current Chat mode does not have an authenticated Cloudflare control-panel connector or the originating browser context**, so a Cloudflare operator or ChatGPT Work with the user’s authenticated browser must perform Steps 1–4 in the Cloudflare account. Do not ask the user to paste account API tokens into chat. The source is ready; account resource provisioning, domain ownership, sender activation and secrets are not available from the GitHub connector alone. Each actual change must be reported in the shared BRIDGE by the actor that performed it.
+The earlier mobile cloud-browser handoff did not complete. The authorized **desktop local Chrome extension session** subsequently reached the signed-in Cloudflare dashboard and applied the isolated D1 schema described above. This does not establish the cause of the mobile handoff failure. Remaining subscription acceptance, event-owned sender domain, dedicated inboxes and security settings still require their respective account permissions and evidence. Do not ask the user to paste account API tokens into chat. Each actual change must be reported in the shared BRIDGE by the actor that performed it.
