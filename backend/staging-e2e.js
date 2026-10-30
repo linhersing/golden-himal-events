@@ -1,3 +1,4 @@
+import {handleV2Route} from './staging-v2-flow.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Explicit opt-in and allowlisted emails. No production applicants, actual payments,
  * public registration, raw passwords, magic-code shortcuts or exposed R2 URLs.
@@ -226,6 +227,8 @@ export async function handleE2E(request,env){
   if(pathname==='/api/e2e/verify-code'&&isPost)return await verifyCode(request,env);
   const a=await account(request,env);
   if(!a)return deny('login_required',401);
+  const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON});
+  if(v2)return v2;
   if(pathname==='/api/e2e/logout'&&isPost)return await logout(request,env,a);
   if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:a,testOnly:true});
   if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env);
