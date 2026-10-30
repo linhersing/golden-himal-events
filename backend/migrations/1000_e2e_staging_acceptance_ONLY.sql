@@ -107,6 +107,20 @@ CREATE TABLE IF NOT EXISTS e2e_live_scores (
  created_at INTEGER NOT NULL,
  PRIMARY KEY(application_id,reviewer_id,stage)
 );
+-- Reject scores submitted for a stage the application has already left,
+-- even if an organizer promotes between a Worker SELECT and an INSERT.
+CREATE TRIGGER IF NOT EXISTS e2e_demo_score_stage_guard
+BEFORE INSERT ON e2e_judge_scores FOR EACH ROW BEGIN
+ SELECT CASE WHEN NOT EXISTS(
+  SELECT 1 FROM e2e_applications WHERE id=NEW.application_id AND phase='demo'
+ ) THEN RAISE(ABORT,'stale_demo_score') END;
+END;
+CREATE TRIGGER IF NOT EXISTS e2e_live_score_stage_guard
+BEFORE INSERT ON e2e_live_scores FOR EACH ROW BEGIN
+ SELECT CASE WHEN NOT EXISTS(
+  SELECT 1 FROM e2e_applications WHERE id=NEW.application_id AND phase=NEW.stage
+ ) THEN RAISE(ABORT,'stale_live_stage_score') END;
+END;
 -- Staging votes: one per VERIFIED TEST MEMBER for the 2027 final rehearsal.
 -- V2 has NOT yet defined actual voter verification or per-voter limit;
 -- this stricter test-only rule cannot be used as the published official rule.
@@ -131,6 +145,10 @@ FOR EACH ROW WHEN OLD.phase<>NEW.phase BEGIN
   AND category=NEW.category AND phase IN ('qualifier','final')
   AND id<>NEW.id
  )>=25 THEN RAISE(ABORT,'qualifier_capacity_25') END;
+ SELECT CASE WHEN NEW.phase='final' AND EXISTS(
+  SELECT 1 FROM e2e_applications
+  WHERE account_id=NEW.account_id AND phase='final' AND id<>NEW.id
+ ) THEN RAISE(ABORT,'member_already_has_finalist_entry') END;
  SELECT CASE WHEN NEW.phase='final' AND (
   SELECT COUNT(*) FROM e2e_applications WHERE round_code=NEW.round_code
   AND category=NEW.category AND phase='final' AND id<>NEW.id
