@@ -1,3 +1,4 @@
+import {handleE2E} from './staging-e2e.js';
 /*
  * Golden Himal Voice — SAFE STAGING SMOKE TEST ONLY.
  *
@@ -143,6 +144,7 @@ async function handleSampleRegistration(request,env) {
 export default {
   async fetch(request,env) {
     const pathname=new URL(request.url).pathname;
+    if(pathname.startsWith('/api/e2e/'))return handleE2E(request,env);
     if(pathname==='/api/staging/health')return handleHealth(request,env);
     if(pathname==='/api/staging/dashboard')return handleTestDashboard(request,env);
     if(pathname==='/api/staging/sample-read')return handleSampleRead(request,env);
