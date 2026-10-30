@@ -7,6 +7,7 @@ const $=id=>document.getElementById(id);
 let state;
 try{state=safeParsePortal(localStorage.getItem(KEY))}catch{state=blankPortal()}
 let activeId=null;
+try{const remembered=sessionStorage.getItem('ghv_demo_active_member_v1');if(state.members.some(m=>m.id===remembered))activeId=remembered}catch{}
 let lastSeed=null;
 function setText(id,value){$(id).textContent=String(value)}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}}
@@ -64,6 +65,7 @@ $('dossier-demo').addEventListener('click',()=>{
   m=result.member;
  }
  activeId=m.id;
+ try{sessionStorage.setItem('ghv_demo_active_member_v1',activeId)}catch{}
  let app=state.applications.find(x=>x.memberId===m.id&&x.round==='2027-03');
  if(!app){
   const result=applyMock(state,m.id,'2027-03','TEST-DEMO-90S');
@@ -96,14 +98,18 @@ $('persona').addEventListener('change',displayPersona);
 $('signup').addEventListener('click',()=>{
  const result=signUpMock(state,$('persona').value);
  if(result.error){info('enroll-status',result.error,true);return}
- activeId=result.member.id;save();render();
+ activeId=result.member.id;
+ try{sessionStorage.setItem('ghv_demo_active_member_v1',activeId)}catch{}
+ save();render();
  info('enroll-status',result.member.id+' 註冊模擬完成。');
  changeTab('apply');
 });
 $('login').addEventListener('click',()=>{
  const id=$('signin').value;
  if(!state.members.some(m=>m.id===id)){info('enroll-status','請先選擇已建立的虛構會員。',true);return}
- activeId=id;render();
+ activeId=id;
+ try{sessionStorage.setItem('ghv_demo_active_member_v1',activeId)}catch{}
+ render();
  info('enroll-status','已切換至 '+member().alias+'（無密碼的假登入）。');
  changeTab('profile');
 });
@@ -276,6 +282,7 @@ function render(){
 $('seed20').addEventListener('click',()=>{
  if(!confirm('將「此會員沙盒」重置，再產生20個固定虛構測試案例？不會改動既有D1、金流或別的測試室。'))return;
  state=blankPortal();activeId=null;
+ try{sessionStorage.removeItem('ghv_demo_active_member_v1')}catch{}
  lastSeed=seed20(state);
  save();render();
  const failed=lastSeed.filter(x=>x.error),ok=lastSeed.length-failed.length;
@@ -285,6 +292,7 @@ $('seed20').addEventListener('click',()=>{
 $('reset').addEventListener('click',()=>{
  if(!confirm('清除這台瀏覽器的會員／報名／付款測試資料？此操作不會刪除D1或其他沙盒。'))return;
  state=blankPortal();activeId=null;lastSeed=null;
+ try{sessionStorage.removeItem('ghv_demo_active_member_v1')}catch{}
  save();render();info('qa-status','會員測試沙盒已重置。');
 });
 $('export').addEventListener('click',()=>{
@@ -294,3 +302,8 @@ $('export').addEventListener('click',()=>{
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
 render();
+const requestedStep=new URLSearchParams(location.search).get('step');
+if(['apply','checkout','profile'].includes(requestedStep)){
+ if(member())changeTab(requestedStep);
+ else changeTab('enroll');
+}

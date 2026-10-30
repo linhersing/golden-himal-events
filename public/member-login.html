@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#34261e">
+<title>Golden Himal Voice | Member Sign In & My Account — TEST ONLY</title>
+<link rel="stylesheet" href="./member-login.css">
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to content</a>
+<div class="test-banner" role="note"><strong>TEST ONLY · NOT REAL AUTHENTICATION</strong><span data-i18n="testBanner">Use only the displayed fictional test account and demo passcode. Never enter a real password, personal information, or payment details.</span></div>
+<header class="site-header">
+ <div class="shell header-inner">
+  <a class="brand" href="./"><img src="./images/brand-identity.png" width="62" height="54" alt="Golden Himal Palace"><span><strong>Golden Himal Voice</strong><small>CHITWAN · 2027 MEMBER PREVIEW</small></span></a>
+  <div class="header-actions">
+   <a href="./" class="header-link" data-i18n="backHome">← Event home</a>
+   <div class="languages" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true">EN</button><button type="button" data-lang="ne" aria-pressed="false">नेपाली</button></div>
+  </div>
+ </div>
+</header>
+<main id="main" class="shell">
+ <section id="auth-view" class="auth-layout" aria-labelledby="auth-title">
+  <div class="auth-intro">
+   <span class="eyebrow">THE CONTESTANT JOURNEY · TEST PREVIEW</span>
+   <h1 id="auth-title" data-i18n="welcome">Your stage.<br>Your account.</h1>
+   <p data-i18n="welcomeText">Sign in to your personal area to see your competition entry, demo submission, mock NPR 500 payment and screening progress — all in one place.</p>
+   <div class="steps"><div><b>01</b><span data-i18n="step1">Create a test account</span></div><div><b>02</b><span data-i18n="step2">Submit a demo & test payment</span></div><div><b>03</b><span data-i18n="step3">Return here to track your result</span></div></div>
+   <p class="intro-caption" data-i18n="sameDevice">Test entries remain on this browser and website address only; they are not real Cloudflare member accounts.</p>
+  </div>
+  <div class="auth-card">
+   <div class="card-top"><span class="eyebrow">MEMBER ACCESS</span><span class="pill">SANDBOX</span></div>
+   <h2 data-i18n="signInTitle">Member sign in</h2>
+   <p class="muted" data-i18n="signInIntro">Already registered in this browser's member test? Use the fictional ID and shared demo passcode below.</p>
+   <form id="login-form" autocomplete="off">
+    <label for="login-username" data-i18n="usernameLabel">Test account name / Member ID / test email</label>
+    <input id="login-username" name="test-username" type="text" spellcheck="false" value="TEST-SINGER-001" maxlength="80" required autocomplete="off">
+    <label for="login-password" data-i18n="passwordLabel">Demo password (not a real password)</label>
+    <div class="password-row"><input id="login-password" name="test-passcode" type="password" maxlength="32" required autocomplete="off" placeholder="Demo code only"><button type="button" id="show-password" data-i18n="toggleReveal" aria-label="Show demo passcode">Show</button></div>
+    <div class="demo-credentials"><span data-i18n="testCredentials">Use only these public demonstration credentials:</span><strong>TEST-SINGER-001</strong><code>GHV-TEST-2027</code></div>
+    <button type="submit" class="btn primary" data-i18n="signInBtn">Sign in to my test account</button>
+    <p id="login-feedback" class="feedback" role="status" aria-live="polite"></p>
+   </form>
+   <div class="separate"><span data-i18n="newMember">First time here? Create a fictional test member.</span></div>
+   <div class="register-box">
+    <label for="register-persona" data-i18n="chooseTestPerson">Choose a fictional participant</label>
+    <select id="register-persona" aria-label="Choose fictional participant"></select>
+    <button id="register-test" type="button" class="btn secondary" data-i18n="createTestAccount">Create test account & open my area</button>
+    <p id="register-feedback" class="feedback" role="status" aria-live="polite"></p>
+   </div>
+   <p class="legal" data-i18n="notSecure">This shared demo passcode proves nothing about identity. No password is saved or sent. Real sign-in will require a secure server, individual credentials and verified sessions before launch.</p>
+  </div>
+ </section>
+ <section id="dashboard-view" class="dashboard" hidden aria-labelledby="dashboard-title">
+  <div class="dashboard-heading">
+   <div><span class="eyebrow" data-i18n="personalArea">MY MEMBER AREA · DEMO</span><h1 id="dashboard-title" data-i18n="dashboardTitle">My competition dashboard</h1><p id="member-greeting"></p></div>
+   <button id="sign-out" type="button" class="btn secondary" data-i18n="signOut">Sign out (demo)</button>
+  </div>
+  <div class="dashboard-notice" role="note" data-i18n="localOnly">This is a browser-only test account. No identity, uploaded media, payment or official entry is stored in the real back end.</div>
+  <div class="summary-grid">
+   <article class="summary-card"><span data-i18n="memberId">Member ID</span><strong id="summary-member"></strong><small id="summary-category"></small></article>
+   <article class="summary-card"><span data-i18n="currentStatus">My current status</span><strong id="summary-status"></strong><small data-i18n="statusNotOfficial">Test status · not an official decision</small></article>
+   <article class="summary-card"><span data-i18n="paymentStatus">Payment status</span><strong id="summary-payment"></strong><small data-i18n="paymentNotReal">Simulated NPR 500 only · no real money</small></article>
+  </div>
+  <div class="dashboard-main">
+   <section class="next-action" aria-labelledby="action-title">
+    <span class="eyebrow">YOUR NEXT STEP</span><h2 id="action-title" data-i18n="nextAction">What should I do next?</h2>
+    <p id="action-text"></p>
+    <a id="action-link" href="./member-portal.html" class="btn primary" data-i18n="continueApplication">Continue my test application</a>
+   </section>
+   <section class="account-card" aria-labelledby="account-title">
+    <span class="eyebrow" data-i18n="myDetails">ACCOUNT PROFILE · TEST</span><h2 id="account-title" data-i18n="accountTitle">My details</h2>
+    <dl id="account-details"></dl>
+   </section>
+  </div>
+  <section class="applications" aria-labelledby="entries-title">
+   <div class="section-heading"><div><span class="eyebrow">MY SUBMISSIONS</span><h2 id="entries-title" data-i18n="myEntries">My registrations and demos</h2></div><a class="text-link" href="./member-portal.html" data-i18n="manageEntries">Manage test submission →</a></div>
+   <div id="entries-list" class="entries-list"></div>
+  </section>
+  <div class="dashboard-footer"><a href="./member-portal.html" data-i18n="testRegistration">Registration & mock payment lab</a><a href="./" data-i18n="backEvent">Back to event homepage</a></div>
+ </section>
+</main>
+<footer class="site-footer">GOLDEN HIMAL VOICE · MEMBER JOURNEY SANDBOX · <strong>TEST ONLY</strong></footer>
+<script type="module" src="./member-login.js"></script>
+</body>
+</html>

@@ -6,12 +6,13 @@
 <title>Golden Himal Voice｜會員及報名整合體驗 TEST ONLY</title>
 <link rel="stylesheet" href="./test-lab.css">
 <link rel="stylesheet" href="./member-portal.css">
+<style>.portal-links{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.dashboard-shortcut a{display:inline-block;margin:15px 0;padding:12px 17px;border-radius:12px;border:1px solid #d0a75d;color:#624020;background:#fbefd7;font-weight:700;font-size:.9rem}@media(max-width:620px){.portal-links{width:100%;justify-content:flex-start}}</style>
 </head><body>
 <a href="#main" class="skip">跳至內容</a>
 <div class="warning" role="note"><strong>TEST ONLY｜不是真實會員系統</strong><span>請勿輸入姓名、手機、Email、證件、密碼、真影片或信用卡資訊；此頁不收取任何費用。</span></div>
 <header class="topbar"><div class="wrap topbar-inner">
 <a class="brand" href="/"><img src="./images/brand-identity.png" alt="Golden Himal Palace" width="65" height="53"><span><strong>Golden Himal Voice</strong><small>MEMBERSHIP & APPLICATION · 2027</small></span></a>
-<a class="back" href="./test-lab.html">← 回測試中心</a>
+<div class="portal-links"><a class="back" href="./member-login.html">🔐 Member Sign In / 個人首頁</a><a class="back" href="./test-lab.html">← 回測試中心</a></div>
 </div></header>
 <main id="main" class="wrap">
 <section class="member-hero"><div>
@@ -66,13 +67,13 @@
  <div id="checkout-card" class="checkout-card"></div>
  <div class="actions"><button type="button" id="order" class="primary">建立 NPR 500 TEST 訂單</button>
  <button type="button" id="pay-success" class="subtle">模擬付款成功</button><button type="button" id="pay-fail" class="subtle">模擬付款失敗</button><button type="button" id="pay-retry" class="subtle">模擬重新付款</button></div>
- <p id="payment-feedback" role="status" aria-live="polite" class="hint">沒有銀行連線。正式付款必須由後端向收單商驗證交易，而不是相信此畫面。</p>
+ <p id="payment-feedback" role="status" aria-live="polite" class="hint">沒有銀行連線。正式付款必須由後端向收單商驗證交易，而不是相信此畫面。</p><p class="dashboard-shortcut"><a href="./member-login.html">👤 View My Account / 查看我的個人會員首頁 →</a></p>
 </section>
 <section id="panel-profile" class="panel member-panel" role="tabpanel" aria-labelledby="tab-profile" hidden>
  <div class="panel-heading"><div><span class="eyebrow">MY TEST ACCOUNT</span><h2>我的會員中心</h2></div><span class="pill">本機虛構資料</span></div>
  <div id="profile" class="profile-wrap"></div>
  <h3>我的報名與付款進度</h3>
- <div class="table-scroll"><table><thead><tr><th>測試報名</th><th>場次</th><th>Demo</th><th>付款</th><th>初篩狀態</th></tr></thead><tbody id="my-apps"></tbody></table></div>
+ <div class="table-scroll"><table><thead><tr><th>測試報名</th><th>場次</th><th>Demo</th><th>付款</th><th>初篩狀態</th></tr></thead><tbody id="my-apps"></tbody></table></div><p class="dashboard-shortcut"><a href="./member-login.html">🔐 前往獨立會員登入及「我的個人首頁」／ Member Dashboard</a></p>
  <section class="member-dossier" aria-labelledby="dossier-title">
   <div class="panel-heading"><div><span class="eyebrow">FOUR SCREEN DEMO · SYNTHETIC DATA</span><h3 id="dossier-title">參賽者四畫面整合預覽</h3></div><span class="pill">非正式文件</span></div>
   <p class="lead">依照現有測試會員、報名及假訂單即時產生四種畫面。僅使用固定虛構人物與瀏覽器本機資料；沒有實名認證、真實影片、付款交易或有效准考證。</p>
