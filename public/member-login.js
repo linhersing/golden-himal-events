@@ -8,6 +8,7 @@ const $=id=>document.getElementById(id);
 const text=(id,value)=>{$(id).textContent=String(value)};
 const translations={
  en:{
+  demoHeading:'TEST ONLY · NOT REAL AUTHENTICATION',introEyebrow:'CONTESTANT AREA · TEST PREVIEW',cardEyebrow:'MEMBER ACCESS',sandboxBadge:'TEST PREVIEW',actionEyebrow:'YOUR NEXT STEP',submissionsEyebrow:'MY SUBMISSIONS',footerDemo:'GOLDEN HIMAL VOICE · MEMBER JOURNEY TEST ONLY',
   testBanner:'Use only the displayed fictional test account and demo passcode. Never enter a real password, personal information, or payment details.',
   backHome:'← Event home',welcome:'Your stage. Your account.',
   welcomeText:'Sign in to your personal area to see your competition entry, demo submission, mock NPR 500 payment and screening progress — all in one place.',
@@ -44,6 +45,7 @@ const translations={
   ready:'Welcome back,',testPersonLabel:'TEST / fictional'
  },
  ne:{
+  demoHeading:'परीक्षण मात्र · वास्तविक लगइन होइन',introEyebrow:'प्रतियोगी क्षेत्र · परीक्षण',cardEyebrow:'सदस्य लगइन',sandboxBadge:'परीक्षण',actionEyebrow:'अब के गर्ने',submissionsEyebrow:'मेरा आवेदनहरू',footerDemo:'गोल्डेन हिमाल भ्वाइस · सदस्य परीक्षण मात्र',
   testBanner:'यहाँ देखाइएको काल्पनिक परीक्षण खाता र डेमो पासकोड मात्र प्रयोग गर्नुहोस्। वास्तविक पासवर्ड, व्यक्तिगत विवरण वा भुक्तानी जानकारी नहाल्नुहोस्।',
   backHome:'← कार्यक्रमको मुख्य पृष्ठ',welcome:'तपाईंको मञ्च। तपाईंको खाता।',
   welcomeText:'आफ्नो प्रतियोगिता आवेदन, डेमो, NPR 500 को नमुना भुक्तानी र छनोटको अवस्था एउटै ठाउँमा हेर्न साइन इन गर्नुहोस्।',
@@ -78,16 +80,59 @@ const translations={
   stage:'चरण',demo:'डेमो',payment:'भुक्तानी',review:'समीक्षा',noEntry:'हालसम्म परीक्षण आवेदन छैन। माथिको बटन प्रयोग गरी काल्पनिक आवेदन सुरु गर्नुहोस्।',
   demoNotUploaded:'निश्चित परीक्षण डेमो मात्र हो; वास्तविक भिडियो अपलोड भएको छैन।',noteSameBrowser:'यही वेबसाइट र ब्राउजरमा बनेको परीक्षण खाता मात्र चल्छ।',
   ready:'फेरि स्वागत छ,',testPersonLabel:'परीक्षण / काल्पनिक'
+ },
+ zh:{
+  testBanner:'這是測試頁。只能使用畫面顯示的虛構帳號與示範密碼，請勿輸入真實密碼、個人資料或付款資訊。',
+  demoHeading:'僅供測試・不是正式登入',
+  backHome:'← 返回活動首頁',welcome:'你的舞台，你的會員專區。',
+  welcomeText:'登入後可在同一頁查看自己的測試報名、Demo 作品、NPR 500 模擬付款及審核進度。',
+  step1:'建立測試會員',step2:'提交 Demo 並模擬付款',step3:'回到這裡查詢進度',
+  sameDevice:'測試資料只存在目前這個網站與瀏覽器中，不是真正的 Cloudflare 會員帳號。',
+  signInTitle:'會員登入',signInIntro:'已建立測試會員？請輸入下方虛構會員帳號和公開示範密碼，進入個人首頁。',
+  usernameLabel:'測試會員帳號／會員編號／虛構信箱',passwordLabel:'示範密碼（請勿輸入真實密碼）',
+  toggleReveal:'顯示',toggleHide:'隱藏',testCredentials:'可使用以下公開測試資料：',
+  signInBtn:'登入我的會員中心',newMember:'第一次體驗？請先建立虛構測試會員。',
+  chooseTestPerson:'選擇虛構測試參賽者',createTestAccount:'建立測試會員並開啟個人首頁',
+  notSecure:'這組公開示範密碼並不能驗證真實身分；系統不儲存也不傳送密碼。正式上線前需建立安全登入及獨立帳號驗證。',
+  personalArea:'我的會員專區・測試版',dashboardTitle:'我的參賽進度',signOut:'登出（測試）',
+  localOnly:'這是瀏覽器本機測試帳號；真實身分、影片檔案、付款和正式報名資料都尚未存入正式後端。',
+  memberId:'會員編號',currentStatus:'目前審核狀態',statusNotOfficial:'僅模擬審核，不是正式決議',
+  paymentStatus:'付款狀態',paymentNotReal:'NPR 500 模擬付款，沒有實際扣款',
+  nextAction:'我下一步該做什麼？',continueApplication:'繼續我的測試報名',
+  myDetails:'會員資料・測試版',accountTitle:'我的基本資料',myEntries:'我的報名與作品',
+  manageEntries:'管理測試報名 →',testRegistration:'前往報名與模擬付款',backEvent:'回到活動首頁',
+  needUsername:'請輸入測試帳號。',incorrectLogin:'此瀏覽器沒有相符的測試會員，或示範密碼不正確。',
+  blocked:'此測試人物未滿18歲，不能註冊。',alreadyMember:'此虛構人物已有測試會員，請使用示範密碼登入。',
+  created:'測試會員建立成功，已進入個人首頁。',
+  labelAlias:'測試姓名',labelEmail:'虛構信箱',labelCategory:'2027 年度組別',labelAge:'模擬年齡',labelVerification:'驗證狀態',
+  university:'大學組',community:'社會組',mockOnly:'僅供模擬',
+  noneStatus:'尚未報名',submitted:'待審核（測試）',needs_info:'待補件（測試）',shortlisted:'通過初篩（測試）',rejected:'未入選（測試）',finalist:'晉級決賽（測試）',
+  noPayment:'尚無測試訂單',unpaid:'尚未模擬付款',failed:'模擬付款失敗',paid:'已模擬付款 NPR 500',refund_pending:'模擬退款處理中',refunded:'模擬已退款',
+  firstStep:'你已建立測試會員。請前往報名頁，建立虛構的 Demo 作品報名。',
+  payStep:'你的測試報名已建立。下一步是模擬 NPR 500 結帳，沒有真實收款。',
+  correctionStep:'模擬審查要求補件。請回到測試報名頁查看資料；正式補件上傳尚未開放。',
+  reviewStep:'你的測試報名已記錄。可以回到這裡查看模擬審核進度。',
+  qualifiedStep:'這筆測試報名的審核狀態已通過，但不是正式入圍通知。',
+  rejectedStep:'這筆虛構報名未入選；正式申訴機制尚未啟用。',
+  stage:'報名場次',demo:'Demo 作品',payment:'付款狀態',review:'審核狀態',noEntry:'目前沒有測試報名，請點上方按鈕開始。',
+  demoNotUploaded:'這是固定的測試 Demo 代號，並沒有實際上傳影片。',noteSameBrowser:'只能使用此網站及此瀏覽器建立的測試會員資料登入。',
+  ready:'歡迎回來，',testPersonLabel:'測試／虛構',
+  introEyebrow:'參賽者專區・測試預覽',cardEyebrow:'會員登入入口',sandboxBadge:'測試版',
+  actionEyebrow:'下一步操作',submissionsEyebrow:'我的送件紀錄',footerDemo:'黃金喜馬拉雅歌唱賽・會員測試・非正式系統'
  }
 };
-let language='en';
+const UI_LANG_KEY='ghv_ui_language_v1';
+function savedLanguage(){try{const value=localStorage.getItem(UI_LANG_KEY);return ['en','ne','zh'].includes(value)?value:'en'}catch{return 'en'}}
+let language=savedLanguage();
 let state=readState();
 function readState(){try{return safeParsePortal(localStorage.getItem(DATA_KEY))}catch{return blankPortal()}}
 function t(key){return translations[language][key]||translations.en[key]||key}
 function setLanguage(next){
- language=next==='ne'?'ne':'en';document.documentElement.lang=language;
+ language=['en','ne','zh'].includes(next)?next:'en';document.documentElement.lang=language==='zh'?'zh-Hant':language;
+ try{localStorage.setItem(UI_LANG_KEY,language)}catch{}
  document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===language)));
  document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
+ document.querySelectorAll('[data-i18n-aria]').forEach(el=>el.setAttribute('aria-label',t(el.dataset.i18nAria)));
  $('show-password').textContent=t($('login-password').type==='text'?'toggleHide':'toggleReveal');
  render();
 }
@@ -217,4 +262,4 @@ for(const person of PERSONAS){
  const label=person.alias+(person.age<18?' · 17 yrs / blocked':'');
  $('register-persona').add(new Option(label,person.code));
 }
-setLanguage('en');
+setLanguage(savedLanguage());

@@ -20,7 +20,7 @@
 </head>
 <body>
 <a class="skip-link" href="#main-content">Skip to content</a>
-<div class="preview-ribbon"><span class="ribbon-dot" aria-hidden="true"></span><span data-i18n="ribbon">DESIGN PREVIEW · Registration and voting are simulations only. Do not enter real personal information.</span> <a href="./test-lab.html" style="color:#603d16;font-weight:800;text-decoration:underline;margin-left:12px;white-space:nowrap" aria-label="Open test laboratory, not for real applications">測試實驗室 / TEST LAB ↗</a> <a href="./member-portal.html" style="color:#603d16;font-weight:800;text-decoration:underline;margin-left:12px;white-space:nowrap" aria-label="Open simulated member registration portal, not real signup">會員／報名試作 TEST ↗</a></div>
+<div class="preview-ribbon" role="note"><span class="ribbon-dot" aria-hidden="true"></span><span data-i18n="ribbon">DESIGN PREVIEW · Registration and voting are simulations only. Do not enter real personal information.</span></div>
 <header class="site-header">
   <div class="site-shell header-inner">
     <a class="brand" href="#home" aria-label="Golden Himal Voice home">
@@ -28,7 +28,6 @@
       <span class="brand-title"><strong>Golden Himal</strong><small>PALACE · CHITWAN</small></span>
     </a>
     <nav class="main-nav" aria-label="Sections">
-      <a class="member-gateway" href="./member-login.html" aria-label="Open separate TEST member login and personal account">🔐 Member Login / सदस्य</a>
       <a href="#event" data-i18n="navEvent">The Event</a>
       <a href="#updates" data-i18n="navUpdates">Updates</a>
       <a href="#registration" data-i18n="navRegister">Registration</a>
@@ -36,10 +35,13 @@
       <a href="#trust" data-i18n="navTrust">Fair Voting</a>
       <a href="#venue" data-i18n="navVenue">Venue</a>
     </nav>
-    <div class="lang-switch" role="group" aria-label="Choose language">
-      <button type="button" class="lang-button active" data-lang="en" aria-pressed="true">EN</button>
-      <button type="button" class="lang-button" data-lang="ne" aria-pressed="false">ने</button>
-      <button type="button" class="lang-button" data-lang="zh" aria-pressed="false">中</button>
+    <div class="header-actions">
+      <a class="member-gateway" href="./member-login.html" data-i18n-aria="navMemberAria" aria-label="Open TEST member login and personal account"><span aria-hidden="true" class="member-icon">♙</span><span data-i18n="navMember">Member Login / My Account</span></a>
+      <div class="lang-switch" role="group" aria-label="Select website language">
+        <button type="button" class="lang-button active" data-lang="en" aria-label="English" aria-pressed="true">EN</button>
+        <button type="button" class="lang-button" data-lang="ne" aria-label="नेपाली" aria-pressed="false">नेपाली</button>
+        <button type="button" class="lang-button" data-lang="zh" aria-label="繁體中文" aria-pressed="false">中文</button>
+      </div>
     </div>
   </div>
 </header>
@@ -134,7 +136,7 @@
           <li><b>03</b><span><strong data-i18n="regStep3">Review your submission</strong><small data-i18n="regSub3">Preview only; nothing is saved or sent.</small></span></li>
         </ol>
         <div class="soft-note" data-i18n="demoWarning">TEST MODE — No registration, emails, or uploads occur on this site.</div>
-        <a class="member-entrance" href="./member-login.html">🔐 <span>Open My Member Account · सदस्य लगइन</span><small>TEST ONLY — existing fictional member records in this browser</small></a>
+        <a class="member-entrance" href="./member-login.html"><span class="entrance-main"><span aria-hidden="true">♙</span><span data-i18n="registerMemberCTA">Sign in to my member account</span></span><small data-i18n="registerMemberNote">TEST ONLY · Use a fictional account for this preview</small></a>
       </div>
       <div class="form-panel">
         <div class="form-head"><div><small>REGISTRATION</small><h3 data-i18n="formTitle">Start your story</h3></div><span class="tag">DEMO</span></div>
@@ -214,7 +216,9 @@
 <footer class="footer">
   <div class="site-shell footer-grid">
     <div><strong>Golden Himal Voice</strong><p>A Golden Himal Palace initiative · Chitwan, Nepal</p></div>
-    <div class="footer-right"><p data-i18n="footerNote">Design preview · No live registration, voting, or official results.</p><small>PREVIEW V0.4 · OCTOBER 2026</small></div>
+    <div class="footer-right"><p data-i18n="footerNote">Design preview · No live registration, voting, or official results.</p><small>PREVIEW V0.4 · OCTOBER 2026</small>
+      <div class="footer-test-links" aria-label="Internal test pages"><a href="./test-lab.html" data-i18n="footerTestLab" aria-label="Open test laboratory, not for real applications">TEST LAB</a><a href="./member-portal.html" data-i18n="footerPortal" aria-label="Open simulated member registration portal, not real signup">Member testing</a></div>
+    </div>
   </div>
 </footer>
 <dialog id="vote-dialog" aria-labelledby="vote-dialog-title">
