@@ -24,10 +24,13 @@ test('preview form is explicitly non-collecting and has no submission endpoint',
   assert.match(js,/event\.preventDefault\(\)/);
 });
 
-test('public preview does not announce unapproved numbers or organizational identity',async()=>{
+test('public preview displays Alan V2 numbers only in explicitly simulation-labeled scope',async()=>{
   const html=await read('index.html');
   assert.doesNotMatch(html,/\b(?:CMA|Chinese Mission Alliance|wanjun|cma-mission\.com)\b/i);
-  assert.doesNotMatch(html,/\b(?:NPR|NT\$|USD)\s*[\d,]+/i);
+  assert.match(html,/class="v2-rule-summary"/);
+  assert.match(html,/V2 preview/);
+  assert.match(html,/not issue vouchers/i);
+  assert.match(html,/NPR 332,000/);
   assert.doesNotMatch(html,/\b(?:12|15)\s*(?:finalists|強)/i);
 });
 
