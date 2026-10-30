@@ -37,3 +37,42 @@ test('payment simulator mobile layout loads without page horizontal overflow',as
  const width=await page.evaluate(()=>({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
  expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
+
+test('reset registration lab cannot carry old paid state into new registration with reused ID',async({page})=>{
+ await page.route('**/api/staging/**',r=>r.fulfill({status:503,contentType:'application/json',body:'{"ok":false}'}));
+ await page.goto('/test-lab.html');
+ await page.locator('#candidate').selectOption('T001');
+ await page.locator('#lab-form button[type=submit]').click();
+ await page.goto('/payment-lab.html');
+ await page.locator('#create').click();
+ await page.getByRole('button',{name:'模擬付款成功'}).click();
+ await expect(page.locator('#orders')).toContainText('模擬已付款');
+ await page.goto('/test-lab.html');
+ await page.locator('#tab-reports').click();
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#reset').click();
+ await page.locator('#tab-applicant').click();
+ await page.locator('#candidate').selectOption('T002');
+ await page.locator('#lab-form button[type=submit]').click();
+ await page.goto('/payment-lab.html');
+ await expect(page.locator('#orders')).toContainText('尚無模擬付款訂單');
+ await page.locator('#create').click();
+ await expect(page.locator('#orders')).toContainText('待付款');
+ await expect(page.locator('#payment-stats')).toContainText('NPR 0');
+});
+test('one-click full mock test invalidates previous financial sandbox too',async({page})=>{
+ await page.route('**/api/staging/**',r=>r.fulfill({status:503,contentType:'application/json',body:'{"ok":false}'}));
+ await page.goto('/test-lab.html');
+ await page.locator('#candidate').selectOption('T001');
+ await page.locator('#lab-form button[type=submit]').click();
+ await page.goto('/payment-lab.html');
+ await page.locator('#create').click();
+ await page.getByRole('button',{name:'模擬付款成功'}).click();
+ await page.goto('/test-lab.html');
+ await page.locator('#tab-reports').click();
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#run-all').click();
+ await expect(page.locator('#auto-result')).toContainText('本機模擬 PASS');
+ await page.goto('/payment-lab.html');
+ await expect(page.locator('#orders')).toContainText('尚無模擬付款訂單');
+});
