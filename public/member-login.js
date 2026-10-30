@@ -198,7 +198,7 @@ function renderDashboard(member){
  else if(latest.status==='needs_info'){action.textContent=t('correctionStep');link.href='./member-portal.html?step=profile'}
  else if(latest.status==='rejected'){action.textContent=t('rejectedStep');link.href='./member-portal.html?step=profile'}
  else if(['shortlisted','finalist'].includes(latest.status)){action.textContent=t('qualifiedStep');link.href='./member-portal.html?step=profile'}
- else if(!order||order.status==='unpaid'||order.status==='failed'){action.textContent=t('payStep');link.href='./member-portal.html?step=checkout'}
+ else if(!order||order.status==='unpaid'||order.status==='failed'){action.textContent=t('payStep');link.href='./member-portal.html?step=checkout&application='+encodeURIComponent(latest.id)}
  else action.textContent=t('reviewStep');
  const list=$('entries-list');list.replaceChildren();
  if(apps.length===0){list.append(make('p',t('noEntry'),'empty'));return}
