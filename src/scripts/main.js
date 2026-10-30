@@ -219,7 +219,9 @@ Object.assign(translations.en,{
   reviewCategory:"Category",reviewRound:"Online audition",
   v2TesterTitle:"V2 · Connected Cloudflare acceptance test",
   v2TesterNote:"Invited fictional accounts only. After Cloudflare email, D1 and R2 are configured, these paths support persistent testing; they are not official registration.",
-  v2TesterMember:"Participant test ↗",v2TesterJudge:"Invited reviewer test ↗"
+  v2TesterMember:"Participant test ↗",v2TesterJudge:"Invited reviewer test ↗",v2TesterAdmin:"Organizer test ↗",
+  v2PrizeHeading:"Alan V2 · staging program",v2PrizeText:"Bagmati and Gandaki provinces · University / Community · NPR 500 per online audition · 60–90s Demo · September final: 32 singers · website votes 51% + jury 49% · total proposed cash awards NPR 332,000.",
+  v2VoucherNote:"V2 proposes one annual NPR 10,000 dining voucher for eligible fee-verified entrants; this simulation does not issue a spendable voucher."
 });
 Object.assign(translations.ne,{
   seasonOverline:"२०२७ · एलन V2 · परीक्षण पूर्वावलोकन",seasonTitle:"दुई अनलाइन छनोट, एक फाइनल।",
@@ -234,7 +236,9 @@ Object.assign(translations.ne,{
   reviewCategory:"समूह",reviewRound:"अनलाइन छनोट",
   v2TesterTitle:"V2 · Cloudflare परीक्षण वातावरण",
   v2TesterNote:"आमन्त्रित काल्पनिक खाताका लागि मात्र। Cloudflare सेवाहरू तयार भएपछि परीक्षण डाटा D1 मा रहन्छ, यो आधिकारिक दर्ता होइन।",
-  v2TesterMember:"सहभागी परीक्षण ↗",v2TesterJudge:"निर्णायक परीक्षण ↗"
+  v2TesterMember:"सहभागी परीक्षण ↗",v2TesterJudge:"निर्णायक परीक्षण ↗",v2TesterAdmin:"आयोजक परीक्षण ↗",
+  v2PrizeHeading:"Alan V2 · परीक्षण नियम",v2PrizeText:"बागमती / गण्डकी · विश्वविद्यालय / सामाजिक · अनलाइन चरण NPR 500 · ६०–९० सेकेन्ड Demo · सेप्टेम्बरमा ३२ फाइनलिस्ट · वेबसाइट मत ५१% + निर्णायक ४९% · प्रस्तावित पुरस्कार NPR 332,000।",
+  v2VoucherNote:"योग्यता र भुक्तानी जाँचपछि वार्षिक एक NPR 10,000 भोजन भौचर प्रस्ताव गरिएको छ; यो परीक्षणले वास्तविक भौचर दिँदैन।"
 });
 Object.assign(translations.zh,{
   seasonOverline:"2027年 · Alan V2 · 驗收模擬",seasonTitle:"兩次線上海選，九月年度決賽。",
@@ -249,7 +253,9 @@ Object.assign(translations.zh,{
   reviewCategory:"組別",reviewRound:"線上海選",
   v2TesterTitle:"V2 · Cloudflare 真資料庫驗收",
   v2TesterNote:"僅供受邀測試帳號使用。Cloudflare 寄信、D1 及 R2 配置完成後可持久保存測試資料；此入口不是正式報名。",
-  v2TesterMember:"參賽者驗收入口 ↗",v2TesterJudge:"受邀評審驗收 ↗"
+  v2TesterMember:"參賽者驗收入口 ↗",v2TesterJudge:"受邀評審驗收 ↗",v2TesterAdmin:"賽事管理員驗收 ↗",
+  v2PrizeHeading:"Alan V2 · 比賽規章模擬",v2PrizeText:"巴格馬蒂省／甘達基省 · 大學組／社會組 · 每次海選報名費 NPR 500 · 60至90秒 Demo · 9月32強決賽 · 官網票51%＋評審49% · 擬定總現金獎金 NPR 332,000。",
+  v2VoucherNote:"V2提出符合繳費與資格審核者，每年可領一次 NPR 10,000 餐飲折抵券；此測試不發出可兌換餐券，也不收取任何款項。"
 });
 
 /* Isolated staging bridge: not a real registration form or vote API. */
