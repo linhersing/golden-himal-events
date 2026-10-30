@@ -19,8 +19,7 @@
     }
   ],
   "vars": {
-    "STAGING_TEST_WRITE_ENABLED": "false",
-    "STAGING_E2E_ENABLED": "false"
+    "STAGING_TEST_WRITE_ENABLED": "false"
   },
   "observability": {
     "enabled": false
