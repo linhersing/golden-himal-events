@@ -81,7 +81,8 @@ test('Wrangler configuration binds staging only with writes disabled',async()=>{
  assert.equal(cfg.d1_databases[0].database_name,'ghv-staging');
  assert.equal(cfg.d1_databases[0].binding,'DB');
  assert.equal(cfg.vars.STAGING_TEST_WRITE_ENABLED,'false');
- assert.deepEqual(cfg.assets.run_worker_first,['/api/staging/*']);
+ assert.deepEqual(cfg.assets.run_worker_first,['/api/staging/*','/api/e2e/*']);
+  assert.equal(cfg.vars.STAGING_E2E_ENABLED,undefined, 'E2E enable requires a separately provisioned Cloudflare secret');
  assert.equal(JSON.stringify(cfg).includes('backend/src/index.js'),false);
 });
 
