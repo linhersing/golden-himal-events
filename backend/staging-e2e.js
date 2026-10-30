@@ -73,7 +73,9 @@ async function verifyCode(request,env){
  const b=await bodyJSON(request);if(!b||!/^\d{6}$/.test(String(b.code||''))||!/^[-a-f0-9]{36}$/i.test(String(b.challenge_id||'')))return deny('invalid_challenge');
  const challenge=await env.DB.prepare('SELECT * FROM e2e_email_challenges WHERE id=?').bind(b.challenge_id).first();
  if(!challenge||challenge.used_at||challenge.expires_at<=NOW()||challenge.attempts>=5)return deny('expired_or_invalid_code',401);
- await env.DB.prepare('UPDATE e2e_email_challenges SET attempts=attempts+1 WHERE id=? AND used_at IS NULL AND attempts<5').bind(challenge.id).run();
+ const attempt=await env.DB.prepare('UPDATE e2e_email_challenges SET attempts=attempts+1 WHERE id=? AND used_at IS NULL AND expires_at>? AND attempts<5').bind(challenge.id,NOW()).run();
+ // Attempts can race: only a successfully incremented slot may test a code.
+ if(!attempt.meta?.changes)return deny('expired_or_invalid_code',401);
  const hash=await sign(env,'challenge:'+challenge.id+':'+b.code);
  if(hash!==challenge.code_fingerprint)return deny('expired_or_invalid_code',401);
  const used=await env.DB.prepare('UPDATE e2e_email_challenges SET used_at=? WHERE id=? AND used_at IS NULL AND expires_at>? AND attempts<=5').bind(NOW(),challenge.id,NOW()).run();
