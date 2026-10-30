@@ -48,6 +48,36 @@ document.querySelectorAll('.tab[data-tab]').forEach(button=>{
  });
 });
 $('start').addEventListener('click',()=>{changeTab('enroll');$('persona').focus()});
+let dossierScreen='pass';
+document.querySelectorAll('[data-dossier]').forEach(button=>{
+ button.addEventListener('click',()=>{
+  dossierScreen=button.dataset.dossier;
+  renderDossier();
+ });
+});
+$('dossier-demo').addEventListener('click',()=>{
+ // Prefer an adult pre-defined fixture: T020 is deliberately 17 and MUST remain rejected.
+ let m=state.members.find(x=>x.person==='T019');
+ if(!m){
+  const result=signUpMock(state,'T019');
+  if(result.error){info('dossier-status',result.error,true);return}
+  m=result.member;
+ }
+ activeId=m.id;
+ let app=state.applications.find(x=>x.memberId===m.id&&x.round==='2027-03');
+ if(!app){
+  const result=applyMock(state,m.id,'2027-03','TEST-DEMO-90S');
+  if(result.error){info('dossier-status',result.error,true);save();render();return}
+  app=result.application;
+ }
+ const order=getOrCreateOrder(state,app.id);
+ if(order.error){info('dossier-status',order.error,true);save();render();return}
+ if(order.order.status==='failed')simulatePayment(state,order.order.id,'retry');
+ if(order.order.status==='unpaid')simulatePayment(state,order.order.id,'success');
+ save();render();changeTab('profile');dossierScreen='pass';renderDossier();
+ info('dossier-status','已選擇成年虛構案例 TEST-SINGER-019。所有付款與文件僅供畫面測試，沒有真實收款。');
+});
+
 function member(){return state.members.find(m=>m.id===activeId)}
 function myApplications(){return state.applications.filter(a=>a.memberId===activeId)}
 function payment(appId){return state.orders.find(o=>o.applicationId===appId)}
@@ -179,6 +209,42 @@ function renderMyApps(){
   root.append(row);
  }
 }
+function renderDossier(){
+ const root=$('dossier-content');
+ root.replaceChildren();
+ document.querySelectorAll('[data-dossier]').forEach(button=>{
+  const on=button.dataset.dossier===dossierScreen;
+  button.classList.toggle('active',on);
+  button.setAttribute('aria-pressed',String(on));
+ });
+ const m=member();
+ if(!m){root.append(make('h4','尚未選取測試會員'),make('p','請先從會員註冊頁模擬登入，或點選上方「一鍵準備成年測試參賽者」。'));return}
+ const app=myApplications()[0];
+ const order=app?payment(app.id):null;
+ const category=m.category==='university'?'大學組':'社會組';
+ const when=app?({'2027-03':'2027年3月初賽','2027-06':'2027年6月初賽','2027-09':'2027年9月初賽'}[app.round]||app.round):'尚未報名';
+ const testPayment=order?payNames[order.status]:'未開立假訂單';
+ const common=[['測試會員',m.alias],['模擬組別',category],['報名場次',when],['測試報名編號',app?.id||'尚未建立']];
+ const screens={
+  pass:{title:'初賽准考證 · 視覺示意',subtitle:'不是正式核發的入場憑證，沒有有效 QR Code。',
+   rows:[...common,['Demo 初篩狀態',app?reviewNames[app.status]:'未報名'],['入場資格','尚未核發（TEST ONLY）']]},
+  application:{title:'2027 歌唱嘉年華 · 報名資料',subtitle:'Demo 名稱和會員資料均為系統固定虛構測試內容。',
+   rows:[...common,['Demo 測試檔',app?.demo||'未提交'],['實際檔案上傳','未啟用，沒有影片']]},
+  payment:{title:'NPR 500 · 模擬付款存根',subtitle:'非官方收據；Khalti / eSewa / 銀行均未連接，絕無實收。',
+   rows:[['假訂單編號',order?.id||'尚未開單'],['對應測試報名',app?.id||'尚未報名'],['報名費草案','NPR 500'],['付款狀態',testPayment],['支付商交易序號','不存在（純模擬）'],['可作稅務／入場憑證','不可']]},
+  profile:{title:'參賽者會員中心 · 測試檔案',subtitle:'沒有驗證身分、密碼登入或真人個資；只顯示固定測試人物。',
+   rows:[['測試會員 ID',m.id],['固定測試代稱',m.alias],['虛構信箱',m.email],['模擬年齡',m.age+' 歲'],['組別',category],['登入驗證','MOCK ONLY / 未實作 OTP']]}
+ };
+ const view=screens[dossierScreen]||screens.pass;
+ root.append(make('h4',view.title),make('p',view.subtitle));
+ const grid=make('div','', 'dossier-grid');
+ for(const [label,value] of view.rows){
+  const field=make('div','', 'dossier-field');
+  field.append(make('small',label),make('strong',value));
+  grid.append(field);
+ }
+ root.append(grid);
+}
 function render(){
  const personaOptions=PERSONAS.map(p=>({value:p.code,label:p.alias+(p.age<18?' (17歲測試拒絕)':'')}));
  const selected=$('persona').value;
@@ -194,7 +260,7 @@ function render(){
  setOptions('pay-app',myApplications().map(a=>({value:a.id,label:a.id+'｜'+a.round})),'請先建立測試報名');
  if(!selectedApplication()&&myApplications().length)$('pay-app').value=myApplications()[0].id;
  $('apply').disabled=!member();
- renderCheckout();renderProfile();renderMyApps();renderOperator();
+ renderCheckout();renderProfile();renderMyApps();renderOperator();renderDossier();
  const metrics=summary(state);
  setText('member-total',metrics.members);
  setText('application-total',metrics.applications);
