@@ -3,6 +3,9 @@
 const translations = {
   en: {
     ribbon:"DESIGN PREVIEW · Registration and voting are simulations only. Do not enter real personal information.",
+    navMember:"Member Login / My Account",navMemberAria:"Open test member sign-in and my account",
+    registerMemberCTA:"Open my personal member account",registerMemberNote:"TEST ONLY · Use fictional account details",
+    footerTestLab:"Test laboratory",footerPortal:"Registration sandbox",
     navEvent:"The Event",navUpdates:"Updates",navRegister:"Registration",navVote:"Audience Choice",navVenue:"Venue",
     heroEyebrow:"CHITWAN, NEPAL · A NEW STAGE IS COMING",
     slogan:"Where love meets, and talent shines.",
@@ -49,6 +52,9 @@ const translations = {
   },
   ne: {
     ribbon:"डिजाइन पूर्वावलोकन · दर्ता र मतदान अभ्यास मात्र हुन्। कृपया वास्तविक व्यक्तिगत जानकारी नराख्नुहोस्।",
+    navMember:"सदस्य लगइन / मेरो खाता",navMemberAria:"परीक्षण सदस्य लगइन र मेरो खाता खोल्नुहोस्",
+    registerMemberCTA:"मेरो सदस्य खातामा जानुहोस्",registerMemberNote:"परीक्षण मात्र · काल्पनिक विवरण प्रयोग गर्नुहोस्",
+    footerTestLab:"परीक्षण कक्ष",footerPortal:"दर्ता परीक्षण",
     navEvent:"कार्यक्रम",navUpdates:"सूचनाहरू",navRegister:"दर्ता",navVote:"दर्शकको रोजाइ",navVenue:"स्थान",
     heroEyebrow:"चितवन, नेपाल · नयाँ मञ्चको तयारी",
     slogan:"जहाँ माया भेटिन्छ र प्रतिभा चम्किन्छ।",
@@ -95,6 +101,9 @@ const translations = {
   },
   zh: {
     ribbon:"內部設計預覽 · 報名與投票皆為模擬，請勿填寫真實個人資料。",
+    navMember:"會員登入／我的專區",navMemberAria:"開啟會員測試登入及個人資料首頁",
+    registerMemberCTA:"前往我的會員中心",registerMemberNote:"測試版 · 請使用虛構帳號，不要輸入真實個資",
+    footerTestLab:"測試實驗室",footerPortal:"報名測試系統",
     navEvent:"活動介紹",navUpdates:"最新公告",navRegister:"參賽報名",navVote:"人氣投票",navVenue:"認識場地",
     heroEyebrow:"尼泊爾奇旺 · 新舞台即將展開",
     slogan:"讓愛相遇，讓才華發光。",
@@ -267,7 +276,9 @@ Object.assign(translations.zh,{
  dbTestSaved:"D1 已確認測試記錄：",
  dbTestSaveFailed:"沒有成功寫入測試資料，請查看 Cloudflare 測試設定。"
 });
-let language='en',currentFilter='all',voted=false,selected=null,dialogOpener=null;
+const UI_LANG_KEY='ghv_ui_language_v1';
+function savedLanguage(){try{const value=localStorage.getItem(UI_LANG_KEY);return ['en','ne','zh'].includes(value)?value:'en'}catch{return 'en'}}
+let language=savedLanguage(),currentFilter='all',voted=false,selected=null,dialogOpener=null;
 const root=document.documentElement;
 const qs=(s)=>document.querySelector(s);
 const qsa=(s)=>Array.from(document.querySelectorAll(s));
@@ -275,11 +286,12 @@ const tr=(key)=>translations[language][key]||translations.en[key]||key;
 function translate(){
   root.lang=language==='zh'?'zh-Hant':language;
   qsa('[data-i18n]').forEach(el=>{el.textContent=tr(el.dataset.i18n)});
+  qsa('[data-i18n-aria]').forEach(el=>el.setAttribute('aria-label',tr(el.dataset.i18nAria)));
   qsa('[data-lang]').forEach(button=>{const active=button.dataset.lang===language;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active))});
   qs('#news-status').textContent=tr('newsCount')+qsa('.news-card:not([hidden])').length;
   if(!voted) qs('#vote-status').textContent=tr('voteNote');
 }
-qsa('[data-lang]').forEach(button=>button.addEventListener('click',()=>{language=button.dataset.lang;translate()}));
+qsa('[data-lang]').forEach(button=>button.addEventListener('click',()=>{language=button.dataset.lang;try{localStorage.setItem(UI_LANG_KEY,language)}catch{}translate()}));
 function filterNews(category){
   currentFilter=category;
   qsa('.news-card').forEach(card=>{card.hidden=category!=='all'&&card.dataset.category!==category});
