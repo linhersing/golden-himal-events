@@ -28,7 +28,7 @@ jobs:
       - name: Install Chrome Playwright dependencies
         run: pnpm exec playwright install --with-deps chrome
       - name: Full front/back sandbox browser run (desktop and mobile)
-        run: pnpm exec playwright test tests/lab-browser.spec.mjs tests/payment-browser.spec.mjs tests/member-browser.spec.mjs tests/member-login-browser.spec.mjs tests/i18n-member-entry-browser.spec.mjs tests/member-auth-truth-browser.spec.mjs
+        run: pnpm exec playwright test tests/lab-browser.spec.mjs tests/payment-browser.spec.mjs tests/member-browser.spec.mjs tests/member-login-browser.spec.mjs tests/i18n-member-entry-browser.spec.mjs tests/member-auth-truth-browser.spec.mjs tests/e2e-stage-browser.spec.mjs
       - name: Preserve visual evidence (QA screenshots, no private data)
         if: always()
         uses: actions/upload-artifact@v4
