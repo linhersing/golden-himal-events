@@ -118,6 +118,24 @@ CREATE TABLE IF NOT EXISTS e2e_final_votes (
 );
 CREATE INDEX IF NOT EXISTS e2e_votes_application ON e2e_final_votes(application_id);
 
+-- Atomic stage transitions and seat quotas, never set by browsers.
+CREATE TRIGGER IF NOT EXISTS e2e_stage_quota
+BEFORE UPDATE OF phase ON e2e_applications
+FOR EACH ROW WHEN OLD.phase<>NEW.phase BEGIN
+ SELECT CASE WHEN NOT (
+  (OLD.phase='demo' AND NEW.phase='qualifier') OR
+  (OLD.phase='qualifier' AND NEW.phase='final')
+ ) THEN RAISE(ABORT,'invalid_stage_transition') END;
+ SELECT CASE WHEN NEW.phase='qualifier' AND (
+  SELECT COUNT(*) FROM e2e_applications WHERE round_code=NEW.round_code
+  AND category=NEW.category AND phase IN ('qualifier','final')
+  AND id<>NEW.id
+ )>=25 THEN RAISE(ABORT,'qualifier_capacity_25') END;
+ SELECT CASE WHEN NEW.phase='final' AND (
+  SELECT COUNT(*) FROM e2e_applications WHERE round_code=NEW.round_code
+  AND category=NEW.category AND phase='final' AND id<>NEW.id
+ )>=8 THEN RAISE(ABORT,'final_capacity_8') END;
+END;
 -- Audit: role-gated manual advancement, no auto promotion by score alone.
 CREATE TABLE IF NOT EXISTS e2e_promotion_events (
  id TEXT PRIMARY KEY,
