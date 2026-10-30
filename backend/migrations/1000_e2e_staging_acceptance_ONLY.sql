@@ -42,6 +42,17 @@ CREATE TABLE IF NOT EXISTS e2e_applications (
  updated_at INTEGER NOT NULL,
  UNIQUE(account_id,round_code)
 );
+-- Database-enforced annual category lock. A separate SELECT in the Worker
+-- is not concurrency-safe when two rounds submit at the same time.
+CREATE TRIGGER IF NOT EXISTS e2e_annual_category_lock
+BEFORE INSERT ON e2e_applications
+FOR EACH ROW
+BEGIN
+ SELECT CASE WHEN EXISTS(
+  SELECT 1 FROM e2e_applications
+   WHERE account_id=NEW.account_id AND category<>NEW.category
+ ) THEN RAISE(ABORT,'annual_category_locked') END;
+END;
 CREATE INDEX IF NOT EXISTS e2e_apps_review ON e2e_applications(status,payment_status);
 CREATE TABLE IF NOT EXISTS e2e_payment_events (
  id TEXT PRIMARY KEY,
