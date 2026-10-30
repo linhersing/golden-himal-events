@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#392820">
+<title>Golden Himal Voice｜NPR 500 金流沙盒（不扣款）</title>
+<link rel="stylesheet" href="./test-lab.css">
+<style>
+.bill{background:#fff7e9;border:1px solid #e0c495;border-radius:14px;padding:24px;max-width:630px;margin:16px 0}
+.bill strong{display:block;font:2.2rem Georgia,serif;color:#79552d}
+.bill small{display:block}.attention{background:#fff1d2;border:1px solid #c9a366;padding:12px;border-radius:9px;color:#694421;font-size:.85rem}
+#orders td{vertical-align:top}.test-steps{display:flex;flex-wrap:wrap;gap:10px;padding:14px 0}.footnote{font-size:.8rem;color:#69584b}
+</style></head>
+<body>
+<a href="#main" class="skip">跳至內容</a>
+<div class="warning" role="note"><strong>TEST ONLY · 不扣真錢</strong><span>不連銀行、不收信用卡、不收個資；這是模擬訂單，不是真實收款。</span></div>
+<header class="topbar"><div class="wrap topbar-inner">
+<a class="brand" href="./test-lab.html"><strong>Golden Himal Voice<br><small>PAYMENT REHEARSAL · NPR</small></strong></a>
+<a class="back" href="./test-lab.html">← 返回前後台測試室</a>
+</div></header>
+<main class="wrap" id="main">
+<section class="hero"><div>
+<span class="eyebrow">2027 · PAYMENTS SANDBOX</span>
+<h1>報名 NPR 500<br><em>先模擬，再上線。</em></h1>
+<p>從虛構報名產生訂單，驗證付款回報、重試、對帳及退款狀態。此頁所有數字是瀏覽器內的測試紀錄，不代表銀行收入。</p>
+</div><div class="hero-card"><span>每場報名費（Alan Draft 1）</span><strong>NPR 500</strong><small>暫定規則，等王老師／Muse核定。未晉級重新報下一場，需建立新訂單；已晉級決賽不再額外收費。</small></div></section>
+<section class="panel">
+<div class="panel-heading"><div><span class="eyebrow">CHECKOUT · TEST DATA ONLY</span><h2>01 建立模擬付款訂單</h2></div><span class="pill">不會跳到真實金流</span></div>
+<p class="lead">先回到<a href="./test-lab.html">報名測試室</a>建立虛構選手，才能在這裡為對應場次建立 NPR 500 訂單。</p>
+<label for="reg">選擇虛構報名紀錄</label>
+<select id="reg"><option value="">尚未建立模擬報名</option></select>
+<div class="bill"><small>固定費用｜一筆報名／一個測試訂單</small><strong>NPR 500</strong><small>已由系統固定金額，不能自行更改；正式交易將由伺服器計算並向支付商確認。</small></div>
+<div class="actions"><button id="create" type="button" class="primary">建立 TEST 付款訂單</button>
+<span id="create-status" role="status" aria-live="polite"></span></div>
+<p class="attention">注意：「付款成功」在此只是模擬支付商通知；真正的系統必須在後端查驗交易序號、金額、幣別、簽章與支付商狀態，不能相信瀏覽器回傳的成功訊息。</p>
+</section>
+<section class="panel" style="margin-top:20px">
+<div class="panel-heading"><div><span class="eyebrow">BACK OFFICE · SIMULATED RECONCILIATION</span><h2>02 付款後台與對帳演練</h2></div><span class="pill">無真實交易</span></div>
+<div id="payment-stats" class="cards" aria-label="模擬金流統計"></div>
+<div class="table-scroll"><table><thead><tr><th>TEST 訂單</th><th>測試金額</th><th>狀態</th><th>模擬事件（非真實金流）</th></tr></thead>
+<tbody id="orders"><tr><td colspan="4">尚無測試訂單</td></tr></tbody></table></div>
+<p id="payment-message" role="status" aria-live="polite" class="hint">請先建立 TEST 訂單。</p>
+<div class="actions"><button type="button" id="export" class="subtle">匯出虛構付款 JSON</button>
+<button type="button" id="reset-payments" class="danger">清除本機付款沙盒</button></div>
+<p class="footnote">清除只會移除目前這台瀏覽器的模擬訂單，不會刪除 D1、真實銀行紀錄或前台測試選手。</p>
+</section>
+<section class="panel" style="margin-top:20px">
+<div class="panel-heading"><div><span class="eyebrow">LAUNCH GATES · NOT CONNECTED</span><h2>03 正式上線前還缺什麼</h2></div></div>
+<div class="checks">
+<p class="no">● 尚未向尼泊爾支付商申請 merchant 帳號或正式 KYC。</p>
+<p class="no">● 尚未接入 Khalti／eSewa／Fonepay／銀行的真實結帳 API。</p>
+<p class="no">● 尚未部署收款訂單、簽章回呼、後端支付狀態查證與對帳表至 D1。</p>
+<p class="no">● 尚未確認實際收款公司所在地（尼泊爾或新加坡）、結算銀行及退款規範。</p>
+<p class="yes">● 本頁可先自動測試訂單建立、重複防止、成功/失敗、重試、退款及本機數字。</p>
+</div></section>
+</main>
+<footer class="footer"><div class="wrap">GHV Payment Sandbox · NPR 500 · MOCK ONLY｜<a href="./test-lab.html">返回營運測試室</a></div></footer>
+<script type="module" src="./payment-lab.js"></script>
+</body></html>
