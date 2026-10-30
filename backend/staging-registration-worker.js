@@ -144,7 +144,12 @@ async function handleSampleRegistration(request,env) {
 export default {
   async fetch(request,env) {
     const pathname=new URL(request.url).pathname;
-    if(pathname.startsWith('/api/e2e/'))return handleE2E(request,env);
+    if(pathname.startsWith('/api/e2e/')){
+      // Do not mix new applicant/OTP data with the legacy synthetic D1 fixture.
+      // E2E_DB auto-provisions separately from the existing ghv-staging DB.
+      if(!env.E2E_DB)return failure('e2e_database_not_bound',503);
+      return handleE2E(request,{...env,DB:env.E2E_DB});
+    }
     if(pathname==='/api/staging/health')return handleHealth(request,env);
     if(pathname==='/api/staging/dashboard')return handleTestDashboard(request,env);
     if(pathname==='/api/staging/sample-read')return handleSampleRead(request,env);
