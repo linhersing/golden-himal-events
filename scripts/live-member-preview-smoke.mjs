@@ -3,8 +3,9 @@
 const BASE='https://golden-himal-voice-preview.linhersing.workers.dev';
 const checks=[
   ['/', ['會員／報名試作 TEST', 'TEST LAB']],
-  ['/member-portal.html',['TEST ONLY','建立你的虛構會員','member-portal.js']],
-  ['/member-portal.js',['signUpMock','simulatePayment','seed20']],
+  ['/member-portal.html',['TEST ONLY','建立你的虛構會員','member-portal.js','參賽者四畫面整合預覽','data-dossier="pass"','data-dossier="application"','data-dossier="payment"','data-dossier="profile"','id="dossier-demo"']],
+  ['/member-portal.js',['signUpMock','simulatePayment','seed20','renderDossier','T019']],
+  ['/member-portal.css',['dossier-tabs','dossier-sheet']],
   ['/member-portal-model.mjs',['PERSONAS','blankPortal','@example.invalid']]
 ];
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
