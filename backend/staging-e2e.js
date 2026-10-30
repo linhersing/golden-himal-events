@@ -1,0 +1,216 @@
+/* Golden Himal Voice: real D1-backed, test-only acceptance API.
+ * Explicit opt-in and allowlisted emails. No production applicants, actual payments,
+ * public registration, raw passwords, magic-code shortcuts or exposed R2 URLs.
+ */
+const COOKIE='__Host-ghv-e2e';
+const MAX_AGE=12*3600;
+const NOW=()=>Math.floor(Date.now()/1000);
+const secureHeaders={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Cross-Origin-Resource-Policy':'same-origin'};
+const json=(data,status=200,headers={})=>Response.json(data,{status,headers:{...secureHeaders,...headers}});
+const deny=(code,status=400)=>json({ok:false,error:code},status);
+const uuid=()=>crypto.randomUUID();
+const encode=u=>Array.from(u,b=>b.toString(16).padStart(2,'0')).join('');
+const random=()=>crypto.getRandomValues(new Uint8Array(32));
+async function sign(env,message){
+ const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.STAGING_IDENTITY_SECRET),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+ return encode(new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(message))));
+}
+const norm=s=>String(s||'').trim().toLowerCase();
+function emails(env,name){return String(env[name]||'').split(',').map(norm).filter(Boolean)}
+function hint(email){const [name,domain]=email.split('@');return (name.slice(0,2)||'*')+'***@'+domain}
+function emailAllowed(email,env,role){
+ const list=emails(env,role==='reviewer'?'STAGING_REVIEWER_EMAILS':'STAGING_ALLOWED_EMAILS');
+ return list.includes(email);
+}
+function configured(env){
+ return env.STAGING_E2E_ENABLED==='true'&&env.DB&&env.EMAIL&&env.STAGING_FROM_EMAIL&&
+ typeof env.STAGING_IDENTITY_SECRET==='string'&&env.STAGING_IDENTITY_SECRET.length>=32&&
+ emails(env,'STAGING_ALLOWED_EMAILS').length>0;
+}
+function cookie(token,age=MAX_AGE){return COOKIE+'='+token+'; Path=/; Max-Age='+age+'; HttpOnly; Secure; SameSite=Lax'}
+async function bodyJSON(request,max=2600){
+ if(!request.headers.get('content-type')?.toLowerCase().startsWith('application/json'))return null;
+ if(Number(request.headers.get('content-length')||0)>max)return null;
+ const raw=await request.text();if(raw.length>max)return null;
+ try{const value=JSON.parse(raw);return value&&typeof value==='object'&&!Array.isArray(value)?value:null}catch{return null}
+}
+async function account(request,env){
+ const match=request.headers.get('cookie')?.match(new RegExp('(?:^|;\\s*)'+COOKIE+'=([a-f0-9]{64})(?:;|$)'));
+ if(!match)return null;
+ const fingerprint=await sign(env,'session:'+match[1]);
+ return await env.DB.prepare('SELECT a.id,a.role,a.email_hint FROM e2e_sessions s JOIN e2e_accounts a ON a.id=s.account_id WHERE s.session_fingerprint=? AND s.expires_at>?').bind(fingerprint,NOW()).first();
+}
+const sameOrigin=request=>request.headers.get('Origin')===new URL(request.url).origin;
+function requireRole(a,role){return a&&a.role===role}
+function selectApplication(db,id,userId){
+ return db.prepare('SELECT * FROM e2e_applications WHERE id=? AND account_id=?').bind(id,userId).first();
+}
+async function requestCode(request,env){
+ const b=await bodyJSON(request);if(!b)return deny('invalid_json');
+ const email=norm(b.email),role=b.role==='reviewer'?'reviewer':'member';
+ if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i.test(email)||email.length>250)return deny('invalid_email');
+ if(!emailAllowed(email,env,role))return deny('not_on_test_allowlist',403);
+ const fingerprint=await sign(env,'email:'+email);
+ const period=NOW()-600;
+ const recent=await env.DB.prepare('SELECT COUNT(*) AS n FROM e2e_email_challenges WHERE email_fingerprint=? AND created_at>?').bind(fingerprint,period).first();
+ if(Number(recent?.n||0)>=3)return deny('too_many_code_requests',429);
+ const id=uuid(),digits=new Uint32Array(1);crypto.getRandomValues(digits);
+ const code=String(digits[0]%1000000).padStart(6,'0');
+ const hashed=await sign(env,'challenge:'+id+':'+code);
+ await env.DB.prepare('INSERT INTO e2e_email_challenges(id,email_fingerprint,code_fingerprint,kind,expires_at,created_at) VALUES(?,?,?,?,?,?)')
+ .bind(id,fingerprint,hashed,role,NOW()+600,NOW()).run();
+ try{
+  await env.EMAIL.send({from:env.STAGING_FROM_EMAIL,to:email,
+   subject:'Golden Himal Voice TEST — one-time verification code',
+   text:'Golden Himal Voice STAGING ONLY. Your one-time verification code is '+code+
+        '. It expires in 10 minutes. If you did not request it, ignore this message. No payments are being collected.',
+   html:'<p><strong>Golden Himal Voice — TEST ONLY</strong></p><p>Your one-time verification code is <strong>'+code+
+        '</strong>. Valid for 10 minutes.</p><p>No real payment or public registration is enabled.</p>'});
+ }catch{return deny('test_email_service_unavailable',503)}
+ return json({ok:true,challenge_id:id,message:'Check the allowlisted test mailbox. Code expires in 10 minutes.'});
+}
+async function verifyCode(request,env){
+ const b=await bodyJSON(request);if(!b||!/^\d{6}$/.test(String(b.code||''))||!/^[-a-f0-9]{36}$/i.test(String(b.challenge_id||'')))return deny('invalid_challenge');
+ const challenge=await env.DB.prepare('SELECT * FROM e2e_email_challenges WHERE id=?').bind(b.challenge_id).first();
+ if(!challenge||challenge.used_at||challenge.expires_at<=NOW()||challenge.attempts>=5)return deny('expired_or_invalid_code',401);
+ await env.DB.prepare('UPDATE e2e_email_challenges SET attempts=attempts+1 WHERE id=? AND used_at IS NULL AND attempts<5').bind(challenge.id).run();
+ const hash=await sign(env,'challenge:'+challenge.id+':'+b.code);
+ if(hash!==challenge.code_fingerprint)return deny('expired_or_invalid_code',401);
+ const used=await env.DB.prepare('UPDATE e2e_email_challenges SET used_at=? WHERE id=? AND used_at IS NULL AND expires_at>? AND attempts<=5').bind(NOW(),challenge.id,NOW()).run();
+ if(!used.meta?.changes)return deny('expired_or_invalid_code',401);
+ let a=await env.DB.prepare('SELECT id,role FROM e2e_accounts WHERE email_fingerprint=?').bind(challenge.email_fingerprint).first();
+ if(!a){
+  // Role is derived from a server-only allowlist at time of initial challenge, not browser-supplied at verify.
+  const aid=uuid(),role=challenge.kind;
+  const hintValue='verified-test-mailbox';
+  await env.DB.prepare('INSERT OR IGNORE INTO e2e_accounts(id,email_fingerprint,email_hint,role,verified_at,created_at) VALUES(?,?,?,?,?,?)')
+   .bind(aid,challenge.email_fingerprint,hintValue,role,NOW(),NOW()).run();
+  a=await env.DB.prepare('SELECT id,role FROM e2e_accounts WHERE email_fingerprint=?').bind(challenge.email_fingerprint).first();
+ }
+ if(a.role!==challenge.kind)return deny('wrong_account_role',403);
+ const token=encode(random()),sessionHash=await sign(env,'session:'+token);
+ await env.DB.prepare('INSERT INTO e2e_sessions(session_fingerprint,account_id,expires_at,created_at) VALUES(?,?,?,?)')
+ .bind(sessionHash,a.id,NOW()+MAX_AGE,NOW()).run();
+ return json({ok:true,role:a.role,account_id:a.id},200, {'Set-Cookie':cookie(token)});
+}
+async function logout(request,env,a){
+ const match=request.headers.get('cookie')?.match(new RegExp('(?:^|;\\s*)'+COOKIE+'=([a-f0-9]{64})(?:;|$)'));
+ if(match)await env.DB.prepare('DELETE FROM e2e_sessions WHERE session_fingerprint=?').bind(await sign(env,'session:'+match[1])).run();
+ return json({ok:true},200,{'Set-Cookie':cookie('',0)});
+}
+async function applications(a,env){
+ const rows=await env.DB.prepare('SELECT id,round_code,category,stage_name,demo_url,media_key IS NOT NULL AS has_uploaded_file,status,payment_status,created_at FROM e2e_applications WHERE account_id=? ORDER BY created_at DESC').bind(a.id).all();
+ return json({ok:true,account:{id:a.id,role:a.role},applications:rows.results||[],testOnly:true});
+}
+function validDemo(s){
+ try{const u=new URL(s);if(u.protocol!=='https:')return false;const h=u.hostname.toLowerCase();
+  return ['youtube.com','www.youtube.com','youtu.be','www.tiktok.com','tiktok.com','m.tiktok.com'].includes(h);
+ }catch{return false}
+}
+async function submitApplication(request,env,a){
+ if(!requireRole(a,'member'))return deny('member_only',403);
+ const b=await bodyJSON(request);if(!b)return deny('invalid_json');
+ if(!['2027-03','2027-06','2027-09'].includes(b.round_code))return deny('invalid_round');
+ if(!['university','community'].includes(b.category))return deny('invalid_category');
+ if(b.adult_confirmed!==true)return deny('adult_confirmation_required',422);
+ const name=String(b.stage_name||'').trim(),url=String(b.demo_url||'').trim();
+ if(name.length<2||name.length>80||!validDemo(url))return deny('stage_name_or_demo_url_invalid');
+ const existing=await env.DB.prepare('SELECT category FROM e2e_applications WHERE account_id=? LIMIT 1').bind(a.id).first();
+ if(existing&&existing.category!==b.category)return deny('annual_category_locked',409);
+ const id=uuid();
+ try{await env.DB.prepare('INSERT INTO e2e_applications(id,account_id,round_code,category,stage_name,demo_url,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)')
+  .bind(id,a.id,b.round_code,b.category,name,url,NOW(),NOW()).run();
+ }catch{return deny('already_registered_for_round_or_unavailable',409)}
+ return json({ok:true,application_id:id,status:'submitted',source:'cloudflare-d1-staging',testOnly:true},201);
+}
+async function mockPayment(request,env,a){
+ if(!requireRole(a,'member'))return deny('member_only',403);
+ const b=await bodyJSON(request);if(!b)return deny('invalid_json');
+ const app=await selectApplication(env.DB,b.application_id,a.id);if(!app)return deny('application_not_found',404);
+ if(app.payment_status==='simulated_paid')return json({ok:true,status:'simulated_paid',amount_npr:500,already:true});
+ const inserted=await env.DB.prepare("INSERT OR IGNORE INTO e2e_payment_events(id,application_id,event_type,created_at) VALUES(?,?,'SIMULATED_PAYMENT',?)").bind(uuid(),app.id,NOW()).run();
+ await env.DB.prepare("UPDATE e2e_applications SET payment_status='simulated_paid', status='under_review',updated_at=? WHERE id=? AND account_id=? AND status='submitted'").bind(NOW(),app.id,a.id).run();
+ return json({ok:true,status:'simulated_paid',amount_npr:500,testOnly:true,realCharge:false});
+}
+async function mediaUpload(request,env,a){
+ if(!requireRole(a,'member'))return deny('member_only',403);
+ if(!env.STAGING_MEDIA)return deny('r2_bucket_not_configured',503);
+ const appId=new URL(request.url).searchParams.get('application');
+ const app=await selectApplication(env.DB,appId,a.id);
+ if(!app||app.status==='withdrawn')return deny('application_not_found',404);
+ const type=(request.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();
+ if(!['audio/mpeg','audio/mp4','audio/ogg','audio/wav','video/mp4','video/webm'].includes(type))
+  return deny('media_type_not_allowed',415);
+ const max=20*1024*1024;
+ if(Number(request.headers.get('content-length')||0)>max)return deny('file_too_large',413);
+ const data=await request.arrayBuffer();
+ if(data.byteLength<100||data.byteLength>max)return deny('invalid_file_size',413);
+ const key='e2e/'+app.account_id+'/'+app.id+'/'+uuid();
+ await env.STAGING_MEDIA.put(key,data,{httpMetadata:{contentType:type},customMetadata:{applicationId:app.id}});
+ try{await env.DB.prepare('UPDATE e2e_applications SET media_key=?,updated_at=? WHERE id=? AND account_id=?')
+  .bind(key,NOW(),app.id,a.id).run()}
+ catch{await env.STAGING_MEDIA.delete(key);return deny('database_unavailable',503)}
+ if(app.media_key)await env.STAGING_MEDIA.delete(app.media_key);
+ return json({ok:true,stored:true,application_id:app.id,bytes:data.byteLength,private:true,testOnly:true});
+}
+async function streamMedia(request,env,a){
+ if(!a)return deny('login_required',401);
+ if(!env.STAGING_MEDIA)return deny('r2_bucket_not_configured',503);
+ const id=new URL(request.url).searchParams.get('application');
+ const app=await env.DB.prepare('SELECT id,account_id,media_key FROM e2e_applications WHERE id=?').bind(id).first();
+ if(!app||!app.media_key||!(app.account_id===a.id||a.role==='reviewer'))return deny('not_found',404);
+ const obj=await env.STAGING_MEDIA.get(app.media_key);if(!obj)return deny('not_found',404);
+ return new Response(obj.body,{headers:{...secureHeaders,'Content-Type':obj.httpMetadata?.contentType||'application/octet-stream','Content-Disposition':'attachment; filename="demo-submission"','Content-Security-Policy':'sandbox'}});
+}
+async function judgeQueue(env,a){
+ if(!requireRole(a,'reviewer'))return deny('reviewer_only',403);
+ const rows=await env.DB.prepare("SELECT p.id,p.round_code,p.category,p.stage_name,p.demo_url,p.media_key IS NOT NULL AS has_uploaded_file,p.status,p.payment_status,s.technique,s.interpretation FROM e2e_applications p LEFT JOIN e2e_judge_scores s ON s.application_id=p.id AND s.reviewer_id=? WHERE p.payment_status='simulated_paid' AND p.status<>'withdrawn' ORDER BY p.created_at DESC LIMIT 100").bind(a.id).all();
+ return json({ok:true,queue:rows.results||[],role:'reviewer',testOnly:true});
+}
+async function submitScore(request,env,a){
+ if(!requireRole(a,'reviewer'))return deny('reviewer_only',403);
+ const b=await bodyJSON(request);if(!b)return deny('invalid_json');
+ if(!Number.isInteger(b.technique)||b.technique<0||b.technique>60||
+    !Number.isInteger(b.interpretation)||b.interpretation<0||b.interpretation>40||
+    b.no_conflict!==true)return deny('invalid_score_or_conflict_declaration',422);
+ const app=await env.DB.prepare('SELECT id FROM e2e_applications WHERE id=? AND payment_status=? AND status NOT IN (?,?)')
+  .bind(b.application_id,'simulated_paid','withdrawn','rejected').first();
+ if(!app)return deny('not_reviewable',409);
+ try{await env.DB.prepare('INSERT INTO e2e_judge_scores(application_id,reviewer_id,technique,interpretation,conflict_checked,created_at) VALUES(?,?,?,?,1,?)')
+ .bind(app.id,a.id,b.technique,b.interpretation,NOW()).run()}
+ catch{return deny('already_scored_or_unavailable',409)}
+ await env.DB.prepare("UPDATE e2e_applications SET status='scored',updated_at=? WHERE id=? AND status='under_review'").bind(NOW(),app.id).run();
+ return json({ok:true,score:b.technique+b.interpretation,storedIn:'cloudflare-d1-staging',testOnly:true});
+}
+async function eraseMember(env,a){
+ if(!requireRole(a,'member'))return deny('member_only',403);
+ const rows=await env.DB.prepare('SELECT media_key FROM e2e_applications WHERE account_id=?').bind(a.id).all();
+ if(rows.results?.some(x=>x.media_key)&&!env.STAGING_MEDIA)return deny('r2_cleanup_unavailable',503);
+ for(const row of rows.results||[])if(row.media_key)await env.STAGING_MEDIA.delete(row.media_key);
+ await env.DB.prepare('DELETE FROM e2e_accounts WHERE id=?').bind(a.id).run();
+ return json({ok:true,deletedTestData:true},200,{'Set-Cookie':cookie('',0)});
+}
+export async function handleE2E(request,env){
+ if(!configured(env))return deny('e2e_not_configured',503);
+ const {pathname}=new URL(request.url);
+ const isPost=request.method==='POST';
+ if(isPost&&!sameOrigin(request))return deny('origin_not_allowed',403);
+ if(!['GET','POST'].includes(request.method))return deny('method_not_allowed',405);
+ try{
+  if(pathname==='/api/e2e/request-code'&&isPost)return await requestCode(request,env);
+  if(pathname==='/api/e2e/verify-code'&&isPost)return await verifyCode(request,env);
+  const a=await account(request,env);
+  if(!a)return deny('login_required',401);
+  if(pathname==='/api/e2e/logout'&&isPost)return await logout(request,env,a);
+  if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:a,testOnly:true});
+  if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env);
+  if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
+  if(pathname==='/api/e2e/mock-payment'&&isPost)return await mockPayment(request,env,a);
+  if(pathname==='/api/e2e/demo-upload'&&isPost)return await mediaUpload(request,env,a);
+  if(pathname==='/api/e2e/demo-download'&&!isPost)return await streamMedia(request,env,a);
+  if(pathname==='/api/e2e/reviewer-queue'&&!isPost)return await judgeQueue(env,a);
+  if(pathname==='/api/e2e/score'&&isPost)return await submitScore(request,env,a);
+  if(pathname==='/api/e2e/delete-my-data'&&isPost)return await eraseMember(env,a);
+  return deny('not_found',404);
+ }catch{return deny('temporary_service_error',503)}
+}
