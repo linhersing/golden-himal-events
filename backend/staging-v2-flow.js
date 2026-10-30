@@ -28,6 +28,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON})
    AND (media_key IS NOT NULL OR demo_url IS NOT NULL)
    AND status NOT IN ('withdrawn','rejected')`).bind(b.application_id).first();
   if(!app)return deny('not_reviewable',409);
+  if(b.phase!==app.phase)return deny('stale_reviewer_stage_reload_required',409);
   const demo=app.phase==='demo',caps=demo?[60,40]:[40,30,20,10];
   const inputs=demo?[b.technique,b.interpretation]:[b.technique,b.interpretation,b.stage_presence,b.appearance];
   if(inputs.some((v,i)=>!Number.isInteger(v)||v<0||v>caps[i]))return deny('invalid_stage_scores',422);
