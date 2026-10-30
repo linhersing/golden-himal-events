@@ -97,3 +97,9 @@ dialog{max-height:min(92vh,900px);overflow:auto}
 .d1-staging-panel .form-actions{margin-top:14px;gap:11px}
 .d1-staging-panel .button:disabled,.d1-staging-panel .text-button:disabled{opacity:.48;cursor:not-allowed;transform:none}
 .d1-staging-status{margin-top:13px;background:#eee2cd;border-left:3px solid #b68b4b;padding:10px 13px;overflow-wrap:anywhere}
+
+/* Entry point to separate test account and personal dashboard */
+.main-nav a.member-gateway{color:#744a1f;border:1px solid #cfa660;background:#faf1da;border-radius:24px;padding:9px 11px;font-weight:800}
+.member-entrance{display:flex;flex-direction:column;gap:3px;margin-top:15px;padding:14px 16px;border:1px solid #caa057;background:#fff4d9;color:#583c1d;border-radius:12px;font-size:.91rem;font-weight:800}
+.member-entrance small{color:#846e4e;font-size:.69rem;font-weight:500}
+@media(max-width:860px){.main-nav a.member-gateway{order:-1;position:relative}}
