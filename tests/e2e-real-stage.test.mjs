@@ -12,7 +12,7 @@ test('e2e API fails closed without D1, sender, allowlist, and identity secret',a
 });
 test('site connects the new paths to Worker but disables them by default',async()=>{
  const config=JSON.parse((await src('../wrangler.jsonc')).replace(/\/\/.*$/gm,''));
- assert.equal(config.vars.STAGING_E2E_ENABLED,'false');
+ assert.equal(config.vars.STAGING_E2E_ENABLED,undefined); // enable only via Cloudflare secret
  assert(config.assets.run_worker_first.includes('/api/e2e/*'));
  const worker=await src('../backend/staging-registration-worker.js');
  assert.match(worker,/import \{handleE2E\} from '\.\/staging-e2e\.js'/);
