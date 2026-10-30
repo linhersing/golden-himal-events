@@ -44,6 +44,18 @@ test('real D1-style SQLite adapter persists OTP, entry, simulated fee and score 
   },cookie),env);
   assert.equal(appResponse.status,201);const appId=(await appResponse.json()).application_id;
   assert.equal((await handleE2E(get('/api/e2e/applications',cookie),env)).status,200);
+  // Authenticated direct upload is persisted to a private R2 fixture and linked to D1.
+  const uploaded=await handleE2E(new Request(host+'/api/e2e/demo-upload?application='+appId,{
+   method:'POST',headers:{Origin:host,Cookie:cookie,'Content-Type':'audio/mpeg'},
+   body:new Uint8Array(512)
+  }),env);
+  assert.equal(uploaded.status,200);
+  assert.equal((await uploaded.json()).private,true);
+  assert.equal(db.prepare('SELECT media_key FROM e2e_applications WHERE id=?').get(appId).media_key.startsWith('e2e/'),true);
+  const ownDownload=await handleE2E(get('/api/e2e/demo-download?application='+appId,cookie),env);
+  assert.equal(ownDownload.status,200);
+  assert.equal((await ownDownload.arrayBuffer()).byteLength,512);
+  assert.equal((await handleE2E(get('/api/e2e/demo-download?application='+appId),env)).status,401);
   const duplicate=await handleE2E(req('/api/e2e/applications',{round_code:'2027-03',category:'university',stage_name:'TEST SINGER',demo_url:'https://youtu.be/test123',adult_confirmed:true},cookie),env);
   assert.equal(duplicate.status,409);
   const paid=await handleE2E(req('/api/e2e/mock-payment',{application_id:appId},cookie),env);
