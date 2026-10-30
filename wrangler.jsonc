@@ -16,6 +16,9 @@
       "binding": "DB",
       "database_name": "ghv-staging",
       "database_id": "93f23f1e-0c2b-41a6-8d8d-fb1a35d4a93a"
+    },
+    {
+      "binding": "E2E_DB"
     }
   ],
   "vars": {
