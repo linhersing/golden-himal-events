@@ -17,7 +17,7 @@ test('desktop Chinese choice makes login obvious and remains Chinese on personal
  await expect(page).toHaveURL(/member-login\.html$/);
  await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
  await expect(page.locator('#auth-view h2')).toContainText('會員登入');
- await expect(page.locator('[data-i18n="usernameLabel"]')).toContainText('測試會員帳號');
+ await expect(page.locator('[data-i18n="usernameLabel"]')).toContainText('虛構測試 Email');
  await expect(page.locator('#login-form button[type="submit"]')).toContainText('登入我的會員中心');
  await page.locator('#register-persona').selectOption('T001');
  await page.locator('#register-test').click();

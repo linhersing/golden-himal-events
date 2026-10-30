@@ -304,6 +304,14 @@ $('export').addEventListener('click',()=>{
 render();
 const requestedStep=new URLSearchParams(location.search).get('step');
 if(['apply','checkout','profile'].includes(requestedStep)){
- if(member())changeTab(requestedStep);
- else changeTab('enroll');
+ if(member()){
+  changeTab(requestedStep);
+  // The link may name a specific application; never trust a foreign member ID.
+  // Validate against applications owned by the current synthetic session.
+  const requestedApplication=new URLSearchParams(location.search).get('application');
+  if(requestedStep==='checkout'&&myApplications().some(a=>a.id===requestedApplication)){
+   $('pay-app').value=requestedApplication;
+   renderCheckout();
+  }
+ }else changeTab('enroll');
 }

@@ -2,12 +2,12 @@
 // NO POST, no real data, no Cloudflare secrets or D1 mutation.
 const BASE='https://golden-himal-voice-preview.linhersing.workers.dev';
 const checks=[
-  ['/', ['class="preview-ribbon"','class="member-gateway"','href="./member-login.html"','class="footer-test-links"','data-i18n="navMember"']],
+  ['/', ['class="preview-ribbon"','class="member-gateway"','href="./member-login.html"','class="footer-test-links"','data-i18n="navMember"','class="demo-no-record"','data-i18n="demoNoRecordTitle"']],
   ['/member-portal.html',['TEST ONLY','建立你的虛構會員','member-portal.js','參賽者四畫面整合預覽','data-dossier="pass"','data-dossier="application"','data-dossier="payment"','data-dossier="profile"','id="dossier-demo"']],
   ['/member-portal.js',['signUpMock','simulatePayment','seed20','renderDossier','T019']],
   ['/member-portal.css',['dossier-tabs','dossier-sheet']],
   ['/member-portal-model.mjs',['PERSONAS','blankPortal','@example.invalid']],
-  ['/member-login.html',['TEST ONLY','Member sign in','data-lang="zh"','id="login-username"','id="login-password"','id="dashboard-view"','member-login.js']],
+  ['/member-login.html',['TEST ONLY','Member sign in','singer-001@example.invalid','data-lang="zh"','id="login-username"','id="login-password"','id="dashboard-view"','member-login.js']],
   ['/member-login.js',['GHV-TEST-2027','ghv_member_sandbox_v1','ghv_demo_active_member_v1','renderDashboard','會員登入','ghv_ui_language_v1']],
   ['/member-login.css',['auth-layout','dashboard-main','summary-grid']]
 ];

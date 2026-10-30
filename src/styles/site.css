@@ -139,3 +139,9 @@ dialog{max-height:min(92vh,900px);overflow:auto}
  .header-inner>.main-nav{border-top:1px solid var(--line)}
  .footer-test-links{justify-content:flex-start}
 }
+
+/* Make sample-only completion unmistakable to a visitor. */
+.demo-no-record{margin:16px 0;padding:19px;border:2px solid #b98942;border-radius:13px;background:#fff4da;color:#533f25}
+.demo-no-record strong{display:block;font-size:1.12rem}
+.demo-no-record p{margin:8px 0 17px;color:#6b5436;font-size:.88rem;line-height:1.7}
+.demo-no-record .button{display:inline-flex;min-height:45px;align-items:center}
