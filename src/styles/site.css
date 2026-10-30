@@ -154,3 +154,8 @@ dialog{max-height:min(92vh,900px);overflow:auto}
 .v2-stage-cta div{display:flex;gap:11px;flex-wrap:wrap}
 .v2-stage-cta a{display:inline-flex;align-items:center;min-height:45px;padding:10px 16px;border:1px solid #8d6536;border-radius:9px;font-weight:700;text-decoration:none;background:#fff;color:#664521}
 .v2-stage-cta a:first-child{background:#694629;color:#fff}
+
+.v2-rule-summary{background:#fffaf0;border:1px solid #dfc8a3;border-radius:14px;padding:18px 21px;margin:18px 0}
+.v2-rule-summary strong{font-size:1rem;color:#654322}
+.v2-rule-summary p{font-size:.85rem;color:#5e523e;line-height:1.65;margin:8px 0}
+.v2-rule-summary p:last-child{font-size:.77rem}
