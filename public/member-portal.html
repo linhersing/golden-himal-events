@@ -73,6 +73,19 @@
  <div id="profile" class="profile-wrap"></div>
  <h3>我的報名與付款進度</h3>
  <div class="table-scroll"><table><thead><tr><th>測試報名</th><th>場次</th><th>Demo</th><th>付款</th><th>初篩狀態</th></tr></thead><tbody id="my-apps"></tbody></table></div>
+ <section class="member-dossier" aria-labelledby="dossier-title">
+  <div class="panel-heading"><div><span class="eyebrow">FOUR SCREEN DEMO · SYNTHETIC DATA</span><h3 id="dossier-title">參賽者四畫面整合預覽</h3></div><span class="pill">非正式文件</span></div>
+  <p class="lead">依照現有測試會員、報名及假訂單即時產生四種畫面。僅使用固定虛構人物與瀏覽器本機資料；沒有實名認證、真實影片、付款交易或有效准考證。</p>
+  <div class="dossier-actions"><button id="dossier-demo" class="subtle" type="button">一鍵準備成年測試參賽者</button><span id="dossier-status" role="status" aria-live="polite"></span></div>
+  <div class="dossier-tabs" role="group" aria-label="會員文件預覽類型">
+   <button type="button" class="dossier-tab active" data-dossier="pass" aria-pressed="true">01 准考證示意</button>
+   <button type="button" class="dossier-tab" data-dossier="application" aria-pressed="false">02 報名資料</button>
+   <button type="button" class="dossier-tab" data-dossier="payment" aria-pressed="false">03 付款存根</button>
+   <button type="button" class="dossier-tab" data-dossier="profile" aria-pressed="false">04 會員檔案</button>
+  </div>
+  <div class="dossier-sheet" id="dossier-content" aria-live="polite"></div>
+  <p class="hint">與 Gemini 的四畫面原型對齊「版型與欄位」，但不匯入其未核實姓名、電話、學生證、交易序號或付款成功宣稱。第20號 TEST-SINGER-020 仍為17歲拒絕案例。</p>
+ </section>
 </section>
 <section id="panel-operator" class="panel member-panel" role="tabpanel" aria-labelledby="tab-operator" hidden>
  <div class="panel-heading"><div><span class="eyebrow">BACK OFFICE · NOT AUTHENTICATED</span><h2>行政／評審後台模擬</h2></div><span class="pill">任何測試者可進入</span></div>
