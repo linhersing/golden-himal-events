@@ -15,7 +15,7 @@ const translations={
   sameDevice:'Test entries remain on this browser and website address only; they are not real Cloudflare member accounts.',
   signInTitle:'Member sign in',signInIntro:"Already registered in this browser's member test? Use the fictional ID and shared demo passcode below.",
   usernameLabel:'Test account name / Member ID / test email',passwordLabel:'Demo password (not a real password)',
-  showPassword:'Show',hidePassword:'Hide',testCredentials:'Use only these public demonstration credentials:',
+  toggleReveal:'Show',toggleHide:'Hide',testCredentials:'Use only these public demonstration credentials:',
   signInBtn:'Sign in to my test account',newMember:'First time here? Create a fictional test member.',
   chooseTestPerson:'Choose a fictional participant',createTestAccount:'Create test account & open my area',
   notSecure:'This shared demo passcode proves nothing about identity. No password is saved or sent. Real sign-in will require a secure server, individual credentials and verified sessions before launch.',
@@ -51,7 +51,7 @@ const translations={
   sameDevice:'परीक्षण विवरण यही ब्राउजर र वेबसाइट ठेगानामा मात्र रहन्छन्। यी वास्तविक Cloudflare सदस्य खाताहरू होइनन्।',
   signInTitle:'सदस्य साइन इन',signInIntro:'यस ब्राउजरमा परीक्षण सदस्य बनाइसक्नुभयो? तलको काल्पनिक ID र साझा परीक्षण कोड प्रयोग गर्नुहोस्।',
   usernameLabel:'परीक्षण प्रयोगकर्ता नाम / सदस्य ID / परीक्षण इमेल',passwordLabel:'डेमो पासकोड (वास्तविक पासवर्ड होइन)',
-  showPassword:'देखाउनुहोस्',hidePassword:'लुकाउनुहोस्',testCredentials:'यी सार्वजनिक नमुना विवरण मात्र प्रयोग गर्नुहोस्:',
+  toggleReveal:'देखाउनुहोस्',toggleHide:'लुकाउनुहोस्',testCredentials:'यी सार्वजनिक नमुना विवरण मात्र प्रयोग गर्नुहोस्:',
   signInBtn:'मेरो परीक्षण खातामा साइन इन',newMember:'पहिलो पटक आउनुभएको हो? काल्पनिक परीक्षण खाता बनाउनुहोस्।',
   chooseTestPerson:'काल्पनिक सहभागी छान्नुहोस्',createTestAccount:'परीक्षण खाता बनाएर मेरो पृष्ठ खोल्नुहोस्',
   notSecure:'यो साझा डेमो कोडले वास्तविक पहिचान प्रमाणित गर्दैन। पासवर्ड न त सुरक्षित राखिन्छ न पठाइन्छ। वास्तविक सेवा सुरु गर्न सुरक्षित सर्भर, व्यक्तिगत लगइन र प्रमाणित सेसन आवश्यक छ।',
@@ -88,7 +88,7 @@ function setLanguage(next){
  language=next==='ne'?'ne':'en';document.documentElement.lang=language;
  document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===language)));
  document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
- $('show-password').textContent=t($('login-password').type==='text'?'hidePassword':'showPassword');
+ $('show-password').textContent=t($('login-password').type==='text'?'toggleHide':'toggleReveal');
  render();
 }
 const make=(tag,textValue,className)=>{
@@ -210,7 +210,7 @@ $('sign-out').addEventListener('click',signOut);
 $('show-password').addEventListener('click',()=>{
  const field=$('login-password');
  field.type=field.type==='password'?'text':'password';
- $('show-password').textContent=t(field.type==='password'?'showPassword':'hidePassword');
+ $('show-password').textContent=t(field.type==='password'?'toggleReveal':'toggleHide');
 });
 document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>setLanguage(b.dataset.lang)));
 for(const person of PERSONAS){
