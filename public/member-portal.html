@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#35241d">
+<title>Golden Himal Voice｜會員及報名整合體驗 TEST ONLY</title>
+<link rel="stylesheet" href="./test-lab.css">
+<link rel="stylesheet" href="./member-portal.css">
+</head><body>
+<a href="#main" class="skip">跳至內容</a>
+<div class="warning" role="note"><strong>TEST ONLY｜不是真實會員系統</strong><span>請勿輸入姓名、手機、Email、證件、密碼、真影片或信用卡資訊；此頁不收取任何費用。</span></div>
+<header class="topbar"><div class="wrap topbar-inner">
+<a class="brand" href="/"><img src="./images/brand-identity.png" alt="Golden Himal Palace" width="65" height="53"><span><strong>Golden Himal Voice</strong><small>MEMBERSHIP & APPLICATION · 2027</small></span></a>
+<a class="back" href="./test-lab.html">← 回測試中心</a>
+</div></header>
+<main id="main" class="wrap">
+<section class="member-hero"><div>
+<span class="eyebrow">MEMBER JOURNEY · 2027 PRE-LAUNCH</span>
+<h1>從加入會員，<br>到站上<em>黃金舞台。</em></h1>
+<p>先讓我們自己完整測一遍：建立虛構帳號、選擇場次、提交Demo、模擬繳費、查看報名進度、後台審核。</p>
+<div class="hero-actions"><button class="primary" type="button" id="start">開始模擬註冊</button><a class="back" href="./payment-lab.html">既有金流沙盒</a></div>
+</div>
+<div class="member-hero-side">
+ <span>MEMBER EXPERIENCE</span><strong>5 STEPS</strong><div class="hero-steps"><small>01</small> 會員建立<div class="step-line"></div><small>02</small> Demo 報名<div class="step-line"></div><small>03</small> NPR 500 測試付款<div class="step-line"></div><small>04</small> 初篩審核<div class="step-line"></div><small>05</small> 查詢進度</div>
+</div></section>
+<section class="status-banner">
+ <div><span class="dot"></span><strong>獨立瀏覽器沙盒</strong><small>所有資料只存在這台裝置，非真正 D1 帳號</small></div>
+ <div><icon-placeholder></icon-placeholder><strong>零個人資料與金錢交易</strong><small>20個預設虛構人物，無密碼、無外部請求</small></div>
+ <a href="#qa" class="back">一鍵批次測試</a>
+</section>
+<div class="tabs member-tabs" role="tablist" aria-label="會員與後台工作區">
+ <button id="tab-enroll" class="tab active" role="tab" aria-selected="true" aria-controls="panel-enroll" data-tab="enroll">01 註冊／登入</button>
+ <button id="tab-apply" class="tab" role="tab" aria-selected="false" aria-controls="panel-apply" data-tab="apply">02 報名／Demo</button>
+ <button id="tab-checkout" class="tab" role="tab" aria-selected="false" aria-controls="panel-checkout" data-tab="checkout">03 模擬付款</button>
+ <button id="tab-profile" class="tab" role="tab" aria-selected="false" aria-controls="panel-profile" data-tab="profile">04 我的會員中心</button>
+ <button id="tab-operator" class="tab" role="tab" aria-selected="false" aria-controls="panel-operator" data-tab="operator">05 後台審核</button>
+ <button id="tab-audit" class="tab" role="tab" aria-selected="false" aria-controls="panel-audit" data-tab="audit">06 驗收／重置</button>
+</div>
+<section id="panel-enroll" class="panel member-panel" role="tabpanel" aria-labelledby="tab-enroll">
+ <div class="panel-heading"><div><span class="eyebrow">ACCOUNT REGISTRATION MOCK</span><h2>建立你的虛構會員</h2></div><span class="pill">沒有真實帳號</span></div>
+ <p class="lead">正式系統未來會進行 Email／手機驗證及安全登入；這裡只用固定 TEST-001～TEST-020 演練帳號建立和返回會員中心。</p>
+ <div class="fields">
+ <label>選擇固定虛構人物<select id="persona" aria-label="測試人物"></select></label>
+ <label>已有測試會員：模擬登入<select id="signin"><option value="">選擇現有測試帳號</option></select></label>
+ </div>
+ <div id="persona-preview" class="preview" role="note"></div>
+ <div class="actions"><button class="primary" type="button" id="signup">建立 TEST 會員</button><button class="subtle" type="button" id="login">模擬登入</button><span id="enroll-status" role="status" aria-live="polite"></span></div>
+ <p class="hint">我們沒有收集密碼，這個「登入」只是切換模擬身份，任何開啟此測試頁的人都可以操作。**絕不可用於真實會員驗證。**</p>
+</section>
+<section id="panel-apply" class="panel member-panel" role="tabpanel" aria-labelledby="tab-apply" hidden>
+ <div class="panel-heading"><div><span class="eyebrow">APPLICATION & DEMO</span><h2>填寫線上初篩報名</h2></div><span class="pill">2027 Draft 1</span></div>
+ <div class="who" id="active-apply">尚未選擇測試會員。先到註冊頁。</div>
+ <p class="lead">Alan 草案：先提交60～90秒本人演唱Demo，初篩後再進入3／6／9月實體初賽。此頁使用假影片名稱，不接受真正的影片上傳。</p>
+ <div class="fields">
+ <label>報名場次<select id="round"><option value="2027-03">2027年3月初賽</option><option value="2027-06">2027年6月初賽</option><option value="2027-09">2027年9月初賽</option></select></label>
+ <label>模擬 Demo 內容<select id="demo"><option value="TEST-DEMO-60S">TEST-DEMO-60S｜60秒（假資料）</option><option value="TEST-DEMO-90S">TEST-DEMO-90S｜90秒（假資料）</option></select></label>
+ </div>
+ <div class="bill"><small>當次報名費（暫定草案）</small><strong>NPR 500</strong><small>報名建立後才開立假訂單，完成模擬付款後方可在後台通過審核。</small></div>
+ <div class="actions"><button type="button" id="apply" class="primary">建立 TEST 報名申請</button><span id="apply-status" role="status" aria-live="polite"></span></div>
+ <div class="process"><div><b>1</b> 建會員</div><span>→</span><div><b>2</b> 提 Demo</div><span>→</span><div><b>3</b> 付款</div><span>→</span><div><b>4</b> 進度</div></div>
+</section>
+<section id="panel-checkout" class="panel member-panel" role="tabpanel" aria-labelledby="tab-checkout" hidden>
+ <div class="panel-heading"><div><span class="eyebrow">TEST CHECKOUT</span><h2>NPR 500 報名費結帳</h2></div><span class="pill">完全不扣款</span></div>
+ <p class="lead">選擇會員的其中一筆報名，建立一個不可重複的假付款訂單。所有「成功／失敗」按鈕只模擬支付商狀態，不是真正匯款或銀行回呼。</p>
+ <label>選擇此會員報名<select id="pay-app"></select></label>
+ <div id="checkout-card" class="checkout-card"></div>
+ <div class="actions"><button type="button" id="order" class="primary">建立 NPR 500 TEST 訂單</button>
+ <button type="button" id="pay-success" class="subtle">模擬付款成功</button><button type="button" id="pay-fail" class="subtle">模擬付款失敗</button><button type="button" id="pay-retry" class="subtle">模擬重新付款</button></div>
+ <p id="payment-feedback" role="status" aria-live="polite" class="hint">沒有銀行連線。正式付款必須由後端向收單商驗證交易，而不是相信此畫面。</p>
+</section>
+<section id="panel-profile" class="panel member-panel" role="tabpanel" aria-labelledby="tab-profile" hidden>
+ <div class="panel-heading"><div><span class="eyebrow">MY TEST ACCOUNT</span><h2>我的會員中心</h2></div><span class="pill">本機虛構資料</span></div>
+ <div id="profile" class="profile-wrap"></div>
+ <h3>我的報名與付款進度</h3>
+ <div class="table-scroll"><table><thead><tr><th>測試報名</th><th>場次</th><th>Demo</th><th>付款</th><th>初篩狀態</th></tr></thead><tbody id="my-apps"></tbody></table></div>
+</section>
+<section id="panel-operator" class="panel member-panel" role="tabpanel" aria-labelledby="tab-operator" hidden>
+ <div class="panel-heading"><div><span class="eyebrow">BACK OFFICE · NOT AUTHENTICATED</span><h2>行政／評審後台模擬</h2></div><span class="pill">任何測試者可進入</span></div>
+ <p class="lead">這只演練工作人員畫面。正式後台會把「行政查身份／核款」與「評審匿名看Demo」分成不同授權角色，並記錄審核操作。</p>
+ <div id="operator-stats" class="cards"></div>
+ <div class="table-scroll"><table><thead><tr><th>報名識別</th><th>測試會員／組別</th><th>場次／Demo</th><th>模擬付款</th><th>審核狀態</th><th>操作</th></tr></thead><tbody id="admin-rows"></tbody></table></div>
+ <p id="operator-feedback" role="status" aria-live="polite" class="hint">審核通過必須有模擬付款。正式環境仍需裁判認證、資格查核和迴避制度。</p>
+</section>
+<section id="panel-audit" class="panel member-panel" role="tabpanel" aria-labelledby="tab-audit" hidden>
+ <div class="panel-heading"><div><span class="eyebrow">QA CONTROL ROOM</span><h2 id="qa">20位虛構會員全流程驗收</h2></div><span class="pill">不動雲端D1</span></div>
+ <div class="compare"><article class="result"><span class="eyebrow">BROWSER MOCK</span><h3>會員帳號數</h3><strong class="big" id="member-total">0</strong><small>這台瀏覽器裡的 TEST 會員</small></article>
+ <article class="result"><span class="eyebrow">BROWSER MOCK</span><h3>報名申請數</h3><strong class="big" id="application-total">0</strong><small>不是 Cloudflare D1 真的報名人數</small></article></div>
+ <div class="checks" id="qa-report"></div>
+ <div class="actions"><button id="seed20" type="button" class="primary">一鍵產生20個測試情境</button>
+ <button id="export" type="button" class="subtle">匯出本機測試 JSON</button><button id="reset" type="button" class="danger">清空此會員沙盒</button></div>
+ <p id="qa-status" class="hint" role="status" aria-live="polite">其中第20位預設為17歲，用來驗證年齡阻擋，因此預期19位會員可註冊、1位遭拒絕。</p>
+ <p class="hint">本頁資料只在本機 localStorage；清除不會修改既有報名測試室、付款測試室、Cloudflare D1、GitHub、Google Drive。正式資料庫與登入帳號仍待開發。</p>
+</section>
+</main>
+<footer class="footer"><div class="wrap">GHV｜MEMBERSHIP SANDBOX • TEST ONLY　<a href="/">網站首頁</a>　<a href="./test-lab.html">營運測試室</a></div></footer>
+<script type="module" src="./member-portal.js"></script>
+</body></html>
