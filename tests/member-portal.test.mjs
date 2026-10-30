@@ -110,3 +110,34 @@ test('member portal never collects real account credentials or triggers financia
  assert.doesNotMatch(script,/fetch\s*\(/);
  assert.doesNotMatch(script,/\.post\s*\(/);
 });
+
+test('401+ fake reviews never cause local member/application/payment loss on reload',()=>{
+ const state=blankPortal();
+ const member=signUpMock(state,'T001').member;
+ const app=applyMock(state,member.id,'2027-03','TEST-DEMO-60S').application;
+ const order=getOrCreateOrder(state,app.id).order;
+ simulatePayment(state,order.id,'success');
+ for(let i=0;i<460;i++){
+  const next=i%2?'shortlisted':'needs_info';
+  assert.ok(reviewMock(state,app.id,next).application);
+ }
+ assert.ok(state.audit.length<=200,'audit must be bounded during mutation');
+ const restored=safeParsePortal(JSON.stringify(state));
+ assert.equal(restored.members.length,1);
+ assert.equal(restored.applications.length,1);
+ assert.equal(restored.orders.length,1);
+ assert.equal(restored.orders[0].status,'paid');
+ assert.ok(restored.audit.length<=200);
+});
+test('old valid localStorage with >400 audit messages migrates without erasing members',()=>{
+ const state=blankPortal();
+ const member=signUpMock(state,'T002').member;
+ const app=applyMock(state,member.id,'2027-06','TEST-DEMO-90S').application;
+ getOrCreateOrder(state,app.id);
+ state.audit=Array.from({length:430},(_,i)=>({event:'fake_legacy_review',ref:'APP-TEST-0001'}));
+ const upgraded=safeParsePortal(JSON.stringify(state));
+ assert.equal(upgraded.members.length,1);
+ assert.equal(upgraded.applications.length,1);
+ assert.equal(upgraded.orders.length,1);
+ assert.equal(upgraded.audit.length,200);
+});
