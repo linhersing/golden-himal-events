@@ -113,7 +113,7 @@ a{overflow-wrap:anywhere}
 }
 @media(max-width:350px){
  .brand strong{font-size:.92rem}
- .langs button{min-width:42px;font-size:.75rem}
+ .langs button{min-width:44px;font-size:.75rem}
  .access-step{font-size:.7rem}
  .access-step b{width:26px;height:26px}
  .entry .meta{grid-template-columns:1fr}

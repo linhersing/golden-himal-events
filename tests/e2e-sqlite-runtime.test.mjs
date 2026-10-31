@@ -14,11 +14,11 @@ function adapter(db){return {prepare(sql){let args=[];return {
 const req=(path,obj,cookie)=>new Request(host+path,{method:'POST',headers:{Origin:host,'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(obj)});
 const get=(path,cookie)=>new Request(host+path,{headers:cookie?{Cookie:cookie}:{}});
 
-test('Alan V2: verified email -> real DB audition -> R2 proofs -> mock fee -> 3 judges -> live -> finale -> vote',async()=>{
+for (const mode of ['uploads','links']) test(`Alan V2 ${mode}: persisted audition -> mock fee -> 3 judges -> live -> final -> vote`,async()=>{
  const db=new DatabaseSync(':memory:');
  db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
  const inbox=[],r2=new Map(),env={
-  STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'G'.repeat(64),
+  STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:mode,STAGING_IDENTITY_SECRET:'G'.repeat(64),
   STAGING_ALLOWED_EMAILS:'singer@test.invalid,voter@test.invalid',
   STAGING_REVIEWER_EMAILS:'judge1@test.invalid,judge2@test.invalid,judge3@test.invalid',
   STAGING_ORGANIZER_EMAILS:'organizer@test.invalid',
@@ -39,14 +39,22 @@ test('Alan V2: verified email -> real DB audition -> R2 proofs -> mock fee -> 3 
    method:'POST',headers:{Origin:host,Cookie:cookie,'Content-Type':type},body:new Uint8Array(512)
   }),env);assert.equal(r.status,200,kind+' '+JSON.stringify(await r.clone().json()));return r;
  }
+ if(mode==='links')delete env.STAGING_MEDIA;
  try{
   assert.equal((await handleE2E(req('/api/e2e/request-code',{email:'not-listed@test.invalid',role:'organizer'}),env)).status,403);
   const member=await auth('singer@test.invalid','member');
   const request={round_code:'2027-01',category:'community',province:'gandaki',location_basis:'residence',
    affiliation:'TEST JOB',stage_name:'TEST SINGER',song_title:'TEST SONG',original_artist:'TEST ORIGINAL',
-   song_language:'Nepali',song_key:'C',demo_url:'',adult_confirmed:true,no_exclusive_contract:true};
+   song_language:'Nepali',song_key:'C',demo_url:mode==='links'?'https://drive.google.com/file/d/fictional-test-performance/view?usp=sharing':'',adult_confirmed:true,no_exclusive_contract:true};
   assert.equal((await handleE2E(req('/api/e2e/applications',{...request,round_code:'2027-09'},member),env)).status,400);
   assert.equal((await handleE2E(req('/api/e2e/applications',{...request,adult_confirmed:false},member),env)).status,422);
+  if(mode==='links'){
+   for(const demo_url of ['', 'javascript:alert(1)', 'http://youtu.be/test', 'https://user:secret@youtube.com/watch?v=test', 'https://localhost/demo', 'https://127.0.0.1/demo', 'https://youtube.com:8443/demo', 'https://youtube.com/'+ 'x'.repeat(2100)]){
+    const rejected=await handleE2E(req('/api/e2e/applications',{...request,demo_url},member),env);
+    assert.equal(rejected.status,422,'reject unsafe/empty link '+demo_url.slice(0,60));
+   }
+   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_applications').get().n,0);
+  }
   const created=await handleE2E(req('/api/e2e/applications',request,member),env);
   assert.equal(created.status,201,JSON.stringify(await created.clone().json()));
   const appId=(await created.json()).application_id;
@@ -54,10 +62,20 @@ test('Alan V2: verified email -> real DB audition -> R2 proofs -> mock fee -> 3 
   // D1 table, not the browser, is the authoritative application record.
   assert.equal((await (await handleE2E(get('/api/e2e/applications',member),env)).json()).applications[0].id,appId);
   assert.equal((await handleE2E(req('/api/e2e/applications',{...request,round_code:'2027-04',category:'university',student_confirmed:true},member),env)).status,409);
+  if(mode==='links'){
+   assert.equal(db.prepare('SELECT demo_url FROM e2e_applications WHERE id=?').get(appId).demo_url,request.demo_url);
+   const reauth=await auth('singer@test.invalid','member');
+   const saved=(await (await handleE2E(get('/api/e2e/applications',reauth),env)).json()).applications[0];
+   assert.equal(saved.demo_url,request.demo_url);
+   assert.equal(saved.has_eligibility_file,0);
+   const blocked=await handleE2E(new Request(host+'/api/e2e/demo-upload?application='+appId,{method:'POST',headers:{Origin:host,Cookie:member,'Content-Type':'video/mp4'},body:new Uint8Array(512)}),env);
+   assert.equal(blocked.status,409);assert.equal((await blocked.json()).error,'link_submission_only');
+  }else{
   await upload(member,appId,'demo','video/mp4');
   await upload(member,appId,'eligibility','application/pdf');
   await upload(member,appId,'receipt','image/png');
   assert.equal((await handleE2E(get('/api/e2e/demo-download?application='+appId,member),env)).status,200);
+  }
   const paid=await handleE2E(req('/api/e2e/mock-payment',{application_id:appId},member),env);
   assert.equal(paid.status,200);assert.equal((await paid.json()).realCharge,false);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_payment_events').get().n,1);
@@ -69,8 +87,9 @@ test('Alan V2: verified email -> real DB audition -> R2 proofs -> mock fee -> 3 
   assert.equal((await handleE2E(get('/api/e2e/organizer-queue',reviewers[0]),env)).status,403);
   const queue=(await (await handleE2E(get('/api/e2e/reviewer-queue',reviewers[0]),env)).json()).queue;
   assert.equal(queue[0].id,appId);assert.equal(queue[0].phase,'demo');
+  if(mode==='links')assert.equal(queue[0].demo_url,request.demo_url);
   const docDenied=await handleE2E(get('/api/e2e/demo-download?application='+appId+'&kind=eligibility',reviewers[0]),env);
-  assert.equal(docDenied.status,404);
+  assert.equal(docDenied.status,mode==='links'?503:404);
   assert.equal((await handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'qualifier'},org),env)).status,409);
   for(const cookie of reviewers){
    const s=await handleE2E(req('/api/e2e/score',{application_id:appId,phase:'demo',technique:50,interpretation:30,no_conflict:true},cookie),env);
@@ -118,6 +137,7 @@ test('Alan V2: verified email -> real DB audition -> R2 proofs -> mock fee -> 3 
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_live_scores').get().n,0);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_final_votes').get().n,0);
   assert.equal(r2.size,0);
+  if(mode==='links')assert.equal(env.STAGING_MEDIA,undefined);
  }finally{db.close()}
 });
 test('expired and over-attempted emailed codes are rejected',async()=>{

@@ -47,3 +47,17 @@ test('readiness and member path are GET-only or fail closed',async()=>{
  assert.equal(inactive.status,503);
  assert.equal((await inactive.json()).error,'e2e_database_not_bound');
 });
+
+// A link-only rehearsal still requires real OTP/security setup; R2 is optional.
+test('link-only readiness has no R2 prerequisite and cannot bypass email setup',async()=>{
+ const env={STAGING_SUBMISSION_MODE:'links',E2E_DB:{prepare(){return {async first(){return {n:9}}}}},
+  EMAIL:{},STAGING_FROM_EMAIL:'sender@test.invalid',STAGING_ALLOWED_EMAILS:'member@test.invalid',
+  STAGING_IDENTITY_SECRET:'X'.repeat(40),STAGING_E2E_ENABLED:'true'};
+ const ready=await check(env);
+ assert.equal(ready.readiness,'READY_FOR_INVITED_OTP_TEST');
+ assert.equal(ready.resources.privateMediaBound,false);
+ assert.equal(ready.submissionMode,'external_links');
+ assert.equal(ready.privateMediaRequired,false);
+ assert.equal((await check({...env,EMAIL:undefined})).readiness,'BLOCKED');
+ assert.equal((await check({...env,STAGING_SUBMISSION_MODE:undefined})).readiness,'BLOCKED');
+});

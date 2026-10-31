@@ -1,3 +1,4 @@
+import {validPerformanceLink} from './performance-link.js';
 // Alan V2 2026-10-29 · real D1 acceptance client, not public registration.
 // Only non-sensitive LANGUAGE preference uses localStorage; all accounts and forms use Worker.
 const $=id=>document.getElementById(id),role=document.body.dataset.role;
@@ -23,10 +24,10 @@ en:{
  notLive:'This is a closed technical rehearsal. No real payment, eligibility check, official vote or award is performed.',
  signedIn:'Verified test session',saved:'Stored in Cloudflare D1',none:'No test entries yet',reviewNone:'No eligible review submissions.',
  application:'Application ID',phase:'Competition stage',status:'Review status',payment:'Payment',mockPay:'Simulate NPR 500 test payment',
- testPaid:'SIMULATED NPR 500 · no real transfer',upload:'Upload TEST 60–90 sec MP4/WebM video, max 20 MB',
- eligibility:'Upload fictional TEST eligibility PDF/image, max 5 MB',receipt:'Upload fictional TEST payment receipt PDF/image, max 5 MB',
- uploadAction:'Upload privately to R2',download:'Download private TEST demo',
- allFiles:'For review: provide a TEST video or video link, plus TEST eligibility and receipt files.',
+ testPaid:'SIMULATED NPR 500 · no real transfer',
+
+ download:'Download private TEST demo',
+
  technique:'Technique',interpretation:'Interpretation',stagePresence:'Stage presence',appearance:'Appearance',
  conflict:'I confirm I have no direct conflict of interest.',score:'Submit TEST score',
  alreadyScored:'Score already saved',scoreSaved:'D1 score recorded',
@@ -36,7 +37,7 @@ en:{
  voteTest:'Submit one TEST vote',noFinalists:'No test finalists are ready yet.',noOrganizer:'No test applications yet.',
  sendSuccess:'Email requested. Check your TEST inbox.',done:'Verified. Test account data is stored on Cloudflare D1.',
  failed:'Operation failed: ',restart:'Cloudflare setup incomplete: D1 migration, Email binding, allowlist and secrets are required.',
- fileReady:'Test file stored privately in R2.',newEntry:'D1 TEST entry saved.',paymentDone:'NPR 500 mock payment logged in D1; no money charged.',
+ newEntry:'D1 TEST entry saved.',paymentDone:'NPR 500 mock payment logged in D1; no money charged.',
  deleted:'TEST account erased.',reviewerOnly:'This login is for invited judges only.',memberOnly:'Participant-only page.',organizerOnly:'Organizer invitation required.',
  confirmDelete:'Erase all this test account data? This cannot be undone.',user:'TEST ACCOUNT',contestRules:'V2 rehearsal terms',
  noFunds:'TEST ONLY: never upload real IDs, receipts, or remit any money.'
@@ -61,10 +62,10 @@ ne:{
  notLive:'परीक्षण मात्र। आधिकारिक दर्ता, भुक्तानी, मतदान वा पुरस्कार होइन।',
  signedIn:'परीक्षण सत्र प्रमाणित',saved:'Cloudflare D1 मा सुरक्षित',none:'आवेदन छैन',reviewNone:'स्कोरका लागि आवेदन छैन',
  application:'आवेदन',phase:'चरण',status:'स्थिति',payment:'भुक्तानी',mockPay:'NPR 500 नमुना भुक्तानी',
- testPaid:'नमुना NPR 500 · वास्तविक रकम होइन',upload:'परीक्षण MP4/WebM, २० MB',
- eligibility:'परीक्षण योग्यता PDF/तस्बिर, ५ MB',receipt:'परीक्षण भुक्तानी प्रमाण PDF/तस्बिर, ५ MB',
- uploadAction:'निजी R2 मा राख्नुहोस्',download:'निजी परीक्षण भिडियो लिनुहोस्',
- allFiles:'निर्णायकका लागि भिडियो र परीक्षण योग्यता/रसिद प्रमाण चाहिन्छ।',
+ testPaid:'नमुना NPR 500 · वास्तविक रकम होइन',
+
+ download:'निजी परीक्षण भिडियो लिनुहोस्',
+
  technique:'गायन प्राविधिक',interpretation:'गीत व्याख्या',stagePresence:'मञ्च प्रस्तुति',appearance:'समग्र प्रस्तुति',
  conflict:'मसँग प्रत्यक्ष हितको द्वन्द्व छैन।',score:'परीक्षण स्कोर पठाउनुहोस्',
  alreadyScored:'स्कोर राखिएको छ',scoreSaved:'D1 मा स्कोर राखियो',
@@ -74,7 +75,7 @@ ne:{
  voteTest:'परीक्षण मत दिनुहोस्',noFinalists:'फाइनलिस्ट छैनन्',noOrganizer:'परीक्षण आवेदन छैन',
  sendSuccess:'इमेल कोड मागियो।',done:'प्रमाणित भयो। डाटा D1 मा सुरक्षित रहन्छ।',
  failed:'त्रुटि: ',restart:'Cloudflare D1/Email/गोप्य सेटिङ अझै पूरा भएको छैन।',
- fileReady:'निजी R2 मा परीक्षण फाइल राखियो।',newEntry:'D1 मा आवेदन राखियो।',paymentDone:'NPR 500 नमुना घटना D1 मा राखियो।',
+ newEntry:'D1 मा आवेदन राखियो।',paymentDone:'NPR 500 नमुना घटना D1 मा राखियो।',
  deleted:'परीक्षण खाता मेटियो।',reviewerOnly:'निमन्त्रित निर्णायक मात्र',memberOnly:'सहभागी मात्र',organizerOnly:'आयोजक निमन्त्रणा आवश्यक',
  confirmDelete:'सबै परीक्षण डाटा हटाउने?',user:'परीक्षण खाता',contestRules:'V2 परीक्षण',noFunds:'वास्तविक कागजात वा पैसा नदिनुहोस्।'
 },
@@ -99,10 +100,10 @@ zh:{
  notLive:'本頁為封閉功能驗收。資料若成功寫入 D1 仍不是正式報名、資格認定、付款、官網正式投票或獎金。',
  signedIn:'測試信箱已驗證',saved:'已儲存至 Cloudflare D1',none:'尚無測試報名',reviewNone:'目前沒有符合測試審核條件的作品',
  application:'報名編號',phase:'賽事階段',status:'審核狀態',payment:'付款狀態',mockPay:'模擬支付 NPR 500',
- testPaid:'NPR 500 已模擬（沒有銀行交易）',upload:'上傳測試演唱 MP4／WebM 影片（20MB內）',
- eligibility:'上傳虛構測試資格文件（PDF／圖片，5MB內）',receipt:'上傳虛構測試繳費證明（PDF／圖片，5MB內）',
- uploadAction:'送到私人 R2',download:'下載我的測試演唱影片',
- allFiles:'評審審核須具備測試影片／作品連結，以及測試資格和繳費證明。',
+ testPaid:'NPR 500 已模擬（沒有銀行交易）',
+
+ download:'下載我的測試演唱影片',
+
  technique:'歌唱技巧與音準',interpretation:'情感表達與歌曲詮釋',stagePresence:'舞台表現與台風',appearance:'儀態及整體呈現',
  conflict:'我確認與此選手沒有直接利益衝突。',score:'確認儲存測試評分',
  alreadyScored:'此階段已評分',scoreSaved:'測試評分已寫入 D1',
@@ -112,7 +113,7 @@ zh:{
  voteTest:'投下測試票',noFinalists:'目前沒有測試決賽者，須完成海選及初賽評分後人工晉級。',noOrganizer:'目前沒有D1測試報名',
  sendSuccess:'已要求寄送驗證碼，請檢查測試信箱。',done:'驗證完成，資料由 D1 儲存。',
  failed:'操作失敗：',restart:'Cloudflare 尚未設定完整：需先建立 D1 資料表、Email 寄件、白名單及密鑰。',
- fileReady:'測試檔案已存入私人 R2。',newEntry:'測試報名已寫入 D1。',paymentDone:'NPR 500 模擬付款已寫入 D1，沒有實際扣款。',
+ newEntry:'測試報名已寫入 D1。',paymentDone:'NPR 500 模擬付款已寫入 D1，沒有實際扣款。',
  deleted:'測試會員已刪除。',reviewerOnly:'只限受邀評審登入',memberOnly:'此頁只限參賽測試會員',organizerOnly:'需要受邀管理員權限',
  confirmDelete:'確定刪除所有測試會員資料？無法復原。',user:'測試會員',contestRules:'V2 模擬章程',noFunds:'不要在這裡上傳真實證件或匯款。'
 }};
@@ -133,18 +134,58 @@ const mobileCopy={
 };
 for(const l of ['en','ne','zh'])Object.assign(dict[l],mobileCopy[l]);
 
+
+const linkCopy={
+ en:{demo:'Performance link (required)',linkMode:'LINK SUBMISSIONS · No file uploads. Eligibility documents and payment receipts are not collected or verified in this test.',
+ demoHelp:'Paste a YouTube, Google Drive, TikTok, Douyin or other external HTTPS performance link. Allow judges to view it without requesting access; check it in a signed-out browser. Do not share IDs or payment documents here.',
+ openWork:'Open performance',invalidWorkLink:'Enter a valid external HTTPS performance link (up to 2,048 characters).',
+ documentsPending:'TEST ONLY: eligibility documents and payment receipts are not collected or verified. Scoring tests performance workflow only.',
+ checking:'Checking your test session…',safetyTitle:'INVITED TEST · NOT OFFICIAL REGISTRATION',
+ step01:'STEP 01 · EMAIL VERIFICATION',step02:'STEP 02 · PERFORMANCE LINK',step03:'STEP 03 · SIMULATED PAYMENT',stepFinal:'FINAL · TEST VOTING',
+ reviewerOnlyLabel:'INVITED JUDGES',organizerOnlyLabel:'INVITED ORGANIZERS',footerLabel:'RESTRICTED TEST · NO OFFICIAL ENTRY',
+ university:'University',community:'Community',bagmati:'Bagmati Province',gandaki:'Gandaki Province',residence:'Residence',study:'Study',work:'Work',
+ signinText:'Use your invited TEST email. A real one-time code can be sent once the email service is configured.',
+ deleteText:'Erase this test account and its D1 applications, scores and votes. Externally hosted videos are not deleted.'},
+ ne:{demo:'प्रस्तुतिको लिंक (अनिवार्य)',linkMode:'लिंकबाट आवेदन · फाइल अपलोड हुँदैन। यो परीक्षणमा योग्यता कागजात वा भुक्तानी रसिद लिइँदैन वा प्रमाणित गरिँदैन।',
+ demoHelp:'YouTube, Google Drive, TikTok, Douyin वा अन्य HTTPS प्रस्तुति लिंक राख्नुहोस्। निर्णायकले अनुमति नमागी हेर्न सक्नुपर्छ; लगआउट गरेर जाँच्नुहोस्। परिचयपत्र वा भुक्तानी कागजात नराख्नुहोस्।',
+ openWork:'प्रस्तुति खोल्नुहोस्',invalidWorkLink:'सही बाह्य HTTPS प्रस्तुति लिंक राख्नुहोस् (२,०४८ अक्षरसम्म)।',
+ documentsPending:'परीक्षण मात्र: योग्यता कागजात र भुक्तानी रसिद लिइएको वा प्रमाणित गरिएको छैन। यो प्रस्तुति मूल्याङ्कन प्रक्रियाको परीक्षण हो।',
+ checking:'परीक्षण सत्र जाँच्दै…',safetyTitle:'निमन्त्रित परीक्षण · आधिकारिक दर्ता होइन',
+ step01:'चरण १ · इमेल प्रमाणिकरण',step02:'चरण २ · प्रस्तुतिको लिंक',step03:'चरण ३ · नमुना भुक्तानी',stepFinal:'फाइनल · परीक्षण मतदान',
+ reviewerOnlyLabel:'निमन्त्रित निर्णायक',organizerOnlyLabel:'निमन्त्रित आयोजक',footerLabel:'सीमित परीक्षण · आधिकारिक दर्ता होइन',
+ university:'विश्वविद्यालय',community:'सामाजिक',bagmati:'बागमती प्रदेश',gandaki:'गण्डकी प्रदेश',residence:'बसोबास',study:'अध्ययन',work:'काम',
+ deleteText:'यस परीक्षण खाताको D1 आवेदन, स्कोर र मत मेटाइन्छ। अन्य वेबसाइटका भिडियो मेटिँदैनन्।'},
+ zh:{demo:'作品連結（必填）',linkMode:'連結報名測試 · 不上傳原始檔；本階段不收集或驗證資格文件與繳費證明。',
+ demoHelp:'貼上 YouTube、Google Drive、TikTok／抖音或其他 HTTPS 作品連結。請允許評審直接觀看、不必申請權限，並先用登出狀態確認能開啟。不要填寫身分證件或付款文件的連結。',
+ openWork:'開啟作品',invalidWorkLink:'請填寫有效的外部 HTTPS 作品連結，長度不超過2,048字元。',
+ documentsPending:'僅供測試：尚未收集或驗證資格文件與繳費證明；評分只驗收作品評審流程。',
+ checking:'正在檢查測試登入狀態…',safetyTitle:'受邀測試 · 非正式報名',
+ step01:'第一步 · Email 驗證',step02:'第二步 · 提交作品連結',step03:'第三步 · 模擬付款',stepFinal:'決賽 · 測試投票',
+ reviewerOnlyLabel:'受邀評審專用',organizerOnlyLabel:'受邀管理員專用',footerLabel:'封閉測試 · 非正式報名',
+ university:'大學組',community:'社會組',bagmati:'巴格馬蒂省',gandaki:'甘達基省',residence:'居住',study:'就學',work:'工作',
+ signinText:'請使用受邀測試信箱。寄信服務完成設定後，系統才會真正寄出一次性驗證碼。',
+ deleteText:'刪除這個測試帳號及其 D1 報名、評分與投票資料；不會刪除其他平台上的影片。'}
+};
+for(const l of ['en','ne','zh'])Object.assign(dict[l],linkCopy[l]);
+
 let lang='en';try{const p=localStorage.getItem('ghv_ui_language_v1');if(dict[p])lang=p}catch{}
-let challenge='',account=null;
+let challenge='',account=null,statusMessage={key:'checking',bad:false,detail:''};
 const t=k=>dict[lang][k]||dict.en[k]||k;
 const node=(tag,value,cls)=>{const a=document.createElement(tag);if(value!==undefined)a.textContent=String(value);if(cls)a.className=cls;return a};
-const message=(value,bad=false)=>{$('status').textContent=value;$('status').className='status '+(bad?'error':'good')};
+const renderMessage=()=>{$('status').textContent=t(statusMessage.key)+statusMessage.detail;$('status').className='status '+(statusMessage.bad?'error':'good')};
+const message=(key,bad=false,detail='')=>{statusMessage={key,bad,detail};renderMessage()};
+function workLink(url){
+ if(!validPerformanceLink(url))return node('p',t('invalidWorkLink'),'micro');
+ const link=node('a',t('openWork')+' · '+new URL(url).hostname);link.href=url;link.target='_blank';link.rel='noopener noreferrer';return link;
+}
 function locale(l){
  lang=dict[l]?l:'en';document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
  try{localStorage.setItem('ghv_ui_language_v1',lang)}catch{}
  for(const el of document.querySelectorAll('[data-lang]'))el.setAttribute('aria-pressed',String(el.dataset.lang===lang));
  for(const el of document.querySelectorAll('[data-i18n]'))el.textContent=t(el.dataset.i18n);
- progress();
- if(account)workspace();
+ renderMessage();progress();
+ if(challenge)$('verify-mailbox').textContent=t('codeSentTo')+' '+$('email').value.trim();
+ if(account){$('welcome').textContent=t('signedIn')+' · '+account.id.slice(0,8);workspace();}
 }
 async function api(path,options={}){
  const response=await fetch('/api/e2e/'+path,{credentials:'same-origin',cache:'no-store',...options});
@@ -174,10 +215,10 @@ const visible=x=>{
 async function session(){
  try{
   const data=await api('me');account=data.account;
-  if(account.role!==role){account=null;visible(false);message(t(role==='reviewer'?'reviewerOnly':role==='organizer'?'organizerOnly':'memberOnly'),true);return}
+  if(account.role!==role){account=null;visible(false);message(role==='reviewer'?'reviewerOnly':role==='organizer'?'organizerOnly':'memberOnly',true);return}
   visible(true);progress();$('welcome').textContent=t('signedIn')+' · '+account.id.slice(0,8);
-  message(t('saved'));await workspace();
- }catch(error){account=null;visible(false);progress();message(error.message==='e2e_not_configured'?t('restart'):t('signinText'),error.message==='e2e_not_configured')}
+  message('saved');await workspace();
+ }catch(error){account=null;visible(false);progress();message(['e2e_not_configured','e2e_database_not_bound'].includes(error.message)?'restart':'signinText',['e2e_not_configured','e2e_database_not_bound'].includes(error.message))}
 }
 async function workspace(){
  if(role==='reviewer')await judging();
@@ -195,38 +236,19 @@ async function applications(){
    for(const [key,value] of [[t('application'),a.id],[t('phase'),a.phase],[t('category'),a.category],[t('status'),a.status],[t('payment'),a.payment_status]]){
     const c=node('div');c.append(node('small',key),node('strong',value));meta.append(c)}
    item.append(meta,node('p',a.song_title+' / '+a.original_artist));
-   if(a.demo_url){const l=node('a',a.demo_url);l.href=a.demo_url;l.target='_blank';l.rel='noopener noreferrer';item.append(l)}
+   if(a.demo_url)item.append(workLink(a.demo_url));
    if(a.has_uploaded_file){const l=node('a',t('download'));l.href='/api/e2e/demo-download?application='+encodeURIComponent(a.id);l.style.display='block';item.append(l)}
    const actions=node('div',undefined,'actions');
    if(a.payment_status==='unpaid'){
     const pay=node('button',t('mockPay'),'secondary');pay.type='button';
-    pay.onclick=async()=>{pay.disabled=true;try{await post('mock-payment',{application_id:a.id});message(t('paymentDone'));await applications()}
-    catch(err){message(t('failed')+err.message,true)}finally{pay.disabled=false}};
+    pay.onclick=async()=>{pay.disabled=true;try{await post('mock-payment',{application_id:a.id});message('paymentDone');await applications()}
+    catch(err){message('failed',true,err.message)}finally{pay.disabled=false}};
     actions.append(pay);
    }else actions.append(node('strong',t('testPaid')));
-   for(const kind of ['demo','eligibility','receipt']){
-    const label=node('label',kind==='demo'?t('upload'):kind==='eligibility'?t('eligibility'):t('receipt'));
-    const file=document.createElement('input');file.type='file';
-    file.accept=kind==='demo'?'video/mp4,video/webm':'application/pdf,image/png,image/jpeg';
-    label.append(file);
-    const ready=kind==='demo'?a.has_uploaded_file:kind==='eligibility'?a.has_eligibility_file:a.has_receipt_file;
-    if(ready)label.append(node('small',' ✓ '+t('saved')));
-    const btn=node('button',t('uploadAction'),'secondary');btn.type='button';
-    btn.onclick=async()=>{
-     const f=file.files?.[0],max=(kind==='demo'?20:5)*1024*1024;
-     if(!f||f.size>max){message(t('failed')+'invalid_file_size',true);return}
-     btn.disabled=true;
-     try{const data=await api('demo-upload?application='+encodeURIComponent(a.id)+'&kind='+kind,
-       {method:'POST',headers:{'Content-Type':f.type},body:f});
-       message(t('fileReady'));await applications()}
-     catch(err){message(t('failed')+err.message,true)}finally{btn.disabled=false}
-    };
-    actions.append(label,btn);
-   }
-   if(!a.has_eligibility_file||!a.has_receipt_file||(!a.has_uploaded_file&&!a.demo_url))actions.append(node('p',t('allFiles'),'micro'));
+   actions.append(node('p',t('documentsPending'),'micro'));
    item.append(actions);view.append(item);
   }
- }catch(err){message(t('failed')+err.message,true)}
+ }catch(err){message('failed',true,err.message)}
 }
 async function judging(){
  const view=$('queue');view.replaceChildren();
@@ -236,8 +258,8 @@ async function judging(){
   for(const a of queue){
    const card=node('article',undefined,'entry');
    card.append(node('h3',a.stage_name+' · '+a.round_code+' · '+a.phase),
-    node('p',a.song_title+' · '+a.original_artist));
-   if(a.demo_url){const l=node('a',a.demo_url);l.href=a.demo_url;l.target='_blank';l.rel='noopener noreferrer';card.append(l)}
+    node('p',a.song_title+' · '+a.original_artist),node('p',t('documentsPending'),'micro'));
+   if(a.demo_url)card.append(workLink(a.demo_url));
    if(a.has_uploaded_file){const l=node('a',t('download'));l.href='/api/e2e/demo-download?application='+encodeURIComponent(a.id);card.append(l)}
    const demo=a.phase==='demo',scored=demo?a.demo_technique:a.live_technique;
    if(scored!==null&&scored!==undefined){
@@ -256,12 +278,12 @@ async function judging(){
     ev.preventDefault();submit.disabled=true;
     const body={application_id:a.id,phase:a.phase,technique:Number(inputs.technique.value),interpretation:Number(inputs.interpretation.value),no_conflict:check.checked};
     if(!demo){body.stage_presence=Number(inputs.stagePresence.value);body.appearance=Number(inputs.appearance.value)}
-    try{await post('score',body);message(t('scoreSaved'));await judging()}
-    catch(err){message(t('failed')+err.message,true)}finally{submit.disabled=false}
+    try{await post('score',body);message('scoreSaved');await judging()}
+    catch(err){message('failed',true,err.message)}finally{submit.disabled=false}
    };
    card.append(form);view.append(card);
   }
- }catch(err){message(t('failed')+err.message,true)}
+ }catch(err){message('failed',true,err.message)}
 }
 async function finalists(){
  const view=$('finalists');if(!view)return;view.replaceChildren();
@@ -271,11 +293,11 @@ async function finalists(){
   for(const a of finalists){
    const card=node('article',undefined,'entry');card.append(node('h3',a.stage_name+' · '+a.category),node('p',a.song_title));
    const btn=node('button',t('voteTest'),'secondary');btn.type='button';
-   btn.onclick=async()=>{btn.disabled=true;try{await post('test-vote',{application_id:a.id});message(t('saved'))}
-     catch(err){message(t('failed')+err.message,true)}finally{btn.disabled=false}};
+   btn.onclick=async()=>{btn.disabled=true;try{await post('test-vote',{application_id:a.id});message('saved')}
+     catch(err){message('failed',true,err.message)}finally{btn.disabled=false}};
    card.append(btn);view.append(card);
   }
- }catch(err){message(t('failed')+err.message,true)}
+ }catch(err){message('failed',true,err.message)}
 }
 async function organizer(){
  const apps=$('admin-apps'),board=$('standings');if(!apps||!board)return;
@@ -286,12 +308,14 @@ async function organizer(){
   for(const a of items){
    const box=node('article',undefined,'entry');box.append(node('h3',a.stage_name+' · '+a.round_code+' · '+a.category));
    box.append(node('p',a.phase+' · '+a.status+' · '+a.payment_status));
+   if(a.demo_url)box.append(workLink(a.demo_url));
+   box.append(node('p',t('documentsPending'),'micro'));
    box.append(node('p','Demo '+a.demo_judges+'/3 (avg '+(a.demo_mean??'—')+') · Live '+a.live_judges+'/3 (avg '+(a.live_mean??'—')+')'));
    if(a.phase!=='final'&&a.payment_status==='simulated_paid'){
     const next=a.phase==='demo'?'qualifier':'final',b=node('button',t('promote')+' '+next,'secondary');b.type='button';
     b.disabled=(a.phase==='demo'?a.demo_judges:a.live_judges)<3;
-    b.onclick=async()=>{b.disabled=true;try{await post('organizer-promote',{application_id:a.id,to_phase:next});message(t('saved'));await organizer()}
-     catch(err){message(t('failed')+err.message,true)}finally{b.disabled=false}};
+    b.onclick=async()=>{b.disabled=true;try{await post('organizer-promote',{application_id:a.id,to_phase:next});message('saved');await organizer()}
+     catch(err){message('failed',true,err.message)}finally{b.disabled=false}};
     box.append(b);
    }apps.append(box);
   }
@@ -302,22 +326,22 @@ async function organizer(){
    box.append(node('p','TEST votes '+x.votes+' · normalized '+x.vote_score+' · jury '+(x.judges_mean??'—')+' · total '+(x.total_score??'awaiting 3 judge scores')));
    board.append(box);
   }
- }catch(err){message(t('failed')+err.message,true)}
+ }catch(err){message('failed',true,err.message)}
 }
 $('send-form').onsubmit=async ev=>{
  ev.preventDefault();const btn=$('send-form').querySelector('button');btn.disabled=true;
  try{const result=await post('request-code',{email:$('email').value,role});challenge=result.challenge_id;
-   $('send-form').hidden=true;$('verify-form').hidden=false;$('verify-mailbox').textContent=t('codeSentTo')+' '+$('email').value.trim();progress();$('code').focus();message(t('sendSuccess'))}
- catch(err){message(t('failed')+err.message,true)}finally{btn.disabled=false}
+   $('send-form').hidden=true;$('verify-form').hidden=false;$('verify-mailbox').textContent=t('codeSentTo')+' '+$('email').value.trim();progress();$('code').focus();message('sendSuccess')}
+ catch(err){message('failed',true,err.message)}finally{btn.disabled=false}
 };
 $('verify-form').onsubmit=async ev=>{
  ev.preventDefault();const btn=$('verify-form').querySelector('button');btn.disabled=true;
- try{await post('verify-code',{challenge_id:challenge,code:$('code').value});$('code').value='';await session();message(t('done'))}
- catch(err){message(t('failed')+err.message,true)}finally{btn.disabled=false}
+ try{await post('verify-code',{challenge_id:challenge,code:$('code').value});$('code').value='';await session();message('done')}
+ catch(err){message('failed',true,err.message)}finally{btn.disabled=false}
 };
 $('logout').onclick=async()=>{
- try{await post('logout',{});account=null;visible(false);$('verify-form').hidden=true;$('send-form').hidden=false;progress();message(t('signinText'))}
- catch(err){message(t('failed')+err.message,true)}
+ try{await post('logout',{});account=null;visible(false);$('verify-form').hidden=true;$('send-form').hidden=false;progress();message('signinText')}
+ catch(err){message('failed',true,err.message)}
 };
 if($('application-form'))$('application-form').onsubmit=async ev=>{
  ev.preventDefault();const btn=$('application-form').querySelector('button');btn.disabled=true;
@@ -328,13 +352,14 @@ if($('application-form'))$('application-form').onsubmit=async ev=>{
  song_key:$('song-key').value,demo_url:$('demo').value,adult_confirmed:$('adult').checked,
  student_confirmed:$('student').checked,no_exclusive_contract:$('contract').checked
  };
- try{await post('applications',data);message(t('newEntry'));await applications()}
- catch(err){message(t('failed')+err.message,true)}finally{btn.disabled=false}
+ if(!validPerformanceLink(data.demo_url.trim())){message('invalidWorkLink',true);btn.disabled=false;return}
+ try{await post('applications',data);message('newEntry');await applications()}
+ catch(err){message('failed',true,err.message)}finally{btn.disabled=false}
 };
 if($('delete-account'))$('delete-account').onclick=async()=>{
  if(!confirm(t('confirmDelete')))return;
- try{await post('delete-my-data',{});account=null;visible(false);message(t('deleted'))}
- catch(err){message(t('failed')+err.message,true)}
+ try{await post('delete-my-data',{});account=null;visible(false);message('deleted')}
+ catch(err){message('failed',true,err.message)}
 };
 $('change-email').onclick=()=>{
  $('verify-form').hidden=true;$('send-form').hidden=false;challenge='';$('code').value='';progress();$('email').focus();

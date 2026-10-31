@@ -24,7 +24,8 @@
     }
   ],
   "vars": {
-    "STAGING_TEST_WRITE_ENABLED": "false"
+    "STAGING_TEST_WRITE_ENABLED": "false",
+    "STAGING_SUBMISSION_MODE": "links"
   },
   "observability": {
     "enabled": false
