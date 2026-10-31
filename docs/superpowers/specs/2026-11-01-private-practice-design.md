@@ -1,0 +1,17 @@
+# Functional, private competition practice
+
+The owner explicitly requests continued implementation, without another approval discussion. Continue existing Cloudflare Worker/D1, no new paid services. Email verification and real fees remain deferred.
+
+## Approach (engineering choice)
+Add `/practice.html`, a functional synthetic-only competition workspace, separate from both real `e2e_*` and read-only `architecture_preview_*`. Creating a workspace generates six independently scoped bearer recovery passes (two fictional members, three judges, one organizer); the creator initially becomes member A. Passes are generated on the server, returned once, stored hashed, and never included in source, URLs, logs, or browser persistent storage. They authenticate only the synthetic practice workspace, not an email owner or a real contest. HttpOnly sessions expire after 12h; recovery passes/workspaces expire after 30 days. No public real registration and no common fixed OTP.
+
+The organizer pass controls only its own workspace; judges see only their own scorecards. Members see only their own entry and eligible finalists. Each workspace supports two applications and eighteen scorecards (2 entries ×3 judges×3 stages), two test votes, and bounded sessions. Cap active workspaces at20; no paid-plan change or R2. Explicit synthetic-data acknowledgement required to create and submit. Data is stored in dedicated ghv_practice_* tables in existing E2E_DB. All writes verify exact Origin and JSON size. No server-side link fetching. External performance URLs use existing validation.
+
+## Functional deliverable
+Member submits Jan/Apr, university/community, province, song, artist and public performance URL, receives server-generated GHV-TEST identifier and reads the same persisted row after logout/login or another device. Fee stays `deferred`, never collected; an explicit optional NPR500 simulation is an idempotent, non-transaction status only, never a voucher. Three judges enter 60/40 or40/30/20/10, explicitly declare no conflict, and cannot resubmit or write a stale phase. Organizer promotes only after three distinct scores, snapshots phase guards, and sees calculated standings. Test votes are one per synthetic member per workspace, disallow self-votes; these are test restrictions, not official rules. Final score is51% normalized category votes +49% three-judge mean, incomplete totals remain null. A targeted organizer cleanup deletes only that practice workspace after typed confirmation; retained owner datasets remain available until cleanup or expiry.
+
+## Deployment
+Migration1002 is strictly additive. Trusted Cloudflare build first obtains a Time Travel bookmark then applies only1002 to E2E_DB, records schema/count evidence and leaves legacy/e2e counts unchanged. Build should continue publishing existing site if automatic provision is unavailable; practice API returns explicit503 until schema available. No runtime DDL or privileged secret exposure. Report actual remote evidence separately from SQLite/CI. User can create their own retained workspace and keep passes privately.
+
+## UI
+EN/ne/zh, mobile-first, two tabs for authentication and active role. One role per cookie/session; explicit logout before another role. Show server identity and workspace on every page. Creation reveals passes once with a clear save prompt; returning sessions cannot fetch all passes. No automatic success fallback. Homepage retains existing links and gains a prominent functional practice entry.
