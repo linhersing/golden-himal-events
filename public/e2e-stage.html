@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="./e2e-stage.css"></head>
 <body data-role="member">
 <a class="skip" href="#main">Skip to content</a>
-<div class="safety"><strong>STAGING · REAL DATABASE · NOT AN OFFICIAL APPLICATION</strong><span data-i18n="safety">Only invite-listed test email addresses and test media. Payments never charge money.</span></div>
+<div class="safety"><strong data-i18n="safetyTitle">STAGING · REAL DATABASE · NOT AN OFFICIAL APPLICATION</strong><span data-i18n="safety">Only invite-listed test email addresses and test media. Payments never charge money.</span></div>
 <header class="header"><div class="shell head">
 <a class="brand" href="./"><strong>Golden Himal Voice</strong><small>CHITWAN · 2027</small></a>
 <div class="langs" role="group" aria-label="Language">
@@ -22,9 +22,10 @@
  <span class="access-step" data-step="verify"><b>2</b><span data-i18n="stepVerify">Verify code</span></span>
  <span class="access-step" data-step="account"><b>3</b><span data-i18n="stepAccount">My account</span></span>
 </nav>
+<p class="notice" data-i18n="linkMode">Link submissions only. Eligibility and payment documents are not collected or verified in this test.</p>
 <div id="status" role="status" aria-live="polite" class="status" tabindex="-1">Checking your staging session…</div>
 <section id="signin" class="panel" aria-labelledby="signin-heading">
- <span class="eyebrow">STEP 01 · VERIFIED EMAIL</span><h2 id="signin-heading" data-i18n="signinTitle">Sign in with a one-time email code</h2>
+ <span class="eyebrow" data-i18n="step01">STEP 01 · VERIFIED EMAIL</span><h2 id="signin-heading" data-i18n="signinTitle">Sign in with a one-time email code</h2>
  <p data-i18n="signinText">Use an organizer-approved test mailbox. The system will actually send a verification email when configured.</p>
  <form id="send-form"><label for="email" data-i18n="email">Test email address</label><input type="email" id="email" required autocomplete="email" placeholder="name@example.com" maxlength="250" aria-describedby="email-hint">
  <p id="email-hint" class="field-help" data-i18n="emailHint">Only organizer-invited TEST mailboxes can receive a verification code. Never send real identity documents.</p>
@@ -39,31 +40,32 @@
 </section>
 <section id="workspace" hidden>
  <div class="summary"><h2 id="welcome"></h2><button id="logout" type="button" class="secondary" data-i18n="logout">Log out</button></div>
- <section class="panel" aria-labelledby="apply-heading"><span class="eyebrow">STEP 02 · PERSISTENT D1 ENTRY</span>
+ <section class="panel" aria-labelledby="apply-heading"><span class="eyebrow" data-i18n="step02">STEP 02 · PERFORMANCE LINK</span>
  <h2 id="apply-heading" data-i18n="applyTitle">Submit my audition demo</h2>
  <form id="application-form">
  <div class="two"><div><label for="stage" data-i18n="stageName">Fictional singer name</label><input id="stage" required maxlength="80" value="TEST SINGER"></div>
  <div><label for="round" data-i18n="round">Online audition window</label><select id="round"><option value="2027-01" data-i18n="janWindow">January 1–31, 2027</option><option value="2027-04" data-i18n="aprWindow">April 1–30, 2027</option></select></div></div>
- <div class="two"><div><label for="category" data-i18n="category">Contest category</label><select id="category"><option value="university">University</option><option value="community">Community</option></select></div>
- <div><label for="province" data-i18n="province">Eligible province</label><select id="province"><option value="bagmati">Bagmati Province</option><option value="gandaki">Gandaki Province</option></select></div></div>
- <div class="two"><div><label for="basis" data-i18n="basis">Location basis</label><select id="basis"><option value="residence">Residence</option><option value="study">Study</option><option value="work">Work</option></select></div>
+ <div class="two"><div><label for="category" data-i18n="category">Contest category</label><select id="category"><option value="university" data-i18n="university">University</option><option value="community" data-i18n="community">Community</option></select></div>
+ <div><label for="province" data-i18n="province">Eligible province</label><select id="province"><option value="bagmati" data-i18n="bagmati">Bagmati Province</option><option value="gandaki" data-i18n="gandaki">Gandaki Province</option></select></div></div>
+ <div class="two"><div><label for="basis" data-i18n="basis">Location basis</label><select id="basis"><option value="residence" data-i18n="residence">Residence</option><option value="study" data-i18n="study">Study</option><option value="work" data-i18n="work">Work</option></select></div>
  <div><label for="affiliation" data-i18n="affiliation">TEST school / occupation</label><input id="affiliation" required maxlength="100" value="TEST SCHOOL"></div></div>
  <div class="two"><div><label for="song" data-i18n="song">Song title</label><input id="song" required maxlength="100" value="TEST SONG"></div>
  <div><label for="artist" data-i18n="artist">Original artist</label><input id="artist" required maxlength="100" value="TEST ARTIST"></div></div>
  <div class="two"><div><label for="song-language" data-i18n="songLanguage">Song language</label><input id="song-language" required maxlength="100" value="Nepali"></div>
  <div><label for="song-key" data-i18n="songKey">Key / transposition</label><input id="song-key" required maxlength="100" value="C"></div></div>
- <label for="demo" data-i18n="demo">YouTube/TikTok Demo URL (or private TEST video upload after creating application)</label><input id="demo" type="url" placeholder="https://youtu.be/..." autocomplete="off">
+ <label for="demo" data-i18n="demo">Performance link (YouTube, Google Drive, TikTok or other HTTPS link)</label><input id="demo" type="url" required maxlength="2048" aria-describedby="demo-help" placeholder="https://youtu.be/..." autocomplete="off">
+ <p id="demo-help" class="field-help" data-i18n="demoHelp">Share a viewable performance link; check access while signed out. Never share identity or payment documents.</p>
  <p class="micro" data-i18n="demoRule">V2 Demo: one continuous 60–90 second performance, clearly showing the contestant's face and voice; no lip-sync, pitch editing or splicing. Test files only.</p>
  <label class="check"><input id="adult" type="checkbox"><span data-i18n="adult">For COMMUNITY group only: fictional test contestant is 18+ at audition close.</span></label>
  <label class="check"><input id="student" type="checkbox"><span data-i18n="student">For UNIVERSITY group only: fictional test contestant is currently enrolled.</span></label>
  <label class="check"><input id="contract" type="checkbox" required><span data-i18n="contract">Fictional participant has no conflicting exclusive artist contract.</span></label>
  <button class="primary" type="submit" data-i18n="submit">Submit to D1 staging</button></form>
  </section>
- <section class="panel" aria-labelledby="entries-title"><span class="eyebrow">STEP 03 · PAYMENT REHEARSAL</span><h2 id="entries-title" data-i18n="entries">My saved submissions</h2><div id="applications"></div></section>
- <section class="panel" aria-labelledby="vote-stage-title"><span class="eyebrow">FINAL · WEBSITE VOTE REHEARSAL</span><h2 id="vote-stage-title" data-i18n="voteStageTitle">Verified test account · 51% website vote</h2><p data-i18n="voteStageNote">One test vote per verified account, only after a participant is manually promoted to the September final. Official voter eligibility and limits remain subject to announcement.</p><div id="finalists"></div></section>
+ <section class="panel" aria-labelledby="entries-title"><span class="eyebrow" data-i18n="step03">STEP 03 · PAYMENT REHEARSAL</span><h2 id="entries-title" data-i18n="entries">My saved submissions</h2><div id="applications"></div></section>
+ <section class="panel" aria-labelledby="vote-stage-title"><span class="eyebrow" data-i18n="stepFinal">FINAL · WEBSITE VOTE REHEARSAL</span><h2 id="vote-stage-title" data-i18n="voteStageTitle">Verified test account · 51% website vote</h2><p data-i18n="voteStageNote">One test vote per verified account, only after a participant is manually promoted to the September final. Official voter eligibility and limits remain subject to announcement.</p><div id="finalists"></div></section>
  <section class="panel danger"><h2 data-i18n="deleteTitle">Delete my staging account</h2><p data-i18n="deleteText">Delete all my saved TEST entries, scores, sessions and private media. Cannot be undone.</p><button id="delete-account" class="secondary" data-i18n="delete">Delete TEST account and records</button></section>
  </section>
  <div class="notice"><p data-i18n="notLive">Staging has actual D1 records when enabled. It is not public registration, not verified eligibility and not real payment. Review scores are for functional testing only.</p></div>
-</main><footer class="foot">GOLDEN HIMAL VOICE · RESTRICTED ACCEPTANCE · TEST ONLY</footer>
+</main><footer class="foot" data-i18n="footerLabel">GOLDEN HIMAL VOICE · RESTRICTED ACCEPTANCE · TEST ONLY</footer>
 <script type="module" src="./e2e-stage.js"></script>
 </body></html>

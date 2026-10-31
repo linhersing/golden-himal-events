@@ -161,9 +161,11 @@ async function handleE2EReadiness(request,env){
   }catch{schemaReady=false}
  }
  const otpEnabled=env.STAGING_E2E_ENABLED==='true';
- const ready=databaseBound&&schemaReady&&mediaBound&&emailBound&&senderSet&&allowlistSet&&secretSet&&otpEnabled;
+ const linkMode=env.STAGING_SUBMISSION_MODE==='links';
+ const ready=databaseBound&&schemaReady&&(linkMode||mediaBound)&&emailBound&&senderSet&&allowlistSet&&secretSet&&otpEnabled;
  return json({
   ok:true,testOnly:true,readiness:ready?'READY_FOR_INVITED_OTP_TEST':'BLOCKED',
+  submissionMode:linkMode?'external_links':'private_uploads',privateMediaRequired:!linkMode,
   resources:{databaseBound,schemaReady,privateMediaBound:mediaBound,emailBound,
    senderConfigured:senderSet,memberAllowlistConfigured:allowlistSet,
    identitySecretConfigured:secretSet,explicitTestModeEnabled:otpEnabled},

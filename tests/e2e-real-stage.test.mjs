@@ -36,7 +36,6 @@ test('reviewer and participant UI are separate; passwords and real charges are n
  assert(!judge.includes('id="application-form"'));
  assert(!member.includes('id="queue"'));
  assert.match(js,/\/api\/e2e\//);
- assert.match(js,/uploadAction/);
  assert.match(js,/mock-payment/);
  assert.match(js,/score/);
  assert.doesNotMatch(js,/localStorage\.setItem\('ghv_member_sandbox_v1'/);

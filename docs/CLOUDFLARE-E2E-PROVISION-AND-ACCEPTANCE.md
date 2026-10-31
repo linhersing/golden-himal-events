@@ -1,4 +1,17 @@
 # Golden Himal Voice｜Cloudflare D1 + R2 + Email 實機開通（2026年10月30日）
+
+## Current decision — 10月31日: external performance links, no R2
+
+The owner explicitly selected link submissions and instructed the R2 checkout tab to be closed. `wrangler.jsonc` now sets only the non-secret `STAGING_SUBMISSION_MODE=links`; invitation mode remains disabled. No R2 subscription, payment method, bucket or migration is needed for this path. Preserve the historical upload instructions below as a future option, not a current prerequisite.
+
+- A required external HTTPS URL (YouTube, Google Drive, TikTok/Douyin or another public host) is stored in the existing `e2e_applications.demo_url` column. The Worker does not fetch, proxy, download, embed or claim to verify that URL.
+- Ask entrants to verify viewing permissions while signed out. Only performance media may be shared; never collect public identity/payment-document URLs. External content may change or disappear, and an unavailable link is not a completed performance review.
+- Link-only TEST scoring requires the saved URL and the D1 **simulated** payment event/status, with the existing invited judge, conflict, phase and role checks. Identity/receipt files are neither collected nor verified; every relevant screen discloses that limitation. This does not waive official eligibility or payment rules.
+- Readiness reports `submissionMode=external_links` and `privateMediaRequired=false`. `privateMediaBound=false` is expected in this mode. Missing actual Email, sender, allowlist, identity secret or explicit invitation flag still produces BLOCKED. Do not bypass those checks.
+- Steps C/D below become: save the work URL, simulate NPR 500, log out, authenticate by a new real email on another device, and read back the same D1 URL/application. Skip R2 uploads/file cleanup. Account deletion removes D1 links but never removes the external video.
+- No first-time D1 migration is required. Do not rerun the existing migration or change `ghv-staging`.
+- Email provisioning remains separate and UNVERIFIED. Mailgun Free/sandbox is a candidate for actual invited emails without buying a sender domain; the current Worker still requires its configured email binding. No Mailgun account/API secret was created by this code change.
+
 ## 讀者
 Cloudflare 帳戶所有者、已授權的 ChatGPT Work / Gemini 測試代理。此文件不是系統已開通的證據。絕對不要將 Access Token、OTP、Cookie、私人證件或測試信箱清單寫入 GitHub 或共用 Google Drive。
 

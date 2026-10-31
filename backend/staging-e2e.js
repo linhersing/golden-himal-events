@@ -1,3 +1,4 @@
+import {validPerformanceLink} from '../public/performance-link.js';
 import {handleV2Route} from './staging-v2-flow.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Explicit opt-in and allowlisted emails. No production applicants, actual payments,
@@ -105,11 +106,6 @@ async function applications(a,env){
  const rows=await env.DB.prepare('SELECT id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,demo_url,media_key IS NOT NULL AS has_uploaded_file,eligibility_key IS NOT NULL AS has_eligibility_file,receipt_key IS NOT NULL AS has_receipt_file,phase,status,payment_status,created_at FROM e2e_applications WHERE account_id=? ORDER BY created_at DESC').bind(a.id).all();
  return json({ok:true,account:{id:a.id,role:a.role},applications:rows.results||[],testOnly:true});
 }
-function validDemo(s){
- try{const u=new URL(s);if(u.protocol!=='https:')return false;const h=u.hostname.toLowerCase();
-  return ['youtube.com','www.youtube.com','youtu.be','www.tiktok.com','tiktok.com','m.tiktok.com'].includes(h);
- }catch{return false}
-}
 async function submitApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request,4500);if(!b)return deny('invalid_json');
@@ -126,7 +122,7 @@ async function submitApplication(request,env,a){
  const values=fields.map(k=>String(b[k]||'').trim());
  if(values.some(x=>x.length<1||x.length>100)||values[0].length<2)return deny('missing_song_or_identity_test_fields',422);
  const url=String(b.demo_url||'').trim();
- if(url&&!validDemo(url))return deny('invalid_demo_url',422);
+ if((env.STAGING_SUBMISSION_MODE==='links'&&!url)||(url&&!validPerformanceLink(url)))return deny('invalid_demo_url',422);
  const prior=await env.DB.prepare('SELECT category,phase FROM e2e_applications WHERE account_id=? LIMIT 1').bind(a.id).first();
  if(prior&&prior.category!==b.category)return deny('annual_category_locked',409);
  const finalist=await env.DB.prepare("SELECT id FROM e2e_applications WHERE account_id=? AND phase='final' LIMIT 1").bind(a.id).first();
@@ -151,6 +147,7 @@ async function mockPayment(request,env,a){
 // Judge access is limited to performance media, never eligibility/receipt documents.
 async function mediaUpload(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
+ if(env.STAGING_SUBMISSION_MODE==='links')return deny('link_submission_only',409);
  if(!env.STAGING_MEDIA)return deny('r2_bucket_not_configured',503);
  const url=new URL(request.url);
  const app=await selectApplication(env.DB,url.searchParams.get('application'),a.id);

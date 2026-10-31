@@ -3,6 +3,10 @@
 export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON}){
  const path=new URL(request.url).pathname,post=request.method==='POST';
  const db=env.DB;
+ // Explicit closed rehearsal: link evidence is not identity or payment verification.
+ const links=env.STAGING_SUBMISSION_MODE==='links';
+ const evidence=links?"p.demo_url IS NOT NULL AND length(trim(p.demo_url))>0":
+  "p.eligibility_key IS NOT NULL AND p.receipt_key IS NOT NULL AND (p.media_key IS NOT NULL OR p.demo_url IS NOT NULL)";
  const forbidden=role=>a?.role!==role?deny(role+'_only',403):null;
  if(path==='/api/e2e/reviewer-queue'&&!post){
   if(forbidden('reviewer'))return forbidden('reviewer');
@@ -13,8 +17,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON})
    FROM e2e_applications p
    LEFT JOIN e2e_judge_scores d ON d.application_id=p.id AND d.reviewer_id=?
    LEFT JOIN e2e_live_scores l ON l.application_id=p.id AND l.reviewer_id=? AND l.stage=p.phase
-   WHERE p.payment_status='simulated_paid' AND p.eligibility_key IS NOT NULL AND p.receipt_key IS NOT NULL
-    AND (p.media_key IS NOT NULL OR p.demo_url IS NOT NULL)
+   WHERE p.payment_status='simulated_paid' AND ${evidence}
     AND p.status NOT IN ('withdrawn','rejected')
    ORDER BY p.created_at DESC LIMIT 100`).bind(a.id,a.id).all();
   return json({ok:true,queue:r.results||[],testOnly:true});
@@ -23,10 +26,9 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON})
   if(forbidden('reviewer'))return forbidden('reviewer');
   const b=await bodyJSON(request);if(!b)return deny('invalid_json');
   if(b.no_conflict!==true)return deny('conflict_declaration_required',422);
-  const app=await db.prepare(`SELECT id,phase FROM e2e_applications WHERE id=?
-   AND payment_status='simulated_paid' AND eligibility_key IS NOT NULL AND receipt_key IS NOT NULL
-   AND (media_key IS NOT NULL OR demo_url IS NOT NULL)
-   AND status NOT IN ('withdrawn','rejected')`).bind(b.application_id).first();
+  const app=await db.prepare(`SELECT p.id,p.phase FROM e2e_applications p WHERE p.id=?
+   AND p.payment_status='simulated_paid' AND ${evidence}
+   AND p.status NOT IN ('withdrawn','rejected')`).bind(b.application_id).first();
   if(!app)return deny('not_reviewable',409);
   if(b.phase!==app.phase)return deny('stale_reviewer_stage_reload_required',409);
   const demo=app.phase==='demo',caps=demo?[60,40]:[40,30,20,10];
@@ -44,7 +46,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON})
  }
  if(path==='/api/e2e/organizer-queue'&&!post){
   if(forbidden('organizer'))return forbidden('organizer');
-  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.phase,p.status,p.payment_status,
+  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.demo_url,p.phase,p.status,p.payment_status,
    p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,
    p.receipt_key IS NOT NULL AS has_receipt_file,
    (SELECT COUNT(*) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_judges,

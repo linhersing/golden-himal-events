@@ -54,3 +54,36 @@ test('Alan V2 preview shows Jan/Apr windows and invitation-only organizer surfac
  await expect(page.locator('#admin-apps')).toBeHidden();
  await expect(page.locator('#send-form')).toBeVisible();
 });
+
+test('link-only participant entry has required URL guidance and no raw file controls',async({page})=>{
+ // Controlled UI fixture only; this is not Cloudflare OTP/D1 acceptance evidence.
+ const url='https://drive.google.com/file/d/test-performance/view?usp=sharing';
+ await page.route('**/api/e2e/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  const data=path.endsWith('/me')?{ok:true,account:{id:'test-link-member',role:'member'}}:
+   path.endsWith('/applications')?{ok:true,applications:[{id:'test-app',stage_name:'TEST LINK',round_code:'2027-01',phase:'demo',category:'community',status:'submitted',payment_status:'unpaid',song_title:'TEST SONG',original_artist:'TEST ARTIST',demo_url:url}]}:{ok:true,finalists:[]};
+  await route.fulfill({contentType:'application/json',body:JSON.stringify(data)});
+ });
+ await page.goto('/e2e-stage.html');
+ await expect(page.locator('#workspace')).toBeVisible();
+ await expect(page.locator('#demo')).toHaveAttribute('required','');
+ await expect(page.locator('#demo')).toHaveAttribute('maxlength','2048');
+ await expect(page.locator('#demo-help')).toContainText('Google Drive');
+ await expect(page.locator('#applications a')).toHaveAttribute('href',url);
+ await expect(page.locator('#applications input[type="file"]')).toHaveCount(0);
+ await expect(page.locator('#applications')).toContainText('not collected');
+});
+
+test('blocked-session status follows language changes and phone controls stay at least 44px',async({page})=>{
+ await page.route('**/api/e2e/me',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({ok:false,error:'e2e_not_configured'})}));
+ await page.setViewportSize({width:320,height:812});
+ await page.goto('/e2e-stage.html');
+ await expect(page.locator('#status')).toContainText('setup incomplete');
+ await page.locator('[data-lang="zh"]').click();
+ await expect(page.locator('#status')).toContainText('尚未設定完整');
+ await page.locator('[data-lang="ne"]').click();
+ await expect(page.locator('#status')).toContainText('सेटिङ');
+ for(const r of await page.locator('[data-lang]').evaluateAll(xs=>xs.map(x=>({w:x.getBoundingClientRect().width,h:x.getBoundingClientRect().height})))){
+  expect(r.w).toBeGreaterThanOrEqual(44);expect(r.h).toBeGreaterThanOrEqual(44);
+ }
+});
