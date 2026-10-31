@@ -212,3 +212,8 @@ dialog{max-height:min(92vh,900px);overflow:auto}
  .season-card{min-height:0!important;padding:8px!important}
  .site-footer{display:none}
 }
+
+/* Direct architecture review entrance; actual login remains a separate route. */
+.architecture-entry{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:11px 17px;border-radius:11px;background:#5c422a;color:#fff8e9!important;text-decoration:none;font-weight:750;text-align:center;overflow-wrap:anywhere}
+
+.architecture-entry span{display:none}html:lang(en) .architecture-entry span[lang=en],html:lang(ne) .architecture-entry span[lang=ne],html:lang(zh) .architecture-entry span[lang=zh-Hant]{display:inline}

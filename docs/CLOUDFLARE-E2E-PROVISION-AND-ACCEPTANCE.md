@@ -1,5 +1,16 @@
 # Golden Himal Voice｜Cloudflare D1 + R2 + Email 實機開通（2026年10月30日）
 
+## Latest owner decision — 10月31日: architecture first; defer email and real fees
+
+The owner now postpones real email verification, password design and registration-fee collection. **Do not keep asking for Mailgun signup or enable invitation mode.** Prior email setup instructions below are a future option, not a current prerequisite.
+
+The direct architecture preview is `/architecture-preview.html`, with overview/participant/judges/organizer tabs. Its dedicated read-only D1 fixture is not verified membership, real judging, actual promotion or voting. Role tabs do not authenticate. Six personas, two example entries and18 scorecards live in three `architecture_preview_*` tables, separated from all e2e member/session tables. Only GET `/api/staging/architecture-preview` exposes the fixed non-personal fixture; all writes are405. No browser data fallback is used if D1 is unavailable.
+
+Apply only `backend/migrations/1001_architecture_preview_ONLY.sql` to E2E_DB after taking a current Time Travel bookmark and inspecting that these tables do not already contain unexpected data. It is additive and INSERT OR IGNORE; do not rerun1000 or changeghv-staging. Read back preview counts6/2/18 and verify e2e_accounts/e2e_applications remain unchanged. Work links are blank because no real performance was supplied; the UI must say so rather than invent a submitted video.
+
+Keep full real Email→member persistence→judging acceptance as deferred/BLOCKED. A successfully displayed architecture page proves only that the illustrative fixture was read, not that a person registered or a judge logged in. Future implementation can use the existing guarded endpoints after the owner resumes email/payment decisions.
+
+
 ## Current decision — 10月31日: external performance links, no R2
 
 The owner explicitly selected link submissions and instructed the R2 checkout tab to be closed. `wrangler.jsonc` now sets only the non-secret `STAGING_SUBMISSION_MODE=links`; invitation mode remains disabled. No R2 subscription, payment method, bucket or migration is needed for this path. Preserve the historical upload instructions below as a future option, not a current prerequisite.

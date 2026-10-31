@@ -136,3 +136,46 @@ test('late OTP response cannot replace a changed address or re-enable an in-flig
  await expect(page.locator('#verify-mailbox')).toContainText('qa+new@gmail.com');
  await expect(page.locator('#verify-mailbox')).toContainText('ref-3');
 });
+
+// Architecture UI fixture is served by the actual handler against local SQLite.
+// This is browser QA, not proof of remote D1/email acceptance.
+async function architectureFixture(page){
+ const {DatabaseSync}=await import('node:sqlite');const {readFile}=await import('node:fs/promises');
+ const {default:worker}=await import('../backend/staging-registration-worker.js');
+ const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1001_architecture_preview_ONLY.sql',import.meta.url),'utf8'));
+ const E2E_DB={prepare(sql){let args=[];return {bind(...xs){args=xs;return this},async all(){return {results:db.prepare(sql).all(...args)}}}}};
+ const response=await worker.fetch(new Request('https://example.invalid/api/staging/architecture-preview'),{E2E_DB});
+ const body=await response.text();db.close();
+ await page.route('**/api/staging/architecture-preview',route=>route.fulfill({status:response.status,contentType:'application/json',body}));
+}
+test('architecture preview exposes fictional participant, three scorecards and organizer without signing in',async({page})=>{
+ await architectureFixture(page);await page.goto('/architecture-preview.html#participant');
+ await expect(page.locator('#data-status')).toContainText('Cloudflare D1');
+ await expect(page.locator('#participant-content')).toContainText('TEST MAYA');
+ await expect(page.locator('#participant-content')).toContainText('actual collection deferred');
+ await expect(page.locator('#participant-content input')).not.toHaveCount(0);
+ for(const input of await page.locator('#participant-content input').all())await expect(input).toHaveAttribute('readonly','');
+ await page.locator('[data-view="judges"]').click();await expect(page.locator('#judge-content .scorecard')).toHaveCount(3);
+ await page.locator('[data-phase="final"]').click();await expect(page.locator('[data-phase="final"]')).toBeFocused();await expect(page.locator('#judge-content')).toContainText('/ 40');
+ await page.locator('[data-view="organizer"]').click();await expect(page.locator('#standings')).toContainText('69.8');
+ await expect(page.locator('input[type="email"],input[type="password"],input[type="file"]')).toHaveCount(0);
+ await page.reload();await expect(page.locator('#standings')).toContainText('69.8');
+});
+test('architecture preview remains readable at five phone widths in all three languages',async({page})=>{
+ await architectureFixture(page);await page.goto('/architecture-preview.html');await expect(page.locator('#data-status')).toContainText('Cloudflare D1');
+ for(const width of [320,360,375,390,428]){
+  await page.setViewportSize({width,height:812});
+  for(const lang of ['en','ne','zh']){
+   await page.locator('[data-lang="'+lang+'"]').click();
+   for(const view of ['overview','participant','judges','organizer']){
+    await page.locator('[data-view="'+view+'"]').click();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+   }
+  }
+ }
+});
+test('architecture data failure is shown without invented member records',async({page})=>{
+ await page.route('**/api/staging/architecture-preview',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({ok:false,error:'architecture_preview_unavailable'})}));
+ await page.goto('/architecture-preview.html#participant');await expect(page.locator('#data-status')).toHaveClass('error');
+ await expect(page.locator('#participant-content')).toBeEmpty();await expect(page.locator('#personas')).toBeEmpty();
+});
