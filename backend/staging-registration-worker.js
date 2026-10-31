@@ -1,3 +1,4 @@
+import {mailProviderReady,mailSenderReady} from './staging-mail.js';
 import {handleE2E} from './staging-e2e.js';
 /*
  * Golden Himal Voice — SAFE STAGING SMOKE TEST ONLY.
@@ -148,7 +149,8 @@ async function handleE2EReadiness(request,env){
  const databaseBound=Boolean(env.E2E_DB);
  const mediaBound=Boolean(env.STAGING_MEDIA);
  const emailBound=Boolean(env.EMAIL);
- const senderSet=Boolean(env.STAGING_FROM_EMAIL);
+ const emailConfigured=mailProviderReady(env);
+ const senderSet=mailSenderReady(env);
  const allowlistSet=Boolean(env.STAGING_ALLOWED_EMAILS);
  const secretSet=typeof env.STAGING_IDENTITY_SECRET==='string'&&env.STAGING_IDENTITY_SECRET.length>=32;
  let schemaReady=false;
@@ -162,11 +164,11 @@ async function handleE2EReadiness(request,env){
  }
  const otpEnabled=env.STAGING_E2E_ENABLED==='true';
  const linkMode=env.STAGING_SUBMISSION_MODE==='links';
- const ready=databaseBound&&schemaReady&&(linkMode||mediaBound)&&emailBound&&senderSet&&allowlistSet&&secretSet&&otpEnabled;
+ const ready=databaseBound&&schemaReady&&(linkMode||mediaBound)&&emailConfigured&&senderSet&&allowlistSet&&secretSet&&otpEnabled;
  return json({
   ok:true,testOnly:true,readiness:ready?'READY_FOR_INVITED_OTP_TEST':'BLOCKED',
   submissionMode:linkMode?'external_links':'private_uploads',privateMediaRequired:!linkMode,
-  resources:{databaseBound,schemaReady,privateMediaBound:mediaBound,emailBound,
+  resources:{databaseBound,schemaReady,privateMediaBound:mediaBound,emailBound,emailServiceConfigured:emailConfigured,
    senderConfigured:senderSet,memberAllowlistConfigured:allowlistSet,
    identitySecretConfigured:secretSet,explicitTestModeEnabled:otpEnabled},
   note:'Read-only capability flags. READY does not prove an email was delivered, a record saved, or a file uploaded.'

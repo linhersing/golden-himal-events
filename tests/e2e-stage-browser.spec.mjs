@@ -78,12 +78,61 @@ test('blocked-session status follows language changes and phone controls stay at
  await page.route('**/api/e2e/me',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({ok:false,error:'e2e_not_configured'})}));
  await page.setViewportSize({width:320,height:812});
  await page.goto('/e2e-stage.html');
- await expect(page.locator('#status')).toContainText('setup incomplete');
+ await expect(page.locator('#status')).toContainText('not enabled');
  await page.locator('[data-lang="zh"]').click();
- await expect(page.locator('#status')).toContainText('尚未設定完整');
+ await expect(page.locator('#status')).toContainText('尚未開放');
  await page.locator('[data-lang="ne"]').click();
  await expect(page.locator('#status')).toContainText('सेटिङ');
  for(const r of await page.locator('[data-lang]').evaluateAll(xs=>xs.map(x=>({w:x.getBoundingClientRect().width,h:x.getBoundingClientRect().height})))){
   expect(r.w).toBeGreaterThanOrEqual(44);expect(r.h).toBeGreaterThanOrEqual(44);
  }
+});
+
+test('OTP recovery distinguishes delivery failure and matches resent email reference',async({page})=>{
+ // UI recovery fixture only: never evidence that a real inbox received email.
+ await page.clock.install();let attempts=0;
+ await page.route('**/api/e2e/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(path.endsWith('/me'))return route.fulfill({status:401,contentType:'application/json',body:JSON.stringify({ok:false,error:'login_required'})});
+  if(path.endsWith('/request-code')){
+   attempts++;
+   if(attempts===1)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({ok:false,error:'test_email_service_unavailable'})});
+   return route.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,challenge_id:'fictional-challenge-'+attempts,request_ref:'request-'+attempts,resend_after:60})});
+  }
+ });
+ await page.goto('/e2e-stage.html');await page.locator('#email').fill('qa+ghv-member@gmail.com');
+ await page.locator('#send-form button').click();
+ await expect(page.locator('#status')).toContainText('could not send');
+ await expect(page.locator('#send-form')).toBeVisible();await expect(page.locator('#verify-form')).toBeHidden();
+ await page.locator('#send-form button').click();
+ await expect(page.locator('#verify-mailbox')).toContainText('request-2');
+ await expect(page.locator('#resend-code')).toBeDisabled();
+ await page.clock.fastForward(61000);await expect(page.locator('#resend-code')).toBeEnabled();
+ await page.locator('#resend-code').click();
+ await expect(page.locator('#verify-mailbox')).toContainText('request-3');
+ await page.locator('[data-lang="zh"]').click();
+ await expect(page.locator('#verify-mailbox')).toContainText('請求編號');
+ await expect(page.locator('#verify-form')).toContainText('垃圾郵件');
+});
+
+test('late OTP response cannot replace a changed address or re-enable an in-flight resend',async({page})=>{
+ await page.clock.install();let starts=0,releaseLate;const late=new Promise(resolve=>{releaseLate=resolve});
+ await page.route('**/api/e2e/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(path.endsWith('/me'))return route.fulfill({status:401,contentType:'application/json',body:JSON.stringify({ok:false,error:'login_required'})});
+  if(path.endsWith('/request-code')){
+   starts++;const n=starts;if(n===2)await late;
+   return route.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,challenge_id:'test-challenge-'+n,request_ref:'ref-'+n})});
+  }
+ });
+ await page.goto('/e2e-stage.html');await page.locator('#email').fill('qa+old@gmail.com');await page.locator('#send-form button').click();
+ await expect(page.locator('#verify-mailbox')).toContainText('ref-1');await page.clock.fastForward(61000);
+ await page.locator('#resend-code').click();
+ await page.locator('[data-lang="zh"]').click();await expect(page.locator('#resend-code')).toBeDisabled();
+ await page.locator('#change-email').click();await page.locator('#email').fill('qa+new@gmail.com');
+ await page.locator('#send-form button').click();await expect(page.locator('#verify-mailbox')).toContainText('ref-3');
+ releaseLate();
+ await expect.poll(()=>starts).toBe(3);
+ await expect(page.locator('#verify-mailbox')).toContainText('qa+new@gmail.com');
+ await expect(page.locator('#verify-mailbox')).toContainText('ref-3');
 });

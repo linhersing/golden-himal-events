@@ -36,6 +36,8 @@
  <input id="code" type="text" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required placeholder="000000">
  <p class="field-help" data-i18n="codeHint">Enter the six-digit code sent to your TEST mailbox. It expires after ten minutes.</p>
  <button type="submit" class="primary" data-i18n="verify">Verify and open my page</button>
+ <p class="field-help" data-i18n="deliveryHelp">If the code does not arrive, check Spam and confirm the email address. Match the request reference before entering a code.</p>
+ <button type="button" id="resend-code" class="secondary" data-i18n="resendCode" disabled>Resend verification email</button>
  <button type="button" class="text-action" id="change-email" data-i18n="changeEmail">Use another email address</button></form>
 </section>
 <section id="workspace" hidden>

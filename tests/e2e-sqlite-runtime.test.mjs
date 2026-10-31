@@ -154,3 +154,67 @@ test('expired and over-attempted emailed codes are rejected',async()=>{
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_sessions').get().n,0);
  }finally{db.close()}
 });
+
+test('one Gmail inbox can exercise separate invited test roles and concurrent OTP requests stay distinct',async()=>{
+ const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ const inbox=[],env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'Z'.repeat(64),
+  STAGING_FROM_EMAIL:'sender@test.invalid',STAGING_ALLOWED_EMAILS:'qa+ghv-member@gmail.com',
+  STAGING_REVIEWER_EMAILS:'qa+ghv-judge1@gmail.com,qa+ghv-judge2@gmail.com,qa+ghv-judge3@gmail.com',
+  STAGING_ORGANIZER_EMAILS:'qa+ghv-admin@gmail.com',EMAIL:{async send(m){inbox.push(m)}}};
+ async function start(email,role){
+  const r=await handleE2E(req('/api/e2e/request-code',{email,role}),env);assert.equal(r.status,200);
+  const packet=await r.json(),mail=inbox.at(-1);assert.equal(packet.request_ref,packet.challenge_id.slice(0,8));
+  assert(mail.text.includes(packet.request_ref));assert(mail.subject.includes(role));assert.equal(packet.code,undefined);
+  return {...packet,code:mail.text.match(/\b\d{6}\b/)[0]};
+ }
+ async function verify(x){return handleE2E(req('/api/e2e/verify-code',{challenge_id:x.challenge_id,code:x.code}),env)}
+ try{
+  const first=await start('qa+ghv-member@gmail.com','member'),second=await start('qa+ghv-member@gmail.com','member');
+  assert.notEqual(first.challenge_id,second.challenge_id);
+  const a=await verify(first),b=await verify(second);assert.equal(a.status,200);assert.equal(b.status,200);
+  assert.equal((await a.clone().json()).account_id,(await b.clone().json()).account_id);
+  assert.equal((await verify(first)).status,401,'a used code cannot sign in twice');
+  const cookieA=a.headers.get('set-cookie').split(';')[0],cookieB=b.headers.get('set-cookie').split(';')[0];
+  await handleE2E(req('/api/e2e/logout',{},cookieA),env);
+  assert.equal((await handleE2E(get('/api/e2e/me',cookieA),env)).status,401);
+  assert.equal((await handleE2E(get('/api/e2e/me',cookieB),env)).status,200,'logout revokes only its own server session');
+  for(const [suffix,role] of [['judge1','reviewer'],['judge2','reviewer'],['judge3','reviewer'],['admin','organizer']]){
+   const x=await start('qa+ghv-'+suffix+'@gmail.com',role);assert.equal((await verify(x)).status,200);
+  }
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_accounts').get().n,5);
+  assert.equal((await handleE2E(req('/api/e2e/request-code',{email:'qa+ghv-member@gmail.com',role:'organizer'}),env)).status,403);
+  await start('qa+ghv-member@gmail.com','member');
+  assert.equal((await handleE2E(req('/api/e2e/request-code',{email:'qa+ghv-member@gmail.com',role:'member'}),env)).status,429);
+ }finally{db.close()}
+});
+
+test('email send failure never claims sent or leaves a usable failed challenge',async()=>{
+ const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ let failedCode;const env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'F'.repeat(64),STAGING_FROM_EMAIL:'test@example.invalid',
+  STAGING_ALLOWED_EMAILS:'member@test.invalid',EMAIL:{async send(m){failedCode=m.text.match(/\b\d{6}\b/)[0];throw Error('private provider message')}}};
+ try{
+  const r=await handleE2E(req('/api/e2e/request-code',{email:'member@test.invalid',role:'member'}),env);
+  assert.equal(r.status,503);assert.deepEqual(await r.json(),{ok:false,error:'test_email_service_unavailable'});
+  const row=db.prepare('SELECT id FROM e2e_email_challenges').get();
+  assert.equal((await handleE2E(req('/api/e2e/verify-code',{challenge_id:row.id,code:failedCode}),env)).status,401);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_sessions').get().n,0);
+ }finally{db.close()}
+});
+
+test('the actual OTP route can use Mailgun without an EMAIL binding and keeps codes out of API responses',async t=>{
+ const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ let mailText; t.mock.method(globalThis,'fetch',async(url,init)=>{
+  assert.equal(url,'https://api.mailgun.net/v3/sandboxabc123.mailgun.org/messages');
+  mailText=init.body.get('text');return Response.json({id:'unit-message-id',message:'Queued. Thank you.'});
+ });
+ const env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'M'.repeat(64),
+  STAGING_ALLOWED_EMAILS:'qa+ghv-member@gmail.com',STAGING_EMAIL_PROVIDER:'mailgun',
+  STAGING_MAILGUN_DOMAIN:'sandboxabc123.mailgun.org',STAGING_MAILGUN_API_KEY:'test-only-key-'.repeat(5),STAGING_FROM_EMAIL:'test@sandboxabc123.mailgun.org'};
+ try{
+  const response=await handleE2E(req('/api/e2e/request-code',{email:'qa+ghv-member@gmail.com',role:'member'}),env);
+  assert.equal(response.status,200);const packet=await response.json();assert.equal(packet.code,undefined);
+  assert(mailText.includes(packet.request_ref));const code=mailText.match(/\b\d{6}\b/)[0];
+  const verified=await handleE2E(req('/api/e2e/verify-code',{challenge_id:packet.challenge_id,code}),env);
+  assert.equal(verified.status,200);assert.equal(db.prepare('SELECT role FROM e2e_accounts').get().role,'member');
+ }finally{db.close()}
+});

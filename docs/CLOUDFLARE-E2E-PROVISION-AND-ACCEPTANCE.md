@@ -83,3 +83,26 @@ F. Any error -> BLOCKED/FAIL, no fake PAID or official voucher. User specificall
 
 ## Work mode handoff
 The earlier mobile cloud-browser handoff did not complete. The authorized **desktop local Chrome extension session** subsequently reached the signed-in Cloudflare dashboard and applied the isolated D1 schema described above. This does not establish the cause of the mobile handoff failure. Remaining subscription acceptance, event-owned sender domain, dedicated inboxes and security settings still require their respective account permissions and evidence. Do not ask the user to paste account API tokens into chat. Each actual change must be reported in the shared BRIDGE by the actor that performed it.
+
+## 10月31日 — one-inbox email rehearsal and recovery
+
+The owner keeps actual registration-fee collection undecided. NPR 500 remains an explicitly simulated, non-chargeable D1 test event; no real payment provider/card/bank callback is configured.
+
+Mailgun Free account page (observed, not yet completed): https://signup.mailgun.com/new/signup?currency=USD&plan_name=dev_free . It states cardless accounts can send 100 messages/day. Creating the account accepts provider terms; the owner must select a usable test mailbox and complete this step. Never select a paid trial to unblock testing.
+
+After account/recipient verification, configure only in Cloudflare's private settings:
+- `STAGING_EMAIL_PROVIDER=mailgun`
+- `STAGING_MAILGUN_DOMAIN`: the real account sandbox domain ending `.mailgun.org`.
+- `STAGING_MAILGUN_REGION=us` or `eu`, matching the sandbox.
+- `STAGING_MAILGUN_API_KEY`: a sending key stored as a Secret, never source/Docs/chat.
+- `STAGING_FROM_EMAIL`: a sender at that exact sandbox domain.
+- Exact invited member/reviewer/organizer email lists and `STAGING_IDENTITY_SECRET` in private settings.
+- Only after all security checks: `STAGING_E2E_ENABLED=true`. Never reuse the old D1 or disable OTP.
+
+The adapter uses official fixed API hosts and multipart fields, requires TLS and certificate verification, disables message/open/click tracking, and never sets Mailgun's non-delivering `o:testmode`. API success only means queued, so separately inspect the real recipient inbox and actual D1 records. `resources.emailBound` still describes the native binding; `emailServiceConfigured` describes either configured provider. Neither proves delivery.
+
+For a Gmail test inbox, exact `+ghv-member`, `+ghv-judge1`, `+ghv-judge2`, `+ghv-judge3`, `+ghv-admin` aliases can route into the same inbox. Confirm all five in the provider sandbox, and keep actual addresses out of GitHub/shared logs. They verify five synthetic roles, not independent people. Official identity/voting rules remain undecided. This should generate only a small, planned batch of test emails, cleaned after evidence is recorded.
+
+An OTP can be requested again: each request has its own reference and ten-minute, single-use code. Match the reference, role and recipient; do not assume the newest inbox email belongs to the active browser request. Existing server cap is three requests per address per ten minutes; UI resends wait 60 seconds. After a failed send the challenge is invalidated, while failed attempts still count toward the request cap. On failure check address, Spam, sandbox authorization and provider logs, then retry within limits. Never expose the code in the page or bypass email.
+
+Same-profile tabs share the session cookie, so member/judge switches must be sequential (log out each role), or use separately selected profiles/devices. GPT should perform the write test while Gemini reviews read-only evidence; BRIDGE is coordination, not a technical lock or proof Gemini stopped. Existing D1 uniqueness and stage guards remain the backstop. Test records are fictional only.

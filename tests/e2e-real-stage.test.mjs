@@ -46,7 +46,6 @@ test('staging runtime rejects missing sessions and restricts mutation by origin'
  assert.match(api,/HttpOnly; Secure; SameSite=Lax/);
  assert.match(api,/STAGING_ALLOWED_EMAILS/);
  assert.match(api,/STAGING_REVIEWER_EMAILS/);
- assert.match(api,/env\.EMAIL\.send/);
  assert.match(api,/status:'simulated_paid'/);
  assert.match(api,/payment_status='simulated_paid'/);
  assert.match(api,/role==='reviewer'/);
