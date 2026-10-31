@@ -1,3 +1,4 @@
+import {mailProviderReady,mailSenderReady,sendTestEmail} from './staging-mail.js';
 import {validPerformanceLink} from '../public/performance-link.js';
 import {handleV2Route} from './staging-v2-flow.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
@@ -25,7 +26,7 @@ function emailAllowed(email,env,role){
  return list.includes(email);
 }
 function configured(env){
- return env.STAGING_E2E_ENABLED==='true'&&env.DB&&env.EMAIL&&env.STAGING_FROM_EMAIL&&
+ return env.STAGING_E2E_ENABLED==='true'&&env.DB&&mailProviderReady(env)&&mailSenderReady(env)&&
  typeof env.STAGING_IDENTITY_SECRET==='string'&&env.STAGING_IDENTITY_SECRET.length>=32&&
  emails(env,'STAGING_ALLOWED_EMAILS').length>0;
 }
@@ -62,14 +63,17 @@ async function requestCode(request,env){
  await env.DB.prepare('INSERT INTO e2e_email_challenges(id,email_fingerprint,code_fingerprint,kind,expires_at,created_at) VALUES(?,?,?,?,?,?)')
  .bind(id,fingerprint,hashed,role,NOW()+600,NOW()).run();
  try{
-  await env.EMAIL.send({from:env.STAGING_FROM_EMAIL,to:email,
-   subject:'Golden Himal Voice TEST — one-time verification code',
+  await sendTestEmail(env,{from:env.STAGING_FROM_EMAIL,to:email,
+   subject:'Golden Himal Voice TEST ['+role+'] — request '+id.slice(0,8),
    text:'Golden Himal Voice STAGING ONLY. Your one-time verification code is '+code+
-        '. It expires in 10 minutes. If you did not request it, ignore this message. No payments are being collected.',
+        '. It expires in 10 minutes. Request reference: '+id.slice(0,8)+'. Role: '+role+'. If you did not request it, ignore this message. No payments are being collected.',
    html:'<p><strong>Golden Himal Voice — TEST ONLY</strong></p><p>Your one-time verification code is <strong>'+code+
-        '</strong>. Valid for 10 minutes.</p><p>No real payment or public registration is enabled.</p>'});
- }catch{return deny('test_email_service_unavailable',503)}
- return json({ok:true,challenge_id:id,message:'Check the allowlisted test mailbox. Code expires in 10 minutes.'});
+        '</strong>. Valid for 10 minutes.</p><p>Request reference: '+id.slice(0,8)+' · Role: '+role+'</p><p>No real payment or public registration is enabled.</p>'});
+ }catch{
+  await env.DB.prepare('UPDATE e2e_email_challenges SET used_at=? WHERE id=?').bind(NOW(),id).run();
+  return deny('test_email_service_unavailable',503)
+ }
+ return json({ok:true,challenge_id:id,request_ref:id.slice(0,8),resend_after:60,message:'Check the allowlisted test mailbox. Code expires in 10 minutes.'});
 }
 async function verifyCode(request,env){
  const b=await bodyJSON(request);if(!b||!/^\d{6}$/.test(String(b.code||''))||!/^[-a-f0-9]{36}$/i.test(String(b.challenge_id||'')))return deny('invalid_challenge');

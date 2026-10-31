@@ -168,8 +168,36 @@ const linkCopy={
 };
 for(const l of ['en','ne','zh'])Object.assign(dict[l],linkCopy[l]);
 
+const recoveryCopy={
+ en:{resendCode:'Resend verification email',resendWait:'Resend in {seconds}s',requestRef:'Request reference',
+ deliveryHelp:'No email? Check Spam and the address you entered. Match the request reference shown here to the email. A code expires after 10 minutes and works only once. Wait for the resend button before trying again.',
+ mailUnavailable:'The email service could not send a verification email. No sign-in was completed. Try later or contact the organizer.',
+ tooManyCodes:'Too many code requests. Wait 10 minutes before requesting another email.',
+ codeInvalid:'This code is expired, used, incorrect or no longer usable. Check the email request reference or request another code.',
+ notInvited:'This email is not invited for this role. Use the assigned participant, judge or organizer address.',
+ restart:'Test sign-in is not enabled yet. The organizer must finish email, invitation and security settings.',
+ sendSuccess:'Verification email requested. Check your inbox and Spam, and match the request reference.'},
+ ne:{resendCode:'प्रमाणीकरण इमेल फेरि पठाउनुहोस्',resendWait:'{seconds} सेकेन्डपछि फेरि पठाउन सकिन्छ',requestRef:'अनुरोध सङ्केत',
+ deliveryHelp:'इमेल आएन? Spam र लेखेको इमेल ठेगाना जाँच्नुहोस्। यहाँको अनुरोध सङ्केत इमेलसँग मिलाउनुहोस्। कोड १० मिनेट मान्य हुन्छ र एक पटक मात्र चल्छ। फेरि पठाउने बटन खुलुन्जेल पर्खनुहोस्।',
+ mailUnavailable:'इमेल सेवाले कोड पठाउन सकेन। लगइन भएको छैन। पछि प्रयास गर्नुहोस् वा आयोजकलाई सम्पर्क गर्नुहोस्।',
+ tooManyCodes:'धेरै कोड मागिएको छ। अर्को इमेल माग्नुअघि १० मिनेट पर्खनुहोस्।',
+ codeInvalid:'यो कोड म्याद सकिएको, प्रयोग भइसकेको वा गलत छ। अनुरोध सङ्केत जाँच्नुहोस् वा अर्को कोड माग्नुहोस्।',
+ notInvited:'यो भूमिकाका लागि इमेल आमन्त्रित छैन। तोकिएको सहभागी, निर्णायक वा आयोजक इमेल प्रयोग गर्नुहोस्।',
+ restart:'परीक्षण लगइन अझै खुला छैन। आयोजकले इमेल, निमन्त्रणा र सुरक्षा सेटिङ पूरा गर्नुपर्छ।',
+ sendSuccess:'प्रमाणीकरण इमेल मागियो। Inbox र Spam जाँचेर अनुरोध सङ्केत मिलाउनुहोस्।'},
+ zh:{resendCode:'重新寄送驗證信',resendWait:'{seconds}秒後可重新寄信',requestRef:'請求編號',
+ deliveryHelp:'收不到信？請檢查垃圾郵件及輸入的信箱，並核對這裡與信件的請求編號。驗證碼10分鐘內有效、每組僅能使用一次；重新寄信按鈕開放後再試。',
+ mailUnavailable:'寄信服務目前無法寄出驗證信，尚未完成登入。請稍後再試或聯絡活動方。',
+ tooManyCodes:'要求驗證碼過於頻繁，請等待10分鐘後再重新寄信。',
+ codeInvalid:'驗證碼已過期、已使用、輸入有誤或已失效。請核對信件請求編號，或重新要求驗證碼。',
+ notInvited:'這個信箱未獲邀使用此角色，請使用分配給參賽者、評審或管理員的信箱。',
+ restart:'測試登入尚未開放。活動方需先完成寄信、受邀名單與安全設定。',
+ sendSuccess:'已要求寄送驗證信，請檢查收件匣與垃圾郵件，並核對請求編號。'}
+};
+for(const l of ['en','ne','zh'])Object.assign(dict[l],recoveryCopy[l]);
+
 let lang='en';try{const p=localStorage.getItem('ghv_ui_language_v1');if(dict[p])lang=p}catch{}
-let challenge='',account=null,statusMessage={key:'checking',bad:false,detail:''};
+let challenge='',challengeRef='',deliveryEmail='',requestVersion=0,requestPending=false,resendUntil=0,resendTimer=null,account=null,statusMessage={key:'checking',bad:false,detail:''};
 const t=k=>dict[lang][k]||dict.en[k]||k;
 const node=(tag,value,cls)=>{const a=document.createElement(tag);if(value!==undefined)a.textContent=String(value);if(cls)a.className=cls;return a};
 const renderMessage=()=>{$('status').textContent=t(statusMessage.key)+statusMessage.detail;$('status').className='status '+(statusMessage.bad?'error':'good')};
@@ -184,7 +212,7 @@ function locale(l){
  for(const el of document.querySelectorAll('[data-lang]'))el.setAttribute('aria-pressed',String(el.dataset.lang===lang));
  for(const el of document.querySelectorAll('[data-i18n]'))el.textContent=t(el.dataset.i18n);
  renderMessage();progress();
- if(challenge)$('verify-mailbox').textContent=t('codeSentTo')+' '+$('email').value.trim();
+ updateMailbox();updateResend();
  if(account){$('welcome').textContent=t('signedIn')+' · '+account.id.slice(0,8);workspace();}
 }
 async function api(path,options={}){
@@ -328,19 +356,43 @@ async function organizer(){
   }
  }catch(err){message('failed',true,err.message)}
 }
-$('send-form').onsubmit=async ev=>{
- ev.preventDefault();const btn=$('send-form').querySelector('button');btn.disabled=true;
- try{const result=await post('request-code',{email:$('email').value,role});challenge=result.challenge_id;
-   $('send-form').hidden=true;$('verify-form').hidden=false;$('verify-mailbox').textContent=t('codeSentTo')+' '+$('email').value.trim();progress();$('code').focus();message('sendSuccess')}
- catch(err){message('failed',true,err.message)}finally{btn.disabled=false}
-};
+function updateMailbox(){
+ if(challenge)$('verify-mailbox').textContent=t('codeSentTo')+' '+deliveryEmail+' · '+t('requestRef')+' '+challengeRef;
+}
+function updateResend(){
+ const seconds=Math.max(0,Math.ceil((resendUntil-Date.now())/1000)),button=$('resend-code');
+ button.disabled=requestPending||!challenge||seconds>0;
+ button.textContent=seconds>0?t('resendWait').replace('{seconds}',String(seconds)):t('resendCode');
+ if(!seconds&&resendTimer){clearInterval(resendTimer);resendTimer=null}
+}
+function authFailure(error){
+ const key={test_email_service_unavailable:'mailUnavailable',too_many_code_requests:'tooManyCodes',
+ expired_or_invalid_code:'codeInvalid',not_on_test_allowlist:'notInvited',e2e_not_configured:'restart',e2e_database_not_bound:'restart'}[error.message];
+ if(key)message(key,true);else message('failed',true,error.message);
+}
+async function requestVerification(button){
+ if(requestPending)return;
+ const version=++requestVersion,email=$('email').value.trim();requestPending=true;
+ button.disabled=true;updateResend();
+ try{
+  const result=await post('request-code',{email,role});
+  if(version!==requestVersion)return;
+  challenge=result.challenge_id;deliveryEmail=email;
+  challengeRef=result.request_ref||challenge.slice(0,8);resendUntil=Date.now()+60000;
+  if(resendTimer)clearInterval(resendTimer);resendTimer=setInterval(updateResend,1000);
+  $('send-form').hidden=true;$('verify-form').hidden=false;$('code').value='';
+  updateMailbox();updateResend();progress();$('code').focus();message('sendSuccess');
+ }catch(err){if(version===requestVersion)authFailure(err)}finally{if(version===requestVersion){requestPending=false;updateResend();if(button.id!=='resend-code')button.disabled=false}}
+}
+$('send-form').onsubmit=ev=>{ev.preventDefault();requestVerification($('send-form').querySelector('button'))};
+$('resend-code').onclick=()=>requestVerification($('resend-code'));
 $('verify-form').onsubmit=async ev=>{
  ev.preventDefault();const btn=$('verify-form').querySelector('button');btn.disabled=true;
  try{await post('verify-code',{challenge_id:challenge,code:$('code').value});$('code').value='';await session();message('done')}
- catch(err){message('failed',true,err.message)}finally{btn.disabled=false}
+ catch(err){authFailure(err)}finally{btn.disabled=false}
 };
 $('logout').onclick=async()=>{
- try{await post('logout',{});account=null;visible(false);$('verify-form').hidden=true;$('send-form').hidden=false;progress();message('signinText')}
+ try{await post('logout',{});requestVersion++;requestPending=false;account=null;visible(false);$('verify-form').hidden=true;$('send-form').hidden=false;progress();message('signinText')}
  catch(err){message('failed',true,err.message)}
 };
 if($('application-form'))$('application-form').onsubmit=async ev=>{
@@ -362,7 +414,7 @@ if($('delete-account'))$('delete-account').onclick=async()=>{
  catch(err){message('failed',true,err.message)}
 };
 $('change-email').onclick=()=>{
- $('verify-form').hidden=true;$('send-form').hidden=false;challenge='';$('code').value='';progress();$('email').focus();
+ $('verify-form').hidden=true;$('send-form').hidden=false;requestVersion++;requestPending=false;challenge='';challengeRef='';deliveryEmail='';resendUntil=0;updateResend();$('send-form').querySelector('button').disabled=false;$('code').value='';progress();$('email').focus();
 };
 for(const b of document.querySelectorAll('[data-lang]'))b.onclick=()=>locale(b.dataset.lang);
 locale(lang);session();
