@@ -1,0 +1,21 @@
+name: Real Cloudflare private practice acceptance
+on:
+  push:
+    branches: [codex/initial-site]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: private-practice-remote-acceptance
+  cancel-in-progress: false
+jobs:
+  remote-d1-practice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Remote synthetic D1 flow and targeted cleanup; never email or real payment
+        run: node scripts/live-practice-smoke.mjs

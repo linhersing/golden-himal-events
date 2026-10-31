@@ -25,7 +25,7 @@ function render(){
  const app=data.applications.find(a=>a.id===entryId),profile=person(app.profile_id),content=$('participant-content');content.replaceChildren();
  const box=node('article',undefined,'card');box.append(node('h3',profile.display_name),node('span',t('role_participant'),'tag'));const fields=node('div',undefined,'details');
  for(const [key,val] of [['entryId',app.id],['name',profile.display_name],['window',app.round_code],['category',t(app.category)],['province',t(app.province)],['song',app.song_title],['artist',app.original_artist]])fields.append(field(key,val));
- fields.append(field('work',app.work_url||t('noWork'),true));box.append(fields,node('p',t('workHelp'),'micro'),node('p',t('fee')+' · '+t('feeState'),'deferred'),node('p',t('docs'),'micro'));content.append(box);
+ fields.append(field('work',app.work_url||t('noWork'),true));box.append(fields,node('p',t('workHelp'),'micro'),node('p',(lang==='zh'?'網址格式範例（未提交作品）':lang==='ne'?'लिंक ढाँचाको नमुना (प्रस्तुति पेस भएको छैन)':'Example URL format (no performance submitted)')+' · https://www.youtube.com/watch?v=VIDEO_ID','micro'),node('p',t('fee')+' · '+t('feeState'),'deferred'),node('p',t('docs'),'micro'));content.append(box);
  $('judged-entry').textContent=profile.display_name+' · '+app.id;
  $('phase-choices').replaceChildren();for(const stage of ['demo','qualifier','final']){const b=node('button',t(stage));b.type='button';b.dataset.phase=stage;b.setAttribute('aria-pressed',String(stage===phase));b.onclick=()=>{phase=stage;render();$('phase-choices').querySelector('[data-phase='+phase+']').focus()};$('phase-choices').append(b)}
  $('judge-content').replaceChildren();for(const score of data.scores.filter(s=>s.application_id===entryId&&s.stage===phase)){

@@ -12,14 +12,14 @@ if(process.env.WORKERS_CI!=='1'||process.env.WORKERS_CI_BRANCH!=='codex/initial-
  const query=sql=>{const value=run(['d1','execute','E2E_DB','--remote','--command',sql,'--json']);const result=rows(value);if(!result?.length)throw Error('cloudflare_count_evidence_unavailable');return result[0]};
  const counts="SELECT (SELECT COUNT(*) FROM e2e_accounts) AS accounts,(SELECT COUNT(*) FROM e2e_applications) AS applications";
  try{
-  evidence.bookmark=bookmark(run(['d1','time-travel','info','E2E_DB','--json']));
+  evidence.phase='bookmark';evidence.bookmark=bookmark(run(['d1','time-travel','info','E2E_DB','--json']));
   if(!evidence.bookmark)throw Error('restore_bookmark_unavailable');
-  evidence.before=query(counts);
-  run(['d1','execute','E2E_DB','--remote','--file','backend/migrations/1002_private_practice_ONLY.sql','--yes','--json']);
-  evidence.after=query(counts);
+  evidence.phase='before_counts';evidence.before=query(counts);
+  evidence.phase='additive_migration';run(['d1','execute','E2E_DB','--remote','--file','backend/migrations/1002_private_practice_ONLY.sql','--yes','--json']);
+  evidence.phase='readback';evidence.after=query(counts);
   evidence.schema=query("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'ghv_practice_%') AS tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name LIKE 'ghv_practice_%') AS triggers");
-  if(evidence.before.accounts!==evidence.after.accounts||evidence.before.applications!==evidence.after.applications||Number(evidence.schema.tables)!==7||Number(evidence.schema.triggers)!==4)throw Error('practice_provision_readback_mismatch');
-  evidence.status='PASS';
+  if(evidence.before.accounts!==evidence.after.accounts||evidence.before.applications!==evidence.after.applications||Number(evidence.schema.tables)!==8||Number(evidence.schema.triggers)!==6)throw Error('practice_provision_readback_mismatch');
+  evidence.status='PASS';evidence.phase='complete';
  }catch(e){evidence.reason=e.message;}
  mkdirSync('dist',{recursive:true});writeFileSync('dist/practice-build.json',JSON.stringify(evidence));
  console.log('Practice remote provisioning evidence: '+JSON.stringify(evidence));
