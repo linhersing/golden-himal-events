@@ -1,3 +1,4 @@
+import {handlePractice} from './practice.js';
 import {architecturePreview} from './architecture-preview.js';
 import {mailProviderReady,mailSenderReady} from './staging-mail.js';
 import {handleE2E} from './staging-e2e.js';
@@ -184,6 +185,7 @@ export default {
       if(!env.E2E_DB)return failure('e2e_database_not_bound',503);
       return handleE2E(request,{...env,DB:env.E2E_DB});
     }
+    if(pathname.startsWith('/api/staging/practice/'))return handlePractice(request,env);
     if(pathname==='/api/staging/architecture-preview')return architecturePreview(request,env);
     if(pathname==='/api/staging/e2e-readiness')return handleE2EReadiness(request,env);
     if(pathname==='/api/staging/health')return handleHealth(request,env);
