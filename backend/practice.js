@@ -14,9 +14,30 @@ async function jsonBody(request){
  const text=await request.text();if(text.length>4000)return null;
  try{const b=JSON.parse(text);return b&&typeof b==='object'&&!Array.isArray(b)?b:null}catch{return null}
 }
-async function schemaReady(db){const r=await db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN ('ghv_practice_workspaces','ghv_practice_actors','ghv_practice_sessions','ghv_practice_applications','ghv_practice_scores','ghv_practice_votes','ghv_practice_events','ghv_practice_vouchers')").first();const t=await db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='trigger' AND name IN ('ghv_practice_score_guard','ghv_practice_promotion_guard','ghv_practice_promotion_event','ghv_practice_vote_guard','ghv_practice_application_guard','ghv_practice_voucher_guard')").first();if(Number(r?.n)!==8||Number(t?.n)!==6)return false;await db.prepare('SELECT contact_phone,contact_handle,birth_date,priority_ack,media_ack FROM ghv_practice_applications LIMIT 0').all();await db.prepare('SELECT recused,reason FROM ghv_practice_scores LIMIT 0').all();return true;}
+const requiredColumns={
+ ghv_practice_workspaces:'id,created_at,expires_at',
+ ghv_practice_actors:'workspace_id,actor_id,role,recovery_hash',
+ ghv_practice_sessions:'session_hash,workspace_id,actor_id,expires_at',
+ ghv_practice_applications:'id,workspace_id,actor_id,stage_name,round_code,category,province,song_title,original_artist,work_url,contact_phone,contact_handle,birth_date,affiliation,song_language,song_key,priority_ack,media_ack,phase,fee_status,created_at',
+ ghv_practice_scores:'workspace_id,application_id,judge_id,phase,technique,interpretation,stage_presence,appearance,recused,reason,created_at',
+ ghv_practice_votes:'workspace_id,voter_id,application_id,created_at',
+ ghv_practice_events:'workspace_id,application_id,kind,phase,created_at',
+ ghv_practice_vouchers:'id,workspace_id,account_id,season_year,application_id,face_value_npr,status,created_at'
+};
+async function schemaReady(db){
+ const r=await db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN ('ghv_practice_workspaces','ghv_practice_actors','ghv_practice_sessions','ghv_practice_applications','ghv_practice_scores','ghv_practice_votes','ghv_practice_events','ghv_practice_vouchers')").first();
+ const t=await db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='trigger' AND name IN ('ghv_practice_score_guard','ghv_practice_promotion_guard','ghv_practice_promotion_event','ghv_practice_vote_guard','ghv_practice_application_guard','ghv_practice_voucher_guard')").first();
+ if(Number(r?.n)!==8||Number(t?.n)!==6)return false;
+ await db.batch(Object.entries(requiredColumns).map(([table,columns])=>db.prepare('SELECT '+columns+' FROM '+table+' LIMIT 0')));
+ return true;
+}
 async function session(db,request){const token=request.headers.get('Cookie')?.match(/(?:^|;\s*)__Host-ghv-practice=([a-f0-9]{64})(?:;|$)/)?.[1];if(!token)return null;return db.prepare(`SELECT a.workspace_id,a.actor_id,a.role,w.expires_at AS workspace_expires,s.session_hash FROM ghv_practice_sessions s JOIN ghv_practice_actors a ON a.workspace_id=s.workspace_id AND a.actor_id=s.actor_id JOIN ghv_practice_workspaces w ON w.id=a.workspace_id WHERE s.session_hash=? AND s.expires_at>? AND w.expires_at>?`).bind(await hash(token),now(),now()).first();}
-async function startSession(db,a){const token=random(),fingerprint=await hash(token);const result=await db.prepare(`INSERT INTO ghv_practice_sessions(session_hash,workspace_id,actor_id,expires_at) SELECT ?,?,?,? WHERE (SELECT COUNT(*) FROM ghv_practice_sessions WHERE workspace_id=? AND actor_id=? AND expires_at>?)<6`).bind(fingerprint,a.workspace_id,a.actor_id,now()+12*hour,a.workspace_id,a.actor_id,now()).run();return result.meta?.changes?token:null;}
+async function startSession(db,a,revokeHash=null){
+ const token=random(),fingerprint=await hash(token);
+ const inserted=db.prepare(`INSERT INTO ghv_practice_sessions(session_hash,workspace_id,actor_id,expires_at) SELECT ?,?,?,? WHERE (SELECT COUNT(*) FROM ghv_practice_sessions WHERE workspace_id=? AND actor_id=? AND expires_at>?)<6+(SELECT COUNT(*) FROM ghv_practice_sessions WHERE session_hash=? AND workspace_id=? AND actor_id=? AND expires_at>?)`).bind(fingerprint,a.workspace_id,a.actor_id,now()+12*hour,a.workspace_id,a.actor_id,now(),revokeHash,a.workspace_id,a.actor_id,now());
+ const removed=db.prepare('DELETE FROM ghv_practice_sessions WHERE session_hash=? AND EXISTS(SELECT 1 FROM ghv_practice_sessions WHERE session_hash=?)').bind(revokeHash,fingerprint);
+ const results=await db.batch([inserted,removed]);return results[0].meta?.changes?token:null;
+}
 async function view(db,a){
  const args=a.role==='member'?[a.workspace_id,a.actor_id]:[a.workspace_id];
  const applications=(await db.prepare('SELECT id,actor_id,stage_name,round_code,category,province,song_title,original_artist,work_url,phase,fee_status,created_at '+(a.role!=='judge'?',contact_phone,contact_handle,birth_date,affiliation,song_language,song_key,priority_ack,media_ack':'')+' FROM ghv_practice_applications WHERE workspace_id=?'+(a.role==='member'?' AND actor_id=?':'')+' ORDER BY created_at,id').bind(...args).all()).results||[];
@@ -42,7 +63,7 @@ export async function handlePractice(request,env){
    if(body.synthetic!==true)return deny('synthetic_acknowledgement_required',422);
    const id=crypto.randomUUID(),time=now(),roles=[['member-a','member'],['member-b','member'],['judge-1','judge'],['judge-2','judge'],['judge-3','judge'],['organizer','organizer']];
    const passes=roles.map(([actor_id,role])=>({actor_id,role,pass:random()}));
-   const inserts=[db.prepare('INSERT INTO ghv_practice_workspaces(id,created_at,expires_at) SELECT ?,?,? WHERE (SELECT COUNT(*) FROM ghv_practice_workspaces)<20').bind(id,time,time+30*day)];
+   const inserts=[db.prepare('DELETE FROM ghv_practice_workspaces WHERE expires_at<=?').bind(time),db.prepare('INSERT INTO ghv_practice_workspaces(id,created_at,expires_at) SELECT ?,?,? WHERE (SELECT COUNT(*) FROM ghv_practice_workspaces)<20').bind(id,time,time+30*day)];
    for(const p of passes)inserts.push(db.prepare('INSERT INTO ghv_practice_actors(workspace_id,actor_id,role,recovery_hash) VALUES(?,?,?,?)').bind(id,p.actor_id,p.role,await hash(p.pass)));
    try{await db.batch(inserts)}catch{return deny('practice_capacity_reached',409)}
    const a={workspace_id:id,actor_id:'member-a',role:'member',workspace_expires:time+30*day};
@@ -53,12 +74,12 @@ export async function handlePractice(request,env){
    if(!/^[a-f0-9]{64}$/.test(String(body.pass||'')))return deny('invalid_practice_pass',401);
    const a=await db.prepare('SELECT a.workspace_id,a.actor_id,a.role,w.expires_at AS workspace_expires FROM ghv_practice_actors a JOIN ghv_practice_workspaces w ON w.id=a.workspace_id WHERE a.recovery_hash=? AND w.expires_at>?').bind(await hash(body.pass),now()).first();
    if(!a)return deny('invalid_practice_pass',401);
-   const token=await startSession(db,a);if(!token)return deny('too_many_practice_sessions',429);
+   const previous=await session(db,request);const token=await startSession(db,a,previous?.session_hash||null);if(!token)return deny('too_many_practice_sessions',429);
    return reply({ok:true,actor:actorInfo(a)},200,{'Set-Cookie':cookie(token)});
   }
   const a=await session(db,request);if(!a)return deny('practice_login_required',401);
   if(path==='logout'&&post){await db.prepare('DELETE FROM ghv_practice_sessions WHERE session_hash=?').bind(a.session_hash).run();return reply({ok:true},200,{'Set-Cookie':cookie('',0)});}
-  if(path==='me'&&!post)return view(db,a);
+  if(path==='me'&&!post)return await view(db,a);
   if(!post)return deny('not_found',404);
   const ws=a.workspace_id,id=String(body.application_id||'');
   if(path==='application'){

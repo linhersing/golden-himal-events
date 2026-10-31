@@ -1,5 +1,7 @@
 // Real remote HTTP/D1 acceptance. Credentials stay in memory and never enter output/artifacts.
 import assert from 'node:assert/strict';
+const expectedRevision=process.env.GHV_EXPECTED_REVISION||process.env.GITHUB_SHA||'';
+if(!/^[a-f0-9]{40}$/.test(expectedRevision)){console.log('BLOCKED: an expected revision is required before remote acceptance.');process.exit(2)}
 const base='https://golden-himal-voice-preview.linhersing.workers.dev';
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function call(path,body,cookie=''){
@@ -8,9 +10,9 @@ async function call(path,body,cookie=''){
  return {status:r.status,data,cookie:r.headers.get('set-cookie')?.split(';')[0]||''};
 }
 function ok(result,expected=200){assert.equal(result.status,expected,'Unexpected remote status '+result.status+' / '+(result.data.error||'no-error'));assert.equal(result.data.ok,true);return result;}
-let ready=false;
+let ready=false,buildEvidence=null;
 for(let n=0;n<24;n++){
- try{const r=await call('readiness');if(r.status===200&&r.data.ready===true){ready=true;break}}catch{}
+ try{const build=await fetch(base+'/practice-build.json?revision='+expectedRevision,{cache:'no-store',signal:AbortSignal.timeout(15000)});if(build.ok){const info=await build.json();if(info.revision===expectedRevision){buildEvidence=info;if(info.status==='BLOCKED'){console.log('BLOCKED: expected Cloudflare revision provision evidence '+JSON.stringify(info));break}if(info.status==='PASS'){const r=await call('readiness');if(r.status===200&&r.data.ready===true){ready=true;break}}}}}catch{}
  if(n%3===0)console.log('WAITING: Cloudflare practice deployment/schema (not a PASS).');
  await delay(10000);
 }
@@ -18,7 +20,7 @@ if(!ready){console.log('BLOCKED: remote practice readiness did not become availa
 else{
  let created,adminCookie='',cleaned=false;
  try{
-  const build=await fetch(base+'/practice-build.json',{signal:AbortSignal.timeout(15000)});if(build.ok){const info=await build.json();console.log('Remote build/provision evidence: '+JSON.stringify(info));}
+  assert.equal(buildEvidence.revision,expectedRevision);assert.equal(buildEvidence.status,'PASS');console.log('Remote build/provision evidence: '+JSON.stringify(buildEvidence));
   created=ok(await call('create',{synthetic:true}),201);
   const role=id=>created.data.passes.find(p=>p.actor_id===id).pass;
   adminCookie=ok(await call('login',{pass:role('organizer')})).cookie;
