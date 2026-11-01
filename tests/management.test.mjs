@@ -92,6 +92,21 @@ test('global D1 admin overview includes all active synthetic workspaces but excl
   const newResults=await f.call('overview');
   assert.equal(newResults.data.sources.practice.counts.mock_paid,1);
   assert.equal(newResults.data.sources.practice.counts.mock_unpaid,2);
+  const paymentReport=await f.call('payments?source=practice');
+  assert.equal(paymentReport.status,200);
+  assert.equal(paymentReport.data.total,3);
+  assert.equal(paymentReport.data.items.filter(x=>x.simulated_amount_npr===500).length,1);
+  assert(paymentReport.data.items.every(x=>x.real_paid===false&&x.real_amount_npr===null));
+  const judgeCookie=(await f.practice('login',{pass:first.data.passes.find(x=>x.actor_id==='judge-1').pass})).cookie;
+  assert.equal((await f.practice('score',{application_id:firstId,phase:'demo',
+   technique:54,interpretation:36,no_conflict:true},judgeCookie)).status,201);
+  const scoreReport=await f.call('scores?source=practice');
+  assert.equal(scoreReport.status,200);
+  assert.equal(scoreReport.data.total,1);
+  assert.equal(scoreReport.data.items[0].total_score,90);
+  assert.equal(scoreReport.data.items[0].judge_id,'judge-1');
+  assert(!JSON.stringify(scoreReport.data).includes('contact_phone'));
+  assert.equal((await f.call('scores?source=e2e')).data.status,'not_configured');
   f.db.prepare('UPDATE ghv_practice_workspaces SET expires_at=1 WHERE id=?')
    .run(second.data.actor.workspace_id);
   const after=await f.call('overview');
