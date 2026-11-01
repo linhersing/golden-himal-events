@@ -12,24 +12,74 @@ const respond=(v,status=200)=>Response.json(v,{status,headers});
 const denied=(error,status)=>respond({ok:false,error},status);
 const count=x=>Number(x||0);
 const allowedEmails=env=>String(env.GHV_ADMIN_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
-async function privileged(request,env,ctx){
- if(env.GHV_MANAGEMENT_ENABLED!=='true'||!env.GHV_ADMIN_ACCESS_AUD||
-    !env.GHV_ADMIN_TEAM_DOMAIN||!allowedEmails(env).length)return {error:'admin_access_not_configured',status:503};
- // ctx.access is set by Cloudflare's runtime only for verified Access requests
- // directly invoking the Worker; a public client cannot set this via headers.
- if(!ctx?.access)return {error:'cloudflare_access_required',status:403};
+const tokenCache={keys:null,until:0,domain:null};
+function b64url(part){
+ const normalized=part.replace(/-/g,'+').replace(/_/g,'/');
+ const raw=atob(normalized.padEnd(Math.ceil(normalized.length/4)*4,'='));
+ return Uint8Array.from(raw,c=>c.charCodeAt(0));
+}
+function safeTeam(value){
+ const v=String(value||'').toLowerCase().replace(/\/$/,'');
+ return /^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com$/.test(v)?v:null;
+}
+async function verifyAccessJwt(request,env){
+ const raw=request.headers.get('Cf-Access-Jwt-Assertion');
+ const domain=safeTeam(env.GHV_ADMIN_TEAM_DOMAIN);
+ if(!domain||!raw||raw.length>12000)return null;
+ const parts=raw.split('.');
+ if(parts.length!==3||parts.some(x=>!x||x.length>10000))return null;
+ let header,claims;
+ try{header=JSON.parse(new TextDecoder().decode(b64url(parts[0])));
+  claims=JSON.parse(new TextDecoder().decode(b64url(parts[1])))}catch{return null}
+ if(header.alg!=='RS256'||typeof header.kid!=='string'||header.kid.length>160||
+  claims.iss!==domain||!Array.isArray(claims.aud)||
+  !claims.aud.includes(env.GHV_ADMIN_ACCESS_AUD)||
+  claims.type!=='app'||!Number.isFinite(claims.exp)||
+  claims.exp<=Math.floor(Date.now()/1000)||!Number.isFinite(claims.iat)||
+  claims.iat>Math.floor(Date.now()/1000)+60)return null;
+ // Fetch signing keys only from the exact configured Access team hostname.
+ let keys=tokenCache.keys;
+ if(!keys||tokenCache.until<Date.now()||tokenCache.domain!==domain){
+  try{
+   const response=await fetch(domain+'/cdn-cgi/access/certs',{signal:AbortSignal.timeout(5000)});
+   if(!response.ok)return null;
+   const json=await response.json();keys=Array.isArray(json.keys)?json.keys:[];
+   if(keys.length>8)return null;
+   tokenCache.keys=keys;tokenCache.until=Date.now()+300000;tokenCache.domain=domain;
+  }catch{return null}
+ }
+ const jwk=keys.find(k=>k.kid===header.kid&&k.kty==='RSA'&&(k.alg==='RS256'||!k.alg)&&
+  k.use!=='enc');
+ if(!jwk)return null;
  try{
-  const identity=await ctx.access.getIdentity();
-  const email=String(identity?.email||'').trim().toLowerCase();
-  if(!email||!allowedEmails(env).includes(email))return {error:'not_an_event_administrator',status:403};
-  // Cloudflare Access's runtime context verifies the JWT. Check target
-  // identity is the requested app and team (defense in depth).
-  if(typeof ctx.access.getJwt==='function'){
-   const token=await ctx.access.getJwt();
-   if(!token)return {error:'cloudflare_access_required',status:403};
+  const publicKey=await crypto.subtle.importKey('jwk',jwk,
+   {name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['verify']);
+  const valid=await crypto.subtle.verify('RSASSA-PKCS1-v1_5',publicKey,
+   b64url(parts[2]),new TextEncoder().encode(parts[0]+'.'+parts[1]));
+  return valid?claims:null;
+ }catch{return null}
+}
+async function privileged(request,env,ctx){
+ const domain=safeTeam(env.GHV_ADMIN_TEAM_DOMAIN);
+ if(env.GHV_MANAGEMENT_ENABLED!=='true'||!env.GHV_ADMIN_ACCESS_AUD||
+  !domain||!allowedEmails(env).length)
+  return {error:'admin_access_not_configured',status:503};
+ // Native ctx.access (when provided) is already authenticated by Cloudflare.
+ // Workers Static Assets may suppress ctx.access; the JWT verification below
+ // provides a secure fallback, NEVER trust plain email/role request headers.
+ try{
+  if(ctx?.access&&ctx.access.aud===env.GHV_ADMIN_ACCESS_AUD){
+   const identity=await ctx.access.getIdentity(),email=String(identity?.email||'').trim().toLowerCase();
+   if(email&&allowedEmails(env).includes(email))return {ok:true};
+   return {error:'not_an_event_administrator',status:403};
   }
-  return {ok:true};
- }catch{return {error:'cloudflare_access_required',status:403}}
+ }catch{}
+ const claims=await verifyAccessJwt(request,env);
+ if(!claims)return {error:'cloudflare_access_required',status:403};
+ const email=String(claims.email||'').trim().toLowerCase();
+ if(!email||!allowedEmails(env).includes(email))
+  return {error:'not_an_event_administrator',status:403};
+ return {ok:true};
 }
 const privacy={testOnly:true,official:false,
  financialStatus:'NOT_CONNECTED_NO_REAL_PAYMENTS',
