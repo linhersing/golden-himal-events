@@ -29,3 +29,55 @@ test('an existing different entry is never falsely confirmed as the submitted dr
 test('successful role switch clears the previous member receipt and draft even if the new-role read fails',async({page})=>{const db=await service(page);try{await page.goto('/practice.html');await page.getByRole('button',{name:'中文',exact:true}).click();await page.locator('#create-ack').check();await page.locator('#create-workspace').click();for(const [name,value] of [['stage_name','TEST Private A'],['song_title','TEST song'],['original_artist','TEST artist'],['work_url','https://youtu.be/dQw4w9WgXcQ']])await page.locator('[name='+name+']').fill(value);await fillV2(page);await page.locator('#application-ack').check();await page.locator('#submit-application').click();await expect(page.locator('#submission-receipt')).toContainText('TEST Private A');await page.locator('#application-card summary').click();await page.locator('[name=contact_handle]').fill('TEST PRIVATE DRAFT A');await page.route('**/api/staging/practice/me',r=>r.fulfill({status:503,json:{ok:false,error:'practice_database_unavailable'}}));await page.locator('[data-actor="member-b"] [data-use]').click();await expect(page.locator('#portal')).toBeHidden();await expect(page.locator('#submission-receipt')).toBeHidden();await expect(page.locator('[name=contact_handle]')).toHaveValue('');await expect(page.locator('#entry-list')).not.toContainText('TEST Private A');await expect(page.locator('#pass-list .pass-card')).toHaveCount(6);}finally{db.close()}});
 
 test('existing validation feedback follows the selected language without erasing the draft',async({page})=>{const db=await service(page);try{await startFeedbackTest(page);await page.locator('[name=contact_phone]').fill('0966');await page.locator('#submit-application').click();for(const [language,word] of [['EN','characters'],['नेपाली','फोनमा'],['中文','電話須']]){await page.getByRole('button',{name:language,exact:true}).click();await expect(page.locator('#error-contact_phone')).toContainText(word);await expect(page.locator('[name=stage_name]')).toHaveValue('TEST Feedback Singer');}}finally{db.close()}});
+
+
+test('phone-first organizer sees only its D1 testing scope and can print safe statistics',async({page})=>{
+ const db=await service(page);
+ try{
+  await page.setViewportSize({width:390,height:812});
+  await page.goto('/practice.html');
+  await page.getByRole('button',{name:'中文',exact:true}).click();
+  await page.locator('#create-ack').check();
+  await page.locator('#create-workspace').click();
+  const organizerPass=await page.locator('[data-actor="organizer"] code').innerText();
+  for(const [name,value] of [['stage_name','TEST Statistics Singer'],['song_title','TEST Song'],
+   ['original_artist','TEST Artist'],['work_url','https://youtu.be/dQw4w9WgXcQ']]){
+   await page.locator('[name='+name+']').fill(value);
+  }
+  await fillV2(page);await page.locator('#application-ack').check();
+  await page.locator('#submit-application').click();
+  await expect(page.locator('#submission-receipt')).toContainText('報名已儲存成功');
+  await expect(page.locator('.practice-statistics')).toBeHidden();
+  await page.locator('#logout').click();
+  await page.locator('#recovery-pass').fill(organizerPass);
+  await page.locator('#login-button').click();
+  await expect(page.locator('.practice-statistics')).toBeVisible();
+  await expect(page.locator('#stats-title')).toHaveText('我的測試空間｜報名統計總覽');
+  await expect(page.locator('#stats-summary .stats-kpi')).toHaveCount(4);
+  await expect(page.locator('#stats-summary')).toContainText('測試報名總筆數');
+  const cards=await page.locator('#stats-summary .stats-kpi strong').allInnerTexts();
+  expect(cards).toEqual(['1','1','1','0']);
+  await expect(page.locator('#stats-boundary')).toContainText('不是全站');
+  await expect(page.locator('#stats-breakdown')).toContainText('2027年1月');
+  await expect(page.locator('#stats-updated')).toContainText('D1 讀取時間');
+  expect(db.prepare('SELECT COUNT(*) n FROM ghv_practice_applications').get().n).toBe(1);
+  for(const width of [320,360,375,390,428]){
+   await page.setViewportSize({width,height:812});
+   expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth)).toBe(false);
+   for(const el of await page.locator('.stats-actions button').all()){
+    const r=await el.boundingBox();expect(r.height).toBeGreaterThanOrEqual(44);
+   }
+  }
+  await page.setViewportSize({width:390,height:812});
+  await page.locator('.practice-statistics').screenshot({path:'test-results/practice-private-stats-mobile.png'});
+  await page.setViewportSize({width:1280,height:900});
+  await page.locator('.practice-statistics').screenshot({path:'test-results/practice-private-stats-desktop.png'});
+  await page.emulateMedia({media:'print'});
+  await expect(page.locator('#organizer-entries')).toBeHidden();
+  expect(await page.locator('.practice-statistics').evaluate(el=>getComputedStyle(el).display)).not.toBe('none');
+  await page.emulateMedia({media:'screen'});
+  await page.locator('#logout').click();
+  await expect(page.locator('.practice-statistics')).toBeHidden();
+  await expect(page.locator('#stats-summary')).toBeEmpty();
+ }finally{db.close()}
+});

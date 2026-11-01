@@ -24,6 +24,12 @@ else{
   created=ok(await call('create',{synthetic:true}),201);
   const role=id=>created.data.passes.find(p=>p.actor_id===id).pass;
   adminCookie=ok(await call('login',{pass:role('organizer')})).cookie;
+  const emptyStats=ok(await call('stats',undefined,adminCookie)).data;
+  assert.equal(emptyStats.scope,'single_synthetic_workspace_only');
+  assert.equal(emptyStats.stats.application_count,0);
+  assert.equal(emptyStats.stats.applicant_count,0);
+  assert.equal((await call('stats',undefined,created.cookie)).status,403,'member cannot read organizer counts');
+  console.log('PASS: live Cloudflare D1 private organizer stats are initially zero, member access rejected.');
   const row={synthetic:true,stage_name:'TEST HTTP ACCEPTANCE',round_code:'2027-01',category:'community',province:'bagmati',song_title:'TEST SONG',original_artist:'TEST ARTIST',work_url:'https://www.youtube.com/watch?v=dQw4w9WgXcQ',contact_phone:'+9770000000000',contact_handle:'TEST contact',birth_date:'2000-01-01',affiliation:'TEST occupation',song_language:'Nepali',song_key:'C',priority_ack:true,media_ack:true};
   const invalid=await call('application',{...row,contact_phone:'0966'},created.cookie);
   assert.equal(invalid.status,422);assert.deepEqual(invalid.data.fieldErrors,{contact_phone:'phoneFormat'});
@@ -36,6 +42,16 @@ else{
   assert.equal((await call('application',{...row,stage_name:'TEST DUPLICATE MUST NOT OVERWRITE'},created.cookie)).status,409);
   assert.equal(ok(await call('me',undefined,created.cookie)).data.applications[0].stage_name,row.stage_name);
   console.log('PASS: actual saved ID and all submitted fields match a separate cloud readback; duplicate does not overwrite.');
+  const counts=ok(await call('stats',undefined,adminCookie)).data;
+  assert.equal(counts.stats.applicant_count,1);
+  assert.equal(counts.stats.application_count,1);
+  assert.equal(counts.stats.january_count,1);
+  assert.equal(counts.stats.university_count,0);
+  assert.equal(counts.stats.community_count,1);
+  assert.equal(counts.stats.bagmati_count,1);
+  assert.equal(counts.stats.demo_count,1);
+  assert(!JSON.stringify(counts).includes(row.contact_phone));
+  console.log('PASS: live D1 organizer read-only stats reflect one submitted synthetic application, no contact data exposed.');
   assert.equal((await call('promote',{application_id:id,phase:'demo'},created.cookie)).status,403);
   ok(await call('logout',{},created.cookie));assert.equal((await call('me',undefined,created.cookie)).status,401);
   const member=ok(await call('login',{pass:role('member-a')})).cookie;
@@ -56,6 +72,15 @@ else{
   ok(await call('vote',{application_id:id},voter),201);assert.equal((await call('vote',{application_id:id},voter)).status,409);
   const standings=ok(await call('me',undefined,adminCookie)).data.standings;assert.equal(standings[0].judges_mean,80);assert.equal(standings[0].total_score,90.2);
   console.log('PASS: three remote judge identities × three stages, organizer advancement, duplicate/stale protections and51/49 total90.2.');
+  const finalStats=ok(await call('stats',undefined,adminCookie)).data.stats;
+  assert.equal(finalStats.applicant_count,1);
+  assert.equal(finalStats.application_count,1);
+  assert.equal(finalStats.finalist_count,1);
+  assert.equal(finalStats.mock_fee_count,1);
+  assert.equal(finalStats.score_count,9);
+  assert.equal(finalStats.vote_count,1);
+  assert.equal(finalStats.voucher_count,1);
+  console.log('PASS: live D1 metrics capture mock fees, 3 judges x 3 stages, votes, non-redeemable voucher; temporary workspace will be deleted.');
  }finally{
   if(created){if(!adminCookie)adminCookie=ok(await call('login',{pass:created.data.passes.find(p=>p.actor_id==='organizer').pass})).cookie;
    const cleanup=ok(await call('cleanup',{confirmation:'DELETE PRACTICE'},adminCookie));cleaned=cleanup.data.deleted_workspace===created.data.actor.workspace_id;
