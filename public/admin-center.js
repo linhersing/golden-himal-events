@@ -37,21 +37,53 @@ function showMetrics(){
 }
 function renderRecords(){
  $('rows').replaceChildren();
- if(!records||records.status!=='available'){const row=el('tr'),cell=el('td','此資料來源未啟用；不可當作0筆。');cell.colSpan=5;row.append(cell);$('rows').append(row);$('page-label').textContent='—';return}
+ const headings=tab==='scores'?
+  ['測試報名編號','評審身分','評分階段','評分細項','總分']:
+  tab==='payments'?['測試報名編號','海選梯次','付款狀態','模擬付款紀錄','真實入帳']:
+  ['測試報名編號','海選／組別','審核階段','評審分數','付款狀態'];
+ [...document.querySelectorAll('thead th')].forEach((th,i)=>th.textContent=headings[i]);
+ if(!records||records.status!=='available'){
+  const row=el('tr'),cell=el('td','此資料來源未啟用；不可當作0筆。');
+  cell.colSpan=5;row.append(cell);$('rows').append(row);$('page-label').textContent='—';
+  $('previous').disabled=$('next').disabled=true;return;
+ }
  const items=records.items||[];
  $('page-label').textContent='第 '+page+' 頁 · 共 '+num(records.total)+' 筆 · 每頁50筆';
  $('previous').disabled=page<=1;$('next').disabled=page*50>=records.total;
- if(!items.length){const row=el('tr'),cell=el('td','此資料來源目前沒有這類測試紀錄。');cell.colSpan=5;row.append(cell);$('rows').append(row)}
+ if(!items.length){
+  const row=el('tr'),cell=el('td','此資料來源目前沒有這類測試紀錄。');
+  cell.colSpan=5;row.append(cell);$('rows').append(row);return
+ }
  for(const item of items){
-  const trNode=el('tr'),id=el('td',item.record_id);
-  const round=el('td',tr(item.round_code==='2027-01'?'january':'april')+' · '+tr(item.category));
-  round.append(el('div',tr(item.province),'muted'));
-  const phase=el('td',tr(item.phase));phase.append(el('div',item.review_status||'—','muted'));
-  const score=el('td',num(item.scorecards)+' 張評分卡');score.append(el('div',item.score_mean===null?'尚未評分':'平均 '+num(item.score_mean),'muted'));
-  const pay=el('td');pay.append(el('span',tr(item.payment_status),'pill '+(item.payment_status==='simulation_only'||item.payment_status==='simulated_paid'?'':'warning')));
-  if(tab==='payments'){score.textContent='—';phase.textContent='模擬付款紀錄'}
-  if(tab==='scores'){pay.textContent='—'}
-  trNode.append(id,round,phase,score,pay);$('rows').append(trNode)
+  const row=el('tr');
+  if(tab==='scores'){
+   row.append(
+    el('td',item.application_id),el('td',item.judge_id),
+    el('td',tr(item.phase)+(item.recused?' · 迴避':'')),
+    el('td','技巧 '+num(item.technique)+' ／ 詮釋 '+num(item.interpretation)+
+     ' ／ 台風 '+num(item.stage_presence)+' ／ 表現 '+num(item.appearance)),
+    el('td',item.total_score===null?'迴避不計分':num(item.total_score)));
+  }else if(tab==='payments'){
+   const payment=el('td');
+   payment.append(el('span',tr(item.payment_status),'pill '+
+    (item.payment_status==='simulated_paid'||item.payment_status==='simulation_only'?'':'warning')));
+   row.append(el('td',item.application_id),
+    el('td',tr(item.round_code==='2027-01'?'january':'april')),
+    payment,
+    el('td',item.simulated_amount_npr===null?'尚未模擬收款':'模擬 NPR '+num(item.simulated_amount_npr)),
+    el('td','未接通金流／無實收證據'));
+  }else{
+   const round=el('td',tr(item.round_code==='2027-01'?'january':'april')+' · '+tr(item.category));
+   round.append(el('div',tr(item.province),'muted'));
+   const phase=el('td',tr(item.phase));phase.append(el('div',item.review_status||'—','muted'));
+   const score=el('td',num(item.scorecards)+' 張評分卡');
+   score.append(el('div',item.score_mean===null?'尚未評分':'平均 '+num(item.score_mean),'muted'));
+   const pay=el('td');
+   pay.append(el('span',tr(item.payment_status),'pill '+
+    (item.payment_status==='simulation_only'||item.payment_status==='simulated_paid'?'':'warning')));
+   row.append(el('td',item.record_id),round,phase,score,pay);
+  }
+  $('rows').append(row);
  }
 }
 async function loadAll(){if(working)return;working=true;$('reload').disabled=true;status('正在從 Cloudflare D1 讀取資料…');
@@ -65,7 +97,7 @@ async function loadAll(){if(working)return;working=true;$('reload').disabled=tru
  }finally{working=false;$('reload').disabled=false}
 }
 async function loadRecords(){
- try{records=await api('records?source='+encodeURIComponent(source)+'&page='+page);renderRecords()}
+ try{records=await api((tab==='scores'?'scores':tab==='payments'?'payments':'records')+'?source='+encodeURIComponent(source)+'&page='+page);renderRecords()}
  catch{records=null;$('rows').replaceChildren();status('明細讀取失敗，請重試；未顯示過期資料。',true)}
 }
 $('reload').onclick=loadAll;
@@ -73,5 +105,5 @@ $('source').onchange=()=>{source=$('source').value;page=1;loadRecords()};
 $('previous').onclick=()=>{if(page>1){page--;loadRecords()}};
 $('next').onclick=()=>{if(records&&page*50<records.total){page++;loadRecords()}};
 $('print').onclick=()=>{if(overview)window.print()};
-for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>{tab=b.dataset.tab;for(const other of document.querySelectorAll('[data-tab]'))other.setAttribute('aria-pressed',String(other===b));$('records-title').textContent={registrations:'報名與審核明細',scores:'評審計分進度',payments:'付款狀態（僅模擬）'}[tab];renderRecords()};
+for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>{tab=b.dataset.tab;for(const other of document.querySelectorAll('[data-tab]'))other.setAttribute('aria-pressed',String(other===b));$('records-title').textContent={registrations:'報名與審核明細',scores:'評審計分進度',payments:'付款狀態（僅模擬）'}[tab];page=1;loadRecords()};
 loadAll();
