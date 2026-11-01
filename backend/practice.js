@@ -80,9 +80,15 @@ async function view(db,a){
  const voted=a.role==='member'?await db.prepare('SELECT application_id FROM ghv_practice_votes WHERE workspace_id=? AND voter_id=?').bind(a.workspace_id,a.actor_id).first():null;
  const votes=a.role==='organizer'?(await db.prepare('SELECT application_id,COUNT(*) AS n FROM ghv_practice_votes WHERE workspace_id=? GROUP BY application_id').bind(a.workspace_id).all()).results||[]:[];
  const rankings=a.role==='organizer'?practiceRankings(applications,scores,votes):[];
+ const judge_status=a.role==='organizer'?(await db.prepare(`SELECT j.actor_id,
+ CASE WHEN EXISTS(SELECT 1 FROM ghv_practice_sessions s WHERE s.workspace_id=j.workspace_id AND s.actor_id=j.actor_id AND s.expires_at>?) THEN 1 ELSE 0 END AS active_session,
+ (SELECT COUNT(DISTINCT sc.application_id) FROM ghv_practice_scores sc WHERE sc.workspace_id=j.workspace_id AND sc.judge_id=j.actor_id AND sc.recused=0) AS scored_apps,
+ (SELECT COUNT(*) FROM ghv_practice_scores sc WHERE sc.workspace_id=j.workspace_id AND sc.judge_id=j.actor_id) AS scorecards,
+ (SELECT COUNT(*) FROM ghv_practice_scores sc WHERE sc.workspace_id=j.workspace_id AND sc.judge_id=j.actor_id AND sc.recused=1) AS recusal_count
+ FROM ghv_practice_actors j WHERE j.workspace_id=? AND j.role='judge' ORDER BY j.actor_id`).bind(now(),a.workspace_id).all()).results||[]:[];
  const standings=rankings.filter(r=>r.phase==='final');
  const vouchers=a.role==='judge'?[]:(await db.prepare("SELECT id,account_id,season_year,application_id,face_value_npr,status FROM ghv_practice_vouchers WHERE workspace_id=?"+(a.role==='member'?' AND account_id=?':'')).bind(...args).all()).results.map(v=>({...v,redeemable:false}));
- return reply({ok:true,actor:actorInfo(a),applications,scores,finalists,voted,rankings,standings,vouchers,source:'cloudflare-d1-private-practice'});
+ return reply({ok:true,actor:actorInfo(a),applications,scores,judge_status,finalists,voted,rankings,standings,vouchers,source:'cloudflare-d1-private-practice'});
 }
 export async function handlePractice(request,env){
  if(env.STAGING_PRACTICE_ENABLED!=='true'||!env.E2E_DB)return deny('practice_not_configured',503);
