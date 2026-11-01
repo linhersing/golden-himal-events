@@ -1,0 +1,25 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
+<title>Golden Himal Voice｜主辦單位管理總覽</title><link rel="icon" href="./favicon.svg">
+<link rel="stylesheet" href="./admin-center.css"><script type="module" src="./admin-center.js"></script></head>
+<body><a class="skip" href="#main">跳至內容</a>
+<header><div class="shell top"><div class="brand">Golden Himal Voice<small>CHITWAN · 2027</small></div><div class="head-actions"><span class="environment">受控測試資料 · NOT LIVE</span><a href="./">返回網站</a></div></div></header>
+<main id="main" class="shell">
+<div class="intro"><div><p class="eyebrow">ORGANIZER · CONTROL CENTER</p><h1>賽事後台管理總覽</h1><p class="lead">報名、審核、評分與付款狀態集中檢視；正式開通金流之前，所有付款標記都是模擬。</p></div><div class="actions"><button id="reload" type="button">重新整理資料</button><button id="print" type="button">列印 A4 摘要</button></div></div>
+<div class="boundary" role="note"><strong>資料範圍與權限：</strong>此頁僅提供經 Cloudflare Access 驗證的主辦單位管理員讀取。測試資料與正式報名分開呈現；目前未連接真實金流，不能把「模擬已付款」當成實收款項。</div>
+<p id="status" role="status" aria-live="polite">正在確認管理員權限與雲端資料…</p>
+<div id="content" hidden>
+<section aria-labelledby="summary"><div class="section-head"><h2 id="summary">統計概覽</h2><span id="updated"></span></div><div id="cards" class="cards"></div></section>
+<div class="split">
+<section class="panel"><h2>測試來源</h2><div id="sources"></div></section>
+<section class="panel"><h2>真實金流狀態</h2><p class="unpaid"><strong>尚未接入收款平台</strong></p><p>實際收款人數與款項：<strong>未提供（不以0元冒充已核對）</strong></p><p>下方每筆狀態只有「未模擬付款」或「模擬付款完成」。</p></section>
+</div>
+<section id="records" class="panel" aria-labelledby="records-title">
+<div class="section-head"><div><h2 id="records-title">報名與評審、付款明細</h2><p class="hint">僅顯示測試資料的報名識別碼、分類、分數與模擬付款狀態；不顯示電話、Email 或身分證件。</p></div>
+<div class="filter"><label for="source">資料來源</label><select id="source"><option value="practice">私人虛構測試空間</option><option value="e2e">Email 受邀驗收環境</option></select></div></div>
+<nav class="tabs" aria-label="明細類型"><button type="button" data-tab="registrations" aria-pressed="true">報名</button><button type="button" data-tab="scores" aria-pressed="false">評分</button><button type="button" data-tab="payments" aria-pressed="false">付款</button></nav>
+<div class="table-wrap"><table><thead><tr><th scope="col">測試報名編號</th><th scope="col">海選／組別</th><th scope="col">審核階段</th><th scope="col">評審分數</th><th scope="col">付款狀態</th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="pagination"><span id="page-label"></span><div><button id="previous" type="button">上一頁</button><button id="next" type="button">下一頁</button></div></div>
+</section>
+<div class="footnote">只讀管理後台 · Cloudflare D1 測試資料 · 無正式報名、實收金流或可兌換餐券。正式全站管理員啟用前，無管理權限者無法看見任何統計。</div>
+</div></main></body></html>

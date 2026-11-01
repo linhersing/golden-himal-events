@@ -1,4 +1,5 @@
 import {handlePractice} from './practice.js';
+import {handleManagement} from './management.js';
 import {architecturePreview} from './architecture-preview.js';
 import {mailProviderReady,mailSenderReady} from './staging-mail.js';
 import {handleE2E} from './staging-e2e.js';
@@ -177,7 +178,7 @@ async function handleE2EReadiness(request,env){
  });
 }
 export default {
-  async fetch(request,env) {
+  async fetch(request,env,ctx) {
     const pathname=new URL(request.url).pathname;
     if(pathname.startsWith('/api/e2e/')){
       // Do not mix new applicant/OTP data with the legacy synthetic D1 fixture.
@@ -185,6 +186,7 @@ export default {
       if(!env.E2E_DB)return failure('e2e_database_not_bound',503);
       return handleE2E(request,{...env,DB:env.E2E_DB});
     }
+    if(pathname.startsWith('/api/staging/management/'))return handleManagement(request,env,ctx);
     if(pathname.startsWith('/api/staging/practice/'))return handlePractice(request,env);
     if(pathname==='/api/staging/architecture-preview')return architecturePreview(request,env);
     if(pathname==='/api/staging/e2e-readiness')return handleE2EReadiness(request,env);
