@@ -25,7 +25,17 @@ else{
   const role=id=>created.data.passes.find(p=>p.actor_id===id).pass;
   adminCookie=ok(await call('login',{pass:role('organizer')})).cookie;
   const row={synthetic:true,stage_name:'TEST HTTP ACCEPTANCE',round_code:'2027-01',category:'community',province:'bagmati',song_title:'TEST SONG',original_artist:'TEST ARTIST',work_url:'https://www.youtube.com/watch?v=dQw4w9WgXcQ',contact_phone:'+9770000000000',contact_handle:'TEST contact',birth_date:'2000-01-01',affiliation:'TEST occupation',song_language:'Nepali',song_key:'C',priority_ack:true,media_ack:true};
+  const invalid=await call('application',{...row,contact_phone:'0966'},created.cookie);
+  assert.equal(invalid.status,422);assert.deepEqual(invalid.data.fieldErrors,{contact_phone:'phoneFormat'});
+  assert.equal(ok(await call('me',undefined,created.cookie)).data.applications.length,0);
+  console.log('PASS: screenshot short phone gives a field-specific422 and writes no application.');
   const saved=ok(await call('application',row,created.cookie),201),id=saved.data.application.id;
+  const confirmed=ok(await call('me',undefined,created.cookie)).data.applications.find(a=>a.id===id);
+  for(const key of ['stage_name','round_code','category','province','song_title','original_artist','work_url','contact_phone','contact_handle','birth_date','affiliation','song_language','song_key'])assert.equal(confirmed[key],row[key]);
+  assert.equal(confirmed.priority_ack,1);assert.equal(confirmed.media_ack,1);
+  assert.equal((await call('application',{...row,stage_name:'TEST DUPLICATE MUST NOT OVERWRITE'},created.cookie)).status,409);
+  assert.equal(ok(await call('me',undefined,created.cookie)).data.applications[0].stage_name,row.stage_name);
+  console.log('PASS: actual saved ID and all submitted fields match a separate cloud readback; duplicate does not overwrite.');
   assert.equal((await call('promote',{application_id:id,phase:'demo'},created.cookie)).status,403);
   ok(await call('logout',{},created.cookie));assert.equal((await call('me',undefined,created.cookie)).status,401);
   const member=ok(await call('login',{pass:role('member-a')})).cookie;

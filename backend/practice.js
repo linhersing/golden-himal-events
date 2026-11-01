@@ -1,12 +1,12 @@
 import {practiceRankings} from './practice-ranking.js';
-import {validPerformanceLink} from '../public/performance-link.js';
+import {validatePracticeApplication} from '../public/practice-validation.js';
 const cookieName='__Host-ghv-practice';
 const hour=3600,day=86400;
 const now=()=>Math.floor(Date.now()/1000);
 const random=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');
 const hash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');
 const reply=(body,status=200,headers={})=>Response.json({testOnly:true,emailVerified:false,official:false,...body},{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Cross-Origin-Resource-Policy':'same-origin',...headers}});
-const deny=(error,status=400)=>reply({ok:false,error},status);
+const deny=(error,status=400,extra={})=>reply({ok:false,error,...extra},status);
 const cookie=(value,age=12*hour)=>`${cookieName}=${value}; Path=/; Max-Age=${age}; Secure; HttpOnly; SameSite=Strict`;
 const actorInfo=a=>({workspace_id:a.workspace_id,actor_id:a.actor_id,role:a.role,expires_at:a.workspace_expires});
 async function jsonBody(request){
@@ -89,12 +89,8 @@ export async function handlePractice(request,env){
    const clean=k=>typeof body[k]==='string'?body[k].trim():'';
    const phone=clean('contact_phone'),handle=clean('contact_handle'),birth=clean('birth_date'),affiliation=clean('affiliation'),songLanguage=clean('song_language'),songKey=clean('song_key');
    const stage=clean('stage_name'),song=clean('song_title'),artist=clean('original_artist'),province=clean('province'),link=clean('work_url');
-   if(!stage||stage.length>60||!song||song.length>100||!artist||artist.length>100||!['bagmati','gandaki'].includes(province)||!['2027-01','2027-04'].includes(body.round_code)||!['university','community'].includes(body.category)||!validPerformanceLink(link))return deny('invalid_practice_application',422);
-   if(!/^[+0-9 ()-]{8,30}$/.test(phone)||!handle||handle.length>100||!affiliation||affiliation.length>100||!songLanguage||songLanguage.length>40||!songKey||songKey.length>20||body.priority_ack!==true||body.media_ack!==true)return deny('required_v2_fields_or_acknowledgements',422);
-   if(body.category==='community'){
-    const date=new Date(birth+'T00:00:00Z'),cutoff=body.round_code==='2027-01'?'2009-01-31':'2009-04-30';
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(birth)||!Number.isFinite(date.valueOf())||date.toISOString().slice(0,10)!==birth||birth>cutoff)return deny('community_age_at_nepal_deadline',422);
-   }
+   const fieldErrors=validatePracticeApplication(body);
+   if(Object.keys(fieldErrors).length){const error=fieldErrors.birth_date?'community_age_at_nepal_deadline':Object.keys(fieldErrors).some(k=>['stage_name','song_title','original_artist','province','round_code','category','work_url'].includes(k))?'invalid_practice_application':'required_v2_fields_or_acknowledgements';return deny(error,422,{fieldErrors});}
    const appId='GHV-TEST-'+crypto.randomUUID();
    try{await db.prepare('INSERT INTO ghv_practice_applications(id,workspace_id,actor_id,stage_name,round_code,category,province,song_title,original_artist,work_url,contact_phone,contact_handle,birth_date,affiliation,song_language,song_key,priority_ack,media_ack,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(appId,ws,a.actor_id,stage,body.round_code,body.category,province,song,artist,link,phone,handle,body.category==='community'?birth:null,affiliation,songLanguage,songKey,1,1,now()).run()}catch{return deny('one_practice_entry_per_member',409)}
    const application=await db.prepare('SELECT id,stage_name,round_code,category,province,song_title,original_artist,work_url,contact_phone,contact_handle,birth_date,affiliation,song_language,song_key,priority_ack,media_ack,phase,fee_status FROM ghv_practice_applications WHERE id=? AND workspace_id=?').bind(appId,ws).first();
