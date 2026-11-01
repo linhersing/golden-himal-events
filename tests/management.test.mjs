@@ -8,7 +8,7 @@ const mgr=path=>base+'/api/staging/management/'+path;
 function adapter(db){return {prepare(sql){let args=[];const o={bind(...xs){args=xs;return o},
  async first(){return db.prepare(sql).get(...args)||null},
  async all(){return {results:db.prepare(sql).all(...args)}},
- async run(){return {meta:{changes:Number(db.prepare(sql).run(...args).changes)}}};return o},
+ async run(){return {meta:{changes:Number(db.prepare(sql).run(...args).changes)}}}};return o},
  async batch(stmts){db.exec('BEGIN');try{const r=[];for(const s of stmts)r.push(await s.run());db.exec('COMMIT');return r}catch(e){db.exec('ROLLBACK');throw e}}};}
 async function fixture(){
  const db=new DatabaseSync(':memory:');db.exec('PRAGMA foreign_keys=ON');
