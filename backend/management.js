@@ -174,6 +174,59 @@ async function rows(db,source,limit,offset){
   score_mean:(r.phase==='demo'?r.demo_mean:r.live_mean)===null?null:Number(r.phase==='demo'?r.demo_mean:r.live_mean),
   created_at:r.created_at}))};
 }
+async function scores(db,source,limit,offset){
+ if(source==='practice'){
+  const now=Math.floor(Date.now()/1000);
+  const total=await db.prepare(`SELECT COUNT(*) AS n FROM ghv_practice_scores s
+   JOIN ghv_practice_workspaces w ON w.id=s.workspace_id WHERE w.expires_at>?`).bind(now).first();
+  const result=await db.prepare(`SELECT s.application_id,s.judge_id,s.phase,
+   s.technique,s.interpretation,s.stage_presence,s.appearance,s.recused,s.created_at
+   FROM ghv_practice_scores s JOIN ghv_practice_workspaces w ON w.id=s.workspace_id
+   WHERE w.expires_at>? ORDER BY s.created_at DESC,s.application_id,s.judge_id
+   LIMIT ? OFFSET ?`).bind(now,limit,offset).all();
+  return {total:count(total?.n),items:(result.results||[]).map(x=>({...x,
+   total_score:x.recused?null:count(x.technique)+count(x.interpretation)+count(x.stage_presence)+count(x.appearance),
+   role:'test_judge'}))};
+ }
+ const total=await db.prepare('SELECT (SELECT COUNT(*) FROM e2e_judge_scores)+(SELECT COUNT(*) FROM e2e_live_scores) AS n').first();
+ const result=await db.prepare(`SELECT application_id,reviewer_id AS judge_id,'demo' AS phase,
+  technique,interpretation,0 AS stage_presence,0 AS appearance,0 AS recused,created_at
+  FROM e2e_judge_scores
+  UNION ALL
+  SELECT application_id,reviewer_id AS judge_id,stage AS phase,
+  technique,interpretation,stage_presence,appearance,0 AS recused,created_at
+  FROM e2e_live_scores
+  ORDER BY created_at DESC,application_id,judge_id LIMIT ? OFFSET ?`).bind(limit,offset).all();
+ return {total:count(total?.n),items:(result.results||[]).map(x=>({...x,
+  total_score:count(x.technique)+count(x.interpretation)+count(x.stage_presence)+count(x.appearance),role:'test_reviewer'}))};
+}
+async function payments(db,source,limit,offset){
+ if(source==='practice'){
+  const time=Math.floor(Date.now()/1000);
+  const total=await db.prepare(`SELECT COUNT(*) AS n FROM ghv_practice_applications a
+   JOIN ghv_practice_workspaces w ON w.id=a.workspace_id WHERE w.expires_at>?`).bind(time).first();
+  const result=await db.prepare(`SELECT a.id AS application_id,a.round_code,a.fee_status AS payment_status,
+   a.created_at,(SELECT COUNT(*) FROM ghv_practice_events ev
+   WHERE ev.workspace_id=a.workspace_id AND ev.application_id=a.id AND ev.kind='fee_simulation') AS mock_events
+   FROM ghv_practice_applications a JOIN ghv_practice_workspaces w ON w.id=a.workspace_id
+   WHERE w.expires_at>? ORDER BY a.created_at DESC,a.id DESC LIMIT ? OFFSET ?`).bind(time,limit,offset).all();
+  return {total:count(total?.n),items:(result.results||[]).map(x=>({
+   ...x,mock_events:count(x.mock_events),real_paid:false,real_amount_npr:null,
+   simulated_amount_npr:x.payment_status==='simulation_only'?500:null
+  }))};
+ }
+ const total=await db.prepare('SELECT COUNT(*) AS n FROM e2e_applications').first();
+ const result=await db.prepare(`SELECT a.id AS application_id,a.round_code,a.payment_status,a.created_at,
+  pe.event_type,pe.amount_paisa
+  FROM e2e_applications a LEFT JOIN e2e_payment_events pe ON pe.application_id=a.id
+  ORDER BY a.created_at DESC,a.id DESC LIMIT ? OFFSET ?`).bind(limit,offset).all();
+ return {total:count(total?.n),items:(result.results||[]).map(x=>({
+  ...x,real_paid:false,real_amount_npr:null,
+  simulated_amount_npr:x.payment_status==='simulated_paid'&&x.event_type==='SIMULATED_PAYMENT'?
+   count(x.amount_paisa)/100:null
+ }))};
+}
+
 export async function handleManagement(request,env,ctx){
  if(request.method!=='GET')return denied('read_only_method_required',405);
  const auth=await privileged(request,env,ctx);
@@ -194,13 +247,15 @@ export async function handleManagement(request,env,ctx){
     actual_payments:{status:'NOT_CONNECTED',paid_count:null,received_npr:null},
     warning:'All payment statuses refer to simulations only; never aggregate mock paid statuses into real revenue.'});
   }
-  if(kind==='records'){
+  if(['records','scores','payments'].includes(kind)){
    if((source==='practice'&&!practiceReady)||(source==='e2e'&&!e2eReady))
     return respond({ok:true,...privacy,source,status:'not_configured',total:null,items:[]});
    const p=Number(url.searchParams.get('page')||1);
    if(!Number.isSafeInteger(p)||p<1||p>1000)return denied('invalid_page',400);
    const limit=50;
-   const result=await rows(db,source,limit,(p-1)*limit);
+   const result=kind==='records'?await rows(db,source,limit,(p-1)*limit):
+    kind==='scores'?await scores(db,source,limit,(p-1)*limit):
+    await payments(db,source,limit,(p-1)*limit);
    return respond({ok:true,...privacy,source,status:'available',page:p,page_size:limit,
     ...result,as_of:new Date().toISOString()});
   }
