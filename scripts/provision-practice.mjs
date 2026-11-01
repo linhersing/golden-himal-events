@@ -6,7 +6,7 @@ if(process.env.WORKERS_CI!=='1'||process.env.WORKERS_CI_BRANCH!=='codex/initial-
  console.log('Practice provisioning SKIPPED: not the trusted deployment build.');
 }else{
  const evidence={revision:process.env.WORKERS_CI_COMMIT_SHA||null,status:'BLOCKED',database:'E2E_DB'};
- const run=args=>{const r=spawnSync('npx',['--yes','wrangler@4.156.0',...args],{encoding:'utf8',timeout:60000,maxBuffer:2*1024*1024});if(r.status!==0)throw Error('cloudflare_permission_or_command_unavailable');try{return JSON.parse(r.stdout)}catch{throw Error('cloudflare_evidence_unreadable')}};
+ const run=args=>{const r=spawnSync('npx',['--yes','wrangler@4.156.0',...args],{encoding:'utf8',timeout:60000,maxBuffer:2*1024*1024});if(r.status!==0)throw Error('cloudflare_permission_or_command_unavailable');if(args.includes('--file'))return null;try{return JSON.parse(r.stdout)}catch{throw Error('cloudflare_evidence_unreadable')}};
  const rows=value=>{if(Array.isArray(value)){for(const x of value){const r=rows(x);if(r)return r}}if(value&&Array.isArray(value.results))return value.results;return null;};
  const bookmark=value=>{if(value&&typeof value==='object'){if(typeof value.bookmark==='string')return value.bookmark;for(const x of Object.values(value)){const b=bookmark(x);if(b)return b}}return null;};
  const query=sql=>{const value=run(['d1','execute','E2E_DB','--remote','--command',sql,'--json']);const result=rows(value);if(!result?.length)throw Error('cloudflare_count_evidence_unavailable');return result[0]};
