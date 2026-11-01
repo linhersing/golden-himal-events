@@ -2,6 +2,14 @@
 <a class="skip" href="#main" data-i18n="skip">Skip to content</a><div class="ribbon" data-i18n="ribbon">PRIVATE PRACTICE · fictional data only · no email or real payments</div>
 <header><div class="shell head"><a class="brand" href="./">Golden Himal Voice<small>CHITWAN · 2027</small></a><nav aria-label="Language" class="languages"><button type="button" data-lang="en">EN</button><button type="button" data-lang="ne">नेपाली</button><button type="button" data-lang="zh">中文</button></nav></div></header>
 <main id="main" class="shell"><section class="intro"><p class="eyebrow" data-i18n="eyebrow">WORKING CLOUD PRACTICE</p><h1 data-i18n="title">Try the whole competition flow.</h1><p data-i18n="intro">Submit a fictional entry, switch to separate judge accounts, and review the saved results. Email verification and real fees come later.</p><a href="./architecture-preview.html" data-i18n="previewLink">View the read-only overview</a></section>
+<article class="card self-check-guide" lang="zh-Hant">
+ <h2>✅ 自己測試有沒有成功｜照著做就看得到</h2>
+ <ol><li>按「建立測試空間」，先保存畫面上的六組<span class="emphasis">測試角色碼</span>。這不是正式會員帳號密碼。</li>
+ <li>先用「會員 A」身分填一筆<span class="emphasis">虛構測試報名</span>，送出後確認畫面出現報名編號。</li>
+ <li>按「使用 Organizer 管理員」角色，進入下方後台，核對剛才那筆報名的<span class="emphasis">姓名、編號、歌曲、試聽連結</span>。</li>
+ <li>再用「Judge 1／2／3」依序登入並評分；最後切回 Organizer，查看各位評審的分數與結果。</li></ol>
+ <p class="boundary">安全提醒：目前只是可實際存取雲端資料庫的「測試平台」，請使用假名字、假電話及公開測試影片。正式 Email 帳密登入及真實報名尚未開通。</p>
+</article>
 <p id="status" role="status" aria-live="polite" tabindex="-1"></p>
 <section id="auth" class="auth-grid"><article class="card"><span class="step">01</span><h2 data-i18n="createTitle">Start a private test</h2><p data-i18n="createHelp">Creates two test members, three judges and one organizer. Each has a separate private recovery pass. This does not verify an email address.</p><label class="check"><input id="create-ack" type="checkbox"><span data-i18n="syntheticAck">I will use only fictional names and public test videos, with no personal documents.</span></label><button id="create-workspace" class="primary" type="button" data-i18n="create">Create my test workspace</button><p class="micro" data-i18n="capacity">Up to20 workspaces. One entry per test member; workspace expires in30 days. No paid service is activated.</p></article>
 <article class="card"><span class="step">02</span><h2 data-i18n="returnTitle">Return or use another role</h2><p data-i18n="returnHelp">On this phone or another computer, paste the pass for the role you want. No email, password reset or shared OTP is used.</p><form id="login-form"><label><span data-i18n="passLabel">Test role recovery pass</span><input id="recovery-pass" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="64" required></label><button id="login-button" class="primary" data-i18n="login">Enter test role</button></form></article></section>
@@ -20,6 +28,19 @@
  </div>
  <div id="stats-summary" class="stats-summary" aria-live="polite"></div>
  <div id="stats-breakdown" class="stats-breakdown"></div>
+</article>
+<article class="card roster-dashboard" aria-labelledby="judge-monitor-title">
+ <h2 id="judge-monitor-title">評審登入與評分進度</h2>
+ <p class="micro">顯示此測試空間的三位評審。有有效測試登入不等於現在在線；不顯示無法驗證的「最後登入時間」。</p>
+ <div id="organizer-judge-monitor" class="roster-judges"></div>
+</article>
+<article class="card roster-dashboard" aria-labelledby="roster-title">
+ <h2 id="roster-title">我的測試報名名冊｜看得到實際存入的資料</h2>
+ <p id="roster-warning" class="boundary">只有已登入此測試空間的 Organizer 才能查看；測試資料不是正式報名。</p>
+ <label class="roster-search">搜尋姓名、報名編號、電話或曲目
+  <input id="organizer-roster-search" type="search" autocomplete="off" maxlength="150" placeholder="輸入姓名／編號／電話／曲目">
+ </label>
+ <div id="organizer-roster" class="roster-list"></div>
 </article>
 <article class="card"><h2 data-i18n="organizerTitle">Entries and manual advancement</h2><p data-i18n="organizerHelp">Three distinct judges must finish the current stage before advancement. Practice advancement has no official effect.</p><div id="organizer-entries"></div></article><article class="card"><h2 data-i18n="standingsTitle">Final standings · votes51% / judges49%</h2><p data-i18n="standingsHelp">Votes are normalized within category. A combined total appears only after three final scorecards. This is a test calculation, not an official result.</p><div id="standings"></div></article><details class="card cleanup"><summary data-i18n="cleanupTitle">Clean up this test workspace</summary><p data-i18n="cleanupHelp">Deletes only this workspace and its synthetic entries, scores and role passes. Other workspaces and real data are untouched. Keep your test data until you finish reviewing it.</p><form id="cleanup-form"><label><span data-i18n="cleanupConfirm">Type DELETE PRACTICE to confirm</span><input id="cleanup-confirm" autocomplete="off" required></label><button class="danger" data-i18n="cleanup">Delete this test workspace</button></form></details></section>
 </section><footer><p data-i18n="footer">TEST ONLY · no official registration, email verification, real payments or redeemable vouchers.</p><a href="./" data-i18n="home">Back to event website</a></footer></main></body></html>
