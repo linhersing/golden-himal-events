@@ -11,7 +11,7 @@
 金流尚未正式接通：所有已付款狀態都僅代表模擬付款，真實實收筆數與金額為未知/null，不能說成真實交易。
 
 ## 啟用前的必要Cloudflare管理員操作（此步尚未完成）
-1. 進入 Cloudflare Dashboard → Workers & Pages → golden-himal-voice-preview → Access / Zero Trust，建立／啟用活動主辦方專用 Cloudflare Access 保護。若可以，保護整個 Worker，或至少保護 admin-center.html 及 /api/staging/management/*，將授權收件者限制為主辦方指定的管理員。
+1. 進入 Cloudflare Dashboard → Workers & Pages → golden-himal-voice-preview → Access / Zero Trust，建立／啟用活動主辦方專用 Cloudflare Access 保護。只保護 admin-center.html 及 /api/staging/management/*（如果帳戶功能支援路徑規則）。如果該Cloudflare方案只支援整個Worker保護，必須改用獨立管理員hostname/Worker，絕對不能把一般活動首頁一起鎖住。授權收件者僅限主辦核准的管理員。
 2. 從 Cloudflare Access 取得對應應用的 AUD Tag 與 team domain。
 3. 在Cloudflare Worker私密環境設定 GHV_ADMIN_ACCESS_AUD（對應Access App的AUD）、GHV_ADMIN_TEAM_DOMAIN（https://團隊名稱.cloudflareaccess.com）、GHV_ADMIN_EMAILS（管理員Email白名單，逗號分隔）。不要把名單與Secrets寫進GitHub或Google Drive。
 4. 確認 Cloudflare Access 管理員可成功登入、一般會員與評審不能取得Access身份；在上述前置條件完成並測試後，最後將 GHV_MANAGEMENT_ENABLED 設為 true。
