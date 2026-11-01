@@ -53,6 +53,15 @@ test('phone-first organizer sees only its D1 testing scope and can print safe st
   await page.locator('#login-button').click();
   await expect(page.locator('.practice-statistics')).toBeVisible();
   await expect(page.locator('#stats-title')).toHaveText('我的測試空間｜報名統計總覽');
+  await expect(page.locator('#organizer-roster .roster-entry')).toHaveCount(1);
+  await expect(page.locator('#organizer-roster')).toContainText('TEST Statistics Singer');
+  await expect(page.locator('#organizer-roster')).toContainText('+9770000000000');
+  await expect(page.locator('#organizer-roster .roster-play')).toHaveAttribute('href','https://youtu.be/dQw4w9WgXcQ');
+  await expect(page.locator('#organizer-judge-monitor .roster-judge')).toHaveCount(3);
+  await page.locator('#organizer-roster-search').fill('nonexistent-test-name');
+  await expect(page.locator('#organizer-roster .roster-entry')).toHaveCount(0);
+  await page.locator('#organizer-roster-search').fill('TEST Statistics Singer');
+  await expect(page.locator('#organizer-roster .roster-entry')).toHaveCount(1);
   await expect(page.locator('#stats-summary .stats-kpi')).toHaveCount(4);
   await expect(page.locator('#stats-summary')).toContainText('測試報名總筆數');
   const cards=await page.locator('#stats-summary .stats-kpi strong').allInnerTexts();
