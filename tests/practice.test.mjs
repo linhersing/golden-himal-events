@@ -26,3 +26,50 @@ test('expired synthetic workspaces are reclaimed before the active capacity chec
 test('complete schema probing and asynchronous read failures always return sanitized503 JSON',async()=>{const f=await fixture();try{const c=await f.call('create',{synthetic:true});f.db.exec('ALTER TABLE ghv_practice_applications DROP COLUMN song_key');assert.equal((await f.call('readiness')).status,503);}finally{f.db.close()}});
 test('asynchronous view read errors stay inside sanitized JSON handling',async()=>{const g=await fixture();try{await g.call('create',{synthetic:true});const original=g.env.E2E_DB.prepare;g.env.E2E_DB.prepare=sql=>{const stmt=original(sql);if(sql.startsWith('SELECT id,actor_id')&&sql.includes('WHERE workspace_id'))stmt.all=async()=>{throw Error('private database failure detail')};return stmt};let result;await assert.doesNotReject(async()=>{result=await g.call('me')});assert.equal(result.status,503);assert.equal(result.data.error,'practice_database_unavailable');assert(!JSON.stringify(result.data).includes('private database failure'));}finally{g.db.close()}});
 test('same-browser role login rotates only its own session and preserves the other device',async()=>{const f=await fixture();try{const c=await f.call('create',{synthetic:true});const pass=c.data.passes[0].pass;const other=(await f.call('login',{pass},'')).cookie;let current=c.cookie;for(let i=0;i<10;i++){const r=await f.call('login',{pass},current);assert.equal(r.status,200);current=r.cookie;}assert.equal((await f.call('me',undefined,other)).status,200);assert.equal(f.db.prepare('SELECT COUNT(*) n FROM ghv_practice_sessions').get().n,2);}finally{f.db.close()}});
+
+
+test('organizer-only D1 statistics reject members/judges and isolate test workspaces',async()=>{
+ const f=await fixture();
+ try{
+  const first=await f.call('create',{synthetic:true});
+  assert.equal((await f.call('stats')).status,403,'member cannot access organizer totals');
+  assert.equal((await f.call('stats',{},'')).status,401,'no session cannot access organizer totals');
+  const memberCookie=first.cookie;
+  const judge=(await f.call('login',{pass:first.data.passes.find(p=>p.actor_id==='judge-1').pass},'')).cookie;
+  assert.equal((await f.call('stats',undefined,judge)).status,403,'judge cannot access organizer totals');
+  const organizer=(await f.call('login',{pass:first.data.passes.find(p=>p.role==='organizer').pass},'')).cookie;
+  const empty=await f.call('stats',undefined,organizer);
+  assert.equal(empty.status,200);
+  assert.equal(empty.data.scope,'single_synthetic_workspace_only');
+  assert.equal(empty.data.stats.application_count,0);
+  assert.equal(empty.data.stats.applicant_count,0);
+  assert.equal(empty.data.stats.vote_count,0);
+  assert.equal(empty.data.workspace_id,first.data.actor.workspace_id);
+  assert(!JSON.stringify(empty.data).includes('contact_phone'));
+  const a=await f.call('application',entry,memberCookie);
+  assert.equal(a.status,201);
+  const b=await f.call('application',{...entry,round_code:'2027-04'},memberCookie);
+  assert.equal(b.status,201);
+  const report=await f.call('stats',undefined,organizer);
+  assert.equal(report.status,200);
+  assert.equal(report.data.stats.applicant_count,1,'one member in two auditions counts once');
+  assert.equal(report.data.stats.application_count,2,'two entries remain two entries');
+  assert.equal(report.data.stats.january_count,1);
+  assert.equal(report.data.stats.april_count,1);
+  assert.equal(report.data.stats.university_count,2);
+  assert.equal(report.data.stats.community_count,0);
+  assert.equal(report.data.stats.bagmati_count,2);
+  assert.equal(report.data.stats.demo_count,2);
+  assert.equal(report.data.stats.mock_fee_count,0);
+  assert.equal((await f.call('simulate-fee',{application_id:a.data.application.id},memberCookie)).status,200);
+  assert.equal((await f.call('stats',undefined,organizer)).data.stats.mock_fee_count,1);
+  const second=await f.call('create',{synthetic:true});
+  const secondStats=await f.call('stats',undefined,(await f.call('login',{pass:second.data.passes.find(p=>p.role==='organizer').pass},'')).cookie);
+  assert.equal(secondStats.status,200);
+  assert.equal(secondStats.data.stats.application_count,0,'independent organizer sees no other test entries');
+  assert.equal((await f.call('stats',undefined,organizer)).data.stats.application_count,2);
+  assert.equal((await f.call('stats',{},organizer)).status,404,'stats cannot be written over POST');
+  assert.equal((await f.call('logout',{},organizer)).status,200);
+  assert.equal((await f.call('stats',undefined,organizer)).status,401,'expired session cannot read old data');
+ }finally{f.db.close()}
+});
