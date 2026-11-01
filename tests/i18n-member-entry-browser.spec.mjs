@@ -13,7 +13,9 @@ test('desktop Chinese choice makes login obvious and remains Chinese on personal
  await expect(member).toContainText('會員登入／我的專區');
  await expect(page.locator('.member-entrance')).toContainText('前往我的會員中心');
  await expect(page.locator('.preview-ribbon')).toContainText('請勿填寫真實個人資料');
- await member.click();
+ await expect(member).toHaveAttribute('href','./practice.html');
+ // The old browser-only account remains testable directly, but is no longer the primary entry.
+ await page.goto('/member-login.html');
  await expect(page).toHaveURL(/member-login\.html$/);
  await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
  await expect(page.locator('#auth-view h2')).toContainText('會員登入');
@@ -33,7 +35,8 @@ test('English and Nepali switches stay in sync between homepage and login',async
  await page.goto('/');
  await page.locator('[data-lang="ne"]').click();
  await expect(page.locator('.member-gateway')).toContainText('सदस्य लगइन');
- await page.locator('.member-gateway').click();
+ await expect(page.locator('.member-gateway')).toHaveAttribute('href','./practice.html');
+ await page.goto('/member-login.html');
  await expect(page.locator('html')).toHaveAttribute('lang','ne');
  await expect(page.locator('#auth-view h2')).toContainText('सदस्य साइन इन');
  await page.locator('[data-lang="en"]').click();
@@ -54,7 +57,9 @@ test('small mobile screen keeps member access and three language controls readab
  let dims=await page.evaluate(()=>({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
  expect(dims.scroll).toBeLessThanOrEqual(dims.client);
  await page.locator('.member-gateway').click();
- await expect(page.locator('#auth-view h2')).toHaveText('會員登入');
+ await expect(page).toHaveURL(/practice\.html$/);
+ await expect(page.locator('#auth')).toBeVisible();
+ await expect(page.locator('.self-check-guide')).toContainText('自己測試有沒有成功');
  dims=await page.evaluate(()=>({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
  expect(dims.scroll).toBeLessThanOrEqual(dims.client);
 });
