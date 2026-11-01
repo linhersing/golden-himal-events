@@ -49,7 +49,7 @@ else{
  }finally{
   if(created){if(!adminCookie)adminCookie=ok(await call('login',{pass:created.data.passes.find(p=>p.actor_id==='organizer').pass})).cookie;
    const cleanup=ok(await call('cleanup',{confirmation:'DELETE PRACTICE'},adminCookie));cleaned=cleanup.data.deleted_workspace===created.data.actor.workspace_id;
-   assert(cleaned);assert.equal((await call('me',undefined,created.cookie)).status,401);
+   assert(cleaned);assert.equal((await call('me',undefined,adminCookie)).status,401);
    console.log('PASS: only this HTTP acceptance workspace deleted, credentials revoked; no real records or external files touched.');}
  }
 }
