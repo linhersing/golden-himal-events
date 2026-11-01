@@ -265,21 +265,21 @@ Object.assign(translations.en,{
  cloudEntryBody:"Invited TEST emails only. Registration is not yet open; actual verification needs Cloudflare setup.",
  cloudEntryButton:"Email login test",
  cloudEntryPrint:"Print A4 event overview",
- localDemoTag:"BROWSER DEMO"
+ localDemoTag:"D1 TEST"
 });
 Object.assign(translations.ne,{
  cloudEntryTitle:"Cloudflare सदस्य परीक्षण यहाँबाट",
  cloudEntryBody:"स्वीकृत परीक्षण इमेल मात्र। आधिकारिक दर्ता खुलेको छैन; इमेल सेवा जोडिएपछि मात्र कोड आउँछ।",
  cloudEntryButton:"इमेल लगइन परीक्षण",
  cloudEntryPrint:"A4 कार्यक्रम सारांश छाप्नुहोस्",
- localDemoTag:"ब्राउजर नमुना"
+ localDemoTag:"D1 परीक्षण"
 });
 Object.assign(translations.zh,{
  cloudEntryTitle:"Cloudflare 會員驗收從這裡進入",
  cloudEntryBody:"僅限受邀測試信箱。尚未開放正式註冊；真實驗證碼須先完成 Cloudflare 寄件設定。",
  cloudEntryButton:"Email 驗證登入測試",
  cloudEntryPrint:"A4 王老師展示簡報",
- localDemoTag:"舊版瀏覽器示範"
+ localDemoTag:"雲端測試版"
 });
 
 /* Isolated staging bridge: not a real registration form or vote API. */
