@@ -75,6 +75,7 @@ test('phone-first organizer sees only its D1 testing scope and can print safe st
   await page.emulateMedia({media:'print'});
   await expect(page.locator('#organizer-entries')).toBeHidden();
   expect(await page.locator('.practice-statistics').evaluate(el=>getComputedStyle(el).display)).not.toBe('none');
+  await page.emulateMedia({media:'screen'});
   await page.locator('#logout').click();
   await expect(page.locator('.practice-statistics')).toBeHidden();
   await expect(page.locator('#stats-summary')).toBeEmpty();
