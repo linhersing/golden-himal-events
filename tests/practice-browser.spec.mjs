@@ -69,9 +69,9 @@ test('phone-first organizer sees only its D1 testing scope and can print safe st
    }
   }
   await page.setViewportSize({width:390,height:812});
-  await page.screenshot({path:'test-results/practice-private-stats-mobile.png',fullPage:true});
+  await page.locator('.practice-statistics').screenshot({path:'test-results/practice-private-stats-mobile.png'});
   await page.setViewportSize({width:1280,height:900});
-  await page.screenshot({path:'test-results/practice-private-stats-desktop.png',fullPage:true});
+  await page.locator('.practice-statistics').screenshot({path:'test-results/practice-private-stats-desktop.png'});
   await page.emulateMedia({media:'print'});
   await expect(page.locator('#organizer-entries')).toBeHidden();
   expect(await page.locator('.practice-statistics').evaluate(el=>getComputedStyle(el).display)).not.toBe('none');
