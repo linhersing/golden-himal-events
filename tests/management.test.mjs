@@ -38,8 +38,8 @@ const sample={synthetic:true,contact_phone:'+9770000000000',contact_handle:'TEST
  work_url:'https://youtu.be/dQw4w9WgXcQ'};
 test('private management requires configured Access and approved identity; spoofed plain headers never work',async()=>{
  const f=await fixture();try{
-  assert.equal((await f.call('overview', 'GET',undefined)).status,403);
-  assert.equal((await f.call('overview','GET',undefined,{'X-Admin':'true',
+  assert.equal((await f.call('overview', 'GET',null)).status,403);
+  assert.equal((await f.call('overview','GET',null,{'X-Admin':'true',
    'Cf-Access-Authenticated-User-Email':'approved@example.invalid'})).status,403);
   assert.equal((await f.call('overview','GET',{access:{aud:'wrong-audience',
    getIdentity:async()=>({email:'approved@example.invalid'})}})).status,403);
@@ -121,10 +121,10 @@ test('signed Access JWT is verified using exact team JWKS, audience, expiry and 
    return [...parts,encode(signature)].join('.');
   };
   const good=await sign();
-  assert.equal((await f.call('overview','GET',undefined,{'Cf-Access-Jwt-Assertion':good})).status,200);
-  assert.equal((await f.call('overview','GET',undefined,{'Cf-Access-Jwt-Assertion':await sign({aud:['other']})})).status,403);
-  assert.equal((await f.call('overview','GET',undefined,{'Cf-Access-Jwt-Assertion':await sign({exp:1})})).status,403);
-  assert.equal((await f.call('overview','GET',undefined,{'Cf-Access-Jwt-Assertion':await sign({email:'forbidden@example.invalid'})})).status,403);
-  assert.equal((await f.call('overview','GET',undefined,{'Cf-Access-Jwt-Assertion':good.slice(0,-10)+'1234567890'})).status,403);
+  assert.equal((await f.call('overview','GET',null,{'Cf-Access-Jwt-Assertion':good})).status,200);
+  assert.equal((await f.call('overview','GET',null,{'Cf-Access-Jwt-Assertion':await sign({aud:['other']})})).status,403);
+  assert.equal((await f.call('overview','GET',null,{'Cf-Access-Jwt-Assertion':await sign({exp:1})})).status,403);
+  assert.equal((await f.call('overview','GET',null,{'Cf-Access-Jwt-Assertion':await sign({email:'forbidden@example.invalid'})})).status,403);
+  assert.equal((await f.call('overview','GET',null,{'Cf-Access-Jwt-Assertion':good.slice(0,-10)+'1234567890'})).status,403);
  }finally{globalThis.fetch=originalFetch;f.db.close()}
 });
