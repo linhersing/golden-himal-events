@@ -65,17 +65,17 @@ test('Nepali and Chinese keep clear sign-in instructions on small phone',async({
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
  expect(overflow).toBeLessThanOrEqual(0);
 });
-test('homepage distinguishes browser demo from Cloudflare E2E entry without changing existing links',async({page})=>{
+test('homepage directs members to real D1 practice while preserving separate Email and legacy demos',async({page})=>{
  await page.setViewportSize({width:375,height:812});
  await page.goto('/');
- await expect(page.locator('.member-gateway')).toHaveAttribute('href','./member-login.html');
- await expect(page.locator('.member-gateway .member-demo-label')).toHaveText('BROWSER DEMO');
+ await expect(page.locator('.member-gateway')).toHaveAttribute('href','./practice.html');
+ await expect(page.locator('.member-gateway .member-demo-label')).toHaveText('D1 TEST');
  await expect(page.locator('.cloudflare-entry-button')).toHaveAttribute('href','./e2e-stage.html');
  await expect(page.locator('.cloudflare-entry-button')).toBeVisible();
  await expect(page.locator('.cloudflare-entry-print')).toHaveAttribute('href','./print-brief.html');
  await page.locator('.site-header [data-lang="zh"]').click();
  await expect(page.locator('.cloudflare-entry-button')).toContainText('Email 驗證登入測試');
- await expect(page.locator('.member-gateway')).toContainText('舊版瀏覽器示範');
+ await expect(page.locator('.member-gateway')).toContainText('雲端測試版');
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
  expect(overflow).toBeLessThanOrEqual(0);
 });
