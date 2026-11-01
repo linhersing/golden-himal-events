@@ -31,7 +31,7 @@ const dictionary={
   scorePhase:'Scoring stage',noSessions:'Role passes are not real email/password accounts.'
  }
 };
-function safePerformance(raw){
+export function safePerformance(raw){
  try{
   const u=new URL(raw);
   const host=u.hostname.toLowerCase();
