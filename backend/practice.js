@@ -38,6 +38,40 @@ async function startSession(db,a,revokeHash=null){
  const removed=db.prepare('DELETE FROM ghv_practice_sessions WHERE session_hash=? AND EXISTS(SELECT 1 FROM ghv_practice_sessions WHERE session_hash=?)').bind(revokeHash,fingerprint);
  const results=await db.batch([inserted,removed]);return results[0].meta?.changes?token:null;
 }
+// Aggregate-only private testing statistics. A self-created practice organizer is
+// authorized for THEIR synthetic workspace, not for all workspaces or real entrants.
+// Never accept a workspace_id from the browser; bind to the authenticated session.
+async function organizerStatistics(db,a){
+ const ws=a.workspace_id;
+ const row=await db.prepare(`SELECT
+  COUNT(*) AS application_count,
+  COUNT(DISTINCT actor_id) AS applicant_count,
+  SUM(CASE WHEN round_code='2027-01' THEN 1 ELSE 0 END) AS january_count,
+  SUM(CASE WHEN round_code='2027-04' THEN 1 ELSE 0 END) AS april_count,
+  SUM(CASE WHEN category='university' THEN 1 ELSE 0 END) AS university_count,
+  SUM(CASE WHEN category='community' THEN 1 ELSE 0 END) AS community_count,
+  SUM(CASE WHEN province='bagmati' THEN 1 ELSE 0 END) AS bagmati_count,
+  SUM(CASE WHEN province='gandaki' THEN 1 ELSE 0 END) AS gandaki_count,
+  SUM(CASE WHEN phase='demo' THEN 1 ELSE 0 END) AS demo_count,
+  SUM(CASE WHEN phase='qualifier' THEN 1 ELSE 0 END) AS qualifier_count,
+  SUM(CASE WHEN phase='final' THEN 1 ELSE 0 END) AS finalist_count,
+  SUM(CASE WHEN fee_status='simulation_only' THEN 1 ELSE 0 END) AS mock_fee_count
+  FROM ghv_practice_applications WHERE workspace_id=?`).bind(ws).first();
+ const supplemental=await db.prepare(`SELECT
+ (SELECT COUNT(*) FROM ghv_practice_scores WHERE workspace_id=?) AS score_count,
+ (SELECT COUNT(*) FROM ghv_practice_votes WHERE workspace_id=?) AS vote_count,
+ (SELECT COUNT(*) FROM ghv_practice_vouchers WHERE workspace_id=?) AS voucher_count`).bind(ws,ws,ws).first();
+ const keys=['application_count','applicant_count','january_count','april_count',
+  'university_count','community_count','bagmati_count','gandaki_count',
+  'demo_count','qualifier_count','finalist_count','mock_fee_count'];
+ const counts=Object.fromEntries(keys.map(k=>[k,Number(row?.[k]||0)]));
+ for(const k of ['score_count','vote_count','voucher_count'])counts[k]=Number(supplemental?.[k]||0);
+ return reply({ok:true,scope:'single_synthetic_workspace_only',
+  source:'cloudflare-d1-private-practice',workspace_id:ws,
+  as_of:new Date().toISOString(),stats:counts,
+  warnings:['NOT_ALL_SITE','NOT_REAL_PEOPLE','NOT_OFFICIAL_REGISTRATIONS',
+   'MOCK_FEES_AND_VOUCHERS_HAVE_NO_FINANCIAL_VALUE']});
+}
 async function view(db,a){
  const args=a.role==='member'?[a.workspace_id,a.actor_id]:[a.workspace_id];
  const applications=(await db.prepare('SELECT id,actor_id,stage_name,round_code,category,province,song_title,original_artist,work_url,phase,fee_status,created_at '+(a.role!=='judge'?',contact_phone,contact_handle,birth_date,affiliation,song_language,song_key,priority_ack,media_ack':'')+' FROM ghv_practice_applications WHERE workspace_id=?'+(a.role==='member'?' AND actor_id=?':'')+' ORDER BY created_at,id').bind(...args).all()).results||[];
@@ -78,6 +112,10 @@ export async function handlePractice(request,env){
    return reply({ok:true,actor:actorInfo(a)},200,{'Set-Cookie':cookie(token)});
   }
   const a=await session(db,request);if(!a)return deny('practice_login_required',401);
+  if(path==='stats'&&!post){
+   if(a.role!=='organizer')return deny('organizer_only',403);
+   return await organizerStatistics(db,a);
+  }
   if(path==='logout'&&post){await db.prepare('DELETE FROM ghv_practice_sessions WHERE session_hash=?').bind(a.session_hash).run();return reply({ok:true},200,{'Set-Cookie':cookie('',0)});}
   if(path==='me'&&!post)return await view(db,a);
   if(!post)return deny('not_found',404);
