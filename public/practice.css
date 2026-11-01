@@ -48,3 +48,31 @@ fieldset{padding:0;margin:0;border:0;min-width:0}fieldset:disabled input,fieldse
  .stats-kpi strong{font-size:18pt}
  .stats-kpi span,.stats-line{font-size:8pt}
 }
+
+
+/* Private test Organizer: mobile-first records, not a public admin directory. */
+.self-check-guide{margin:12px 0 22px;border:2px solid #c39b5f;background:#fffcf6}
+.self-check-guide h2{font:700 1.3rem/1.5 system-ui,sans-serif;margin:0 0 12px}
+.self-check-guide li{margin:9px 0;line-height:1.65}
+.self-check-guide .emphasis{font-weight:800}
+.roster-dashboard{border:1px solid #d8c4a6}
+.roster-judges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.roster-judge,.roster-entry{border:1px solid #e5d5bc;border-radius:14px;background:#fffdf8;padding:17px;min-width:0}
+.roster-judge strong{font-size:1.15rem}
+.roster-muted{color:#685d4f;font-size:.84rem}
+.roster-search{display:block;margin:14px 0 18px}
+.roster-search input{display:block;width:100%;max-width:480px;margin-top:7px;padding:11px;font:inherit}
+.roster-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.roster-entry h4{margin:0 0 8px;font-size:1.12rem}
+.roster-id{display:block;overflow-wrap:anywhere;font-size:.78rem;color:#60513f;margin-bottom:14px}
+.roster-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
+.roster-field{border-bottom:1px solid #eee4d7;min-width:0;padding-bottom:8px}
+.roster-field dt{font-size:.76rem;color:#675947}
+.roster-field dd{margin:3px 0;overflow-wrap:anywhere}
+.roster-play{display:inline-block;margin:12px 0;padding:11px 14px;border-radius:10px;background:#553b2c;color:#fff;text-decoration:none;min-height:44px}
+.roster-scores{border-top:1px solid #ded1bf;margin-top:13px;padding-top:12px}
+.roster-scores h5{margin:0 0 8px;font-size:1rem}
+.roster-scores p{margin:7px 0;font-size:.9rem}
+@media(max-width:850px){.roster-list{grid-template-columns:1fr}.roster-judges{grid-template-columns:1fr}}
+@media(max-width:380px){.roster-fields{grid-template-columns:1fr}}
+@media print{.roster-dashboard,.self-check-guide{display:none!important}}
