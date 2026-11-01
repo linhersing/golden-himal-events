@@ -20,6 +20,17 @@ const rows={ok:true,scope:'ALL_ACTIVE_SYNTHETIC_WORKSPACES',source:'practice',
  province:'bagmati',phase:'demo',review_status:'demo',payment_status:'deferred',
  scorecards:0,score_mean:null,votes:0,real_payment:false,created_at:1790000000}
  ]};
+const scores={...rows,total:1,items:[{
+ application_id:'GHV-TEST-000001',judge_id:'judge-1',phase:'demo',
+ technique:54,interpretation:36,stage_presence:0,appearance:0,recused:0,total_score:90
+}]};
+const payments={...rows,total:2,items:[
+ {application_id:'GHV-TEST-000001',round_code:'2027-01',payment_status:'deferred',
+ simulated_amount_npr:null,real_amount_npr:null,real_paid:false},
+ {application_id:'GHV-TEST-000002',round_code:'2027-04',payment_status:'simulation_only',
+ simulated_amount_npr:500,real_amount_npr:null,real_paid:false}
+]};
+
 test('global sponsor dashboard hides numbers on unauthorized Access response',async({page})=>{
  await page.route('**/api/staging/management/**',route=>route.fulfill({
   status:503,contentType:'application/json',body:JSON.stringify({ok:false,error:'admin_access_not_configured'})}));
@@ -31,7 +42,8 @@ test('global sponsor dashboard hides numbers on unauthorized Access response',as
 test('mobile and desktop organizer view shows total/score/payment categories without PII and prints summary',async({page})=>{
  await page.route('**/api/staging/management/**',route=>{
   const url=route.request().url(),result=url.includes('/overview')?overview:url.includes('source=e2e')?
-   {...rows,source:'e2e',status:'not_configured',total:null,items:[]}:rows;
+   {...rows,source:'e2e',status:'not_configured',total:null,items:[]}:
+   url.includes('/scores')?scores:url.includes('/payments')?payments:rows;
   return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(result)});
  });
  for(const width of [320,360,375,390,428,1280]){
@@ -49,6 +61,12 @@ test('mobile and desktop organizer view shows total/score/payment categories wit
    await page.locator('#records').screenshot({path:'test-results/ghv-admin-records-mobile.png'});
    await page.locator('[data-tab="payments"]').click();
    await expect(page.locator('#records-title')).toContainText('付款狀態');
+   await expect(page.locator('#rows')).toContainText('模擬 NPR 500');
+   await expect(page.locator('#rows')).toContainText('未接通金流');
+   await page.locator('[data-tab="scores"]').click();
+   await expect(page.locator('#rows')).toContainText('judge-1');
+   await expect(page.locator('#rows')).toContainText('90');
+   await page.locator('[data-tab="payments"]').click();
    await page.locator('#source').selectOption('e2e');
    await expect(page.locator('#rows')).toContainText('此資料來源未啟用');
    await page.locator('#source').selectOption('practice');
