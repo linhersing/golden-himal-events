@@ -3,7 +3,7 @@
 const translations = {
   en: {
     ribbon:"DESIGN PREVIEW · Registration and voting are simulations only. Do not enter real personal information.",
-    navMember:"Member Login / My Account",navMemberAria:"Open test member sign-in and my account",
+    navMember:"Internal Test Lab",navMemberAria:"Open engineering test lab, not official member sign-in",
     registerMemberCTA:"Open my personal member account",registerMemberNote:"TEST ONLY · Use fictional account details",
     footerTestLab:"Test laboratory",footerPortal:"Registration sandbox",
     navEvent:"The Event",navUpdates:"Updates",navRegister:"Registration",navVote:"Audience Choice",navVenue:"Venue",
@@ -53,7 +53,7 @@ const translations = {
   },
   ne: {
     ribbon:"डिजाइन पूर्वावलोकन · दर्ता र मतदान अभ्यास मात्र हुन्। कृपया वास्तविक व्यक्तिगत जानकारी नराख्नुहोस्।",
-    navMember:"सदस्य लगइन / मेरो खाता",navMemberAria:"परीक्षण सदस्य लगइन र मेरो खाता खोल्नुहोस्",
+    navMember:"आन्तरिक परीक्षण",navMemberAria:"आन्तरिक भूमिका परीक्षण, वास्तविक सदस्य लगइन होइन",
     registerMemberCTA:"मेरो सदस्य खातामा जानुहोस्",registerMemberNote:"परीक्षण मात्र · काल्पनिक विवरण प्रयोग गर्नुहोस्",
     footerTestLab:"परीक्षण कक्ष",footerPortal:"दर्ता परीक्षण",
     navEvent:"कार्यक्रम",navUpdates:"सूचनाहरू",navRegister:"दर्ता",navVote:"दर्शकको रोजाइ",navVenue:"स्थान",
@@ -103,7 +103,7 @@ const translations = {
   },
   zh: {
     ribbon:"內部設計預覽 · 報名與投票皆為模擬，請勿填寫真實個人資料。",
-    navMember:"會員登入／我的專區",navMemberAria:"開啟會員測試登入及個人資料首頁",
+    navMember:"內部工程測試台",navMemberAria:"開啟內部工程測試台，非正式會員登入",
     registerMemberCTA:"前往我的會員中心",registerMemberNote:"測試版 · 請使用虛構帳號，不要輸入真實個資",
     footerTestLab:"測試實驗室",footerPortal:"報名測試系統",
     navEvent:"活動介紹",navUpdates:"最新公告",navRegister:"參賽報名",navVote:"人氣投票",navVenue:"認識場地",
@@ -265,21 +265,21 @@ Object.assign(translations.en,{
  cloudEntryBody:"Invited TEST emails only. Registration is not yet open; actual verification needs Cloudflare setup.",
  cloudEntryButton:"Email login test",
  cloudEntryPrint:"Print A4 event overview",
- localDemoTag:"D1 TEST"
+ localDemoTag:"TEST ONLY"
 });
 Object.assign(translations.ne,{
  cloudEntryTitle:"Cloudflare सदस्य परीक्षण यहाँबाट",
  cloudEntryBody:"स्वीकृत परीक्षण इमेल मात्र। आधिकारिक दर्ता खुलेको छैन; इमेल सेवा जोडिएपछि मात्र कोड आउँछ।",
  cloudEntryButton:"इमेल लगइन परीक्षण",
  cloudEntryPrint:"A4 कार्यक्रम सारांश छाप्नुहोस्",
- localDemoTag:"D1 परीक्षण"
+ localDemoTag:"परीक्षण"
 });
 Object.assign(translations.zh,{
  cloudEntryTitle:"Cloudflare 會員驗收從這裡進入",
  cloudEntryBody:"僅限受邀測試信箱。尚未開放正式註冊；真實驗證碼須先完成 Cloudflare 寄件設定。",
  cloudEntryButton:"Email 驗證登入測試",
  cloudEntryPrint:"A4 王老師展示簡報",
- localDemoTag:"雲端測試版"
+ localDemoTag:"內部測試"
 });
 
 /* Isolated staging bridge: not a real registration form or vote API. */
