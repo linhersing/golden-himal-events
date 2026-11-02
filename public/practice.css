@@ -189,3 +189,5 @@ body[data-portal=true] .journey{padding:18px 22px}
 @media(max-width:380px){.journey-list strong{font-size:.75rem}.journey-list small{font-size:.65rem}.journey-number{flex-basis:27px;width:27px;height:27px}.practice-hero{padding:24px 18px}.languages button{min-width:35px;padding:7px 4px}}
 @media(prefers-reduced-motion:reduce){.hero-main-btn,.hero-second-btn,.next-action{transition:none}}
 @media print{.practice-hero,.journey,.next-step-panel,.switch-role,.demo-prefill{display:none!important}}
+
+.journey-acceptance{margin:13px 0 0;font-size:.81rem;color:#6c5f50}
