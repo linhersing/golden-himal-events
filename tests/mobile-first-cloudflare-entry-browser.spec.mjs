@@ -69,13 +69,13 @@ test('homepage directs members to real D1 practice while preserving separate Ema
  await page.setViewportSize({width:375,height:812});
  await page.goto('/');
  await expect(page.locator('.member-gateway')).toHaveAttribute('href','./practice.html');
- await expect(page.locator('.member-gateway .member-demo-label')).toHaveText('D1 TEST');
+ await expect(page.locator('.member-gateway .member-demo-label')).toHaveText('TEST ONLY');
  await expect(page.locator('.cloudflare-entry-button')).toHaveAttribute('href','./e2e-stage.html');
  await expect(page.locator('.cloudflare-entry-button')).toBeVisible();
  await expect(page.locator('.cloudflare-entry-print')).toHaveAttribute('href','./print-brief.html');
  await page.locator('.site-header [data-lang="zh"]').click();
  await expect(page.locator('.cloudflare-entry-button')).toContainText('Email 驗證登入測試');
- await expect(page.locator('.member-gateway')).toContainText('雲端測試版');
+ await expect(page.locator('.member-gateway')).toContainText('內部測試');
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
  expect(overflow).toBeLessThanOrEqual(0);
 });
