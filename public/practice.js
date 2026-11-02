@@ -38,13 +38,46 @@ const node=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefi
 function status(key,error=false){currentStatus=key;statusError=error;$('status').textContent=tr(key);$('status').className=error?'error':'';}
 const errorKey=code=>({invalid_practice_pass:'invalidPass',practice_login_required:'invalidPass',practice_created_session_unavailable:'createdRecovery',practice_not_configured:'notReady',practice_schema_not_ready:'notReady',invalid_practice_application:'invalidLink',required_v2_fields_or_acknowledgements:'requiredV2',community_age_at_nepal_deadline:'ageError',synthetic_acknowledgement_required:'ackRequired',conflict_declaration_required:'conflictRequired',already_scored_or_stale_phase:'stale',stale_phase_or_application:'stale',practice_capacity_reached:'capacityReached',too_many_practice_sessions:'sessionLimit',cleanup_confirmation_required:'wrongConfirmation'}[code]||'error');
 async function api(path,body){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);try{const response=await fetch('/api/staging/practice/'+path,{method:body===undefined?'GET':'POST',credentials:'same-origin',cache:'no-store',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:controller.signal});const data=await response.json();if(!response.ok||data.ok!==true){const e=new Error('practice_request_failed');e.code=data.error;e.httpStatus=response.status;e.fieldErrors=data.fieldErrors;throw e}return data}finally{clearTimeout(timer)}}
+
+function updateJourney(){
+ const role=state?.actor?.role;
+ document.body.dataset.portal=state?'true':'false';
+ const stages=['workspace','entry','score','verify'];
+ const current=role==='member'?1:role==='judge'?2:role==='organizer'?3:0;
+ stages.forEach((id,index)=>{
+  const element=document.querySelector('[data-journey="'+id+'"]');
+  if(!element)return;
+  const done=Boolean(state&&(index===0||(index===1&&state.applications.length>0)||(index===2&&state.scores.length>0)));
+  element.classList.toggle('is-current',index===current);
+  element.classList.toggle('is-done',done&&index!==current);
+  if(index===current)element.setAttribute('aria-current','step');
+  else element.removeAttribute('aria-current');
+ });
+ const panel=$('next-step');
+ if(!state){panel.hidden=true;return}
+ let prefix,target='#application-card';
+ if(role==='member'){
+  if(state.applications.length){prefix='nextMemberDone';target='#switch-panel'}
+  else prefix='nextMember';
+ }else if(role==='judge'){
+  if(!state.applications.length){prefix='nextJudgeEmpty';target='#switch-panel'}
+  else if(state.scores.length){prefix='nextJudgeDone';target='#switch-panel'}
+  else{prefix='nextJudge';target='#score-form'}
+ }else if(!state.applications.length){prefix='nextOrganizerEmpty';target='#switch-panel'}
+ else{prefix='nextOrganizer';target='#organizer-roster'}
+ $('next-title').textContent=tr(prefix+'Title');
+ $('next-detail').textContent=tr(prefix+'Detail');
+ $('next-action').textContent=tr(prefix+'Button');
+ $('next-action').setAttribute('href',target);
+ panel.hidden=false;
+}
 function translate(){document.documentElement.lang=language==='zh'?'zh-Hant':language;for(const el of document.querySelectorAll('[data-i18n]'))el.textContent=tr(el.dataset.i18n);$('stats-reload').onclick=()=>action(async()=>{await load();status('saved')});
 $('stats-export').onclick=exportStatistics;
 $('organizer-roster-search').oninput=()=>{if(state?.actor?.role==='organizer')renderOrganizerRoster(state,language)};
 $('stats-print').onclick=()=>{if(validStatistics())window.print()};
-for(const b of document.querySelectorAll('[data-lang]'))b.setAttribute('aria-pressed',String(b.dataset.lang===language));for(const card of document.querySelectorAll('.pass-card')){card.querySelector('h3').textContent=actorLabel(card.dataset.actor);card.querySelector('[data-copy]').textContent=tr('copy');card.querySelector('[data-use]').textContent=tr('useRole')}if(state)renderState();renderReceipt();if(applicationError){const {errors,key}=applicationError;showApplicationErrors(errors,key,{focus:false})}status(currentStatus,statusError);}
+for(const b of document.querySelectorAll('[data-lang]'))b.setAttribute('aria-pressed',String(b.dataset.lang===language));for(const card of document.querySelectorAll('.pass-card')){card.querySelector('h3').textContent=actorLabel(card.dataset.actor);card.querySelector('[data-copy]').textContent=tr('copy');card.querySelector('[data-use]').textContent=tr('useRole')}if(state)renderState();else updateJourney();renderReceipt();if(applicationError){const {errors,key}=applicationError;showApplicationErrors(errors,key,{focus:false})}status(currentStatus,statusError);}
 async function action(work){if(pending)return;pending=true;const trigger=document.activeElement?.tagName==='BUTTON'?document.activeElement:null,oldText=trigger?.textContent;document.body.dataset.pending='true';for(const b of document.querySelectorAll('button'))b.disabled=true;if(trigger){trigger.textContent=tr(trigger.id==='submit-application'?'submitting':'working');trigger.setAttribute('aria-busy','true')}$('application-fields').disabled=true;status('working');try{await work()}catch(e){status(errorKey(e.code),true)}finally{pending=false;document.body.dataset.pending='false';for(const b of document.querySelectorAll('button'))b.disabled=false;if(trigger?.isConnected){trigger.textContent=oldText;trigger.removeAttribute('aria-busy')}$('application-fields').disabled=!!submission&&!submission.verified;if(state)availability();if(pendingFocus?.isConnected){const target=pendingFocus;pendingFocus=null;focusView(target)}}}
-function clearPortal({keepPasses=false}={}){state=null;selectedApp=null;scorePhase=null;submission=null;renderReceipt();clearFieldErrors();$('portal').hidden=true;$('auth').hidden=false;if(!keepPasses){$('passes').hidden=true;$('pass-list').replaceChildren();}$('application-form').reset();$('score-form').reset();for(const id of ['entry-list','my-scores','organizer-entries','standings','finalists','judge-work','score-inputs','stats-summary','stats-breakdown','stats-updated','organizer-roster','organizer-judge-monitor','admission-view'])$(id).replaceChildren();$('organizer-roster-search').value='';}
+function clearPortal({keepPasses=false}={}){state=null;selectedApp=null;scorePhase=null;submission=null;renderReceipt();clearFieldErrors();$('portal').hidden=true;$('auth').hidden=false;if(!keepPasses){$('passes').hidden=true;$('pass-list').replaceChildren();}$('application-form').reset();$('score-form').reset();for(const id of ['entry-list','my-scores','organizer-entries','standings','finalists','judge-work','score-inputs','stats-summary','stats-breakdown','stats-updated','organizer-roster','organizer-judge-monitor','admission-view'])$(id).replaceChildren();$('organizer-roster-search').value='';updateJourney();}
 async function load({keepPassesOnAuthFailure=false}={}){
  let next;try{next=await api('me');if(next.actor.role==='organizer')next.statistics=await api('stats')}
  catch(e){if(e.code==='practice_login_required'){clearPortal({keepPasses:keepPassesOnAuthFailure});if(keepPassesOnAuthFailure)e.code='practice_created_session_unavailable'}if(state?.actor.role==='organizer'){state.statistics=null;renderStatistics()}throw e}
@@ -121,11 +154,11 @@ function renderState(){
   $('organizer-entries').replaceChildren();if(!state.applications.length)$('organizer-entries').append(node('p',tr('noEntries')));for(const app of state.applications){const c=details(app),scores=state.scores.filter(x=>x.application_id===app.id&&x.phase===app.phase);c.append(node('p',scores.length+' / 3 · '+tr('judges')));for(const s of scores)c.append(node('p',actorLabel(s.judge_id)+' · '+(s.recused?tr('recusedLabel'):tr('total')+' '+(s.technique+s.interpretation+s.stage_presence+s.appearance))));if(app.phase!=='final'){const b=node('button',tr('promote'));b.type='button';b.dataset.promotionId=app.id;b.dataset.completed=scores.length===3&&scores.some(x=>!x.recused)?3:0;b.disabled=Number(b.dataset.completed)!==3;b.onclick=()=>action(async()=>{await api('promote',{application_id:app.id,phase:app.phase});await load();status('saved')});c.append(b)}const ranked=state.rankings.find(r=>r.id===app.id);if(ranked?.ready)c.append(node('p',tr('rank')+' '+ranked.rank+(ranked.tie_pending?' · '+tr('needsBallot'):'')));if((state.vouchers||[]).some(v=>v.account_id===app.actor_id))c.append(node('p',tr('voucherHelp'),'boundary'));else if(app.fee_status==='simulation_only'){const label=node('label',undefined,'check'),check=node('input'),b=node('button',tr('voucherRecord'));check.type='checkbox';label.append(check,node('span',tr('eligibilityAck')));b.type='button';b.onclick=()=>{if(!check.checked){status('ackRequired',true);return}action(async()=>{await api('voucher',{application_id:app.id,eligibility_confirmed:true});await load();status('voucherRecorded')})};c.append(label,b)}$('organizer-entries').append(c)}
   $('standings').replaceChildren();if(!state.standings.length)$('standings').append(node('p',tr('noResults')));for(const s of state.standings){const row=node('div',undefined,'score-row');row.append(node('h3',s.stage_name),node('p',tr('votes')+' '+s.votes+' · '+s.responses+' / 3 '+tr('responded')+' · '+s.judges_count+' '+tr('eligibleScorers')),node('p',s.total_score===null?tr('waiting'):tr('total')+' '+s.total_score+(s.tie_pending?' · '+tr('needsBallot'):''),'score-total'));$('standings').append(row)}
  }
- availability();
+ availability();updateJourney();
 }
 function scoreInputs(){const app=state?.applications.find(x=>x.id===$('score-app').value);if(!app)return;const previous={};if(selectedApp===app.id&&scorePhase===app.phase)for(const input of $('score-inputs').querySelectorAll('input'))previous[input.name]=input.value;else{$('no-conflict').checked=false;$('recuse').checked=false;$('recusal-reason').value='';}selectedApp=app.id;scorePhase=app.phase;$('score-phase').textContent=tr(app.phase);$('score-inputs').replaceChildren();const fields=app.phase==='demo'?[['technique',60],['interpretation',40]]:[['technique',40],['interpretation',30],['stage_presence',20],['appearance',10]];for(const [key,max] of fields){const label=node('label'),span=node('span',tr(key)+' / '+max),input=node('input');input.type='number';input.inputMode='numeric';input.min='0';input.max=String(max);input.step='1';input.required=true;input.name=key;input.id='score-'+key;input.value=previous[key]??'';label.append(span,input);$('score-inputs').append(label)}$('judge-work').replaceChildren();const work=node('a',tr('openWork'),'performance-link');work.href=app.work_url;work.target='_blank';work.rel='noopener noreferrer';$('judge-work').append(work);if(unresolvedSupplement(state,app.id))$('judge-work').append(node('p',supplementBlockLabel(language),'boundary'));recusalFields();availability();}
-function showPasses(passes,workspaceId){$('pass-list').replaceChildren();$('pass-list').dataset.workspaceId=workspaceId;for(const p of passes){const c=node('article',undefined,'pass-card');c.dataset.actor=p.actor_id;c.append(node('h3',actorLabel(p.actor_id)),node('code',p.pass));const actions=node('div',undefined,'actions'),copyButton=node('button',tr('copy')),use=node('button',tr('useRole'));copyButton.type=use.type='button';copyButton.dataset.copy='';use.dataset.use='';copyButton.onclick=async()=>{try{await navigator.clipboard.writeText(p.pass);status('copied')}catch{status('error',true)}};use.onclick=()=>action(async()=>{await api('login',{pass:p.pass});clearPortal({keepPasses:true});await load();status('saved');$('identity').focus()});actions.append(copyButton,use);c.append(actions);$('pass-list').append(c)}$('passes').hidden=false;}
-function focusView(el){if(pending){pendingFocus=el;return}el.focus({preventScroll:true});el.scrollIntoView({block:'start',behavior:'instant'});}
+function showPasses(passes,workspaceId){$('pass-list').replaceChildren();$('pass-list').dataset.workspaceId=workspaceId;for(const p of passes){const c=node('article',undefined,'pass-card');c.dataset.actor=p.actor_id;c.append(node('h3',actorLabel(p.actor_id)),node('code',p.pass));const actions=node('div',undefined,'actions'),copyButton=node('button',tr('copy')),use=node('button',tr('useRole'));copyButton.type=use.type='button';copyButton.dataset.copy='';use.dataset.use='';copyButton.onclick=async()=>{try{await navigator.clipboard.writeText(p.pass);status('copied')}catch{status('error',true)}};use.onclick=()=>action(async()=>{await api('login',{pass:p.pass});clearPortal({keepPasses:true});await load();status('roleChanged');focusView($('next-step'))});actions.append(copyButton,use);c.append(actions);$('pass-list').append(c)}$('passes').hidden=false;}
+function focusView(el){if(!el)return;if(pending){pendingFocus=el;return}if(!el.hasAttribute('tabindex'))el.setAttribute('tabindex','-1');el.focus({preventScroll:true});el.scrollIntoView({block:'start',behavior:'instant'});}
 function privatePassBackup(){const list=$('pass-list');return buildPracticePassBackup(list.dataset.workspaceId,Array.from(list.querySelectorAll('.pass-card')).map(c=>({actor_id:c.dataset.actor,pass:c.querySelector('code').textContent})));}
 $('copy-all-passes').onclick=async()=>{try{await navigator.clipboard.writeText(privatePassBackup());status('copied')}catch{status('error',true)}};
 $('download-all-passes').onclick=()=>{try{const text=privatePassBackup(),url=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'})),link=node('a');link.href=url;link.download='ghv-private-test-passes.txt';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch{status('error',true)}};
@@ -166,10 +199,45 @@ async function submitApplication(payload){
 
 function birthField(){const community=$('application-form').elements.category.value==='community';$('birth-field').hidden=!community;$('application-form').elements.birth_date.required=community;}
 function recusalFields(){const recused=$('recuse').checked;$('recusal-reason-field').hidden=!recused;$('recusal-reason').required=recused;$('no-conflict').required=!recused;$('no-conflict').disabled=recused;for(const input of $('score-inputs').querySelectorAll('input')){input.disabled=recused;input.required=!recused;}}
+
+$('next-action').addEventListener('click',()=>{
+ if($('next-action').getAttribute('href')==='#switch-panel'){
+  $('switch-panel').open=true;
+  requestAnimationFrame(()=>$('switch-pass').focus({preventScroll:true}));
+ }else if($('next-action').getAttribute('href')==='#application-card'){
+  $('application-card').open=true;
+ }
+});
+$('switch-form').onsubmit=event=>{
+ event.preventDefault();const code=$('switch-pass').value.trim();
+ action(async()=>{
+  await api('login',{pass:code});
+  $('switch-form').reset();$('switch-panel').open=false;
+  clearPortal({keepPasses:true});await load();
+  status('roleChanged');focusView($('next-step'));
+ });
+};
+$('fill-demo').onclick=()=>{
+ if(!state||state.actor.role!=='member')return;
+ const form=$('application-form'),example={
+  stage_name:'TEST Singer A',contact_phone:'+9770000000000',
+  contact_handle:'TEST-contact',affiliation:'TEST University',
+  song_language:'Nepali',song_key:'C',
+  song_title:'TEST Demo Song',original_artist:'TEST Demo Artist',
+  work_url:'https://www.youtube.com/watch?v=aqz-KE-bpKQ',
+  birth_date:'1995-05-12'
+ };
+ for(const [name,value] of Object.entries(example)){
+  const field=form.elements.namedItem(name);
+  if(field&&!String(field.value||'').trim())field.value=value;
+ }
+ birthField();status('demoFilled');
+};
+
 $('application-form').elements.category.onchange=birthField;$('recuse').onchange=recusalFields;
-$('create-workspace').onclick=()=>{if(!$('create-ack').checked){status('ackRequired',true);return}action(async()=>{const created=await api('create',{synthetic:true});showPasses(created.passes,created.actor.workspace_id);await load({keepPassesOnAuthFailure:true});status('saved')})};
+$('create-workspace').onclick=()=>{if(!$('create-ack').checked){status('ackRequired',true);return}action(async()=>{const created=await api('create',{synthetic:true});showPasses(created.passes,created.actor.workspace_id);await load({keepPassesOnAuthFailure:true});status('saved');focusView($('passes'))})};
 $('hide-passes').onclick=()=>{$('passes').hidden=true;$('pass-list').replaceChildren()};
-$('login-form').onsubmit=e=>{e.preventDefault();action(async()=>{await api('login',{pass:$('recovery-pass').value.trim()});$('recovery-pass').value='';clearPortal({keepPasses:true});await load();status('saved')})};
+$('login-form').onsubmit=e=>{e.preventDefault();action(async()=>{await api('login',{pass:$('recovery-pass').value.trim()});$('recovery-pass').value='';clearPortal({keepPasses:true});await load();status('roleChanged');focusView($('next-step'))})};
 $('logout').onclick=()=>action(async()=>{await api('logout',{});clearPortal();$('application-form').reset();$('score-form').reset();status('signedOut')});
 $('refresh').onclick=()=>action(async()=>{await load();status('saved')});
 $('application-form').onsubmit=e=>{e.preventDefault();if(pending||submission&&!submission.verified)return;const values=Object.fromEntries(new FormData($('application-form'))),payload={...values,synthetic:$('application-ack').checked,priority_ack:$('priority-ack').checked,media_ack:$('media-ack').checked},errors=validatePracticeApplication(payload);clearFieldErrors();if(Object.keys(errors).length){showApplicationErrors(errors);return}action(()=>submitApplication(payload))};
