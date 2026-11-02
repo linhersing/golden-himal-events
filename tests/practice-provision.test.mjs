@@ -26,6 +26,6 @@ db.close();`;
   writeFileSync(join(root,'bin/npx'),cli,{mode:0o755});
   const r=spawnSync(process.execPath,[script],{cwd:root,env:{...process.env,PATH:join(root,'bin')+':'+process.env.PATH,WORKERS_CI:'1',WORKERS_CI_BRANCH:'codex/initial-site',WORKERS_CI_COMMIT_SHA:'a'.repeat(40)},encoding:'utf8'});
   assert.equal(r.status,0);const evidence=JSON.parse(readFileSync(join(root,'dist/practice-build.json'),'utf8'));
-  assert.equal(evidence.status,'PASS');assert.deepEqual(evidence.before,{accounts:1,applications:1});assert.deepEqual(evidence.after,evidence.before);assert.deepEqual(evidence.schema,{tables:8,triggers:6});
+  assert.equal(evidence.status,'PASS');assert.deepEqual(evidence.before,{accounts:1,applications:1});assert.deepEqual(evidence.after,evidence.before);assert.deepEqual(evidence.schema,{tables:9,triggers:12});
  }finally{rmSync(root,{recursive:true,force:true})}
 });

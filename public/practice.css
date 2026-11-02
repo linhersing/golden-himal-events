@@ -76,3 +76,10 @@ fieldset{padding:0;margin:0;border:0;min-width:0}fieldset:disabled input,fieldse
 @media(max-width:850px){.roster-list{grid-template-columns:1fr}.roster-judges{grid-template-columns:1fr}}
 @media(max-width:380px){.roster-fields{grid-template-columns:1fr}}
 @media print{.roster-dashboard,.self-check-guide{display:none!important}}
+/* Corrections contain only scoped test records, with an explicit one-shot action. */
+.supplement-panel{margin-top:1rem;padding-top:1rem;border-top:1px solid #e1d6bd;overflow-wrap:anywhere}
+.supplement-panel form{display:grid;gap:1rem;margin-top:1rem}
+.supplement-panel textarea{width:100%;min-height:5rem;font:inherit;resize:vertical}
+.supplement-feedback{color:#8b3428;overflow-wrap:anywhere}
+.supplement-value{overflow-wrap:anywhere}
+@media print{.supplement-panel{display:none!important}}

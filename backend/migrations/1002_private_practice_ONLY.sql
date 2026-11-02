@@ -82,3 +82,52 @@ CREATE TABLE IF NOT EXISTS ghv_practice_vouchers (
 CREATE TRIGGER IF NOT EXISTS ghv_practice_voucher_guard BEFORE INSERT ON ghv_practice_vouchers BEGIN
  SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM ghv_practice_applications WHERE id=NEW.application_id AND workspace_id=NEW.workspace_id AND actor_id=NEW.account_id AND fee_status='simulation_only') THEN RAISE(ABORT,'simulated_fee_required') END;
 END;
+
+-- Additive correction window; existing applications and scores are preserved.
+CREATE TABLE IF NOT EXISTS ghv_practice_supplements (
+ workspace_id TEXT NOT NULL, application_id TEXT NOT NULL,
+ requested_by TEXT NOT NULL, reason TEXT NOT NULL CHECK(length(trim(reason)) BETWEEN 1 AND 300),
+ requested_at INTEGER NOT NULL, deadline_at INTEGER NOT NULL CHECK(deadline_at=requested_at+172800),
+ notification_method TEXT NOT NULL DEFAULT 'manual_test' CHECK(notification_method='manual_test'),
+ original_values TEXT NOT NULL, completed_at INTEGER, corrected_values TEXT,
+ PRIMARY KEY(workspace_id,application_id),
+ CHECK((completed_at IS NULL AND corrected_values IS NULL) OR (completed_at>=requested_at AND completed_at<deadline_at AND corrected_values IS NOT NULL)),
+ FOREIGN KEY(application_id,workspace_id) REFERENCES ghv_practice_applications(id,workspace_id) ON DELETE CASCADE,
+ FOREIGN KEY(workspace_id,requested_by) REFERENCES ghv_practice_actors(workspace_id,actor_id) ON DELETE CASCADE
+);
+CREATE TRIGGER IF NOT EXISTS ghv_practice_supplement_request_guard BEFORE INSERT ON ghv_practice_supplements BEGIN
+ SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM ghv_practice_actors WHERE workspace_id=NEW.workspace_id AND actor_id=NEW.requested_by AND role='organizer')
+ OR NOT EXISTS(SELECT 1 FROM ghv_practice_applications WHERE id=NEW.application_id AND workspace_id=NEW.workspace_id AND phase='demo'
+ AND json_object('work_url',work_url,'contact_phone',contact_phone,'contact_handle',contact_handle,'affiliation',affiliation)=NEW.original_values)
+ OR EXISTS(SELECT 1 FROM ghv_practice_scores WHERE application_id=NEW.application_id AND workspace_id=NEW.workspace_id)
+ OR NEW.completed_at IS NOT NULL OR NEW.corrected_values IS NOT NULL
+ THEN RAISE(ABORT,'supplement_request_locked') END;
+END;
+CREATE TRIGGER IF NOT EXISTS ghv_practice_supplement_edit_guard BEFORE UPDATE OF work_url,contact_phone,contact_handle,affiliation ON ghv_practice_applications BEGIN
+ SELECT CASE WHEN OLD.phase!='demo'
+ OR EXISTS(SELECT 1 FROM ghv_practice_scores WHERE application_id=OLD.id AND workspace_id=OLD.workspace_id)
+ OR NOT EXISTS(SELECT 1 FROM ghv_practice_supplements WHERE application_id=OLD.id AND workspace_id=OLD.workspace_id AND completed_at IS NULL AND deadline_at>unixepoch())
+ THEN RAISE(ABORT,'supplement_edit_locked') END;
+END;
+CREATE TRIGGER IF NOT EXISTS ghv_practice_supplement_completed AFTER UPDATE OF work_url,contact_phone,contact_handle,affiliation ON ghv_practice_applications BEGIN
+ UPDATE ghv_practice_supplements SET completed_at=unixepoch(),corrected_values=json_object('work_url',NEW.work_url,'contact_phone',NEW.contact_phone,'contact_handle',NEW.contact_handle,'affiliation',NEW.affiliation)
+ WHERE application_id=NEW.id AND workspace_id=NEW.workspace_id AND completed_at IS NULL;
+ INSERT INTO ghv_practice_events(workspace_id,application_id,kind,phase,created_at) VALUES(NEW.workspace_id,NEW.id,'supplement_completed','demo',unixepoch());
+END;
+CREATE TRIGGER IF NOT EXISTS ghv_practice_supplement_score_guard BEFORE INSERT ON ghv_practice_scores
+ WHEN EXISTS(SELECT 1 FROM ghv_practice_supplements WHERE application_id=NEW.application_id AND workspace_id=NEW.workspace_id AND completed_at IS NULL) BEGIN
+ SELECT RAISE(ABORT,'supplement_unresolved');
+END;
+CREATE TRIGGER IF NOT EXISTS ghv_practice_supplement_promotion_guard BEFORE UPDATE OF phase ON ghv_practice_applications
+ WHEN NEW.phase!=OLD.phase AND EXISTS(SELECT 1 FROM ghv_practice_supplements WHERE application_id=OLD.id AND workspace_id=OLD.workspace_id AND completed_at IS NULL) BEGIN
+ SELECT RAISE(ABORT,'supplement_unresolved');
+END;
+CREATE TRIGGER IF NOT EXISTS ghv_practice_supplement_immutable BEFORE UPDATE ON ghv_practice_supplements BEGIN
+ SELECT CASE WHEN OLD.completed_at IS NOT NULL OR NEW.completed_at IS NULL OR NEW.completed_at!=unixepoch()
+ OR NEW.application_id!=OLD.application_id OR NEW.workspace_id!=OLD.workspace_id OR NEW.requested_by!=OLD.requested_by
+ OR NEW.reason!=OLD.reason OR NEW.requested_at!=OLD.requested_at OR NEW.deadline_at!=OLD.deadline_at
+ OR NEW.notification_method!=OLD.notification_method OR NEW.original_values!=OLD.original_values
+ OR NOT EXISTS(SELECT 1 FROM ghv_practice_applications WHERE id=NEW.application_id AND workspace_id=NEW.workspace_id
+ AND NEW.corrected_values=json_object('work_url',work_url,'contact_phone',contact_phone,'contact_handle',contact_handle,'affiliation',affiliation))
+ THEN RAISE(ABORT,'supplement_audit_immutable') END;
+END;

@@ -42,6 +42,18 @@ else{
   assert.equal((await call('application',{...row,stage_name:'TEST DUPLICATE MUST NOT OVERWRITE'},created.cookie)).status,409);
   assert.equal(ok(await call('me',undefined,created.cookie)).data.applications[0].stage_name,row.stage_name);
   console.log('PASS: actual saved ID and all submitted fields match a separate cloud readback; duplicate does not overwrite.');
+  const requested=ok(await call('supplement-request',{application_id:id,reason:'TEST acceptance manual notice',notified_manually:true},adminCookie),201);
+  assert.equal(requested.data.emailSent,false);assert.equal(requested.data.supplement.deadline_at-requested.data.supplement.requested_at,172800);
+  assert.equal((await call('supplement-request',{application_id:id,reason:'TEST duplicate',notified_manually:true},adminCookie)).status,409);
+  const earlyJudge=ok(await call('login',{pass:role('judge-1')})).cookie;
+  assert.equal((await call('score',{application_id:id,phase:'demo',technique:54,interpretation:36,no_conflict:true},earlyJudge)).status,409);
+  const corrected={work_url:'https://drive.google.com/file/d/test-remote-correction/view',contact_phone:row.contact_phone,contact_handle:row.contact_handle,affiliation:row.affiliation};
+  ok(await call('supplement',{application_id:id,...corrected},created.cookie));
+  assert.equal((await call('supplement',{application_id:id,...corrected},created.cookie)).status,409);
+  const audit=ok(await call('me',undefined,adminCookie)).data;
+  assert.equal(audit.supplements[0].status,'completed');assert.equal(JSON.parse(audit.supplements[0].original_values).work_url,row.work_url);
+  assert.equal(audit.applications[0].work_url,corrected.work_url);row.work_url=corrected.work_url;
+  console.log('PASS: live D1 manual 48h request, pending judging lock, one correction, immutable before/after readback; no email sent.');
   const counts=ok(await call('stats',undefined,adminCookie)).data;
   assert.equal(counts.stats.applicant_count,1);
   assert.equal(counts.stats.application_count,1);
