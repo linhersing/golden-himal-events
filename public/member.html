@@ -1,0 +1,29 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#4c302a"><title>歌手報名與會員登入｜Golden Himal Voice</title><link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./simple.css"></head><body data-page="member"><a class="skip" href="#main">跳到主內容</a>
+<header class="masthead wrap"><a class="brand" href="./"><img src="./images/brand-identity.png" width="60" height="60" alt=""><span><strong>GOLDEN HIMAL</strong><small>VOICE · CHITWAN 2027</small></span></a><nav class="quick-nav"><a href="./" data-t="home">返回首頁</a><a href="./news.html" data-t="news">最新公告</a></nav></header>
+<main id="main" class="page-shell"><p class="section-eyebrow" data-t="memberKicker">SINGER PORTAL</p><h1 class="page-heading" data-t="memberHead">歌手報名與登入</h1><p class="page-intro" data-t="memberLead">報名很簡單：登入後填寫資料與作品連結，之後隨時回到自己的頁面。</p>
+<div class="steps" aria-label="報名流程"><span class="active" data-t="stepAccount">① 會員登入</span><span data-t="stepForm">② 填報名資料</span><span data-t="stepPayment">③ 確認付款</span></div>
+<p class="notice" data-t="unpaidNotice">目前尚未接入金流。填表只代表建立待付款資料，不代表正式報名成功；所有費用均不會實際扣款。</p>
+<div id="member-status" class="feedback" role="status" aria-live="polite" hidden></div>
+<section id="signin-panel" class="panel"><h2 data-t="signInHeader">先登入或建立會員</h2><p data-t="emailHelp">輸入你的 Email，取得一次性驗證碼。新會員與舊會員使用同一入口。</p>
+<form id="member-email-form"><label class="field"><span>Email</span><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-t="sendCode">寄送驗證碼</button></div></form>
+<form id="member-code-form" hidden><label class="field"><span data-t="verifyCode">輸入 Email 的 6 位驗證碼</span><input name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" required></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-t="goAccount">登入我的專區</button><button class="btn btn-soft" type="button" id="change-mail" data-t="changeEmail">換個 Email</button></div></form>
+<p class="under-actions" data-t="notOpen">目前僅提供受邀帳號測試；若寄信未開通，系統會清楚提示，不會假裝驗證成功。</p></section>
+<section id="member-panel" hidden>
+<div class="panel"><div class="page-top"><h2 data-t="myAccount">我的參賽專區</h2><button type="button" id="member-logout" class="btn btn-soft" data-t="logout">登出</button></div><p data-t="myAccountLead">這裡可以查看已提交資料、作品連結，以及付款狀態。</p><div id="entries" class="cards"></div></div>
+<details class="panel" id="application-details"><summary style="font-weight:850;cursor:pointer;font-size:1.16rem" data-t="formTitle">填寫新報名</summary><p data-t="formHelp">先填基本資料；作品目前採用公開 YouTube 或 Google Drive 連結。</p>
+<form id="application-form" class="form-grid" style="margin-top:16px">
+<label class="field"><span data-t="name">歌手名稱</span><input name="stage_name" maxlength="60" required></label>
+<label class="field"><span data-t="round">報名梯次</span><select name="round_code"><option value="2027-01">2027年1月</option><option value="2027-04">2027年4月</option></select></label>
+<label class="field"><span data-t="category">參賽組別</span><select name="category" id="category"><option value="university" data-t="college">大學組</option><option value="community" data-t="social">社會組</option></select></label>
+<label class="field"><span data-t="province">省份</span><select name="province"><option value="bagmati">Bagmati</option><option value="gandaki">Gandaki</option></select></label>
+<label class="field"><span data-t="basis">參賽資格依據</span><select name="location_basis"><option value="residence" data-t="residence">居住</option><option value="study" data-t="study">就學</option><option value="work" data-t="work">工作</option></select></label>
+<label class="field"><span data-t="affiliation">學校／職業</span><input name="affiliation" maxlength="100" required></label>
+<label class="field"><span data-t="song">歌曲名稱</span><input name="song_title" maxlength="100" required></label>
+<label class="field"><span data-t="artist">原唱者</span><input name="original_artist" maxlength="100" required></label>
+<label class="field"><span data-t="songLang">歌曲語言</span><input name="song_language" maxlength="100" required></label>
+<label class="field"><span data-t="songKey">歌曲調性</span><input name="song_key" maxlength="100" required></label>
+<label class="field full"><span data-t="workLink">參賽作品連結（公開影片）</span><input name="demo_url" type="url" inputmode="url" required placeholder="https://youtu.be/..."></label>
+<div class="full"><label class="check"><input name="adult_confirmed" type="checkbox"><span data-t="adult">社會組：我確認已符合年齡資格（受邀測試僅作聲明）。</span></label><label class="check"><input name="student_confirmed" type="checkbox"><span data-t="student">大學組：我確認正在就學（受邀測試僅作聲明）。</span></label><label class="check"><input name="no_exclusive_contract" type="checkbox" required><span data-t="contract">我確認不存在與比賽衝突的專屬經紀合約。</span></label></div>
+<div class="form-actions full"><button class="btn btn-primary" type="submit" data-t="saveEntry">儲存報名資料</button></div></form></details>
+</section>
+<footer class="site-footer"><a href="./" class="small-link" data-t="home">回首頁</a><small data-t="feeBoundary">付款系統尚未啟用；不計入正式成功報名。</small></footer></main><script src="./simple.js" defer></script></body></html>

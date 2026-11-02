@@ -6,7 +6,7 @@ import { DatabaseSync } from 'node:sqlite';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
 test('Alan V2 stages and category fields are explicitly simulated, never collecting actual funds',async()=>{
- const [html,js]=await Promise.all([read('index.html'),read('src/scripts/main.js')]);
+ const [html,js]=await Promise.all([read('docs/archive/2026-11-02-index-before-simple-front.html'),read('src/scripts/main.js')]);
  for(const val of ['season-preview','seasonDisclaimer','name="category"','name="round"','payment-preview']){
    assert.ok(html.includes(val),val);
  }

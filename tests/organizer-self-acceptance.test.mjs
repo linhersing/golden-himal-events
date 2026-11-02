@@ -109,5 +109,5 @@ test('self acceptance page and homepage contain the navigable portal markers',as
  assert.match(practice,/id="organizer-roster"/);
  assert.match(practice,/id="organizer-judge-monitor"/);
  assert.match(practice,/自己測試有沒有成功/);
- assert.match(homepage,/class="member-gateway" href="\.\/practice\.html"/);
+ assert.match(homepage,/href="\.\/backoffice\.html"[^>]*class="backoffice-link"/);
 });

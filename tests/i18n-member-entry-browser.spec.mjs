@@ -1,65 +1,42 @@
 import {test,expect} from '@playwright/test';
-
-test('desktop Chinese choice makes login obvious and remains Chinese on personal account',async({page})=>{
+test('desktop homepage highlights the three real visitor actions',async({page})=>{
  await page.setViewportSize({width:1366,height:768});
  await page.goto('/');
- const member=page.locator('.header-actions .member-gateway');
- await expect(member).toBeVisible();
- await expect(member).toContainText('Internal Test Lab');
- await expect(page.locator('.preview-ribbon a')).toHaveCount(0);
- await expect(page.locator('.footer-test-links a')).toHaveCount(2);
- await page.locator('.site-header [data-lang="zh"]').click();
- await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
- await expect(member).toContainText('內部工程測試台');
- await expect(page.locator('.member-entrance')).toContainText('前往我的會員中心');
- await expect(page.locator('.preview-ribbon')).toContainText('請勿填寫真實個人資料');
- await expect(member).toHaveAttribute('href','./practice.html');
- // The old browser-only account remains testable directly, but is no longer the primary entry.
+ const choices=page.locator('.front-actions a');
+ await expect(choices).toHaveCount(3);
+ await expect(choices.nth(0)).toContainText('我要報名');
+ await expect(choices.nth(1)).toContainText('會員登入');
+ await expect(choices.nth(2)).toContainText('最新公告');
+ await expect(choices.nth(0)).toHaveAttribute('href','./member.html#register');
+ await expect(choices.nth(1)).toHaveAttribute('href','./member.html#login');
+ await expect(page.locator('.backoffice-link')).toHaveAttribute('href','./backoffice.html');
+ // Legacy browser-only fictional account remains testable at its direct URL.
  await page.goto('/member-login.html');
- await expect(page).toHaveURL(/member-login\.html$/);
- await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
- await expect(page.locator('#auth-view h2')).toContainText('會員登入');
- await expect(page.locator('[data-i18n="usernameLabel"]')).toContainText('虛構測試 Email');
- await expect(page.locator('#login-form button[type="submit"]')).toContainText('登入我的會員中心');
- await page.locator('#register-persona').selectOption('T001');
- await page.locator('#register-test').click();
- await expect(page.locator('#dashboard-view')).toBeVisible();
- await expect(page.locator('#dashboard-title')).toHaveText('我的參賽進度');
- await expect(page.locator('#summary-status')).toHaveText('尚未報名');
- await page.reload();
- await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
- await expect(page.locator('#dashboard-title')).toHaveText('我的參賽進度');
+ await expect(page.locator('#auth-view h2')).toContainText('Member');
 });
-
-test('English and Nepali switches stay in sync between homepage and login',async({page})=>{
+test('English Nepali Chinese translations remain available without adding page clutter',async({page})=>{
  await page.goto('/');
- await page.locator('[data-lang="ne"]').click();
- await expect(page.locator('.member-gateway')).toContainText('आन्तरिक परीक्षण');
- await expect(page.locator('.member-gateway')).toHaveAttribute('href','./practice.html');
- await page.goto('/member-login.html');
+ await page.locator('[data-lang=ne]').click();
+ await expect(page.locator('.choice-main')).toContainText('प्रतियोगितामा सहभागी');
  await expect(page.locator('html')).toHaveAttribute('lang','ne');
- await expect(page.locator('#auth-view h2')).toContainText('सदस्य साइन इन');
- await page.locator('[data-lang="en"]').click();
- await expect(page.locator('#auth-view h2')).toHaveText('Member sign in');
- await page.locator('.header-link').click();
+ await page.locator('[data-lang=en]').click();
+ await expect(page.locator('.choice-main')).toContainText('Join the competition');
+ await page.reload();
  await expect(page.locator('html')).toHaveAttribute('lang','en');
- await expect(page.locator('.member-gateway')).toContainText('Internal Test Lab');
+ await page.locator('[data-lang=zh]').click();
+ await expect(page.locator('.choice-main')).toContainText('我要報名');
 });
-
-test('small mobile screen keeps member access and three language controls readable',async({page})=>{
- await page.setViewportSize({width:375,height:812});
- await page.goto('/');
- await page.locator('[data-lang="zh"]').click();
- await expect(page.locator('.member-gateway')).toBeVisible();
- await expect(page.locator('.lang-switch [data-lang="en"]')).toBeVisible();
- await expect(page.locator('.lang-switch [data-lang="ne"]')).toBeVisible();
- await expect(page.locator('.lang-switch [data-lang="zh"]')).toBeVisible();
- let dims=await page.evaluate(()=>({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
- expect(dims.scroll).toBeLessThanOrEqual(dims.client);
- await page.locator('.member-gateway').click();
- await expect(page).toHaveURL(/practice\.html$/);
- await expect(page.locator('#auth')).toBeVisible();
- await expect(page.locator('.self-check-guide')).toContainText('自己測試有沒有成功');
- dims=await page.evaluate(()=>({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
- expect(dims.scroll).toBeLessThanOrEqual(dims.client);
+test('mobile visitor can reach a separate registration page without overflow',async({page})=>{
+ for(const width of [320,375,390]){
+  await page.setViewportSize({width,height:812});
+  await page.goto('/');
+  await expect(page.locator('.locale [data-lang=en]')).toBeVisible();
+  const dims=await page.evaluate(()=>({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
+  expect(dims.scroll).toBeLessThanOrEqual(dims.client);
+  await page.locator('.choice-main').click();
+  await expect(page).toHaveURL(/member\.html#register$/);
+  await expect(page.locator('#member-email-form')).toBeVisible();
+  const m=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+  expect(m).toBeLessThanOrEqual(0);
+ }
 });
