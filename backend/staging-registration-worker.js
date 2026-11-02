@@ -1,4 +1,4 @@
-import {handlePractice} from './practice.js';
+import {handlePractice,runPracticeSchedule} from './practice.js';
 import {handleManagement} from './management.js';
 import {architecturePreview} from './architecture-preview.js';
 import {mailProviderReady,mailSenderReady} from './staging-mail.js';
@@ -178,6 +178,7 @@ async function handleE2EReadiness(request,env){
  });
 }
 export default {
+  async scheduled(controller,env,ctx){return runPracticeSchedule(env);},
   async fetch(request,env,ctx) {
     const pathname=new URL(request.url).pathname;
     if(pathname.startsWith('/api/e2e/')){

@@ -83,3 +83,6 @@ fieldset{padding:0;margin:0;border:0;min-width:0}fieldset:disabled input,fieldse
 .supplement-feedback{color:#8b3428;overflow-wrap:anywhere}
 .supplement-value{overflow-wrap:anywhere}
 @media print{.supplement-panel{display:none!important}}
+
+#admission-view{overflow-wrap:anywhere}.admission-publish,.admission-notify,.admission-decline,.tie-ballot{display:grid;gap:1rem;margin:1rem 0}.admission-slot{padding:1rem 0;border-top:1px solid #ded1bf}.admission-slot h4{margin:0 0 .6rem}.admission-feedback{color:#8b3428}.admission-pool,.tie-card{margin-top:1rem;min-width:0}
+@media print{#admission-view{display:none!important}}
