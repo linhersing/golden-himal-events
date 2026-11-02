@@ -174,3 +174,40 @@ test('architecture data failure is shown without invented member records',async(
  await page.goto('/architecture-preview.html#participant');await expect(page.locator('#data-status')).toHaveClass('error');
  await expect(page.locator('#participant-content')).toBeEmpty();await expect(page.locator('#personas')).toBeEmpty();
 });
+
+test('minimal staff entrance requests a code for organizer, never a member',async({page})=>{
+ let requested=null;
+ await page.route('**/api/e2e/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(path.endsWith('/me'))return route.fulfill({status:401,json:{ok:false,error:'login_required'}});
+  if(path.endsWith('/request-code')){requested=route.request().postDataJSON();return route.fulfill({status:200,json:{ok:true,challenge_id:'fixture'}})}
+  return route.fulfill({status:401,json:{ok:false,error:'not_found'}});
+ });
+ await page.goto('/backoffice.html');
+ await expect(page.locator('[data-role-tab=organizer]')).toHaveClass(/active/);
+ await page.locator('#back-email-form [name=email]').fill('organizer@example.invalid');
+ await page.locator('#back-email-form button').click();
+ await expect(page.locator('#back-code-form')).toBeVisible();
+ expect(requested.role).toBe('organizer');
+});
+test('minimal staff reviewer submits phase-specific V2 scoring without crossing roles',async({page})=>{
+ let saved=null,scoreData=null;
+ await page.route('**/api/e2e/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(path.endsWith('/me'))return route.fulfill({status:200,json:{ok:true,account:{id:'test-reviewer',role:'reviewer'}}});
+  if(path.endsWith('/reviewer-queue'))return route.fulfill({status:200,json:{ok:true,queue:[{id:'test-application',stage_name:'TEST Singer',round_code:'2027-01',phase:'qualifier',demo_url:'https://youtu.be/dQw4w9WgXcQ',live_technique:saved,live_interpretation:saved===null?null:20,stage_presence:saved===null?null:15,appearance:saved===null?null:7}]}});
+  if(path.endsWith('/score')){scoreData=route.request().postDataJSON();saved=32;return route.fulfill({status:200,json:{ok:true,score:74}})}
+  return route.fulfill({status:404,json:{ok:false,error:'not_found'}});
+ });
+ await page.goto('/backoffice.html');
+ await page.locator('[data-role-tab=reviewer]').click();
+ await expect(page.locator('#judge-dashboard')).toBeVisible();
+ await page.locator('#judge-queue [name=technique]').fill('32');
+ await page.locator('#judge-queue [name=interpretation]').fill('20');
+ await page.locator('#judge-queue [name=stage_presence]').fill('15');
+ await page.locator('#judge-queue [name=appearance]').fill('7');
+ await page.locator('#judge-queue [name=conflict]').check();
+ await page.locator('#judge-queue button[type=submit]').click();
+ await expect(page.locator('#judge-queue')).toContainText('已評分：74 分');
+ expect(scoreData).toMatchObject({application_id:'test-application',phase:'qualifier',technique:32,interpretation:20,stage_presence:15,appearance:7,no_conflict:true});
+});
