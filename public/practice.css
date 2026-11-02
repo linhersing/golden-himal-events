@@ -283,3 +283,7 @@ body[data-portal=true] .role-showcase{display:none}
 #organizer-view .owner-shortcuts a{justify-content:flex-start;padding-left:18px}
 }
 @media print{.role-showcase,.role-objective,.owner-shortcuts{display:none!important}}
+
+.receipt-proof{margin:16px 0 4px;padding:15px 18px;border:1px solid #91bb8d;background:#edf7ec;border-radius:12px;color:#345e36}
+.receipt-proof strong{font-size:1rem;display:block;font-weight:900}
+.receipt-proof p{font-size:.86rem;line-height:1.6;margin:7px 0 0}
