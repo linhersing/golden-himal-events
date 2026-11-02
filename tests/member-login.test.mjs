@@ -23,7 +23,7 @@ test('member login is visibly a synthetic credential rehearsal, with personal ac
  assert.match(js,/sessionStorage\.setItem/);
  assert.match(js,/sessionStorage\.removeItem/);
  assert.match(portal,/sessionStorage\.getItem\('ghv_demo_active_member_v1'\)/);
- assert.match(main,/href="\.\/member-login\.html"/);
+ assert.match(main,/href="\.\/member\.html#login"/);
  assert.doesNotMatch(js,/fetch\s*\(|XMLHttpRequest|\.post\s*\(/);
  assert.doesNotMatch(html,/<input\s[^>]*type="(?:email|file|tel)"/);
 });
