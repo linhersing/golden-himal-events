@@ -108,15 +108,16 @@ test('a real cohort change invalidates previous named ballots and a recusal keep
  const recused=(await f.call('me',undefined,judge)).data.admission_ties[0];assert.equal(recused.conflict,true);assert.equal((await f.call('tie-ballot',{tie_key:recused.tie_key,order:recused.candidates.map(c=>c.id)},judge)).status,409);
 });
 
-test('publication cannot race a decline before its waiting reserve is selected',async t=>{
+for(const race of ['decline','expiry'])test('publication cannot race a waiting reserve: '+race,async t=>{
  const f=await attendanceFixture(t),ids=f.seed(26,'demo',26);assert.equal((await f.publish()).status,201);
  for(const [i,id] of ids.slice(0,24).entries()){
   const actor=f.db.prepare('SELECT actor_id FROM ghv_practice_applications WHERE id=?').get(id).actor_id;
   f.db.prepare("UPDATE ghv_practice_admission_slots SET status='confirmed',responded_by=?,response_at=unixepoch() WHERE application_id=?").run(actor,id);
   for(const judge of ['judge-1','judge-2','judge-3'])f.db.prepare("INSERT INTO ghv_practice_scores VALUES(?,?,?,'qualifier',?,27,18,9,0,NULL,unixepoch())").run(f.ws,id,judge,36-i);
  }
+ if(race==='expiry')f.clock.value=f.db.prepare('SELECT deadline_at FROM ghv_practice_admission_slots WHERE application_id=?').get(ids[24]).deadline_at*1000-1000;
  const batch=f.env.E2E_DB.batch.bind(f.env.E2E_DB);f.env.E2E_DB.batch=stmts=>{
-  if(stmts[0]?.sql.startsWith('INSERT INTO ghv_practice_admission_pools')){const actor=f.db.prepare('SELECT actor_id FROM ghv_practice_applications WHERE id=?').get(ids[24]).actor_id;f.db.prepare("UPDATE ghv_practice_admission_slots SET status='declined',responded_by=?,response_at=unixepoch() WHERE application_id=?").run(actor,ids[24]);}
+  if(stmts[0]?.sql.startsWith('INSERT INTO ghv_practice_admission_pools')){if(race==='expiry')f.clock.value+=2000;else {const actor=f.db.prepare('SELECT actor_id FROM ghv_practice_applications WHERE id=?').get(ids[24]).actor_id;f.db.prepare("UPDATE ghv_practice_admission_slots SET status='declined',responded_by=?,response_at=unixepoch() WHERE application_id=?").run(actor,ids[24]);}}
   return batch(stmts);
  };
  assert.equal((await f.publish('qualifier')).status,409);assert.equal(f.db.prepare("SELECT COUNT(*) n FROM ghv_practice_admission_pools WHERE source_phase='qualifier'").get().n,0);
