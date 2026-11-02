@@ -14,7 +14,7 @@ if(page==='news')return;
 const node=(tag,txt,cls)=>{const x=document.createElement(tag);if(txt!==undefined&&txt!==null)x.textContent=String(txt);if(cls)x.className=cls;return x};
 const safeLink=(url)=>{try{const u=new URL(url);return u.protocol==='https:'?u.href:null}catch{return null}};
 const formValues=form=>Object.fromEntries(new FormData(form));
-let busy=false,challenge=null,role='member',account=null;
+let busy=false,challenge=null,role=staff?'organizer':'member',account=null;
 const staff=page==='back',prefix=staff?'back':'member';
 const statusBox=$(prefix+'-status');
 function status(text,bad=false){if(!statusBox)return;statusBox.hidden=false;statusBox.className='feedback'+(bad?' error':' success');statusBox.textContent=text;statusBox.scrollIntoView({block:'nearest',behavior:'smooth'})}
@@ -72,18 +72,43 @@ if(!v.applications.length)holder.append(node('p','目前沒有可讀取的測試
 for(const a of v.applications){const box=node('article',undefined,'entry');box.append(node('strong',(a.stage_name||'選手')+' · '+a.round_code+' · '+a.category));box.append(node('p','報名：'+a.id,'minor'));box.append(node('span',a.payment_status==='simulated_paid'?'模擬付款｜正式付款 0':'尚未付款','pill'));box.append(node('p','評審回覆：'+(a.demo_judges||0)+'/3 · 平均：'+(a.demo_mean??'—'),'minor'));holder.append(box)}
 }
 async function renderJudge(){
-$('organizer-dashboard').hidden=true;$('judge-dashboard').hidden=false;
-const v=await api('reviewer-queue'),holder=$('judge-queue');holder.replaceChildren();
-if(!v.queue.length)holder.append(node('p','目前沒有可評分的作品。'));
-for(const a of v.queue){const box=node('article',undefined,'entry');box.append(node('strong',a.stage_name+' · '+a.round_code));const link=safeLink(a.demo_url);if(link){const l=node('a','觀看作品 ↗','small-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l)}
-if(a.technique!==null&&a.technique!==undefined){box.append(node('p','已評分：'+(Number(a.technique)+Number(a.interpretation))+' 分','minor'));holder.append(box);continue}
-const form=node('form',undefined,'form-grid');
-for(const [name,labelText,max] of [['technique','技巧（0–60）',60],['interpretation','表現（0–40）',40]]){const lab=node('label',undefined,'field'),input=node('input');input.name=name;input.type='number';input.min='0';input.max=String(max);input.step='1';input.required=true;lab.append(node('span',labelText),input);form.append(lab)}
-const agree=node('label',undefined,'check'),checkbox=node('input');checkbox.type='checkbox';checkbox.name='conflict';checkbox.required=true;agree.append(checkbox,node('span','我確認此次評分沒有利益衝突。'));form.append(agree);
-const save=node('button','儲存我的評分','btn btn-primary');save.type='submit';form.append(save);
-form.onsubmit=ev=>{ev.preventDefault();run(async()=>{const v=formValues(form);await api('score',{application_id:a.id,technique:Number(v.technique),interpretation:Number(v.interpretation),no_conflict:true});status('評分已儲存。');await renderJudge()})};
-box.append(form);holder.append(box)}
+ $('organizer-dashboard').hidden=true;$('judge-dashboard').hidden=false;
+ const v=await api('reviewer-queue'),holder=$('judge-queue');holder.replaceChildren();
+ if(!v.queue.length)holder.append(node('p','目前沒有可評分的作品。'));
+ for(const a of v.queue){
+  const box=node('article',undefined,'entry');
+  const phase=a.phase||'demo',demo=phase==='demo';
+  box.append(node('strong',a.stage_name+' · '+a.round_code));
+  box.append(node('p','目前階段：'+(demo?'線上海選':phase==='qualifier'?'現場初賽':'決賽'),'minor'));
+  const link=safeLink(a.demo_url);
+  if(link){const l=node('a','觀看作品 ↗','small-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l)}
+  const saved=demo?a.demo_technique:a.live_technique;
+  if(saved!==null&&saved!==undefined){
+   const existing=demo?[a.demo_technique,a.demo_interpretation]:[a.live_technique,a.live_interpretation,a.stage_presence,a.appearance];
+   box.append(node('p','已評分：'+existing.reduce((sum,x)=>sum+Number(x||0),0)+' 分','minor'));
+   holder.append(box);continue;
+  }
+  const form=node('form',undefined,'form-grid');
+  const criteria=demo?[['technique','技巧（0–60）',60],['interpretation','表現（0–40）',40]]:
+   [['technique','技巧（0–40）',40],['interpretation','表現（0–30）',30],['stage_presence','台風（0–20）',20],['appearance','儀容（0–10）',10]];
+  for(const [name,labelText,max] of criteria){
+   const lab=node('label',undefined,'field'),input=node('input');
+   input.name=name;input.type='number';input.min='0';input.max=String(max);input.step='1';input.required=true;
+   lab.append(node('span',labelText),input);form.append(lab);
+  }
+  const agree=node('label',undefined,'check'),checkbox=node('input');
+  checkbox.type='checkbox';checkbox.name='conflict';checkbox.required=true;
+  agree.append(checkbox,node('span','我確認此次評分沒有利益衝突。'));form.append(agree);
+  const save=node('button','儲存我的評分','btn btn-primary');save.type='submit';form.append(save);
+  form.onsubmit=ev=>{ev.preventDefault();run(async()=>{
+   const input=formValues(form),payload={application_id:a.id,phase,no_conflict:checkbox.checked};
+   for(const [name] of criteria)payload[name]=Number(input[name]);
+   await api('score',payload);
+   status('評分已儲存。');await renderJudge();
+  })};box.append(form);holder.append(box);
+ }
 }
+
 if(page==='member'){
  role='member';setupAuth();const application=$('application-form');application.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  const v=formValues(application),data={...v,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
