@@ -158,8 +158,11 @@ test('three named judge orderings resolve an exact tie and stay private between 
   for(const judge of ['judge-1','judge-2','judge-3']){
    await admissionLogin(page,passes[judge]);const form=page.locator('.tie-ballot');await expect(form).toBeVisible();await form.locator('[name=place_0]').selectOption(ids[1]);await form.locator('[name=place_1]').selectOption(ids[0]);await form.getByRole('button',{name:'儲存我的具名排序',exact:true}).click();await expect(page.locator('.tie-card')).toContainText(judge==='judge-3'?'已記錄裁決':'尚待裁決');await expect(page.locator('.tie-card')).not.toContainText('主辦裁決稽核紀錄');
   }
-  await admissionLogin(page,passes.organizer);await expect(page.locator('.tie-card')).toContainText('已記錄裁決');await page.locator('.tie-card summary').click();await expect(page.locator('.tie-card')).toContainText('judge-1');await expect(page.locator('.tie-card')).toContainText('TEST Attendance 2 → TEST Attendance 1');
+  await admissionLogin(page,passes.organizer);await expect(page.locator('.tie-card')).toContainText('已記錄裁決');await page.locator('.tie-audit summary').click();await expect(page.locator('.tie-audit')).toContainText('judge-1');await expect(page.locator('.tie-audit')).toContainText('TEST Attendance 2 → TEST Attendance 1');
   await page.setViewportSize({width:390,height:900});await page.locator('.tie-card').screenshot({path:'test-results/practice-tie-decision.png'});
+  const publish=page.locator('.admission-publish');await publish.locator('[name=event_at_nepal]').fill(new Date(Date.now()+30*86400000).toISOString().slice(0,16));await publish.locator('input[type=checkbox]').check();await publish.getByRole('button',{name:'發布並開始正取48小時',exact:true}).click();await expect(page.locator('.admission-pool')).toBeVisible();
+  await admissionLogin(page,passes['member-a']);await page.locator('.admission-slot').getByRole('button',{name:'確認出席並晉級',exact:true}).click();await expect(page.locator('.admission-slot')).toContainText('已確認出席並晉級');
+  await admissionLogin(page,passes.organizer);await page.locator('.tie-audit summary').click();for(const judge of ['judge-1','judge-2','judge-3'])await expect(page.locator('.tie-audit')).toContainText(judge);
  }finally{db.close()}
 });
 

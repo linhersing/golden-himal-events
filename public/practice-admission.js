@@ -46,6 +46,13 @@ export function renderAdmissions(root,state,language,{action,api,load,status}){
    const inputs=tie.candidates.map((candidate,i)=>{const input=select(form,'place_'+i,t.position+' '+(i+1),tie.candidates.map(c=>[c.id,c.stage_name]));input.value=previous[i]||candidate.id;return input}),message=feedback();form.append(button(t.ballot),message);
    form.onsubmit=e=>{e.preventDefault();const order=inputs.map(i=>i.value);if(new Set(order).size!==order.length){message.textContent=t.duplicate;return}send(message,'tie-ballot',{tie_key:tie.tie_key,order})};card.append(form);
   }
-  if(role==='organizer'){const audit=make('details');audit.append(make('summary',t.audit));for(const vote of (state.tie_ballots||[]).filter(v=>v.tie_key===tie.tie_key)){let order=[];try{order=JSON.parse(vote.ordering_json)}catch{}audit.append(make('p',vote.judge_id+' · '+when(vote.created_at)+' · '+order.map(id=>tie.candidates.find(c=>c.id===id)?.stage_name||id).join(' → ')))}card.append(audit)}root.append(card);
+  root.append(card);
+ }
+ if(role==='organizer'&&state.tie_ballots?.length){
+  const audit=make('details',undefined,'tie-audit card');audit.append(make('summary',t.audit));
+  // Keep every revision visible after singers advance and live tie cohorts change.
+  for(const vote of state.tie_ballots){let order=[];try{order=JSON.parse(vote.ordering_json)}catch{}
+   audit.append(make('p',vote.source_phase+' · '+vote.round_code+' · '+t[vote.category]+' · '+vote.judge_id+' · '+when(vote.created_at)+' · '+order.map(id=>state.applications.find(c=>c.id===id)?.stage_name||id).join(' → ')));
+  }root.append(audit);
  }
 }

@@ -80,7 +80,7 @@ test('invalid/stale tie proposals and incomplete/correction-pending groups never
  assert.equal((await f.call('tie-ballot',{tie_key:'stale',order:ids},j)).status,409);
  f.db.prepare('DELETE FROM ghv_practice_scores WHERE application_id=? AND judge_id=?').run(ids[0],'judge-3');assert.equal((await f.publish()).status,409);
 });
-test('a reversed three-way tie receives consecutive ranks and never accepts an old score fingerprint',async t=>{
+test('a reversed three-way tie receives consecutive ranks',async t=>{
  const f=await attendanceFixture(t),ids=f.seed(3,'demo',1,true),j=await f.role('judge-1'),tie=(await f.call('me',undefined,j)).data.admission_ties[0];
  const order=[ids[1],ids[0],ids[2]];for(const judge of ['judge-1','judge-2','judge-3'])assert.equal((await f.call('tie-ballot',{tie_key:tie.tie_key,order},await f.role(judge))).status,201);
  const ranked=(await f.call('me',undefined,await f.role('organizer'))).data.rankings;assert.deepEqual(ranked.map(r=>[r.id,r.rank]),order.map((id,i)=>[id,i+1]));
@@ -90,4 +90,20 @@ test('additive rerun preserves published pool and disabling the practice gate di
  const f=await attendanceFixture(t);f.seed();assert.equal((await f.publish()).status,201);f.db.exec(f.migration);assert.equal(f.db.prepare('SELECT COUNT(*) n FROM ghv_practice_admission_pools').get().n,1);
  f.clock.value+=172800000;await f.worker.scheduled({}, {...f.env,STAGING_PRACTICE_ENABLED:'false'},{});assert.equal(f.db.prepare("SELECT COUNT(*) n FROM ghv_practice_admission_slots WHERE status='offered'").get().n,2);
  f.db.exec('DROP TRIGGER ghv_practice_admission_slot_guard');assert.equal((await f.call('readiness')).status,503);
+});
+
+test('remote batch crossing a clock second still publishes a full48h persisted deadline',async t=>{
+ const f=await attendanceFixture(t);f.seed();const batch=f.env.E2E_DB.batch.bind(f.env.E2E_DB);
+ f.env.E2E_DB.batch=stmts=>{if(stmts[0]?.sql.startsWith('INSERT INTO ghv_practice_admission_pools'))f.clock.value+=1100;return batch(stmts)};
+ assert.equal((await f.publish()).status,201);const pool=f.db.prepare('SELECT published_at FROM ghv_practice_admission_pools').get();for(const slot of f.db.prepare('SELECT * FROM ghv_practice_admission_slots').all()){assert.equal(slot.notified_at,pool.published_at);assert.equal(slot.deadline_at-slot.notified_at,172800);}
+});
+
+test('a real cohort change invalidates previous named ballots and a recusal keeps a new tie locked',async t=>{
+ const f=await attendanceFixture(t),ids=f.seed(2,'demo',1,true),judge=await f.role('judge-1'),old=(await f.call('me',undefined,judge)).data.admission_ties[0];
+ for(const j of ['judge-1','judge-2','judge-3'])assert.equal((await f.call('tie-ballot',{tie_key:old.tie_key,order:ids},await f.role(j))).status,201);
+ assert.equal((await f.call('me',undefined,judge)).data.admission_ties[0].resolved,true);
+ f.seed(1,'demo',0,true,2);const next=(await f.call('me',undefined,judge)).data.admission_ties[0];assert.notEqual(next.tie_key,old.tie_key);assert.equal(next.ballots_count,0);assert.equal(next.resolved,false);assert.equal((await f.call('tie-ballot',{tie_key:old.tie_key,order:ids},judge)).status,409);assert.equal((await f.publish()).status,409);
+ f.db.prepare("DELETE FROM ghv_practice_scores WHERE application_id=? AND judge_id='judge-3'").run(ids[0]);
+ f.db.prepare("INSERT INTO ghv_practice_scores VALUES(?,?,?,'demo',0,0,0,0,1,'TEST conflict',unixepoch())").run(f.ws,ids[0],'judge-3');
+ const recused=(await f.call('me',undefined,judge)).data.admission_ties[0];assert.equal(recused.conflict,true);assert.equal((await f.call('tie-ballot',{tie_key:recused.tie_key,order:recused.candidates.map(c=>c.id)},judge)).status,409);
 });
