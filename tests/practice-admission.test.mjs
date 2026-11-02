@@ -55,6 +55,14 @@ test('publication freezes source judging and prevents old manual promotion from 
  assert.throws(()=>f.db.prepare("UPDATE ghv_practice_applications SET phase='qualifier' WHERE id=?").run(ids[0]),/admission/);
  assert.throws(()=>f.db.prepare('UPDATE ghv_practice_admission_pools SET target_count=99').run(),/admission|constraint/i);
 });
+test('the next list cannot invalidate a still-valid earlier attendance offer',async t=>{
+ const f=await attendanceFixture(t),ids=f.seed(),demo=await f.publish(),member=await f.role('member-a');
+ assert.equal((await f.call('admission-respond',{pool_id:demo.data.pool.id,application_id:ids[0],response:'confirm'},member)).status,200);
+ for(const judge of ['judge-1','judge-2','judge-3'])f.db.prepare("INSERT INTO ghv_practice_scores VALUES(?,?,?,'qualifier',36,27,18,9,0,NULL,unixepoch())").run(f.ws,ids[0],judge);
+ assert.equal((await f.publish('qualifier')).status,409);
+ assert.equal((await f.call('admission-respond',{pool_id:demo.data.pool.id,application_id:ids[1],response:'decline'},await f.role('member-b'))).status,200);
+ assert.equal((await f.publish('qualifier')).status,201);
+});
 test('exact ties block publication until three named judges provide a majority ordering; ballots stay private',async t=>{
  const f=await attendanceFixture(t),ids=f.seed(2,'demo',1,true);assert.equal((await f.publish()).status,409);
  const judge1=await f.role('judge-1'),view=(await f.call('me',undefined,judge1)).data,tie=view.admission_ties[0];assert(tie.tie_key);assert.equal(view.tie_ballots.length,0);

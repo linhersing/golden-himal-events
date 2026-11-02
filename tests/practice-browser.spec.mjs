@@ -121,18 +121,20 @@ test('phone-first organizer sees only its D1 testing scope and can print safe st
  }finally{db.close()}
 });
 
-function seedAdmissionBrowser(db,tied=false){
+function seedAdmissionBrowser(db,tied=false,count=2,ownerAt=1){
  const ws=db.prepare('SELECT id FROM ghv_practice_workspaces').get().id;
- const ids=[];for(let i=1;i<=2;i++){
+ const ids=[];for(let i=1;i<=count;i++){
+  const actor=i===ownerAt?'member-a':i===(ownerAt===1?2:1)?'member-b':'seed-'+i;
+  if(actor.startsWith('seed-'))db.prepare('INSERT INTO ghv_practice_actors VALUES(?,?,?,?)').run(ws,actor,'member',String(i).padStart(64,'0'));
   const id='GHV-TEST-ATTENDANCE-'+i;ids.push(id);
-  db.prepare("INSERT INTO ghv_practice_applications(id,workspace_id,actor_id,stage_name,round_code,category,province,song_title,original_artist,work_url,contact_phone,contact_handle,affiliation,song_language,song_key,priority_ack,media_ack,created_at) VALUES(?,?,?,?,'2027-01','university','bagmati','TEST Song','TEST Artist','https://youtu.be/dQw4w9WgXcQ','+9770000000000','TEST contact','TEST college','Nepali','C',1,1,unixepoch())").run(id,ws,i===1?'member-a':'member-b','TEST Attendance '+i);
+  db.prepare("INSERT INTO ghv_practice_applications(id,workspace_id,actor_id,stage_name,round_code,category,province,song_title,original_artist,work_url,contact_phone,contact_handle,affiliation,song_language,song_key,priority_ack,media_ack,created_at) VALUES(?,?,?,?,'2027-01','university','bagmati','TEST Song','TEST Artist','https://youtu.be/dQw4w9WgXcQ','+9770000000000','TEST contact','TEST college','Nepali','C',1,1,unixepoch())").run(id,ws,actor,'TEST Attendance '+i);
   for(let j=1;j<=3;j++)db.prepare("INSERT INTO ghv_practice_scores VALUES(?,?,?,'demo',?,?,0,0,0,NULL,unixepoch())").run(ws,id,'judge-'+j,tied?54:55-i,36);
  }return ids;
 }
-async function admissionStart(page,db,tied=false){
+async function admissionStart(page,db,tied=false,count=2,ownerAt=1){
  await page.goto('/practice.html');await page.getByRole('button',{name:'中文',exact:true}).click();await page.locator('#create-ack').check();await page.locator('#create-workspace').click();
  const passes={};for(const id of ['member-a','member-b','organizer','judge-1','judge-2','judge-3'])passes[id]=await page.locator('[data-actor="'+id+'"] code').innerText();await page.locator('#hide-passes').click();
- return {passes,ids:seedAdmissionBrowser(db,tied)};
+ return {passes,ids:seedAdmissionBrowser(db,tied,count,ownerAt)};
 }
 async function admissionLogin(page,pass){await page.locator('#logout').click();await page.locator('#recovery-pass').fill(pass);await page.locator('#login-button').click();await expect(page.locator('#portal')).toBeVisible();}
 for(const fault of ['none','response','readback'])test('attendance publication and member confirmation with cloud readback: '+fault,async({page})=>{
@@ -158,5 +160,18 @@ test('three named judge orderings resolve an exact tie and stay private between 
   }
   await admissionLogin(page,passes.organizer);await expect(page.locator('.tie-card')).toContainText('已記錄裁決');await page.locator('.tie-card summary').click();await expect(page.locator('.tie-card')).toContainText('judge-1');await expect(page.locator('.tie-card')).toContainText('TEST Attendance 2 → TEST Attendance 1');
   await page.setViewportSize({width:390,height:900});await page.locator('.tie-card').screenshot({path:'test-results/practice-tie-decision.png'});
+ }finally{db.close()}
+});
+
+test('reserve screen waits for manual notice and gives a full24h before owner confirmation',async({page})=>{
+ const db=await service(page);try{
+  const {passes,ids}=await admissionStart(page,db,false,30,26);await admissionLogin(page,passes.organizer);
+  const form=page.locator('.admission-publish');await form.locator('[name=event_at_nepal]').fill(new Date(Date.now()+30*86400000).toISOString().slice(0,16));await form.locator('input[type=checkbox]').check();await form.getByRole('button',{name:'發布並開始正取48小時',exact:true}).click();await expect(page.locator('.admission-slot')).toHaveCount(30);
+  for(const id of ids.slice(0,24)){const actor=db.prepare('SELECT actor_id FROM ghv_practice_applications WHERE id=?').get(id).actor_id;db.prepare("UPDATE ghv_practice_admission_slots SET status='confirmed',responded_by=?,response_at=unixepoch() WHERE application_id=?").run(actor,id);}
+  const future=Math.floor(Date.now()/1000)+172801;db.function('unixepoch',()=>future);await page.reload();
+  const reserve=page.locator('.admission-slot[data-application="'+ids[25]+'"]');await expect(reserve).toContainText('備取已遞補，待人工通知');expect(db.prepare('SELECT deadline_at FROM ghv_practice_admission_slots WHERE application_id=?').get(ids[25]).deadline_at).toBeNull();
+  await reserve.getByLabel('我已人工通知這位備取測試選手。',{exact:true}).check();await reserve.getByRole('button',{name:'開始備取24小時',exact:true}).click();await expect(reserve).toContainText('等待選手確認');const slot=db.prepare('SELECT * FROM ghv_practice_admission_slots WHERE application_id=?').get(ids[25]);expect(slot.deadline_at-slot.notified_at).toBe(86400);
+  await admissionLogin(page,passes['member-a']);await expect(page.locator('.admission-slot')).toHaveCount(1);await page.locator('.admission-slot').getByRole('button',{name:'確認出席並晉級',exact:true}).click();await expect(page.locator('.admission-slot')).toContainText('已確認出席並晉級');
+  await page.setViewportSize({width:390,height:900});await page.locator('#admission-view').screenshot({path:'test-results/practice-reserve-confirmation.png'});
  }finally{db.close()}
 });
