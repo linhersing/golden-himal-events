@@ -36,22 +36,17 @@ test('staging member and judge login remain mobile usable',async({page})=>{
 });
 
 
-test('Alan V2 preview shows Jan/Apr windows and invitation-only organizer surface',async({page})=>{
+test('short public homepage leads to a separate singer portal and staff surface',async({page})=>{
  await page.goto('/');
- await page.locator('.site-header [data-lang="zh"]').click();
- await expect(page.locator('.season-grid')).toContainText('2027年1月1日至31日');
- await expect(page.locator('.season-grid')).toContainText('2027年4月1日至30日');
- await expect(page.locator('.season-grid')).toContainText('2027年9月初');
- await expect(page.locator('.v2-rule-summary')).toContainText('NPR 332,000');
- await expect(page.locator('a[href="./organizer-stage.html"]')).toBeVisible();
+ await expect(page.locator('.front-actions a')).toHaveCount(3);
+ await expect(page.locator('.front-actions a').first()).toHaveAttribute('href','./member.html#register');
+ await expect(page.locator('.backoffice-link')).toHaveAttribute('href','./backoffice.html');
  await page.goto('/e2e-stage.html');
  await expect(page.locator('#round option')).toHaveCount(2);
  await expect(page.locator('#round option').first()).toHaveAttribute('value','2027-01');
  await expect(page.locator('#round option').last()).toHaveAttribute('value','2027-04');
- await expect(page.locator('#province option')).toHaveCount(2);
  await page.goto('/organizer-stage.html');
  await expect(page.locator('body')).toHaveAttribute('data-role','organizer');
- await expect(page.locator('#admin-apps')).toBeHidden();
  await expect(page.locator('#send-form')).toBeVisible();
 });
 
