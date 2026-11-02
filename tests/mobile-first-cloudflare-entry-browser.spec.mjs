@@ -65,19 +65,15 @@ test('Nepali and Chinese keep clear sign-in instructions on small phone',async({
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
  expect(overflow).toBeLessThanOrEqual(0);
 });
-test('homepage directs members to real D1 practice while preserving separate Email and legacy demos',async({page})=>{
+test('mobile homepage points to clean member flow without exposed engineer test links',async({page})=>{
  await page.setViewportSize({width:375,height:812});
  await page.goto('/');
- await expect(page.locator('.member-gateway')).toHaveAttribute('href','./practice.html');
- await expect(page.locator('.member-gateway .member-demo-label')).toHaveText('TEST ONLY');
- await expect(page.locator('.cloudflare-entry-button')).toHaveAttribute('href','./e2e-stage.html');
- await expect(page.locator('.cloudflare-entry-button')).toBeVisible();
- await expect(page.locator('.cloudflare-entry-print')).toHaveAttribute('href','./print-brief.html');
- await page.locator('.site-header [data-lang="zh"]').click();
- await expect(page.locator('.cloudflare-entry-button')).toContainText('Email 驗證登入測試');
- await expect(page.locator('.member-gateway')).toContainText('內部測試');
- const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
- expect(overflow).toBeLessThanOrEqual(0);
+ await expect(page.locator('.front-actions .choice')).toHaveCount(3);
+ await expect(page.locator('.choice-main')).toHaveAttribute('href','./member.html#register');
+ await expect(page.locator('.front-actions a').nth(1)).toHaveAttribute('href','./member.html#login');
+ await expect(page.locator('.front-actions a').nth(2)).toHaveAttribute('href','./news.html');
+ await expect(page.locator('.backoffice-link')).toHaveAttribute('href','./backoffice.html');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });
 test('desktop print brief exists and is A4 portrait printable with V2 dates',async({page})=>{
  await page.setViewportSize({width:1440,height:900});
