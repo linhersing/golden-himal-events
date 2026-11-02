@@ -18,7 +18,7 @@ if(process.env.WORKERS_CI!=='1'||process.env.WORKERS_CI_BRANCH!=='codex/initial-
   evidence.phase='additive_migration';run(['d1','execute','E2E_DB','--remote','--file','backend/migrations/1002_private_practice_ONLY.sql','--yes','--json']);
   evidence.phase='readback';evidence.after=query(counts);
   evidence.schema=query("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'ghv_practice_%') AS tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name LIKE 'ghv_practice_%') AS triggers");
-  if(evidence.before.accounts!==evidence.after.accounts||evidence.before.applications!==evidence.after.applications||Number(evidence.schema.tables)!==8||Number(evidence.schema.triggers)!==6)throw Error('practice_provision_readback_mismatch');
+  if(evidence.before.accounts!==evidence.after.accounts||evidence.before.applications!==evidence.after.applications||Number(evidence.schema.tables)!==9||Number(evidence.schema.triggers)!==12)throw Error('practice_provision_readback_mismatch');
   evidence.status='PASS';evidence.phase='complete';
  }catch(e){evidence.reason=e.message;}
  mkdirSync('dist',{recursive:true});writeFileSync('dist/practice-build.json',JSON.stringify(evidence));

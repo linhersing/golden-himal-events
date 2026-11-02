@@ -22,12 +22,15 @@ const requiredColumns={
  ghv_practice_scores:'workspace_id,application_id,judge_id,phase,technique,interpretation,stage_presence,appearance,recused,reason,created_at',
  ghv_practice_votes:'workspace_id,voter_id,application_id,created_at',
  ghv_practice_events:'workspace_id,application_id,kind,phase,created_at',
- ghv_practice_vouchers:'id,workspace_id,account_id,season_year,application_id,face_value_npr,status,created_at'
+ ghv_practice_vouchers:'id,workspace_id,account_id,season_year,application_id,face_value_npr,status,created_at',
+ ghv_practice_supplements:'workspace_id,application_id,requested_by,reason,requested_at,deadline_at,notification_method,original_values,completed_at,corrected_values'
 };
 async function schemaReady(db){
  const r=await db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN ('ghv_practice_workspaces','ghv_practice_actors','ghv_practice_sessions','ghv_practice_applications','ghv_practice_scores','ghv_practice_votes','ghv_practice_events','ghv_practice_vouchers')").first();
  const t=await db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='trigger' AND name IN ('ghv_practice_score_guard','ghv_practice_promotion_guard','ghv_practice_promotion_event','ghv_practice_vote_guard','ghv_practice_application_guard','ghv_practice_voucher_guard')").first();
  if(Number(r?.n)!==8||Number(t?.n)!==6)return false;
+ const corrections=await db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='trigger' AND name IN ('ghv_practice_supplement_request_guard','ghv_practice_supplement_edit_guard','ghv_practice_supplement_completed','ghv_practice_supplement_score_guard','ghv_practice_supplement_promotion_guard','ghv_practice_supplement_immutable')").first();
+ if(Number(corrections?.n)!==6)return false;
  await db.batch(Object.entries(requiredColumns).map(([table,columns])=>db.prepare('SELECT '+columns+' FROM '+table+' LIMIT 0')));
  return true;
 }
@@ -88,7 +91,8 @@ async function view(db,a){
  FROM ghv_practice_actors j WHERE j.workspace_id=? AND j.role='judge' ORDER BY j.actor_id`).bind(now(),a.workspace_id).all()).results||[]:[];
  const standings=rankings.filter(r=>r.phase==='final');
  const vouchers=a.role==='judge'?[]:(await db.prepare("SELECT id,account_id,season_year,application_id,face_value_npr,status FROM ghv_practice_vouchers WHERE workspace_id=?"+(a.role==='member'?' AND account_id=?':'')).bind(...args).all()).results.map(v=>({...v,redeemable:false}));
- return reply({ok:true,actor:actorInfo(a),applications,scores,judge_status,finalists,voted,rankings,standings,vouchers,source:'cloudflare-d1-private-practice'});
+ const supplements=(await db.prepare('SELECT application_id,requested_at,deadline_at,completed_at'+(a.role==='judge'?'':',requested_by,reason,notification_method,original_values,corrected_values')+' FROM ghv_practice_supplements WHERE workspace_id=?'+(a.role==='member'?' AND application_id IN (SELECT id FROM ghv_practice_applications WHERE workspace_id=? AND actor_id=?)':'')).bind(...(a.role==='member'?[a.workspace_id,a.workspace_id,a.actor_id]:[a.workspace_id])).all()).results.map(s=>({...s,status:s.completed_at!==null?'completed':now()>=s.deadline_at?'expired':'pending'}));
+ return reply({ok:true,actor:actorInfo(a),applications,scores,judge_status,finalists,voted,rankings,standings,vouchers,supplements,server_now:now(),source:'cloudflare-d1-private-practice'});
 }
 export async function handlePractice(request,env){
  if(env.STAGING_PRACTICE_ENABLED!=='true'||!env.E2E_DB)return deny('practice_not_configured',503);
@@ -126,6 +130,25 @@ export async function handlePractice(request,env){
   if(path==='me'&&!post)return await view(db,a);
   if(!post)return deny('not_found',404);
   const ws=a.workspace_id,id=String(body.application_id||'');
+  if(path==='supplement-request'){
+   if(a.role!=='organizer')return deny('organizer_only',403);
+   const reason=typeof body.reason==='string'?body.reason.trim():'';
+   if(Object.keys(body).some(k=>!['application_id','reason','notified_manually'].includes(k))||!reason||reason.length>300||body.notified_manually!==true)return deny('manual_supplement_notice_required',422);
+   const app=await db.prepare('SELECT id FROM ghv_practice_applications WHERE id=? AND workspace_id=?').bind(id,ws).first();if(!app)return deny('application_not_found',404);
+   try{await db.prepare("INSERT INTO ghv_practice_supplements(workspace_id,application_id,requested_by,reason,requested_at,deadline_at,original_values) SELECT workspace_id,id,?,?,unixepoch(),unixepoch()+172800,json_object('work_url',work_url,'contact_phone',contact_phone,'contact_handle',contact_handle,'affiliation',affiliation) FROM ghv_practice_applications WHERE id=? AND workspace_id=?").bind(a.actor_id,reason,id,ws).run()}catch{return deny('supplement_request_locked',409)}
+   const supplement=await db.prepare('SELECT application_id,requested_at,deadline_at FROM ghv_practice_supplements WHERE application_id=? AND workspace_id=?').bind(id,ws).first();
+   return reply({ok:true,emailSent:false,supplement:{...supplement,status:'pending',notification_method:'manual_test'}},201);
+  }
+  if(path==='supplement'){
+   if(a.role!=='member')return deny('member_only',403);
+   const allowed=['application_id','work_url','contact_phone','contact_handle','affiliation'];
+   if(Object.keys(body).some(k=>!allowed.includes(k))||allowed.some(k=>typeof body[k]!=='string'))return deny('supplement_fields_only',422);
+   const app=await db.prepare('SELECT * FROM ghv_practice_applications WHERE id=? AND workspace_id=? AND actor_id=?').bind(id,ws,a.actor_id).first();if(!app)return deny('application_not_found',404);
+   const fieldErrors=validatePracticeApplication({...app,...body,synthetic:true,priority_ack:true,media_ack:true});
+   if(Object.keys(fieldErrors).length)return deny('invalid_supplement',422,{fieldErrors});
+   try{const result=await db.prepare('UPDATE ghv_practice_applications SET work_url=?,contact_phone=?,contact_handle=?,affiliation=? WHERE id=? AND workspace_id=? AND actor_id=? AND EXISTS(SELECT 1 FROM ghv_practice_supplements WHERE application_id=? AND workspace_id=? AND completed_at IS NULL AND deadline_at>unixepoch())').bind(body.work_url.trim(),body.contact_phone.trim(),body.contact_handle.trim(),body.affiliation.trim(),id,ws,a.actor_id,id,ws).run();if(!result.meta?.changes)return deny('supplement_edit_locked',409)}catch{return deny('supplement_edit_locked',409)}
+   return reply({ok:true,application_id:id,source:'cloudflare-d1-private-practice'});
+  }
   if(path==='application'){
    if(a.role!=='member')return deny('member_only',403);
    const keys=['synthetic','stage_name','round_code','category','province','song_title','original_artist','work_url','contact_phone','contact_handle','birth_date','affiliation','song_language','song_key','priority_ack','media_ack'];
