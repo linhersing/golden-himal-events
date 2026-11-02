@@ -138,6 +138,41 @@ async function submitApplication(request,env,a){
  }catch{return deny('duplicate_round_or_database_rejected',409)}
  return json({ok:true,application_id:id,phase:'demo',status:'submitted',source:'cloudflare-d1-staging',testOnly:true},201);
 }
+// A member may correct or remove only their own unreviewed, unpaid TEST application.
+// These routes do not change the payment state and cannot update another account.
+async function updateApplication(request,env,a){
+ if(!requireRole(a,'member'))return deny('member_only',403);
+ const b=await bodyJSON(request,2500);if(!b)return deny('invalid_json');
+ const allowed=['application_id','stage_name','song_title','original_artist','demo_url'];
+ if(Object.keys(b).some(k=>!allowed.includes(k)))return deny('update_fields_only',422);
+ const id=String(b.application_id||'');
+ const values=['stage_name','song_title','original_artist','demo_url'].map(k=>typeof b[k]==='string'?b[k].trim():'');
+ if(values.some((v,i)=>!v||v.length>(i===3?1000:100))||values[0].length<2||!validPerformanceLink(values[3]))
+   return deny('invalid_demo_url_or_fields',422);
+ const app=await selectApplication(env.DB,id,a.id);
+ if(!app)return deny('application_not_found',404);
+ if(app.payment_status!=='unpaid'||app.status!=='submitted'||app.phase!=='demo')
+   return deny('update_locked',409);
+ const changed=await env.DB.prepare("UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,demo_url=?,updated_at=? WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo'")
+  .bind(...values,NOW(),id,a.id).run();
+ if(!changed.meta?.changes)return deny('update_locked',409);
+ const result=await selectApplication(env.DB,id,a.id);
+ return json({ok:true,application_id:result.id,stage_name:result.stage_name,song_title:result.song_title,original_artist:result.original_artist,demo_url:result.demo_url,testOnly:true});
+}
+async function deleteApplication(request,env,a){
+ if(!requireRole(a,'member'))return deny('member_only',403);
+ const b=await bodyJSON(request);if(!b||Object.keys(b).some(k=>k!=='application_id'))
+   return deny('invalid_json',422);
+ const id=String(b.application_id||'');
+ const app=await selectApplication(env.DB,id,a.id);
+ if(!app)return deny('application_not_found',404);
+ if(app.payment_status!=='unpaid'||app.status!=='submitted'||app.phase!=='demo'||app.media_key||app.eligibility_key||app.receipt_key)
+   return deny('delete_locked',409);
+ const changed=await env.DB.prepare("DELETE FROM e2e_applications WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo' AND media_key IS NULL AND eligibility_key IS NULL AND receipt_key IS NULL")
+  .bind(id,a.id).run();
+ if(!changed.meta?.changes)return deny('delete_locked',409);
+ return json({ok:true,deleted_application_id:id,testOnly:true});
+}
 async function mockPayment(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request);if(!b)return deny('invalid_json');
@@ -234,6 +269,8 @@ export async function handleE2E(request,env){
   if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:a,testOnly:true});
   if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env);
   if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
+   if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a);
+   if(pathname==='/api/e2e/delete-application'&&isPost)return await deleteApplication(request,env,a);
   if(pathname==='/api/e2e/mock-payment'&&isPost)return await mockPayment(request,env,a);
   if(pathname==='/api/e2e/demo-upload'&&isPost)return await mediaUpload(request,env,a);
   if(pathname==='/api/e2e/demo-download'&&!isPost)return await streamMedia(request,env,a);
