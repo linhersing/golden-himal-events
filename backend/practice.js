@@ -1,4 +1,4 @@
-import {practiceRankings} from './practice-ranking.js';
+import {admissionView,handleAdmission,reconcileAdmissions} from './practice-admission.js';
 import {validatePracticeApplication} from '../public/practice-validation.js';
 const cookieName='__Host-ghv-practice';
 const hour=3600,day=86400;
@@ -23,7 +23,10 @@ const requiredColumns={
  ghv_practice_votes:'workspace_id,voter_id,application_id,created_at',
  ghv_practice_events:'workspace_id,application_id,kind,phase,created_at',
  ghv_practice_vouchers:'id,workspace_id,account_id,season_year,application_id,face_value_npr,status,created_at',
- ghv_practice_supplements:'workspace_id,application_id,requested_by,reason,requested_at,deadline_at,notification_method,original_values,completed_at,corrected_values'
+ ghv_practice_supplements:'workspace_id,application_id,requested_by,reason,requested_at,deadline_at,notification_method,original_values,completed_at,corrected_values',
+ ghv_practice_admission_pools:'id,workspace_id,source_phase,round_code,category,primary_limit,reserve_limit,target_count,published_by,published_at,event_at,lock_at,candidate_ids,ballot_revision',
+ ghv_practice_admission_slots:'pool_id,workspace_id,application_id,source_phase,merit_order,initial_kind,status,notified_at,deadline_at,notice_by,responded_by,response_at',
+ ghv_practice_tie_ballots:'id,workspace_id,tie_key,source_phase,round_code,category,judge_id,ordering_json,created_at'
 };
 async function schemaReady(db){
  const r=await db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN ('ghv_practice_workspaces','ghv_practice_actors','ghv_practice_sessions','ghv_practice_applications','ghv_practice_scores','ghv_practice_votes','ghv_practice_events','ghv_practice_vouchers')").first();
@@ -31,6 +34,8 @@ async function schemaReady(db){
  if(Number(r?.n)!==8||Number(t?.n)!==6)return false;
  const corrections=await db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='trigger' AND name IN ('ghv_practice_supplement_request_guard','ghv_practice_supplement_edit_guard','ghv_practice_supplement_completed','ghv_practice_supplement_score_guard','ghv_practice_supplement_promotion_guard','ghv_practice_supplement_immutable')").first();
  if(Number(corrections?.n)!==6)return false;
+ const admissions=await db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='trigger' AND name IN ('ghv_practice_admission_pool_guard','ghv_practice_admission_pool_immutable','ghv_practice_admission_slot_insert','ghv_practice_admission_slot_guard','ghv_practice_admission_slot_event','ghv_practice_admission_promotion_guard','ghv_practice_admission_score_guard','ghv_practice_admission_application_guard','ghv_practice_admission_ballot_guard')").first();
+ if(Number(admissions?.n)!==9)return false;
  await db.batch(Object.entries(requiredColumns).map(([table,columns])=>db.prepare('SELECT '+columns+' FROM '+table+' LIMIT 0')));
  return true;
 }
@@ -82,7 +87,7 @@ async function view(db,a){
  const finalists=a.role==='member'?(await db.prepare("SELECT id,stage_name,category,round_code FROM ghv_practice_applications WHERE workspace_id=? AND phase='final' AND actor_id!=?").bind(a.workspace_id,a.actor_id).all()).results||[]:[];
  const voted=a.role==='member'?await db.prepare('SELECT application_id FROM ghv_practice_votes WHERE workspace_id=? AND voter_id=?').bind(a.workspace_id,a.actor_id).first():null;
  const votes=a.role==='organizer'?(await db.prepare('SELECT application_id,COUNT(*) AS n FROM ghv_practice_votes WHERE workspace_id=? GROUP BY application_id').bind(a.workspace_id).all()).results||[]:[];
- const rankings=a.role==='organizer'?practiceRankings(applications,scores,votes):[];
+ const admission=await admissionView(db,a),rankings=admission.resolved_rankings;
  const judge_status=a.role==='organizer'?(await db.prepare(`SELECT j.actor_id,
  CASE WHEN EXISTS(SELECT 1 FROM ghv_practice_sessions s WHERE s.workspace_id=j.workspace_id AND s.actor_id=j.actor_id AND s.expires_at>?) THEN 1 ELSE 0 END AS active_session,
  (SELECT COUNT(DISTINCT sc.application_id) FROM ghv_practice_scores sc WHERE sc.workspace_id=j.workspace_id AND sc.judge_id=j.actor_id AND sc.recused=0) AS scored_apps,
@@ -92,7 +97,13 @@ async function view(db,a){
  const standings=rankings.filter(r=>r.phase==='final');
  const vouchers=a.role==='judge'?[]:(await db.prepare("SELECT id,account_id,season_year,application_id,face_value_npr,status FROM ghv_practice_vouchers WHERE workspace_id=?"+(a.role==='member'?' AND account_id=?':'')).bind(...args).all()).results.map(v=>({...v,redeemable:false}));
  const supplements=(await db.prepare('SELECT application_id,requested_at,deadline_at,completed_at'+(a.role==='judge'?'':',requested_by,reason,notification_method,original_values,corrected_values')+' FROM ghv_practice_supplements WHERE workspace_id=?'+(a.role==='member'?' AND application_id IN (SELECT id FROM ghv_practice_applications WHERE workspace_id=? AND actor_id=?)':'')).bind(...(a.role==='member'?[a.workspace_id,a.workspace_id,a.actor_id]:[a.workspace_id])).all()).results.map(s=>({...s,status:s.completed_at!==null?'completed':now()>=s.deadline_at?'expired':'pending'}));
- return reply({ok:true,actor:actorInfo(a),applications,scores,judge_status,finalists,voted,rankings,standings,vouchers,supplements,server_now:now(),source:'cloudflare-d1-private-practice'});
+ const {resolved_rankings,...admissionState}=admission;
+ return reply({ok:true,actor:actorInfo(a),applications,scores,judge_status,finalists,voted,rankings,standings,vouchers,supplements,...admissionState,server_now:now(),source:'cloudflare-d1-private-practice'});
+}
+export async function runPracticeSchedule(env){
+ if(env.STAGING_PRACTICE_ENABLED!=='true'||!env.E2E_DB)return;
+ if(!await schemaReady(env.E2E_DB))return;
+ return reconcileAdmissions(env.E2E_DB);
 }
 export async function handlePractice(request,env){
  if(env.STAGING_PRACTICE_ENABLED!=='true'||!env.E2E_DB)return deny('practice_not_configured',503);
@@ -122,6 +133,7 @@ export async function handlePractice(request,env){
    return reply({ok:true,actor:actorInfo(a)},200,{'Set-Cookie':cookie(token)});
   }
   const a=await session(db,request);if(!a)return deny('practice_login_required',401);
+  await reconcileAdmissions(db,a.workspace_id);
   if(path==='stats'&&!post){
    if(a.role!=='organizer')return deny('organizer_only',403);
    return await organizerStatistics(db,a);
@@ -129,6 +141,7 @@ export async function handlePractice(request,env){
   if(path==='logout'&&post){await db.prepare('DELETE FROM ghv_practice_sessions WHERE session_hash=?').bind(a.session_hash).run();return reply({ok:true},200,{'Set-Cookie':cookie('',0)});}
   if(path==='me'&&!post)return await view(db,a);
   if(!post)return deny('not_found',404);
+  const admissionResult=await handleAdmission(path,body,db,a,{reply,deny});if(admissionResult)return admissionResult;
   const ws=a.workspace_id,id=String(body.application_id||'');
   if(path==='supplement-request'){
    if(a.role!=='organizer')return deny('organizer_only',403);

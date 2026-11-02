@@ -28,6 +28,7 @@
     "STAGING_SUBMISSION_MODE": "links",
     "STAGING_PRACTICE_ENABLED": "true"
   },
+  "triggers": {"crons": ["*/5 * * * *"]},
   "observability": {
     "enabled": false
   }

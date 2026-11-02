@@ -93,6 +93,21 @@ else{
   assert.equal(finalStats.vote_count,1);
   assert.equal(finalStats.voucher_count,1);
   console.log('PASS: live D1 metrics capture mock fees, 3 judges x 3 stages, votes, non-redeemable voucher; temporary workspace will be deleted.');
+  // Separate April group exercises new admission without replacing legacy checks.
+  const attendance=ok(await call('application',{...row,round_code:'2027-04',stage_name:'TEST ATTENDANCE HTTP'},voter),201).data.application.id;
+  for(const phase of ['demo','qualifier']){
+   for(const judge of judges)ok(await call('score',{application_id:attendance,phase,no_conflict:true,technique:phase==='demo'?54:36,interpretation:phase==='demo'?36:27,...(phase==='demo'?{}:{stage_presence:18,appearance:9})},judge),201);
+   const before=Math.floor(Date.now()/1000),published=ok(await call('admission-publish',{source_phase:phase,round_code:'2027-04',category:'community',event_at:before+30*86400,notified_manually:true},adminCookie),201);
+   assert.equal(published.data.emailSent,false);assert.equal(published.data.pool.primary_limit,phase==='demo'?25:8);assert.equal(published.data.pool.reserve_limit,phase==='demo'?5:2);
+   assert.equal((await call('promote',{application_id:attendance,phase},adminCookie)).status,409);
+   const privateView=ok(await call('me',undefined,voter)).data,slot=privateView.admission_slots.find(s=>s.pool_id===published.data.pool.id);
+   assert.equal(slot.deadline_at-slot.notified_at,172800);assert(privateView.admission_slots.every(s=>s.application_id===attendance));assert.equal(privateView.tie_ballots.length,0);
+   assert.equal((await call('admission-respond',{pool_id:slot.pool_id,application_id:attendance,response:'confirm'},member)).status,404);
+   ok(await call('admission-respond',{pool_id:slot.pool_id,application_id:attendance,response:'confirm'},voter));
+   ok(await call('admission-respond',{pool_id:slot.pool_id,application_id:attendance,response:'confirm'},voter));
+   const readback=ok(await call('me',undefined,voter)).data;assert.equal(readback.applications.find(a=>a.id===attendance).phase,phase==='demo'?'qualifier':'final');assert.equal(readback.admission_slots.find(s=>s.pool_id===slot.pool_id).status,'confirmed');
+  }
+  console.log('PASS: live D1 Demo25+5 / qualifier8+2 primary48h, owner-only idempotent attendance confirmation, automatic advancement and manual bypass rejection; no email sent.');
  }finally{
   if(created){if(!adminCookie)adminCookie=ok(await call('login',{pass:created.data.passes.find(p=>p.actor_id==='organizer').pass})).cookie;
    const cleanup=ok(await call('cleanup',{confirmation:'DELETE PRACTICE'},adminCookie));cleaned=cleanup.data.deleted_workspace===created.data.actor.workspace_id;
