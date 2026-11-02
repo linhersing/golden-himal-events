@@ -5,12 +5,12 @@ test('desktop Chinese choice makes login obvious and remains Chinese on personal
  await page.goto('/');
  const member=page.locator('.header-actions .member-gateway');
  await expect(member).toBeVisible();
- await expect(member).toContainText('Member Login / My Account');
+ await expect(member).toContainText('Internal Test Lab');
  await expect(page.locator('.preview-ribbon a')).toHaveCount(0);
  await expect(page.locator('.footer-test-links a')).toHaveCount(2);
  await page.locator('.site-header [data-lang="zh"]').click();
  await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
- await expect(member).toContainText('會員登入／我的專區');
+ await expect(member).toContainText('內部工程測試台');
  await expect(page.locator('.member-entrance')).toContainText('前往我的會員中心');
  await expect(page.locator('.preview-ribbon')).toContainText('請勿填寫真實個人資料');
  await expect(member).toHaveAttribute('href','./practice.html');
@@ -34,7 +34,7 @@ test('desktop Chinese choice makes login obvious and remains Chinese on personal
 test('English and Nepali switches stay in sync between homepage and login',async({page})=>{
  await page.goto('/');
  await page.locator('[data-lang="ne"]').click();
- await expect(page.locator('.member-gateway')).toContainText('सदस्य लगइन');
+ await expect(page.locator('.member-gateway')).toContainText('आन्तरिक परीक्षण');
  await expect(page.locator('.member-gateway')).toHaveAttribute('href','./practice.html');
  await page.goto('/member-login.html');
  await expect(page.locator('html')).toHaveAttribute('lang','ne');
@@ -43,7 +43,7 @@ test('English and Nepali switches stay in sync between homepage and login',async
  await expect(page.locator('#auth-view h2')).toHaveText('Member sign in');
  await page.locator('.header-link').click();
  await expect(page.locator('html')).toHaveAttribute('lang','en');
- await expect(page.locator('.member-gateway')).toContainText('Member Login / My Account');
+ await expect(page.locator('.member-gateway')).toContainText('Internal Test Lab');
 });
 
 test('small mobile screen keeps member access and three language controls readable',async({page})=>{
