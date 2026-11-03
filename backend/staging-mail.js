@@ -23,7 +23,10 @@ export function mailSenderReady(env){
  return true;
 }
 export async function sendTestEmail(env,message){
- if(!mailProviderReady(env)||!mailSenderReady(env)||message.from!==env.STAGING_FROM_EMAIL)throw Error('test_email_service_unavailable');
+ if(!mailProviderReady(env)||!mailSenderReady(env)||message.from!==env.STAGING_FROM_EMAIL){
+  console.error(JSON.stringify({event:'staging_email_send_failed',category:'configuration_not_ready'}));
+  throw Error('test_email_service_unavailable');
+ }
  try{
   if(env.STAGING_EMAIL_PROVIDER==='resend'){
    // Fail closed: Resend's shared test sender can send only to the owner's verified email.
@@ -39,7 +42,10 @@ export async function sendTestEmail(env,message){
     body:JSON.stringify({from:message.from,to:[message.to],subject:message.subject,text:message.text,html:message.html}),
     signal:AbortSignal.timeout(10000)
    });
-   if(!response.ok)throw Error('rejected');
+   if(!response.ok){
+    console.error(JSON.stringify({event:'staging_email_provider_rejected',provider:'resend',httpStatus:response.status}));
+    throw Error('rejected');
+   }
    const result=await response.json();
    if(typeof result.id!=='string'||!result.id)throw Error('missing_queue_ack');
    // Resend accepted the send request; actual inbox delivery requires separate confirmation.
@@ -58,5 +64,11 @@ export async function sendTestEmail(env,message){
   if(!response.ok)throw Error('rejected');
   const result=await response.json();if(typeof result.id!=='string'||!result.id)throw Error('missing_queue_ack');
   // Queued is provider acceptance, not proof that an inbox received the email.
- }catch{throw Error('test_email_service_unavailable')}
+ }catch(error){
+  // Only emit fixed diagnostic categories: never log addresses, OTPs, API keys, request bodies or provider responses.
+  const category=error instanceof Error&&['rejected','missing_queue_ack','test_recipient_not_allowed'].includes(error.message)
+   ? error.message:'transport_or_unknown_error';
+  console.error(JSON.stringify({event:'staging_email_send_failed',provider:env.STAGING_EMAIL_PROVIDER||'cloudflare',category}));
+  throw Error('test_email_service_unavailable');
+ }
 }
