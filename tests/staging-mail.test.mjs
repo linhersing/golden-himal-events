@@ -36,3 +36,56 @@ test('native Cloudflare Email binding remains supported',async()=>{
  assert.equal(mailProviderReady(native),true);assert.equal(mailSenderReady(native),true);
  await sendTestEmail(native,{...letter,from:native.STAGING_FROM_EMAIL});assert.equal(sent.to,letter.to);
 });
+
+const resendEnv={
+ STAGING_EMAIL_PROVIDER:'resend',
+ STAGING_RESEND_API_KEY:'re_'+'testkeyonlyabcdef0123456789',
+ STAGING_FROM_EMAIL:'onboarding@resend.dev',
+ STAGING_RESEND_TEST_RECIPIENT:'owner@example.com'
+};
+const resendLetter={from:'onboarding@resend.dev',to:'owner@example.com',
+ subject:'Golden Himal Voice verification',text:'Test OTP message',html:'<p>Test OTP message</p>'};
+test('Resend adapter calls fixed HTTPS endpoint using a secret bearer key and allows only the account owner',async t=>{
+ const calls=[];t.mock.method(globalThis,'fetch',async (url,init)=>{
+  calls.push({url,init});return Response.json({id:'test-message-id'})
+ });
+ assert.equal(mailProviderReady(resendEnv),true);
+ assert.equal(mailSenderReady(resendEnv),true);
+ await sendTestEmail(resendEnv,resendLetter);
+ assert.equal(calls.length,1);
+ assert.equal(calls[0].url,'https://api.resend.com/emails');
+ assert.equal(calls[0].init.method,'POST');
+ assert.equal(calls[0].init.redirect,'error');
+ assert.equal(calls[0].init.headers.Authorization,'Bearer '+resendEnv.STAGING_RESEND_API_KEY);
+ assert.equal(calls[0].init.headers['User-Agent'],'golden-himal-voice/1.0');
+ assert.deepEqual(JSON.parse(calls[0].init.body),{
+  from:'onboarding@resend.dev',to:['owner@example.com'],subject:resendLetter.subject,
+  text:resendLetter.text,html:resendLetter.html
+ });
+});
+test('Resend refuses non-owner recipient before contacting the external email API',async t=>{
+ let called=false;t.mock.method(globalThis,'fetch',async()=>{called=true;throw Error('unexpected')});
+ await assert.rejects(sendTestEmail(resendEnv,{...resendLetter,to:'outsider@example.com'}),
+  e=>e.message==='test_email_service_unavailable');
+ assert.equal(called,false);
+});
+test('Resend defaults are fail-closed if missing API key, test-recipient or verified sender',async t=>{
+ let called=false;t.mock.method(globalThis,'fetch',async()=>{called=true;throw Error('unexpected')});
+ for(const invalid of [
+  {...resendEnv,STAGING_RESEND_API_KEY:''},
+  {...resendEnv,STAGING_RESEND_TEST_RECIPIENT:''},
+  {...resendEnv,STAGING_FROM_EMAIL:'notifications@not-verified.example'},
+  {...resendEnv,STAGING_EMAIL_PROVIDER:'fake'},
+ ]){
+  assert.equal(mailProviderReady(invalid)&&mailSenderReady(invalid),false);
+  await assert.rejects(sendTestEmail(invalid,resendLetter));
+ }
+ assert.equal(called,false);
+});
+test('Resend rejected requests and missing acceptance ID do not falsely indicate delivery',async t=>{
+ t.mock.method(globalThis,'fetch',async()=>new Response('private provider response',{status:403}));
+ await assert.rejects(sendTestEmail(resendEnv,resendLetter),e=>e.message==='test_email_service_unavailable');
+ t.mock.restoreAll();
+ t.mock.method(globalThis,'fetch',async()=>Response.json({notAnId:true}));
+ await assert.rejects(sendTestEmail(resendEnv,resendLetter),e=>e.message==='test_email_service_unavailable');
+});
