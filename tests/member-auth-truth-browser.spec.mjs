@@ -166,6 +166,7 @@ test('Chinese selected on homepage remains Chinese through singer and news; lang
  await page.screenshot({path:'test-results/ghv-trilingual/01-desktop-english-editorial-news.png'});
 });
 test('signed-in returning member sees existing entry, no new application panel, and can edit in Chinese',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
  const record={id:'SYNTHETIC-ENTRY-001',stage_name:'測試歌手',song_title:'示範歌曲',category:'university',round_code:'2027-01',status:'submitted',payment_status:'unpaid',demo_url:'https://youtu.be/abc123'};
  await page.route('**/api/e2e/**',async route=>{
   const p=new URL(route.request().url()).pathname;
