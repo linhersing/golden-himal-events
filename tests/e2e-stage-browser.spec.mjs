@@ -40,7 +40,7 @@ test('short public homepage leads to a separate singer portal and staff surface'
  await page.goto('/');
  await expect(page.locator('.front-actions a')).toHaveCount(3);
  await expect(page.locator('.front-actions a').first()).toHaveAttribute('href','./member.html#register');
- await expect(page.locator('.backoffice-link')).toHaveAttribute('href','./backoffice.html');
+ await expect(page.locator('.backoffice-link')).toHaveCount(0);
  await page.goto('/e2e-stage.html');
  await expect(page.locator('#round option')).toHaveCount(2);
  await expect(page.locator('#round option').first()).toHaveAttribute('value','2027-01');
