@@ -14,7 +14,7 @@ test('late resend cannot relabel a recipient, replace a newer request, or re-ena
   async fetch(){const n=++count;if(n===2)await delayed;return Response.json({ok:true,challenge_id:'test-challenge-'+n,request_ref:'ref-'+n})}
  });
  const source=await readFile(process.env.GHV_AUTH_TEST_SOURCE||new URL('../public/e2e-stage.js',import.meta.url),'utf8');
- vm.runInContext(source.replace(/^import .*\n/,'').replace('locale(lang);session();',''),context);
+ vm.runInContext(source.replace(/^import .*\r?\n/,'').replace('locale(lang);session();',''),context);
  el('email').value='qa+old@gmail.com';
  await vm.runInContext("requestVerification($('send-form').querySelector('button'))",context);
  vm.runInContext('resendUntil=0;updateResend()',context);

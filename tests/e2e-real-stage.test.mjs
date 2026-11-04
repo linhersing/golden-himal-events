@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 import {handleE2E} from '../backend/staging-e2e.js';
 const src=async p=>readFile(new URL(p,import.meta.url),'utf8');
 test('e2e API fails closed without D1, sender, allowlist, and identity secret',async()=>{
@@ -55,7 +56,7 @@ test('staging runtime rejects missing sessions and restricts mutation by origin'
  assert.match(api,/e2e_not_configured/);
  const paths=['backend/staging-e2e.js','backend/staging-v2-flow.js','backend/staging-registration-worker.js','public/e2e-stage.js'];
  for(const path of paths){
-  const res=spawnSync(process.execPath,['--check',new URL('../'+path,import.meta.url).pathname],{encoding:'utf8'});
+  const res=spawnSync(process.execPath,['--check',fileURLToPath(new URL('../'+path,import.meta.url))],{encoding:'utf8'});
   assert.equal(res.status,0,path+' '+res.stderr);
  }
 });

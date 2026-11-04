@@ -1,6 +1,6 @@
 // Alan V2 competition logic, STAGING ONLY. Called only after verified session,
 // same-origin checks and configured() gate in staging-e2e.js.
-export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON}){
+export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication}){
  const path=new URL(request.url).pathname,post=request.method==='POST';
  const db=env.DB;
  // Explicit closed rehearsal: link evidence is not identity or payment verification.
@@ -26,10 +26,11 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON})
   if(forbidden('reviewer'))return forbidden('reviewer');
   const b=await bodyJSON(request);if(!b)return deny('invalid_json');
   if(b.no_conflict!==true)return deny('conflict_declaration_required',422);
-  const app=await db.prepare(`SELECT p.id,p.phase FROM e2e_applications p WHERE p.id=?
+  const app=await db.prepare(`SELECT p.id,p.phase,p.account_id FROM e2e_applications p WHERE p.id=?
    AND p.payment_status='simulated_paid' AND ${evidence}
    AND p.status NOT IN ('withdrawn','rejected')`).bind(b.application_id).first();
   if(!app)return deny('not_reviewable',409);
+  if(await ownsApplication(env,a,app.account_id))return deny('self_review_disallowed',403);
   if(b.phase!==app.phase)return deny('stale_reviewer_stage_reload_required',409);
   const demo=app.phase==='demo',caps=demo?[60,40]:[40,30,20,10];
   const inputs=demo?[b.technique,b.interpretation]:[b.technique,b.interpretation,b.stage_presence,b.appearance];

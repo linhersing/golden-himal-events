@@ -10,7 +10,7 @@ test('remote acceptance refuses to certify any deployment without an expected co
 
 // Real CLI contract regression with SQLite standing in for the external Cloudflare service.
 // File imports may print progress text even with --json; successful exit plus real readback is authoritative.
-test('successful SQL file import with progress output still verifies actual schema and preserved rows',()=>{
+test('successful SQL file import with progress output still verifies actual schema and preserved rows',{skip:process.platform==='win32'?'POSIX npx fixture; runs on Linux CI':false},()=>{
  const root=mkdtempSync(join(tmpdir(),'ghv-provision-output-')),script=resolve('scripts/provision-practice.mjs');
  try{
   mkdirSync(join(root,'bin'));mkdirSync(join(root,'backend/migrations'),{recursive:true});

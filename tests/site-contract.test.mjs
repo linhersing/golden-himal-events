@@ -6,11 +6,12 @@ test('home is focused on registration, member login and news only',async()=>{
  const html=await read('index.html');
  assert.match(html,/class="front-actions"/);
  for(const href of ['./member.html#register','./member.html#login','./news.html'])assert.ok(html.includes('href="'+href+'"'),href);
- // The staff URL is intentionally not linked from public visitor HTML; its route is unchanged.
+ // One discreet staff link is intentional; it is navigation, never authentication.
  const forbiddenStaffHref=/<a\b[^>]*\bhref\s*=\s*["'][^"']*(?:backoffice|admin-center)[^"']*["']/i;
  assert.match('<a href="./backoffice.html">staff</a>',forbiddenStaffHref);
  assert.match('<a href="./admin-center.html">admin</a>',forbiddenStaffHref);
- assert.doesNotMatch(html,forbiddenStaffHref);
+ assert.equal((html.match(forbiddenStaffHref)||[]).length,1);
+ assert.match(html,/<a href="\.\/backoffice.html" class="staff-stealth-link"/);
  assert.match(html,/class="front-footer wrap"/);
  assert.match(html,/網站預覽階段/);
  assert.doesNotMatch(html,/<form[^>]+action\s*=/i);

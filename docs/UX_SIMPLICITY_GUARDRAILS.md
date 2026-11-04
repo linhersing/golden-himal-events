@@ -6,7 +6,7 @@
 
 ## 2026年11月4日｜前台與後台分流的長期安全守則
 
-- 公開首頁只供「我要報名／會員登入／最新公告」；訪客不顯示後台捷徑。這是**減少干擾與誤點**，不是把頁面藏起來就認證成功。
+- 公開首頁只供「我要報名／會員登入／最新公告」；頁尾可保留一個低調工作人員連結，依2026年11月4日較新決策。這是**減少干擾與誤點**，不是把頁面藏起來就認證成功。
 - 測試期保留完全不變的 `/backoffice.html` 私人直達 URL（交付專案管理者），不要破壞 GitHub 及其他測試入口；正式受保護管理網域／路徑完成前，不得刪除使用中的測試通道。
 - **隱藏URL不等於資安**：未授權者即使直接猜到後台 URL，`/api/e2e/organizer-queue`、`/api/e2e/reviewer-queue`、評分／管理 API 都要由伺服器驗證 session 與角色；`/api/staging/management/*` 另須 Cloudflare Access 及管理員白名單，不能相信瀏覽器的角色參數。
 - 正式發布前，要套用 Cloudflare Zero Trust Access 的管理端專用範圍，含所有相同後台的自訂網域、`workers.dev`替代入口及敏感管理 API。**不可錯套到整個對外報名 Worker**，否則歌手首頁也會被要求工作人員登入。Cloudflare 文件 https://developers.cloudflare.com/workers/configuration/cloudflare-access/ 。
