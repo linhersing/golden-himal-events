@@ -10,6 +10,7 @@ test('public homepage has no fake registration form or fake success message',asy
 test('member Email integration fails closed when not configured',async({page})=>{
  await page.route('**/api/e2e/**',async r=>r.fulfill({status:503,json:{ok:false,error:'e2e_not_configured'}}));
  await page.goto('/member.html#register');
+ await page.locator('[data-lang=en]').click();
  await page.locator('#member-email-form [name=email]').fill('fictional@example.invalid');
  await page.locator('#member-email-form button').click();
  await expect(page.locator('#member-status')).toContainText('Email login is not available yet');
@@ -53,6 +54,7 @@ test('Nepal singer onboarding CTA and category guidance work on mobile (syntheti
   await r.fulfill({status:payload.ok?200:404,contentType:'application/json',body:JSON.stringify(payload)});
  });
  await page.goto('/member.html#login');
+ await page.locator('[data-lang=en]').click();
  await expect(page.locator('#member-panel')).toBeVisible();
  await expect(page.locator('#start-application')).toBeVisible();
  await expect(page.locator('#application-details')).not.toHaveAttribute('open','');
@@ -92,6 +94,7 @@ test('TEST payment state is displayed after explicit confirmation, never claimed
  });
  page.on('dialog',d=>d.accept());
  await page.goto('/member.html#login');
+ await page.locator('[data-lang=en]').click();
  await expect(page.getByText('Complete TEST checkout (no charge)')).toBeVisible();
  await page.getByText('Complete TEST checkout (no charge)').click();
  await expect(page.locator('#test-completion')).toBeVisible();
@@ -104,9 +107,10 @@ test('TEST payment state is displayed after explicit confirmation, never claimed
 test('latest news remains short expandable cards (synthetic UI screenshot)',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/news.html');
- await expect(page.locator('.announcement-accordion')).toHaveCount(4);
- await page.locator('.announcement-accordion').first().locator('summary').click();
- await expect(page.locator('.announcement-accordion').first()).toHaveAttribute('open','');
+ await page.locator('[data-lang=en]').click();
+ await expect(page.locator('.news-row')).toHaveCount(4);
+ await page.locator('.news-row').first().locator('summary').click();
+ await expect(page.locator('.news-row').first()).toHaveAttribute('open','');
  await expect(page.getByText(/January 1–31/)).toBeVisible();
  await page.screenshot({path:'test-results/ghv-singer-ux-20261104/04-mobile-news-accordion.png'});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
@@ -123,6 +127,7 @@ test('deleting a TEST entry requires confirmation and cancel leaves the record i
   await r.fulfill({status:data.ok?200:404,contentType:'application/json',body:JSON.stringify(data)});
  });
  await page.goto('/member.html#login');
+ await page.locator('[data-lang=en]').click();
  const del=page.getByText('Delete this TEST entry');
  await expect(del).toBeVisible();
  page.once('dialog',dialog=>{expect(dialog.message()).toContain('cannot be undone');dialog.dismiss()});
@@ -133,4 +138,65 @@ test('deleting a TEST entry requires confirmation and cancel leaves the record i
  await del.click();
  await expect(page.locator('#entries')).toContainText('No entries yet');
  expect(deletes).toBe(1);
+});
+
+/* Regression: homepage selection must carry to every participant page and survive refresh. */
+test('Chinese selected on homepage remains Chinese through singer and news; language controls switch all three',async({page})=>{
+ await page.goto('/');
+ await page.locator('[data-lang=zh]').click();
+ await page.locator('a.choice-main').click();
+ await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
+ await expect(page.locator('h1')).toContainText('歌手報名');
+ await expect(page.locator('#member-email-form button')).toContainText('寄送驗證碼');
+ await page.locator('[data-lang=ne]').click();
+ await expect(page.locator('html')).toHaveAttribute('lang','ne');
+ await expect(page.locator('h1')).toContainText('गायक');
+ await page.locator('a[href="./news.html"]').click();
+ await expect(page.locator('html')).toHaveAttribute('lang','ne');
+ await expect(page.locator('h1')).toContainText('नयाँ');
+ await page.locator('[data-lang=zh]').click();
+ await expect(page.locator('h1')).toContainText('最新消息');
+ await expect(page.locator('.news-row').first().locator('strong')).toContainText('海選報名時間');
+ await page.reload();
+ await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
+ await expect(page.locator('h1')).toContainText('最新消息');
+ await page.locator('[data-lang=en]').click();
+ await expect(page.locator('h1')).toContainText('Latest updates');
+ await expect(page.locator('.news-row')).toHaveCount(4);
+ await page.screenshot({path:'test-results/ghv-trilingual/01-desktop-english-editorial-news.png'});
+});
+test('signed-in returning member sees existing entry, no new application panel, and can edit in Chinese',async({page})=>{
+ const record={id:'SYNTHETIC-ENTRY-001',stage_name:'測試歌手',song_title:'示範歌曲',category:'university',round_code:'2027-01',status:'submitted',payment_status:'unpaid',demo_url:'https://youtu.be/abc123'};
+ await page.route('**/api/e2e/**',async route=>{
+  const p=new URL(route.request().url()).pathname;
+  const v=p.endsWith('/me')?{ok:true,account:{id:'synthetic',role:'member'}}:
+   p.endsWith('/applications')?{ok:true,applications:[record]}:{ok:false,error:'not_found'};
+  await route.fulfill({status:v.ok?200:404,json:v});
+ });
+ await page.goto('/');
+ await page.locator('[data-lang=zh]').click();
+ await page.goto('/member.html#register');
+ await expect(page.locator('#member-panel')).toBeVisible();
+ await expect(page.locator('#new-application-callout')).toBeHidden();
+ await expect(page.locator('#application-details')).toBeHidden();
+ await expect(page.locator('#entries')).toContainText('測試歌手');
+ await expect(page.locator('#entries')).toContainText('修改資料');
+ await page.getByText('修改資料').click();
+ await expect(page.locator('[data-editing]')).toBeVisible();
+ await expect(page.locator('[data-editing]')).toContainText('修改測試報名資料');
+ await page.screenshot({path:'test-results/ghv-trilingual/02-mobile-registered-dashboard-zh.png'});
+});
+test('mobile news and member pages retain full Chinese layout without horizontal overflow',async({page})=>{
+ await page.setViewportSize({width:375,height:812});
+ await page.goto('/');await page.locator('[data-lang=zh]').click();
+ await page.goto('/member.html');
+ await expect(page.locator('#member-email-form')).toBeVisible();
+ await expect(page.locator('h1')).toContainText('歌手報名');
+ await page.screenshot({path:'test-results/ghv-trilingual/03-mobile-member-login-zh.png'});
+ await page.goto('/news.html');
+ await expect(page.locator('.news-row')).toHaveCount(4);
+ await expect(page.locator('h1')).toContainText('最新消息');
+ await page.screenshot({path:'test-results/ghv-trilingual/04-mobile-news-zh.png'});
+ const dims=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth}));
+ expect(dims.scroll).toBeLessThanOrEqual(dims.client);
 });
