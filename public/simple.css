@@ -26,3 +26,52 @@
 .announcement-accordion[open]>summary{border-bottom:1px solid #e8dac8}
 .announcement-accordion .announcement-body{padding:12px 19px;color:#735f52;font-size:.88rem}
 @media(max-width:520px){.start-callout{padding:20px 17px}.btn-apply{width:100%;font-size:.96rem}.application-panel>summary small{display:block;margin:0 0 0 17px}.start-callout [lang=ne]{font-size:.81rem}}
+
+/* 2026-11-04: preserve EN/ne/zh on every participant page, refined editorial updates. */
+.top-utilities{display:flex;gap:15px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.top-utilities .locale{box-shadow:inset 0 0 0 1px #e3d6c4}
+.top-utilities .locale button{cursor:pointer;transition:background .2s ease}
+.top-utilities .quick-nav a{background:#f4ebdf;font-size:.78rem}
+.news-shell{max-width:935px}
+.news-heading{display:flex;justify-content:space-between;align-items:center;gap:30px;margin-bottom:30px}
+.news-heading .page-heading{font-size:clamp(2rem,5vw,3.3rem)}
+.news-heading .page-intro{max-width:580px;margin-top:12px}
+.news-decor{flex:none;width:122px;height:122px;border:1px solid #dac8b2;border-radius:50%;color:#9a7958;display:grid;place-content:center;text-align:center;transform:rotate(-9deg);opacity:.75}
+.news-decor span{font-family:Georgia,serif;font-size:1.42rem;letter-spacing:.09em}
+.news-decor small{letter-spacing:.18em;font-size:.7rem}
+.news-board{border-top:2px solid #8c5b45;border-bottom:1px solid #d9c8b4;background:#fffefa;border-radius:1px;box-shadow:0 13px 44px #4e32200a}
+.news-board-head{display:flex;justify-content:space-between;align-items:start;gap:20px;padding:23px 29px;background:#fffdfa}
+.news-board-heading{display:block;color:#a27b50;font-size:.7rem;font-weight:900;letter-spacing:.16em}
+.news-board-head p{font-size:.83rem;color:#887467;line-height:1.6;margin:4px 0 0;max-width:610px}
+.news-edition{color:#b49b80;white-space:nowrap;font-size:.71rem;letter-spacing:.1em;padding-top:4px}
+.news-row{border-top:1px solid #e9dfd1;margin:0}
+.news-row>summary{display:flex;align-items:center;gap:23px;padding:22px 29px;cursor:pointer;list-style:none;transition:background .18s ease}
+.news-row>summary::-webkit-details-marker{display:none}
+.news-row>summary::marker{content:""}
+.news-row>summary:hover{background:#f9f4ec}
+.news-row[open]>summary{background:#f9f4ec}
+.news-number{flex:0 0 40px;font:normal 1.13rem/1 Georgia,serif;color:#b18b62}
+.news-copy{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+.news-copy small{font-size:.65rem;letter-spacing:.14em;font-weight:750;color:#a07b53}
+.news-copy strong{font-size:1.14rem;color:#49342e;font-weight:800;letter-spacing:.015em}
+.news-copy>span{font-size:.8rem;color:#97816d}
+.news-plus{flex:0 0 33px;width:33px;height:33px;border:1px solid #cbb79d;border-radius:50%;position:relative;display:block;transition:transform .2s ease,background .2s}
+.news-plus:before,.news-plus:after{content:"";position:absolute;display:block;background:#7f6454;top:15px;left:10px;width:11px;height:1.5px}
+.news-plus:after{transform:rotate(90deg)}
+.news-row[open] .news-plus{transform:rotate(45deg);background:#f3e7d6}
+.news-detail{padding:0 77px 23px 92px}
+.news-detail p{font-size:.92rem;color:#65544a;margin:4px 0 0;line-height:1.8;max-width:710px}
+@media(max-width:700px){
+ .masthead:has(.top-utilities){flex-wrap:wrap;padding-block:13px;gap:10px;align-items:center}
+ .top-utilities{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px}
+ .top-utilities .locale button{min-width:42px}
+ .top-utilities .quick-nav a{font-size:.72rem;padding:7px 10px}
+ .news-heading{gap:10px}.news-decor{width:79px;height:79px}.news-decor span{font-size:1rem}
+ .news-board-head{padding:20px 17px}.news-edition{display:none}
+ .news-row>summary{padding:18px 17px;gap:12px}.news-number{flex-basis:28px;font-size:.95rem}
+ .news-copy strong{font-size:1rem}.news-copy>span{font-size:.75rem}
+ .news-plus{flex-basis:30px;width:30px;height:30px}
+ .news-plus:before,.news-plus:after{top:14px;left:9px}
+ .news-detail{padding:0 18px 22px 58px}
+}
+@media(max-width:360px){.top-utilities .quick-nav{gap:4px}.top-utilities .quick-nav a{padding:7px 8px}.news-decor{display:none}}
