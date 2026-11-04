@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "golden-himal-voice-preview",
+  "keep_vars": true,
   "main": "./backend/staging-registration-worker.js",
   "compatibility_date": "2026-10-28",
   "assets": {
@@ -30,6 +31,7 @@
   },
   "triggers": {"crons": ["*/5 * * * *"]},
   "observability": {
-    "enabled": false
+    "enabled": true,
+    "head_sampling_rate": 1
   }
 }
