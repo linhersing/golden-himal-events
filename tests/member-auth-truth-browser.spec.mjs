@@ -12,7 +12,7 @@ test('member Email integration fails closed when not configured',async({page})=>
  await page.goto('/member.html#register');
  await page.locator('#member-email-form [name=email]').fill('fictional@example.invalid');
  await page.locator('#member-email-form button').click();
- await expect(page.locator('#member-status')).toContainText('尚未開通 Email');
+ await expect(page.locator('#member-status')).toContainText('Email login is not available yet');
  await expect(page.locator('#member-panel')).toBeHidden();
 });
 test('multi-round member dashboard opens correct unpaid application at checkout',async({page})=>{
