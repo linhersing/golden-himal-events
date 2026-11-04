@@ -18,18 +18,41 @@ const staff=page==='back',prefix=staff?'back':'member';
 let busy=false,challenge=null,role=staff?'organizer':'member',account=null;
 const statusBox=$(prefix+'-status');
 function status(text,bad=false){if(!statusBox)return;statusBox.hidden=false;statusBox.className='feedback'+(bad?' error':' success');statusBox.textContent=text;statusBox.scrollIntoView({block:'nearest',behavior:'smooth'})}
-function friendlyError(e){const errors={e2e_not_configured:'目前尚未開通 Email 驗證服務，無法登入。正式系統需先完成寄信設定。',test_email_service_unavailable:'寄信服務目前不可使用，請稍後或確認平台設定。',not_on_test_allowlist:'此 Email 尚未獲授權，目前只接受受邀帳號。',expired_or_invalid_code:'驗證碼錯誤或已過期，請重新取得。',login_required:'請先登入。',organizer_only:'這個帳號不是主辦單位，無權查看管理資料。',reviewer_only:'這個帳號不是評審，無權打分。',member_only:'此帳號並非會員。',update_locked:'這筆資料已進入審核或模擬繳費階段，無法直接修改。',delete_locked:'這筆資料已進入評審或後續流程，無法直接刪除。',invalid_demo_url:'請輸入有效的公開作品連結。',annual_category_locked:'年度組別已鎖定。',already_scored_or_unavailable:'你已評過這位選手，不能重複給分。'};return errors[e?.message]||('目前無法完成操作（'+(e?.message||'連線失敗')+'）。')}
+function friendlyError(e){
+ if(page==='member'){
+  const errors={
+   e2e_not_configured:'Email login is not available yet. Please contact the organizer.',
+   test_email_service_unavailable:'We could not send the code. Please try again later or contact the organizer.',
+   not_on_test_allowlist:'This email is not approved for the TEST portal.',
+   expired_or_invalid_code:'The code is incorrect or expired. Request a new one.',
+   login_required:'Please log in first.',
+   member_only:'This account is not a singer account.',
+   update_locked:'This TEST entry is already in review or checkout and can no longer be edited.',
+   delete_locked:'This TEST entry can no longer be deleted.',
+   invalid_demo_url:'Enter a valid public YouTube or Google Drive video link.',
+   annual_category_locked:'Your competition category is fixed for this year.',
+   community_age_confirmation_required:'Please confirm the 18+ community eligibility statement.',
+   university_student_confirmation_required:'Please confirm your current university enrollment.',
+   contract_declaration_required:'Please confirm the exclusive-contract declaration.',
+   duplicate_round_or_database_rejected:'This audition window may already have a saved entry.',
+   invalid_demo_url_or_fields:'Check the song details and public video link.',
+   mock_payment_not_allowed:'This TEST entry is not eligible for simulated checkout.',
+   test_payment_result_unverified:'TEST checkout was not confirmed. No payment was charged.'
+  };
+  return errors[e?.message]||('Unable to finish this action ('+(e?.message||'network error')+').');
+ }
+ const errors={e2e_not_configured:'目前尚未開通 Email 驗證服務，無法登入。正式系統需先完成寄信設定。',test_email_service_unavailable:'寄信服務目前不可使用，請稍後或確認平台設定。',not_on_test_allowlist:'此 Email 尚未獲授權，目前只接受受邀帳號。',expired_or_invalid_code:'驗證碼錯誤或已過期，請重新取得。',login_required:'請先登入。',organizer_only:'這個帳號不是主辦單位，無權查看管理資料。',reviewer_only:'這個帳號不是評審，無權打分。',member_only:'此帳號並非會員。',update_locked:'這筆資料已進入審核或模擬繳費階段，無法直接修改。',delete_locked:'這筆資料已進入評審或後續流程，無法直接刪除。',invalid_demo_url:'請輸入有效的公開作品連結。',annual_category_locked:'年度組別已鎖定。',already_scored_or_unavailable:'你已評過這位選手，不能重複給分。'};return errors[e?.message]||('目前無法完成操作（'+(e?.message||'連線失敗')+'）。')}
 async function api(path,body){const c=new AbortController(),timer=setTimeout(()=>c.abort(),18000);try{const r=await fetch('/api/e2e/'+path,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),credentials:'same-origin',cache:'no-store',signal:c.signal});const data=await r.json();if(!r.ok||data.ok!==true)throw new Error(data.error||('HTTP '+r.status));return data}finally{clearTimeout(timer)}}
 async function run(fn){if(busy)return;busy=true;document.body.classList.add('requesting');try{await fn()}catch(e){status(friendlyError(e),true)}finally{busy=false;document.body.classList.remove('requesting')}}
 function authUI(signedIn){(staff?$('back-signin'):$('signin-panel')).hidden=signedIn;$(prefix+'-dashboard')?.setAttribute('hidden','');if(staff){$('back-dashboard').hidden=!signedIn}else{$('member-panel').hidden=!signedIn}}
 function authForms(email){$(prefix+'-email-form').hidden=!email;$(prefix+'-code-form').hidden=email}
-async function loadSession(){try{const v=await api('me');if(v.account.role!==role){account=null;authUI(false);status('已登入其他身分，請先登出再切換角色。',true);return;}account=v.account;authUI(true);await dashboard()}catch(e){account=null;authUI(false);if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
+async function loadSession(){try{const v=await api('me');if(v.account.role!==role){account=null;authUI(false);status(page==='member'?'Another account role is already signed in. Log out before switching.':'已登入其他身分，請先登出再切換角色。',true);return;}account=v.account;authUI(true);await dashboard()}catch(e){account=null;authUI(false);if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
 function setupAuth(){
 const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
-mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{const {email}=formValues(mailForm);const v=await api('request-code',{email,role});challenge=v.challenge_id;authForms(false);status('驗證信已要求寄送，請查看 Email（僅限受邀測試帳號）。');codeForm.querySelector('input').focus()})});
-codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{await api('verify-code',{challenge_id:challenge,code:String(formValues(codeForm).code||'').trim()});codeForm.reset();await loadSession();if(account)status('已登入。')})});
+mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{const {email}=formValues(mailForm);const v=await api('request-code',{email,role});challenge=v.challenge_id;authForms(false);status(page==='member'?'Verification email requested. Check your inbox (TEST accounts only).':'驗證信已要求寄送，請查看 Email（僅限受邀測試帳號）。');codeForm.querySelector('input').focus()})});
+codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{await api('verify-code',{challenge_id:challenge,code:String(formValues(codeForm).code||'').trim()});codeForm.reset();await loadSession();if(account)status(page==='member'?'Signed in successfully.':'已登入。')})});
 const change=$(staff?'back-change':'change-mail');change?.addEventListener('click',()=>{authForms(true);challenge=null;statusBox.hidden=true});
-$(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);challenge=null;authForms(true);status('已登出。')}));
+$(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);challenge=null;authForms(true);status(page==='member'?'Signed out.':'已登出。')}));
 }
 async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else await renderJudge()}else await renderMember()}
 function drawEntry(a){
