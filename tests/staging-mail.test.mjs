@@ -89,3 +89,17 @@ test('Resend rejected requests and missing acceptance ID do not falsely indicate
  t.mock.method(globalThis,'fetch',async()=>Response.json({notAnId:true}));
  await assert.rejects(sendTestEmail(resendEnv,resendLetter),e=>e.message==='test_email_service_unavailable');
 });
+
+test('Resend diagnostic log includes attempted request and rejection but never private content',async t=>{
+ const messages=[];
+ t.mock.method(console,'info',x=>messages.push(String(x)));
+ t.mock.method(console,'error',x=>messages.push(String(x)));
+ t.mock.method(globalThis,'fetch',async()=>new Response('private-provider-payload',{status:403}));
+ await assert.rejects(sendTestEmail(resendEnv,resendLetter),x=>x.message==='test_email_service_unavailable');
+ const log=messages.join('\n');
+ assert.match(log,/staging_email_fetch_start/);
+ assert.match(log,/staging_email_provider_rejected/);
+ assert.match(log,/httpStatus.*403/);
+ for(const secret of [resendEnv.STAGING_RESEND_API_KEY,resendEnv.STAGING_RESEND_TEST_RECIPIENT,resendLetter.text,'private-provider-payload'])
+  assert.equal(log.includes(secret),false);
+});
