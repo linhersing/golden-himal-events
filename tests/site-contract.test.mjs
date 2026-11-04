@@ -5,7 +5,10 @@ const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 test('home is focused on registration, member login and news only',async()=>{
  const html=await read('index.html');
  assert.match(html,/class="front-actions"/);
- for(const href of ['./member.html#register','./member.html#login','./news.html','./backoffice.html'])assert.ok(html.includes('href="'+href+'"'),href);
+ for(const href of ['./member.html#register','./member.html#login','./news.html'])assert.ok(html.includes('href="'+href+'"'),href);
+ // The staff URL is intentionally not linked from public visitor HTML; its route is unchanged.
+ assert.doesNotMatch(html,/href="[^"]*(?:backoffice|admin-center)(?:\\.html)?"/i);
+ assert.match(html,/class="front-footer wrap"/);
  assert.match(html,/網站預覽階段/);
  assert.doesNotMatch(html,/<form[^>]+action\s*=/i);
  assert.doesNotMatch(html,/class="v2-rule-summary"|class="season-preview"|id="vote-dialog"/);
