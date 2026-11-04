@@ -104,8 +104,11 @@ async function requestCode(request,env){
  const id=uuid(),digits=new Uint32Array(1);crypto.getRandomValues(digits);
  const code=String(digits[0]%1000000).padStart(6,'0');
  const hashed=await sign(env,'challenge:'+id+':'+code);
- await env.DB.prepare('INSERT INTO e2e_email_challenges(id,email_fingerprint,code_fingerprint,kind,expires_at,created_at) VALUES(?,?,?,?,?,?)')
- .bind(id,fingerprint,hashed,role,NOW()+600,NOW()).run();
+ // D1 executes this single write atomically: parallel requests may all pass
+ // the early read, but only three may reserve a send slot across all roles.
+ const reserved=await env.DB.prepare('INSERT INTO e2e_email_challenges(id,email_fingerprint,code_fingerprint,kind,expires_at,created_at) SELECT ?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM e2e_email_challenges WHERE email_fingerprint=? AND created_at>?)<3')
+ .bind(id,fingerprint,hashed,role,NOW()+600,NOW(),fingerprint,period).run();
+ if(!reserved.meta?.changes)return deny('too_many_code_requests',429);
  otpTrace('challenge_saved');
  try{
   await sendTestEmail(env,{from:env.STAGING_FROM_EMAIL,to:email,

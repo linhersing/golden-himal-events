@@ -67,3 +67,12 @@ test('the same mailbox reviewer cannot score its own singer identity',async()=>{
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM e2e_judge_scores').get().n,0);
  }finally{f.db.close()}
 });
+test('concurrent requests cannot exceed the shared mailbox email quota',async()=>{
+ const f=await fixture();try{
+  const roles=['member','reviewer','organizer'];
+  const results=await Promise.all(Array.from({length:12},(_,i)=>handleE2E(post('request-code',{email:'owner@example.invalid',role:roles[i%3]}),f.env)));
+  assert.equal(results.filter(r=>r.status===200).length,3);
+  assert.equal(results.filter(r=>r.status===429).length,9);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM e2e_email_challenges').get().n,3);
+ }finally{f.db.close()}
+});
