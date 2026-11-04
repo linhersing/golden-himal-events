@@ -201,3 +201,33 @@ test('mobile news and member pages retain full Chinese layout without horizontal
  const dims=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth}));
  expect(dims.scroll).toBeLessThanOrEqual(dims.client);
 });
+
+test('switching English Nepali Chinese never discards an unsaved member edit draft',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ const entry={id:'SYNTHETIC-KEEP-DRAFT',stage_name:'Original TEST singer',song_title:'Original TEST song',category:'university',round_code:'2027-01',status:'submitted',payment_status:'unpaid',demo_url:'https://youtu.be/abc123'};
+ await page.route('**/api/e2e/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  const payload=path.endsWith('/me')?{ok:true,account:{id:'synthetic',role:'member'}}:
+   path.endsWith('/applications')?{ok:true,applications:[entry]}:{ok:false,error:'not_found'};
+  await route.fulfill({status:payload.ok?200:404,json:payload});
+ });
+ await page.goto('/');await page.locator('[data-lang=zh]').click();
+ await page.goto('/member.html#register');
+ await expect(page.locator('#new-application-callout')).toBeHidden();
+ await page.getByText('修改資料').click();
+ const input=page.locator('[data-editing] [name=stage_name]');
+ await input.fill('未儲存的重要內容 Test Draft');
+ await page.locator('[data-lang=ne]').click();
+ await expect(input).toHaveValue('未儲存的重要內容 Test Draft');
+ await expect(page.locator('[data-editing] h3')).toContainText('परीक्षण');
+ await page.locator('[data-lang=en]').click();
+ await expect(input).toHaveValue('未儲存的重要內容 Test Draft');
+ await expect(page.locator('[data-editing] h3')).toContainText('Edit your TEST entry');
+ await page.locator('[data-lang=zh]').click();
+ await page.locator('[data-lang=zh]').click();
+ await expect(input).toHaveValue('未儲存的重要內容 Test Draft');
+ await expect(page.locator('[data-editing] h3')).toContainText('修改測試報名資料');
+ await page.screenshot({path:'test-results/ghv-trilingual/05-mobile-unsaved-draft-preserved-after-language-switch.png'});
+ await page.locator('[data-editing] button[type=button]').click();
+ await expect(page.locator('[data-editing]')).toHaveCount(0);
+});

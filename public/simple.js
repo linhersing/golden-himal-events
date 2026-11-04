@@ -104,17 +104,17 @@ async function renderMember(){
 function showEdit(a){
  const holder=$('entries');let existing=document.querySelector('[data-editing]');if(existing)existing.remove();
  const box=node('div',undefined,'panel');box.dataset.editing='true';
- box.append(node('h3',mt('editHeader')));
+ const heading=node('h3',mt('editHeader'));heading.dataset.l='editHeader';box.append(heading);
  const form=node('form',undefined,'form-grid');
  const fields=[['stage_name','stageName'],['song_title','songTitle'],['original_artist','artist'],['demo_url','videoUrl']];
  for(const [name,key] of fields){
-  const lab=node('label',undefined,'field'),label=node('span',mt(key)),input=node('input');
+  const lab=node('label',undefined,'field'),label=node('span',mt(key)),input=node('input');label.dataset.l=key;
   input.name=name;input.value=a[name]||'';input.required=true;
   if(name==='demo_url')input.type='url';
   lab.append(label,input);if(name==='demo_url')lab.classList.add('full');form.append(lab);
  }
- const actions=node('div',undefined,'form-actions full'),save=node('button',mt('saveChanges'),'btn btn-primary');save.type='submit';
- const cancel=node('button',mt('cancel'),'btn btn-soft');cancel.type='button';cancel.onclick=()=>box.remove();
+ const actions=node('div',undefined,'form-actions full'),save=node('button',mt('saveChanges'),'btn btn-primary');save.type='submit';save.dataset.l='saveChanges';
+ const cancel=node('button',mt('cancel'),'btn btn-soft');cancel.type='button';cancel.dataset.l='cancel';cancel.onclick=()=>{box.remove();renderMember().catch(e=>status(friendlyError(e),true))};
  actions.append(save,cancel);form.append(actions);
  form.onsubmit=ev=>{ev.preventDefault();run(async()=>{await api('update-application',{application_id:a.id,...formValues(form)});status(mt('savedChanges'));await renderMember()})};
  box.append(form);holder.prepend(box);box.scrollIntoView({block:'nearest',behavior:'smooth'});
@@ -168,7 +168,7 @@ async function renderJudge(){
 
 if(page==='member'){
  role='member';setupAuth();
- window.addEventListener('ghv:languagechange',()=>{if(account&&account.role==='member')renderMember().catch(e=>status(friendlyError(e),true))});
+ window.addEventListener('ghv:languagechange',()=>{if(account&&account.role==='member'){if(document.querySelector('[data-editing]'))return;renderMember().catch(e=>status(friendlyError(e),true))}});
  const application=$('application-form'),details=$('application-details'),start=$('start-application');
  const syncStart=()=>start?.setAttribute('aria-expanded',String(details.open));
  details.addEventListener('toggle',syncStart);
