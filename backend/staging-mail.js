@@ -34,7 +34,8 @@ export async function sendTestEmail(env,message){
     throw Error('test_recipient_not_allowed');
    console.info(JSON.stringify({event:'staging_email_fetch_start',provider:'resend'}));
    const response=await fetch('https://api.resend.com/emails',{
-    method:'POST',redirect:'error',credentials:'omit',
+    // Workers supports follow/manual, not redirect:error. Reject 3xx below without following.
+    method:'POST',redirect:'manual',credentials:'omit',
     headers:{
      'Authorization':'Bearer '+env.STAGING_RESEND_API_KEY,
      'Content-Type':'application/json',
@@ -60,7 +61,7 @@ export async function sendTestEmail(env,message){
   for(const key of ['o:tracking','o:tracking-clicks','o:tracking-opens','o:skip-verification'])body.set(key,'no');
   body.set('o:require-tls','yes');
   const response=await fetch('https://'+host+'/v3/'+env.STAGING_MAILGUN_DOMAIN+'/messages',{
-   method:'POST',redirect:'error',headers:{Authorization:'Basic '+btoa('api:'+env.STAGING_MAILGUN_API_KEY)},
+   method:'POST',redirect:'manual',headers:{Authorization:'Basic '+btoa('api:'+env.STAGING_MAILGUN_API_KEY)},
    body,signal:AbortSignal.timeout(10000)
   });
   if(!response.ok)throw Error('rejected');
