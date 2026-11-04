@@ -9,7 +9,7 @@ test('Mailgun sandbox delivery uses the fixed HTTPS API with tracking disabled a
  await sendTestEmail(env,letter);
  assert.equal(calls.length,1);assert.equal(calls[0].url,'https://api.mailgun.net/v3/sandboxabc123.mailgun.org/messages');
  const options=calls[0].init;
- assert.equal(options.method,'POST');assert.equal(options.redirect,'error');
+ assert.equal(options.method,'POST');assert.equal(options.redirect,'manual');
  assert.equal(options.headers.Authorization,'Basic '+btoa('api:'+env.STAGING_MAILGUN_API_KEY));
  assert(options.body instanceof FormData);assert.equal(options.body.get('to'),letter.to);
  assert.equal(options.body.get('from'),env.STAGING_FROM_EMAIL);
@@ -55,7 +55,7 @@ test('Resend adapter calls fixed HTTPS endpoint using a secret bearer key and al
  assert.equal(calls.length,1);
  assert.equal(calls[0].url,'https://api.resend.com/emails');
  assert.equal(calls[0].init.method,'POST');
- assert.equal(calls[0].init.redirect,'error');
+ assert.equal(calls[0].init.redirect,'manual');
  assert.equal(calls[0].init.headers.Authorization,'Bearer '+resendEnv.STAGING_RESEND_API_KEY);
  assert.equal(calls[0].init.headers['User-Agent'],'golden-himal-voice/1.0');
  assert.deepEqual(JSON.parse(calls[0].init.body),{
@@ -102,4 +102,18 @@ test('Resend diagnostic log includes attempted request and rejection but never p
  assert.match(log,/httpStatus.*403/);
  for(const secret of [resendEnv.STAGING_RESEND_API_KEY,resendEnv.STAGING_RESEND_TEST_RECIPIENT,resendLetter.text,'private-provider-payload'])
   assert.equal(log.includes(secret),false);
+});
+
+test('email adapters reject redirects without forwarding the bearer key or message to a redirect target',async t=>{
+ const calls=[];
+ t.mock.method(globalThis,'fetch',async(url,init)=>{
+  // Workers accepts only follow/manual. Model that runtime boundary before responding.
+  if(!['follow','manual'].includes(init.redirect))throw new TypeError('Invalid redirect value');
+  calls.push(url);
+  assert.equal(init.redirect,'manual');
+  return new Response(null,{status:302,headers:{Location:'https://untrusted.example/collect'}});
+ });
+ for(const [config,message] of [[resendEnv,resendLetter],[env,letter]])
+  await assert.rejects(sendTestEmail(config,message),{message:'test_email_service_unavailable'});
+ assert.deepEqual(calls,['https://api.resend.com/emails','https://api.mailgun.net/v3/sandboxabc123.mailgun.org/messages']);
 });
