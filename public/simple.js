@@ -33,34 +33,41 @@ $(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logou
 }
 async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else await renderJudge()}else await renderMember()}
 function drawEntry(a){
-const box=node('article',undefined,'entry'),head=node('strong',a.stage_name+' · '+a.song_title);box.append(head,node('p','報名編號：'+a.id,'minor'));
-const isPaid=a.payment_status==='simulated_paid';const badge=node('span',isPaid?'僅模擬付款｜非正式成功':'待付款｜尚未正式報名','pill '+(isPaid?'':'pill-warn'));box.append(badge);
-box.append(node('p','組別：'+a.category+' · 報名梯次：'+a.round_code,'minor'));
-const link=safeLink(a.demo_url);if(link){const l=node('a','查看我的作品連結 ↗','small-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l)}
+const box=node('article',undefined,'entry'),head=node('strong',a.stage_name+' · '+a.song_title);box.append(head,node('p','TEST entry ID: '+a.id,'minor'));
+const isPaid=a.payment_status==='simulated_paid';
+const badge=node('span',isPaid?'✓ TEST checkout complete':'Awaiting TEST checkout','pill '+(isPaid?'pill-pass':'pill-warn'));box.append(badge);
+box.append(node('p','Category: '+(a.category==='university'?'University':'Community')+' · Window: '+a.round_code,'minor'));
+if(isPaid)box.append(node('p','Your TEST application flow is complete. No payment was charged; this is not an officially approved entry.','test-complete-note'));
+const link=safeLink(a.demo_url);if(link){const l=node('a','View my public audition video ↗','small-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l)}
 const actions=node('div',undefined,'inline-actions');
 if(!isPaid&&a.status==='submitted'){
-const edit=node('button','修改資料','btn btn-soft');edit.type='button';edit.onclick=()=>showEdit(a);
-const del=node('button','刪除此筆','btn btn-danger');del.type='button';del.onclick=()=>{if(!confirm('確定刪除這筆尚未付款的測試報名？此操作無法復原。'))return;run(async()=>{await api('delete-application',{application_id:a.id});status('這筆報名已刪除。');await renderMember()})};
-const fake=node('button','模擬付款（不收費）','btn btn-soft');fake.type='button';fake.onclick=()=>{if(!confirm('這只是流程模擬，不會扣款，也不代表正式報名成功。繼續嗎？'))return;run(async()=>{await api('mock-payment',{application_id:a.id});status('已記錄付款流程模擬，沒有實際收費，正式報名仍未成功。');await renderMember()})};
+const edit=node('button','Edit details','btn btn-soft');edit.type='button';edit.onclick=()=>showEdit(a);
+const del=node('button','Delete this TEST entry','btn btn-danger');del.type='button';del.onclick=()=>{if(!confirm('DELETE TEST ENTRY?\n\nThis will permanently remove your unpaid TEST application. This cannot be undone.\n\nEntry ID: '+a.id))return;run(async()=>{await api('delete-application',{application_id:a.id});status('TEST entry permanently deleted.');await renderMember()})};
+const fake=node('button','Complete TEST checkout (no charge)','btn btn-primary');fake.type='button';fake.onclick=()=>{if(!confirm('Confirm TEST checkout?\n\nThis records a simulation in the TEST database. No money will be charged, and it is NOT an official registration.'))return;run(async()=>{const result=await api('mock-payment',{application_id:a.id});if(result.status!=='simulated_paid'||result.testOnly!==true||result.realCharge!==false)throw Error('test_payment_result_unverified');await renderMember();status('✓ TEST checkout successful. This TEST application is complete. No real payment or official registration.');const complete=$('test-completion');if(complete){complete.hidden=false;complete.textContent='✓ TEST REGISTRATION COMPLETE — Entry ID: '+a.id+'. No payment charged; not an official registration.';complete.scrollIntoView({block:'center',behavior:'smooth'});}})};
 actions.append(edit,del,fake);
-}else actions.append(node('small','此階段暫不提供自行修改，如需變更將由主辦方另訂流程。'));
+}else actions.append(node('small','Changes are locked after TEST checkout. Contact the organizer if an update is needed.'));
 box.append(actions);return box;
 }
 async function renderMember(){
 const holder=$('entries');holder.replaceChildren();
 const v=await api('applications');
-if(!v.applications.length)holder.append(node('p','目前沒有報名資料。點下方「填寫新報名」開始。'));
+if(!v.applications.length)holder.append(node('p','No entries yet. Tap the large “Start a new application” button below.'));
 for(const a of v.applications)holder.append(drawEntry(a));
+const done=$('test-completion');if(done){const paid=v.applications.find(a=>a.payment_status==='simulated_paid');done.hidden=!paid;if(paid)done.textContent='✓ TEST REGISTRATION COMPLETE — '+paid.stage_name+' · '+paid.song_title+' · ID: '+paid.id+'. No payment charged; not an official registration.';}
+const paid=v.applications.some(a=>a.payment_status==='simulated_paid');
+$('step-login')?.classList.add('active');
+$('step-apply')?.classList.toggle('active',v.applications.length>0);
+$('step-checkout')?.classList.toggle('active',paid);
 }
 function showEdit(a){
 const holder=$('entries'),id='edit-'+a.id;let existing=document.querySelector('[data-editing]');if(existing)existing.remove();
 const box=node('div',undefined,'panel');box.dataset.editing='true';
-box.append(node('h3','編輯作品與報名資料'));
+box.append(node('h3','Edit your TEST entry'));
 const form=node('form',undefined,'form-grid');
-const fields=[['stage_name','歌手名稱'],['song_title','歌曲名稱'],['original_artist','原唱者'],['demo_url','作品公開連結']];
+const fields=[['stage_name','Singer / stage name'],['song_title','Song title'],['original_artist','Original performer'],['demo_url','Public audition video URL']];
 for(const [name,labelText] of fields){const lab=node('label',undefined,'field');const label=node('span',labelText),input=node('input');input.name=name;input.value=a[name]||'';input.required=true;if(name==='demo_url')input.type='url';lab.append(label,input);if(name==='demo_url')lab.classList.add('full');form.append(lab)}
-const act=node('div',undefined,'form-actions full'),save=node('button','儲存修改','btn btn-primary');save.type='submit';const cancel=node('button','取消','btn btn-soft');cancel.type='button';cancel.onclick=()=>box.remove();act.append(save,cancel);form.append(act);
-form.onsubmit=ev=>{ev.preventDefault();run(async()=>{await api('update-application',{application_id:a.id,...formValues(form)});status('修改已寫入雲端。');await renderMember()})};box.append(form);holder.prepend(box);box.scrollIntoView({behavior:'smooth'});
+const act=node('div',undefined,'form-actions full'),save=node('button','Save changes','btn btn-primary');save.type='submit';const cancel=node('button','Cancel','btn btn-soft');cancel.type='button';cancel.onclick=()=>box.remove();act.append(save,cancel);form.append(act);
+form.onsubmit=ev=>{ev.preventDefault();run(async()=>{await api('update-application',{application_id:a.id,...formValues(form)});status('Your changes were saved to the TEST database.');await renderMember()})};box.append(form);holder.prepend(box);box.scrollIntoView({behavior:'smooth'});
 }
 async function renderOrganizer(){
 $('organizer-dashboard').hidden=false;$('judge-dashboard').hidden=true;
@@ -110,11 +117,17 @@ async function renderJudge(){
 }
 
 if(page==='member'){
- role='member';setupAuth();const application=$('application-form');application.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+ role='member';setupAuth();
+ const application=$('application-form'),details=$('application-details'),start=$('start-application');
+ const syncStart=()=>start?.setAttribute('aria-expanded',String(details.open));
+ details.addEventListener('toggle',syncStart);
+ start?.addEventListener('click',()=>{details.open=true;syncStart();details.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>application.querySelector('[name=stage_name]')?.focus({preventScroll:true}),180)});
+ application.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  const v=formValues(application),data={...v,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
- await api('applications',data);application.reset();$('application-details').open=false;status('資料已送出並儲存，但尚未付款，尚不算正式報名成功。');await renderMember()})});
- const toggle=()=>{const c=$('category').value;application.querySelector('[name=adult_confirmed]').required=c==='community';application.querySelector('[name=student_confirmed]').required=c==='university';};$('category').addEventListener('change',toggle);toggle();
- if(location.hash==='#register')$('application-details').open=true;
+ const saved=await api('applications',data);application.reset();details.open=false;status('✓ TEST entry saved in the database. Entry ID: '+saved.application_id+'. Next, use “Complete TEST checkout” (no charge) on your entry.');await renderMember()})});
+ const toggle=()=>{const community=$('category').value==='community';const adult=application.querySelector('[name=adult_confirmed]'),student=application.querySelector('[name=student_confirmed]');$('community-statement').hidden=!community;$('university-statement').hidden=community;adult.required=community;student.required=!community;if(community)student.checked=false;else adult.checked=false;};
+ $('category').addEventListener('change',toggle);toggle();
+ if(location.hash==='#register')details.open=true;syncStart();
  loadSession();
 }else if(page==='back'){
  setupAuth();document.querySelectorAll('[data-role-tab]').forEach(button=>button.addEventListener('click',()=>{const next=button.dataset.roleTab;if(next===role)return;role=next;document.querySelectorAll('[data-role-tab]').forEach(b=>b.classList.toggle('active',b.dataset.roleTab===role));account=null;challenge=null;authUI(false);authForms(true);statusBox.hidden=true;run(async()=>{const v=await api('me');if(v.account.role===role){account=v.account;authUI(true);await dashboard()}else status('請使用對應身分的受邀 Email 登入。')})}));loadSession();
