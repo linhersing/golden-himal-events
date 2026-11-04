@@ -1,47 +1,33 @@
-// Read-only smoke check against deployed Cloudflare static assets, not just GitHub Pages.
-// NO POST, no real data, no Cloudflare secrets or D1 mutation.
+// Read-only live check for the CURRENT invited member OTP preview.
+// GET only: does not request any codes, send emails, mutate D1, or reveal private data.
 const BASE='https://golden-himal-voice-preview.linhersing.workers.dev';
-const checks=[
-  ['/', ['class="cloudflare-onboarding"','class="cloudflare-entry-button"','href="./e2e-stage.html"','href="./print-brief.html"','data-i18n="localDemoTag"','class="season-grid"','data-i18n="seasonJan"','data-i18n="seasonApr"','class="v2-rule-summary"','class="preview-ribbon"','class="member-gateway"','href="./member-login.html"','class="footer-test-links"','data-i18n="navMember"','class="demo-no-record"','data-i18n="demoNoRecordTitle"']],
-  ['/member-portal.html',['TEST ONLY','建立你的虛構會員','member-portal.js','參賽者四畫面整合預覽','data-dossier="pass"','data-dossier="application"','data-dossier="payment"','data-dossier="profile"','id="dossier-demo"']],
-  ['/member-portal.js',['signUpMock','simulatePayment','seed20','renderDossier','T019']],
-  ['/member-portal.css',['dossier-tabs','dossier-sheet']],
-  ['/member-portal-model.mjs',['PERSONAS','blankPortal','@example.invalid']],
-  ['/member-login.html',['TEST ONLY','Member sign in','singer-001@example.invalid','data-lang="zh"','id="login-username"','id="login-password"','id="dashboard-view"','member-login.js']],
-  ['/member-login.js',['GHV-TEST-2027','ghv_member_sandbox_v1','ghv_demo_active_member_v1','renderDashboard','會員登入','ghv_ui_language_v1']],
-  ['/member-login.css',['auth-layout','dashboard-main','summary-grid']],
-  ['/e2e-stage.html',['data-stepper','id="change-email"','data-role="member"','id="send-form"','id="application-form"','id="applications"','value="2027-01"','value="2027-04"']],
-  ['/judge-stage.html',['data-stepper','id="change-email"','data-role="reviewer"','id="send-form"','id="queue"']],
-  ['/organizer-stage.html',['data-stepper','id="change-email"','data-role="organizer"','id="send-form"','id="admin-apps"','id="standings"']],
-  ['/print-brief.html',['Golden Himal Voice','2027 年度歌唱嘉年華','@page{size:A4 portrait']],
-  ['/e2e-stage.js',['/api/e2e/','mock-payment','reviewer-queue','delete-my-data']],
-  ['/e2e-stage.css',['.entry','.score-fields','.safety','.access-steps','@media print']]
+const endpoints=[
+  ['/member.html',['id="member-email-form"','id="member-code-form"','id="member-status"','simple.js']],
+  ['/simple.js',['request-code','test_email_service_unavailable','verify-code']]
 ];
-const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-async function checkOnce(){
-  for(const [path,markers] of checks){
-    const response=await fetch(BASE+path,{method:'GET',cache:'no-store',
-      headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(12000)});
-    if(!response.ok)throw Error(path+' HTTP '+response.status);
-    const content=await response.text();
-    if(content.length<100)throw Error(path+' empty body');
-    for(const marker of markers)if(!content.includes(marker))
-      throw Error(path+' missing marker '+JSON.stringify(marker));
-    console.log('PASS Cloudflare HTTP '+response.status+' '+path);
-  }
+async function read(path) {
+  const response=await fetch(BASE+path,{headers:{'Cache-Control':'no-cache'},cache:'no-store',signal:AbortSignal.timeout(15000)});
+  if(!response.ok)throw Error(path+' HTTP '+response.status);
+  return response;
 }
-let error;
-for(let i=1;i<=12;i++){
-  try{
-    await checkOnce();
-    console.log('PASS newest MEMBER TEST UI visible on Cloudflare Worker preview, GET only; this is NOT a real account backend.');
-    process.exit(0);
-  }catch(e){
-    error=e;
-    console.warn('Attempt '+i+'/12: '+e.message);
-    if(i<12)await pause(10000);
+async function run() {
+  for(const [path,markers] of endpoints){
+    const body=await (await read(path)).text();
+    for(const marker of markers)if(!body.includes(marker))throw Error(path+' missing current UI marker '+JSON.stringify(marker));
+    console.log('PASS current member preview '+path);
   }
+  const value=await (await read('/api/staging/e2e-readiness')).json();
+  if(value.ok!==true||value.testOnly!==true)throw Error('Readiness returned malformed or unavailable status');
+  // Only boolean capability names are reported; never print secret values, addresses, or tokens.
+  const flags=Object.entries(value.resources||{}).map(([k,v])=>k+'='+Boolean(v)).join(', ');
+  console.log('Read-only Email readiness: '+String(value.readiness)+'; '+flags);
+  if(value.readiness!=='READY_FOR_INVITED_OTP_TEST')throw Error('Invited OTP readiness BLOCKED; inspect false boolean capability flags above');
+  console.log('PASS current member UI + read-only staging readiness. NOTE: No OTP was sent or delivered, and no login was verified.');
 }
-console.error('FAIL Cloudflare Worker still lacks latest membership preview: '+error?.message);
-console.error('GitHub Pages green does NOT prove Cloudflare Worker auto build success. Inspect Cloudflare Workers Builds deployment settings.');
+let lastError;
+for(let attempt=1;attempt<=3;attempt++){
+  try{await run();process.exit(0)}
+  catch(error){lastError=error;console.warn('Attempt '+attempt+'/3: '+error.message);if(attempt<3)await new Promise(resolve=>setTimeout(resolve,3000))}
+}
+console.error('FAIL current live member readiness: '+lastError?.message);
 process.exit(1);
