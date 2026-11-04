@@ -98,3 +98,16 @@ test('desktop print brief exists and is A4 portrait printable with V2 dates',asy
  expect(vals.print).toBe('none');
  expect(parseFloat(vals.width)).toBeGreaterThan(750);
 });
+
+test('desktop public homepage does not advertise backstage; private direct staff URL is still a login',async({page})=>{
+ await page.setViewportSize({width:1280,height:860});
+ await page.goto('/');
+ await expect(page.locator('.front-actions .choice')).toHaveCount(3);
+ await expect(page.locator('.backoffice-link')).toHaveCount(0);
+ await expect(page.locator('footer a')).toHaveCount(0);
+ await page.screenshot({path:'test-results/ghv-hide-public-staff-nav-20261104/03-desktop-public-home-no-staff-link.png'});
+ await page.goto('/backoffice.html');
+ await expect(page.locator('#back-signin')).toBeVisible();
+ await expect(page.locator('#back-dashboard')).toBeHidden();
+ await page.screenshot({path:'test-results/ghv-hide-public-staff-nav-20261104/04-desktop-private-staff-login.png'});
+});
