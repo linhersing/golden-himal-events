@@ -37,7 +37,6 @@ const box=node('article',undefined,'entry'),head=node('strong',a.stage_name+' ·
 const isPaid=a.payment_status==='simulated_paid';
 const badge=node('span',isPaid?'✓ TEST checkout complete':'Awaiting TEST checkout','pill '+(isPaid?'pill-pass':'pill-warn'));box.append(badge);
 box.append(node('p','Category: '+(a.category==='university'?'University':'Community')+' · Window: '+a.round_code,'minor'));
-if(isPaid)box.append(node('p','Your TEST application flow is complete. No payment was charged; this is not an officially approved entry.','test-complete-note'));
 const link=safeLink(a.demo_url);if(link){const l=node('a','View my public audition video ↗','small-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l)}
 const actions=node('div',undefined,'inline-actions');
 if(!isPaid&&a.status==='submitted'){
