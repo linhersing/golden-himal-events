@@ -8,6 +8,7 @@ import {handleV2Route} from './staging-v2-flow.js';
 const COOKIE='__Host-ghv-e2e';
 const MAX_AGE=12*3600;
 const NOW=()=>Math.floor(Date.now()/1000);
+const otpTrace=(stage)=>console.info(JSON.stringify({event:'staging_otp_flow',stage}));
 const secureHeaders={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Cross-Origin-Resource-Policy':'same-origin'};
 const json=(data,status=200,headers={})=>Response.json(data,{status,headers:{...secureHeaders,...headers}});
 const deny=(code,status=400)=>json({ok:false,error:code},status);
@@ -53,6 +54,7 @@ async function requestCode(request,env){
  const email=norm(b.email),role=['member','reviewer','organizer'].includes(b.role)?b.role:'member';
  if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i.test(email)||email.length>250)return deny('invalid_email');
  if(!emailAllowed(email,env,role))return deny('not_on_test_allowlist',403);
+ otpTrace('allowlist_passed');
  const fingerprint=await sign(env,'email:'+email);
  const period=NOW()-600;
  const recent=await env.DB.prepare('SELECT COUNT(*) AS n FROM e2e_email_challenges WHERE email_fingerprint=? AND created_at>?').bind(fingerprint,period).first();
@@ -62,6 +64,7 @@ async function requestCode(request,env){
  const hashed=await sign(env,'challenge:'+id+':'+code);
  await env.DB.prepare('INSERT INTO e2e_email_challenges(id,email_fingerprint,code_fingerprint,kind,expires_at,created_at) VALUES(?,?,?,?,?,?)')
  .bind(id,fingerprint,hashed,role,NOW()+600,NOW()).run();
+ otpTrace('challenge_saved');
  try{
   await sendTestEmail(env,{from:env.STAGING_FROM_EMAIL,to:email,
    subject:'Golden Himal Voice TEST ['+role+'] — request '+id.slice(0,8),
@@ -69,7 +72,9 @@ async function requestCode(request,env){
         '. It expires in 10 minutes. Request reference: '+id.slice(0,8)+'. Role: '+role+'. If you did not request it, ignore this message. No payments are being collected.',
    html:'<p><strong>Golden Himal Voice — TEST ONLY</strong></p><p>Your one-time verification code is <strong>'+code+
         '</strong>. Valid for 10 minutes.</p><p>Request reference: '+id.slice(0,8)+' · Role: '+role+'</p><p>No real payment or public registration is enabled.</p>'});
+  otpTrace('provider_accepted');
  }catch{
+  otpTrace('send_failed');
   await env.DB.prepare('UPDATE e2e_email_challenges SET used_at=? WHERE id=?').bind(NOW(),id).run();
   return deny('test_email_service_unavailable',503)
  }
@@ -253,7 +258,10 @@ async function eraseMember(env,a){
  return json({ok:true,deletedTestData:true},200,{'Set-Cookie':cookie('',0)});
 }
 export async function handleE2E(request,env){
- if(!configured(env))return deny('e2e_not_configured',503);
+ if(!configured(env)){
+  if(new URL(request.url).pathname==='/api/e2e/request-code')otpTrace('configuration_blocked');
+  return deny('e2e_not_configured',503);
+ }
  const {pathname}=new URL(request.url);
  const isPost=request.method==='POST';
  if(isPost&&!sameOrigin(request))return deny('origin_not_allowed',403);
