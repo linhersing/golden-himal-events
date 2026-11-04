@@ -182,7 +182,8 @@ async function mockPayment(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request);if(!b)return deny('invalid_json');
  const app=await selectApplication(env.DB,b.application_id,a.id);if(!app)return deny('application_not_found',404);
- if(app.payment_status==='simulated_paid')return json({ok:true,status:'simulated_paid',amount_npr:500,already:true});
+ if(app.payment_status==='simulated_paid')return json({ok:true,status:'simulated_paid',amount_npr:500,already:true,testOnly:true,realCharge:false});
+ if(app.status!=='submitted'||app.phase!=='demo')return deny('mock_payment_not_allowed',409);
  const inserted=await env.DB.prepare("INSERT OR IGNORE INTO e2e_payment_events(id,application_id,event_type,created_at) VALUES(?,?,'SIMULATED_PAYMENT',?)").bind(uuid(),app.id,NOW()).run();
  await env.DB.prepare("UPDATE e2e_applications SET payment_status='simulated_paid', status='under_review',updated_at=? WHERE id=? AND account_id=? AND status='submitted'").bind(NOW(),app.id,a.id).run();
  return json({ok:true,status:'simulated_paid',amount_npr:500,testOnly:true,realCharge:false});

@@ -1,29 +1,63 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#4c302a"><title>歌手報名與會員登入｜Golden Himal Voice</title><link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./simple.css"></head><body data-page="member"><a class="skip" href="#main">跳到主內容</a>
-<header class="masthead wrap"><a class="brand" href="./"><img src="./images/brand-identity.png" width="60" height="60" alt=""><span><strong>GOLDEN HIMAL</strong><small>VOICE · CHITWAN 2027</small></span></a><nav class="quick-nav"><a href="./" data-t="home">返回首頁</a><a href="./news.html" data-t="news">最新公告</a></nav></header>
-<main id="main" class="page-shell"><p class="section-eyebrow" data-t="memberKicker">SINGER PORTAL</p><h1 class="page-heading" data-t="memberHead">歌手報名與登入</h1><p class="page-intro" data-t="memberLead">報名很簡單：登入後填寫資料與作品連結，之後隨時回到自己的頁面。</p>
-<div class="steps" aria-label="報名流程"><span class="active" data-t="stepAccount">① 會員登入</span><span data-t="stepForm">② 填報名資料</span><span data-t="stepPayment">③ 確認付款</span></div>
-<p class="notice" data-t="unpaidNotice">目前尚未接入金流。填表只代表建立待付款資料，不代表正式報名成功；所有費用均不會實際扣款。</p>
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#4c302a">
+<title>Singer registration & member login | Golden Himal Voice</title>
+<link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./simple.css">
+</head>
+<body data-page="member"><a class="skip" href="#main">Skip to content</a>
+<header class="masthead wrap"><a class="brand" href="./"><img src="./images/brand-identity.png" width="60" height="60" alt=""><span><strong>GOLDEN HIMAL</strong><small>VOICE · CHITWAN 2027</small></span></a><nav class="quick-nav"><a href="./">Home</a><a href="./news.html">Latest news</a></nav></header>
+<main id="main" class="page-shell">
+<p class="section-eyebrow">SINGER PORTAL</p>
+<h1 class="page-heading">Singer registration & login</h1>
+<p class="page-intro">Get your email code, complete one application, then return any time to check your entry.</p>
+<div class="steps" aria-label="Application steps"><span class="active" id="step-login">1 · Email login</span><span id="step-apply">2 · Song & details</span><span id="step-checkout">3 · Test checkout</span></div>
+<p class="notice"><strong>Testing only.</strong> Real registration and payment are not open. No money will be charged. <span lang="ne">यो परीक्षण मात्र हो। कुनै शुल्क लाग्दैन।</span></p>
 <div id="member-status" class="feedback" role="status" aria-live="polite" hidden></div>
-<section id="signin-panel" class="panel"><h2 data-t="signInHeader">先登入或建立會員</h2><p data-t="emailHelp">輸入你的 Email，取得一次性驗證碼。新會員與舊會員使用同一入口。</p>
-<form id="member-email-form"><label class="field"><span>Email</span><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-t="sendCode">寄送驗證碼</button></div></form>
-<form id="member-code-form" hidden><label class="field"><span data-t="verifyCode">輸入 Email 的 6 位驗證碼</span><input name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" required></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-t="goAccount">登入我的專區</button><button class="btn btn-soft" type="button" id="change-mail" data-t="changeEmail">換個 Email</button></div></form>
-<p class="under-actions" data-t="notOpen">目前僅提供受邀帳號測試；若寄信未開通，系統會清楚提示，不會假裝驗證成功。</p></section>
-<section id="member-panel" hidden>
-<div class="panel"><div class="page-top"><h2 data-t="myAccount">我的參賽專區</h2><button type="button" id="member-logout" class="btn btn-soft" data-t="logout">登出</button></div><p data-t="myAccountLead">這裡可以查看已提交資料、作品連結，以及付款狀態。</p><div id="entries" class="cards"></div></div>
-<details class="panel" id="application-details"><summary style="font-weight:850;cursor:pointer;font-size:1.16rem" data-t="formTitle">填寫新報名</summary><p data-t="formHelp">先填基本資料；作品目前採用公開 YouTube 或 Google Drive 連結。</p>
-<form id="application-form" class="form-grid" style="margin-top:16px">
-<label class="field"><span data-t="name">歌手名稱</span><input name="stage_name" maxlength="60" required></label>
-<label class="field"><span data-t="round">報名梯次</span><select name="round_code"><option value="2027-01">2027年1月</option><option value="2027-04">2027年4月</option></select></label>
-<label class="field"><span data-t="category">參賽組別</span><select name="category" id="category"><option value="university" data-t="college">大學組</option><option value="community" data-t="social">社會組</option></select></label>
-<label class="field"><span data-t="province">省份</span><select name="province"><option value="bagmati">Bagmati</option><option value="gandaki">Gandaki</option></select></label>
-<label class="field"><span data-t="basis">參賽資格依據</span><select name="location_basis"><option value="residence" data-t="residence">居住</option><option value="study" data-t="study">就學</option><option value="work" data-t="work">工作</option></select></label>
-<label class="field"><span data-t="affiliation">學校／職業</span><input name="affiliation" maxlength="100" required></label>
-<label class="field"><span data-t="song">歌曲名稱</span><input name="song_title" maxlength="100" required></label>
-<label class="field"><span data-t="artist">原唱者</span><input name="original_artist" maxlength="100" required></label>
-<label class="field"><span data-t="songLang">歌曲語言</span><input name="song_language" maxlength="100" required></label>
-<label class="field"><span data-t="songKey">歌曲調性</span><input name="song_key" maxlength="100" required></label>
-<label class="field full"><span data-t="workLink">參賽作品連結（公開影片）</span><input name="demo_url" type="url" inputmode="url" required placeholder="https://youtu.be/..."></label>
-<div class="full"><label class="check"><input name="adult_confirmed" type="checkbox"><span data-t="adult">社會組：我確認已符合年齡資格（受邀測試僅作聲明）。</span></label><label class="check"><input name="student_confirmed" type="checkbox"><span data-t="student">大學組：我確認正在就學（受邀測試僅作聲明）。</span></label><label class="check"><input name="no_exclusive_contract" type="checkbox" required><span data-t="contract">我確認不存在與比賽衝突的專屬經紀合約。</span></label></div>
-<div class="form-actions full"><button class="btn btn-primary" type="submit" data-t="saveEntry">儲存報名資料</button></div></form></details>
+<section id="signin-panel" class="panel">
+<h2>Log in or create an account</h2><p>Enter your email address. We will send a six-digit, one-time verification code.</p>
+<form id="member-email-form"><label class="field"><span>Email address</span><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><div class="form-actions"><button class="btn btn-primary" type="submit">Send verification code</button></div></form>
+<form id="member-code-form" hidden><label class="field"><span>Six-digit code from email</span><input name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" required></label><div class="form-actions"><button class="btn btn-primary" type="submit">Log in</button><button class="btn btn-soft" type="button" id="change-mail">Use another email</button></div></form>
+<p class="under-actions">Only pre-approved accounts can test this site. Public sign-ups are not open.</p>
 </section>
-<footer class="site-footer"><a href="./" class="small-link" data-t="home">回首頁</a><small data-t="feeBoundary">付款系統尚未啟用；不計入正式成功報名。</small></footer></main><script src="./simple.js" defer></script></body></html>
+<section id="member-panel" hidden>
+<div class="panel">
+<div class="page-top"><h2>My singer dashboard</h2><button type="button" id="member-logout" class="btn btn-soft">Log out</button></div>
+<p>See your submitted songs and <strong>TEST</strong> payment status below.</p>
+<div id="test-completion" class="test-completion" role="status" aria-live="polite" hidden></div>
+<div id="entries" class="cards"></div>
+</div>
+<section class="start-callout" id="new-application-callout" aria-labelledby="new-application-title">
+<p class="section-eyebrow">NEXT STEP</p>
+<h2 id="new-application-title">Ready to enter the competition?</h2>
+<p>Tap the button to open your application form. <span lang="ne">नयाँ आवेदन भर्न तलको बटन थिच्नुहोस्।</span></p>
+<button type="button" class="btn btn-primary btn-apply" id="start-application" aria-controls="application-details" aria-expanded="false">✚ Start a new application <span aria-hidden="true">↓</span></button>
+</section>
+<details class="panel application-panel" id="application-details">
+<summary>Application form <small>Tap to open / close</small></summary>
+<p class="form-lead">Complete one entry for one category. Fields marked * are required.</p>
+<p class="helper-banner"><strong>V2 demo video:</strong> Sing continuously for <strong>60–90 seconds</strong>; show your face and voice clearly. No lip-syncing, vocal effects or cuts. Share a public video link. The organizer checks the actual duration.</p>
+<form id="application-form" class="form-grid" style="margin-top:16px">
+<label class="field"><span>Singer or stage name *</span><input name="stage_name" maxlength="60" required autocomplete="name" placeholder="Name shown to judges"></label>
+<label class="field"><span>Audition window *</span><select name="round_code"><option value="2027-01">January 2027</option><option value="2027-04">April 2027</option></select><small class="field-hint">Choose the online audition window.</small></label>
+<label class="field"><span>Competition category *</span><select name="category" id="category"><option value="university">University student</option><option value="community">Community (18+)</option></select><small class="field-hint">Select ONE. A current university student belongs in the university category, even when working part-time.</small></label>
+<label class="field"><span>Province *</span><select name="province"><option value="bagmati">Bagmati Province</option><option value="gandaki">Gandaki Province</option></select><small class="field-hint">Eligible provinces in the V2 rules.</small></label>
+<label class="field"><span>How do you qualify in this area? *</span><select name="location_basis"><option value="residence">I live here</option><option value="study">I study here</option><option value="work">I work here</option></select></label>
+<label class="field"><span>University / occupation *</span><input name="affiliation" maxlength="100" required placeholder="e.g. Chitwan university / teacher"></label>
+<label class="field"><span>Song title *</span><input name="song_title" maxlength="100" required placeholder="Name of your song"></label>
+<label class="field"><span>Original performer *</span><input name="original_artist" maxlength="100" required placeholder="Original singer / artist"></label>
+<label class="field"><span>Song language *</span><select name="song_language" required id="song-language"><option value="">Choose language</option><option value="Nepali">Nepali / नेपाली</option><option value="English">English</option><option value="Hindi">Hindi / हिन्दी</option><option value="Maithili">Maithili</option><option value="Bhojpuri">Bhojpuri</option><option value="Tamang">Tamang</option><option value="Chinese">Chinese / 中文</option><option value="Other">Other / another language</option></select><small class="field-hint">Choose the language you sing in; this keeps the organizer's lists consistent.</small></label>
+<label class="field"><span>Song key *</span><select name="song_key" required id="song-key"><option value="">Choose key / not sure</option><option value="Unknown">I don't know yet</option><option value="C major">C major</option><option value="C minor">C minor</option><option value="D major">D major</option><option value="D minor">D minor</option><option value="E major">E major</option><option value="E minor">E minor</option><option value="F major">F major</option><option value="F minor">F minor</option><option value="G major">G major</option><option value="G minor">G minor</option><option value="A major">A major</option><option value="A minor">A minor</option><option value="B major">B major</option><option value="B minor">B minor</option><option value="Other">Other / unsure of exact key</option></select><small class="field-hint">The key is the musical pitch (e.g. C major). If you do not know, choose “I don't know yet”.</small></label>
+<label class="field full"><span>Public audition video URL *</span><input name="demo_url" type="url" inputmode="url" required placeholder="https://youtu.be/..."><small class="field-hint">60–90 seconds. Check that anyone with the link can watch; do not upload your original video file here.</small></label>
+<div class="full eligibility-group" aria-label="Eligibility statements">
+<label class="check" id="community-statement" hidden><input name="adult_confirmed" type="checkbox"><span>I confirm I am at least 18 on the audition closing date and I am not currently a university student. <em>(TEST declaration only)</em></span></label>
+<label class="check" id="university-statement"><input name="student_confirmed" type="checkbox"><span>I confirm I am a currently enrolled university student (including bachelor, master or doctorate study). <em>(TEST declaration only)</em></span></label>
+<label class="check"><input name="no_exclusive_contract" type="checkbox" required><span>I confirm I do not have an exclusive entertainment or recording contract that conflicts with this contest. *</span></label>
+</div>
+<div class="form-actions full"><button class="btn btn-primary" type="submit">Save my TEST application</button><small class="field-hint">Saving is not a paid or officially approved entry.</small></div>
+</form>
+<p class="privacy-notice">Portrait photo and identity documents are not collected in this rehearsal. The organizer must approve a secure upload method and privacy rules before these become required.</p>
+</details>
+</section>
+<footer class="site-footer"><a href="./" class="small-link">Home</a><small>TEST portal · No real payment or official registration.</small></footer>
+</main><script src="./simple.js" defer></script></body></html>
