@@ -111,3 +111,26 @@ test('latest news remains short expandable cards (synthetic UI screenshot)',asyn
  await page.screenshot({path:'test-results/ghv-singer-ux-20261104/04-mobile-news-accordion.png'});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });
+
+test('deleting a TEST entry requires confirmation and cancel leaves the record intact',async({page})=>{
+ let deletes=0;
+ await page.route('**/api/e2e/**',async r=>{
+  const endpoint=new URL(r.request().url()).pathname;
+  const entry={id:'TEST-DELETE-001',stage_name:'Synthetic Singer',song_title:'Sample',category:'community',round_code:'2027-01',status:'submitted',payment_status:'unpaid'};
+  const data=endpoint.endsWith('/me')?{ok:true,account:{id:'synthetic-member',role:'member'}}:
+   endpoint.endsWith('/applications')?{ok:true,applications:deletes?[]:[entry]}:
+   endpoint.endsWith('/delete-application')?(deletes++,{ok:true,deleted_application_id:entry.id,testOnly:true}):{ok:false,error:'not_found'};
+  await r.fulfill({status:data.ok?200:404,contentType:'application/json',body:JSON.stringify(data)});
+ });
+ await page.goto('/member.html#login');
+ const del=page.getByText('Delete this TEST entry');
+ await expect(del).toBeVisible();
+ page.once('dialog',dialog=>{expect(dialog.message()).toContain('cannot be undone');dialog.dismiss()});
+ await del.click();
+ expect(deletes).toBe(0);
+ await expect(del).toBeVisible();
+ page.once('dialog',dialog=>dialog.accept());
+ await del.click();
+ await expect(page.locator('#entries')).toContainText('No entries yet');
+ expect(deletes).toBe(1);
+});
