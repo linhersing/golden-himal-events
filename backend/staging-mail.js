@@ -32,6 +32,7 @@ export async function sendTestEmail(env,message){
    // Fail closed: Resend's shared test sender can send only to the owner's verified email.
    if(typeof message.to!=='string'||message.to.toLowerCase()!==env.STAGING_RESEND_TEST_RECIPIENT.toLowerCase())
     throw Error('test_recipient_not_allowed');
+   console.info(JSON.stringify({event:'staging_email_fetch_start',provider:'resend'}));
    const response=await fetch('https://api.resend.com/emails',{
     method:'POST',redirect:'error',credentials:'omit',
     headers:{
@@ -48,6 +49,7 @@ export async function sendTestEmail(env,message){
    }
    const result=await response.json();
    if(typeof result.id!=='string'||!result.id)throw Error('missing_queue_ack');
+   console.info(JSON.stringify({event:'staging_email_accepted',provider:'resend'}));
    // Resend accepted the send request; actual inbox delivery requires separate confirmation.
    return;
   }
