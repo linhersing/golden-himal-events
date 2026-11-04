@@ -22,17 +22,23 @@ test('member and staff share server-issued identity but never fake official paym
  assert.match(staff,/id="paid-count">0/);assert.match(staff,/data-role-tab="reviewer"/);
  for(const path of ['update-application','delete-application','reviewer-queue','organizer-queue'])assert.match(api,new RegExp(path));
  assert.match(backend,/account_id=\?/);assert.match(backend,/payment_status='unpaid'/);
- assert.match(api,/TEST REGISTRATION COMPLETE/);
- assert.match(api,/No real payment or official registration/);
+ const locale=await read('public/page-locale.js');
+ assert.match(api,/mt\('testComplete'\)/);
+ assert.match(api,/result\.testOnly!==true/);
+ assert.match(locale,/No real payment/);
+ for(const lang of ['en','ne','zh'])assert.match(locale,new RegExp(lang+':'));
  assert.match(member,/id="start-application"/);
  assert.match(member,/aria-controls="application-details"/);
  assert.match(member,/<select name="song_language"/);
  assert.match(member,/<select name="song_key"/);
  assert.match(member,/id="community-statement"/);
  assert.match(member,/id="university-statement"/);
- assert.match(member,/60–90 second/);
- assert.match(api,/Delete this TEST entry/);
+ assert.match(locale,/60–90 seconds/);
+ assert.match(api,/mt\('delete'\)/);
  assert.match(api,/payment_status==='simulated_paid'/);
+ assert.match(api,/callout.hidden=hasEntries/);
+ assert.match(member,/data-lang="zh"/);
+ assert.match(member,/page-locale\.js/);
 });
 test('social preview metadata remains neutral and noindex until go live',async()=>{
  const html=await read('index.html');
