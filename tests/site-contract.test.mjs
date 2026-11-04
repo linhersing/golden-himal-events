@@ -26,7 +26,7 @@ test('member and staff share server-issued identity but never fake official paym
  assert.match(api,/mt\('testComplete'\)/);
  assert.match(api,/result\.testOnly!==true/);
  assert.match(locale,/No real payment/);
- for(const lang of ['en','ne','zh'])assert.match(locale,new RegExp(lang+':'));
+ for(const lang of ['en','ne','zh'])assert.match(locale,new RegExp('"'+lang+'"\\s*:'));
  assert.match(member,/id="start-application"/);
  assert.match(member,/aria-controls="application-details"/);
  assert.match(member,/<select name="song_language"/);
