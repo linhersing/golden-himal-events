@@ -9,7 +9,7 @@ test('desktop homepage highlights the three real visitor actions',async({page})=
  await expect(choices.nth(2)).toContainText('最新公告');
  await expect(choices.nth(0)).toHaveAttribute('href','./member.html#register');
  await expect(choices.nth(1)).toHaveAttribute('href','./member.html#login');
- await expect(page.locator('.backoffice-link')).toHaveAttribute('href','./backoffice.html');
+ await expect(page.locator('.backoffice-link')).toHaveCount(0);
  // Legacy browser-only fictional account remains testable at its direct URL.
  await page.goto('/member-login.html');
  await expect(page.locator('#auth-view h2')).toContainText('Member');

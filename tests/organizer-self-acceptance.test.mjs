@@ -109,5 +109,8 @@ test('self acceptance page and homepage contain the navigable portal markers',as
  assert.match(practice,/id="organizer-roster"/);
  assert.match(practice,/id="organizer-judge-monitor"/);
  assert.match(practice,/自己測試有沒有成功/);
- assert.match(homepage,/href="\.\/backoffice\.html"[^>]*class="backoffice-link"/);
+ assert.doesNotMatch(homepage,/class="backoffice-link"/);
+ const staff=await readFile(new URL('../public/backoffice.html',import.meta.url),'utf8');
+ assert.match(staff,/id="back-signin"/);
+ assert.match(staff,/id="back-dashboard"/);
 });
