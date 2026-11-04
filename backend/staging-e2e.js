@@ -26,6 +26,44 @@ function emailAllowed(email,env,role){
  const list=emails(env,role==='organizer'?'STAGING_ORGANIZER_EMAILS':role==='reviewer'?'STAGING_REVIEWER_EMAILS':'STAGING_ALLOWED_EMAILS');
  return list.includes(email);
 }
+const ROLES=['member','reviewer','organizer'];
+function grantedRoles(email,env){return ROLES.filter(role=>emailAllowed(email,env,role))}
+async function emailForFingerprint(env,fingerprint,role){
+ const list=emails(env,role==='organizer'?'STAGING_ORGANIZER_EMAILS':role==='reviewer'?'STAGING_REVIEWER_EMAILS':'STAGING_ALLOWED_EMAILS');
+ for(const email of list){
+  if(fingerprint===await sign(env,'email:'+email)||fingerprint===await sign(env,'role-account:'+role+':'+email))return email;
+ }
+ return null;
+}
+async function roleAccount(env,email,role){
+ // Preserve legacy IDs (and applications/scores). Extra roles get separate,
+ // deterministic HMAC identities; no schema change or account-role overwrite.
+ const legacy=await sign(env,'email:'+email);
+ const scoped=await sign(env,'role-account:'+role+':'+email);
+ const existing=await env.DB.prepare('SELECT id,role FROM e2e_accounts WHERE email_fingerprint=?').bind(scoped).first();
+ if(existing?.role===role)return existing;
+ let a=await env.DB.prepare('SELECT id,role FROM e2e_accounts WHERE email_fingerprint=?').bind(legacy).first();
+ if(a?.role===role)return a;
+ const fingerprint=a?scoped:legacy;
+ await env.DB.prepare('INSERT OR IGNORE INTO e2e_accounts(id,email_fingerprint,email_hint,role,verified_at,created_at) VALUES(?,?,?,?,?,?)')
+  .bind(uuid(),fingerprint,'verified-test-mailbox',role,NOW(),NOW()).run();
+ a=await env.DB.prepare('SELECT id,role FROM e2e_accounts WHERE email_fingerprint=?').bind(fingerprint).first();
+ // Another role may have claimed the legacy row concurrently.
+ if(a?.role!==role&&fingerprint===legacy)return roleAccount(env,email,role);
+ return a?.role===role?a:null;
+}
+async function newSession(env,a){
+ const token=encode(random()),sessionHash=await sign(env,'session:'+token);
+ await env.DB.prepare('INSERT INTO e2e_sessions(session_fingerprint,account_id,expires_at,created_at) VALUES(?,?,?,?)')
+  .bind(sessionHash,a.id,NOW()+MAX_AGE,NOW()).run();
+ return token;
+}
+function publicAccount(a,env){return {id:a.id,role:a.role,available_roles:grantedRoles(a.email,env)}}
+async function ownsApplication(env,a,ownerId){
+ const owner=await env.DB.prepare('SELECT email_fingerprint FROM e2e_accounts WHERE id=?').bind(ownerId).first();
+ if(!owner)return false;
+ return owner.email_fingerprint===await sign(env,'email:'+a.email)||owner.email_fingerprint===await sign(env,'role-account:member:'+a.email);
+}
 function configured(env){
  return env.STAGING_E2E_ENABLED==='true'&&env.DB&&mailProviderReady(env)&&mailSenderReady(env)&&
  typeof env.STAGING_IDENTITY_SECRET==='string'&&env.STAGING_IDENTITY_SECRET.length>=32&&
@@ -42,7 +80,10 @@ async function account(request,env){
  const match=request.headers.get('cookie')?.match(new RegExp('(?:^|;\\s*)'+COOKIE+'=([a-f0-9]{64})(?:;|$)'));
  if(!match)return null;
  const fingerprint=await sign(env,'session:'+match[1]);
- return await env.DB.prepare('SELECT a.id,a.role,a.email_hint FROM e2e_sessions s JOIN e2e_accounts a ON a.id=s.account_id WHERE s.session_fingerprint=? AND s.expires_at>?').bind(fingerprint,NOW()).first();
+ const a=await env.DB.prepare('SELECT a.id,a.role,a.email_fingerprint FROM e2e_sessions s JOIN e2e_accounts a ON a.id=s.account_id WHERE s.session_fingerprint=? AND s.expires_at>?').bind(fingerprint,NOW()).first();
+ if(!a||!ROLES.includes(a.role))return null;
+ const email=await emailForFingerprint(env,a.email_fingerprint,a.role);
+ return email?{id:a.id,role:a.role,email}:null;
 }
 const sameOrigin=request=>request.headers.get('Origin')===new URL(request.url).origin;
 function requireRole(a,role){return a&&a.role===role}
@@ -51,7 +92,8 @@ function selectApplication(db,id,userId){
 }
 async function requestCode(request,env){
  const b=await bodyJSON(request);if(!b)return deny('invalid_json');
- const email=norm(b.email),role=['member','reviewer','organizer'].includes(b.role)?b.role:'member';
+ const email=norm(b.email);
+ const role=b.role==='staff'?(emailAllowed(email,env,'organizer')?'organizer':'reviewer'):(ROLES.includes(b.role)?b.role:'member');
  if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i.test(email)||email.length>250)return deny('invalid_email');
  if(!emailAllowed(email,env,role))return deny('not_on_test_allowlist',403);
  otpTrace('allowlist_passed');
@@ -91,20 +133,23 @@ async function verifyCode(request,env){
  if(hash!==challenge.code_fingerprint)return deny('expired_or_invalid_code',401);
  const used=await env.DB.prepare('UPDATE e2e_email_challenges SET used_at=? WHERE id=? AND used_at IS NULL AND expires_at>? AND attempts<=5').bind(NOW(),challenge.id,NOW()).run();
  if(!used.meta?.changes)return deny('expired_or_invalid_code',401);
- let a=await env.DB.prepare('SELECT id,role FROM e2e_accounts WHERE email_fingerprint=?').bind(challenge.email_fingerprint).first();
- if(!a){
-  // Role is derived from a server-only allowlist at time of initial challenge, not browser-supplied at verify.
-  const aid=uuid(),role=challenge.kind;
-  const hintValue='verified-test-mailbox';
-  await env.DB.prepare('INSERT OR IGNORE INTO e2e_accounts(id,email_fingerprint,email_hint,role,verified_at,created_at) VALUES(?,?,?,?,?,?)')
-   .bind(aid,challenge.email_fingerprint,hintValue,role,NOW(),NOW()).run();
-  a=await env.DB.prepare('SELECT id,role FROM e2e_accounts WHERE email_fingerprint=?').bind(challenge.email_fingerprint).first();
- }
- if(a.role!==challenge.kind)return deny('wrong_account_role',403);
- const token=encode(random()),sessionHash=await sign(env,'session:'+token);
- await env.DB.prepare('INSERT INTO e2e_sessions(session_fingerprint,account_id,expires_at,created_at) VALUES(?,?,?,?)')
- .bind(sessionHash,a.id,NOW()+MAX_AGE,NOW()).run();
- return json({ok:true,role:a.role,account_id:a.id},200, {'Set-Cookie':cookie(token)});
+ if(!ROLES.includes(challenge.kind))return deny('not_on_test_allowlist',403);
+ const email=await emailForFingerprint(env,challenge.email_fingerprint,challenge.kind);
+ if(!email)return deny('not_on_test_allowlist',403);
+ const a=await roleAccount(env,email,challenge.kind);
+ if(!a)return deny('wrong_account_role',403);
+ const token=await newSession(env,a);
+ return json({ok:true,role:a.role,account_id:a.id,available_roles:grantedRoles(email,env)},200, {'Set-Cookie':cookie(token)});
+}
+async function switchRole(request,env,a){
+ const b=await bodyJSON(request);
+ if(!b||!ROLES.includes(b.role))return deny('invalid_role');
+ if(!emailAllowed(a.email,env,b.role))return deny('not_on_test_allowlist',403);
+ const target=await roleAccount(env,a.email,b.role);
+ if(!target)return deny('wrong_account_role',403);
+ const token=await newSession(env,target);
+ await logout(request,env,a);
+ return json({ok:true,account:publicAccount({...target,email:a.email},env),testOnly:true},200,{'Set-Cookie':cookie(token)});
 }
 async function logout(request,env,a){
  const match=request.headers.get('cookie')?.match(new RegExp('(?:^|;\\s*)'+COOKIE+'=([a-f0-9]{64})(?:;|$)'));
@@ -238,9 +283,10 @@ async function submitScore(request,env,a){
  if(!Number.isInteger(b.technique)||b.technique<0||b.technique>60||
     !Number.isInteger(b.interpretation)||b.interpretation<0||b.interpretation>40||
     b.no_conflict!==true)return deny('invalid_score_or_conflict_declaration',422);
- const app=await env.DB.prepare('SELECT id FROM e2e_applications WHERE id=? AND payment_status=? AND status NOT IN (?,?)')
+ const app=await env.DB.prepare('SELECT id,account_id FROM e2e_applications WHERE id=? AND payment_status=? AND status NOT IN (?,?)')
   .bind(b.application_id,'simulated_paid','withdrawn','rejected').first();
  if(!app)return deny('not_reviewable',409);
+ if(await ownsApplication(env,a,app.account_id))return deny('self_review_disallowed',403);
  try{await env.DB.prepare('INSERT INTO e2e_judge_scores(application_id,reviewer_id,technique,interpretation,conflict_checked,created_at) VALUES(?,?,?,?,1,?)')
  .bind(app.id,a.id,b.technique,b.interpretation,NOW()).run()}
  catch{return deny('already_scored_or_unavailable',409)}
@@ -254,7 +300,7 @@ async function eraseMember(env,a){
  for(const row of rows.results||[])for(const key of [row.media_key,row.eligibility_key,row.receipt_key])if(key)await env.STAGING_MEDIA.delete(key);
  // Remove pending verification challenges too. Otherwise an unused emailed OTP
  // could recreate the just-deleted TEST member until its expiry.
- await env.DB.prepare('DELETE FROM e2e_email_challenges WHERE email_fingerprint=(SELECT email_fingerprint FROM e2e_accounts WHERE id=?)').bind(a.id).run();
+ await env.DB.prepare("DELETE FROM e2e_email_challenges WHERE email_fingerprint=? AND kind='member'").bind(await sign(env,'email:'+a.email)).run();
  await env.DB.prepare('DELETE FROM e2e_accounts WHERE id=?').bind(a.id).run();
  return json({ok:true,deletedTestData:true},200,{'Set-Cookie':cookie('',0)});
 }
@@ -272,10 +318,11 @@ export async function handleE2E(request,env){
   if(pathname==='/api/e2e/verify-code'&&isPost)return await verifyCode(request,env);
   const a=await account(request,env);
   if(!a)return deny('login_required',401);
-  const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON});
+  const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication});
   if(v2)return v2;
   if(pathname==='/api/e2e/logout'&&isPost)return await logout(request,env,a);
-  if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:a,testOnly:true});
+  if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),testOnly:true});
+  if(pathname==='/api/e2e/switch-role'&&isPost)return await switchRole(request,env,a);
   if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env);
   if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
    if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a);

@@ -184,11 +184,11 @@ test('minimal staff entrance requests a code for organizer, never a member',asyn
   return route.fulfill({status:401,json:{ok:false,error:'not_found'}});
  });
  await page.goto('/backoffice.html');
- await expect(page.locator('[data-role-tab=organizer]')).toHaveClass(/active/);
+ await expect(page.locator('.role-tabs')).toBeHidden();
  await page.locator('#back-email-form [name=email]').fill('organizer@example.invalid');
  await page.locator('#back-email-form button').click();
  await expect(page.locator('#back-code-form')).toBeVisible();
- expect(requested.role).toBe('organizer');
+ expect(requested.role).toBe('staff');
 });
 test('minimal staff reviewer submits phase-specific V2 scoring without crossing roles',async({page})=>{
  let saved=null,scoreData=null;
@@ -200,7 +200,7 @@ test('minimal staff reviewer submits phase-specific V2 scoring without crossing 
   return route.fulfill({status:404,json:{ok:false,error:'not_found'}});
  });
  await page.goto('/backoffice.html');
- await page.locator('[data-role-tab=reviewer]').click();
+ await expect(page.locator('[data-role-tab=reviewer]')).toHaveClass(/active/);
  await expect(page.locator('#judge-dashboard')).toBeVisible();
  await page.locator('#judge-queue [name=technique]').fill('32');
  await page.locator('#judge-queue [name=interpretation]').fill('20');

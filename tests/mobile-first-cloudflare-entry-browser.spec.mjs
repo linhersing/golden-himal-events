@@ -73,7 +73,7 @@ test('mobile homepage points to clean member flow without exposed engineer test 
  await expect(page.locator('.front-actions a').nth(1)).toHaveAttribute('href','./member.html#login');
  await expect(page.locator('.front-actions a').nth(2)).toHaveAttribute('href','./news.html');
  await expect(page.locator('.backoffice-link')).toHaveCount(0);
- await expect(page.locator('footer a')).toHaveCount(0);
+ await expect(page.locator('footer a.staff-stealth-link')).toHaveCount(1);
  // Existing private staff page remains reachable by a separately shared URL.
  await page.goto('/backoffice.html');
  await expect(page.locator('#back-signin')).toBeVisible();
@@ -104,7 +104,7 @@ test('desktop public homepage does not advertise backstage; private direct staff
  await page.goto('/');
  await expect(page.locator('.front-actions .choice')).toHaveCount(3);
  await expect(page.locator('.backoffice-link')).toHaveCount(0);
- await expect(page.locator('footer a')).toHaveCount(0);
+ await expect(page.locator('footer a.staff-stealth-link')).toHaveCount(1);
  await page.screenshot({path:'test-results/ghv-hide-public-staff-nav-20261104/03-desktop-public-home-no-staff-link.png'});
  await page.goto('/backoffice.html');
  await expect(page.locator('#back-signin')).toBeVisible();
