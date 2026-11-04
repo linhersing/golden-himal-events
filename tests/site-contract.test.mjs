@@ -7,7 +7,10 @@ test('home is focused on registration, member login and news only',async()=>{
  assert.match(html,/class="front-actions"/);
  for(const href of ['./member.html#register','./member.html#login','./news.html'])assert.ok(html.includes('href="'+href+'"'),href);
  // The staff URL is intentionally not linked from public visitor HTML; its route is unchanged.
- assert.doesNotMatch(html,/href="[^"]*(?:backoffice|admin-center)(?:\\.html)?"/i);
+ const forbiddenStaffHref=/<a\\b[^>]*\\bhref\\s*=\\s*["'][^"']*(?:backoffice|admin-center)[^"']*["']/i;
+ assert.match('<a href="./backoffice.html">staff</a>',forbiddenStaffHref);
+ assert.match('<a href="./admin-center.html">admin</a>',forbiddenStaffHref);
+ assert.doesNotMatch(html,forbiddenStaffHref);
  assert.match(html,/class="front-footer wrap"/);
  assert.match(html,/網站預覽階段/);
  assert.doesNotMatch(html,/<form[^>]+action\s*=/i);
