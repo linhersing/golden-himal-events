@@ -7,7 +7,9 @@ test('singer-first homepage shows just register login and announcements on mobil
   await expect(page.locator('.choice-main')).toContainText('我要報名');
   await expect(page.locator('.front-actions a').nth(1)).toHaveAttribute('href','./member.html#login');
   await expect(page.locator('.front-actions a').nth(2)).toHaveAttribute('href','./news.html');
-  await expect(page.locator('.backoffice-link')).toHaveAttribute('href','./backoffice.html');
+  await expect(page.locator('.backoffice-link')).toHaveCount(0);
+  await expect(page.locator('.front-footer a')).toHaveCount(0);
+  if(width===1280)await page.screenshot({path:'test-results/ghv-hide-public-staff-nav-20261104/03-desktop-public-home-no-staff-link.png'});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
  }
 });
