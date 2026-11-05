@@ -16,8 +16,52 @@ const safeLink=(url)=>{try{const u=new URL(url);return u.protocol==='https:'?u.h
 const formValues=form=>Object.fromEntries(new FormData(form));
 const mt=k=>window.GHVLocale?.t(k)||k;
 const staff=page==='back',prefix=staff?'back':'member';
-let busy=false,challenge=null,role=staff?'organizer':'member',account=null;
+let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false;
 const statusBox=$(prefix+'-status');
+function permittedPhoto(url){const href=safeLink(url);if(!href)return null;try{const x=new URL(href);if(x.username||x.password||(x.port&&x.port!=='443')||x.hostname==='localhost'||x.hostname.endsWith('.local')||x.hostname.endsWith('.internal'))return null;return href}catch{return null}}
+function profileImage(url,large=false){
+ const source=permittedPhoto(url);if(!source)return null;
+ const img=node('img');img.className=large?'entrant-gallery-img':'entrant-avatar';
+ img.src=source;img.loading='lazy';img.referrerPolicy='no-referrer';img.decoding='async';img.alt='參賽者自行提供的照片';
+ img.addEventListener('error',()=>{img.replaceWith(node('span','照片暫時無法顯示','entrant-image-fallback'))});
+ return img;
+}
+function profileGallery(a){
+ const urls=[a.photo_url_1,a.photo_url_2,a.photo_url_3].filter(permittedPhoto);
+ if(!urls.length)return null;
+ const gallery=node('div',undefined,'entrant-gallery');
+ for(const url of urls){
+  const link=node('a',undefined,'entrant-photo-link');link.href=url;link.target='_blank';link.rel='noopener noreferrer';link.referrerPolicy='no-referrer';
+  link.append(profileImage(url,true));gallery.append(link);
+ }
+ return gallery;
+}
+function enablePhotoPreview(){
+ const field=$('entrant-photo-url-1'),box=$('entrant-photo-preview'),img=$('entrant-preview-img');
+ if(!field||!box||!img)return;
+ const refresh=()=>{
+  const url=permittedPhoto(field.value.trim());
+  box.hidden=!url;if(!url){img.removeAttribute('src');return}
+  img.src=url;img.alt='主照片預覽';
+ };
+ img.addEventListener('error',()=>{box.hidden=true});
+ field.addEventListener('change',refresh);field.addEventListener('input',refresh);
+}
+function setupProfileFields(ready){
+ profileEnabled=Boolean(ready);
+ const group=$('entrant-profile-fields');
+ if(group)group.hidden=!profileEnabled;
+ if(profileEnabled)enablePhotoPreview();
+ const consent=$('entrant-profile-consent');
+ const fields=group?.querySelectorAll('[name=gender],[name^=photo_url_]');
+ const sync=()=>{
+  if(!consent)return;
+  consent.required=profileEnabled&&Array.from(fields||[]).some(f=>Boolean(f.value.trim()));
+ };
+ fields?.forEach(el=>el.addEventListener('input',sync));
+ sync();
+}
+
 function status(text,bad=false){if(!statusBox)return;statusBox.hidden=false;statusBox.className='feedback'+(bad?' error':' success');statusBox.textContent=text;statusBox.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function friendlyError(e){
  if(page==='member'){
@@ -34,6 +78,13 @@ function friendlyError(e){
  contract_declaration_required:'Confirm the exclusive-contract declaration.',
  duplicate_round_or_database_rejected:'This audition window may already have an application.',
  invalid_demo_url_or_fields:'Check song information and public video link.',
+ profile_not_enabled:'照片資料目前尚未開通，請勿把照片視為已儲存。',
+ profile_storage_unavailable:'照片資料儲存服務尚未就緒。',
+ profile_database_error:'照片資料儲存失敗，請稍後再試。',
+ profile_consent_required:'請先同意照片用途，才能送出外部照片網址或性別。',
+ invalid_public_photo_url:'請輸入公開、安全的 HTTPS 照片網址。',
+ invalid_gender:'請選擇有效的性別欄位。',
+ main_photo_required:'填寫補充照片前，請先提供主照片網址。',
  mock_payment_not_allowed:'This application cannot be checked out.',
  test_payment_result_unverified:'TEST payment could not be verified. No charge was made.'
  };
@@ -56,7 +107,7 @@ async function loadSession(){try{
  const target=staff?(granted.includes('organizer')?'organizer':granted.includes('reviewer')?'reviewer':null):'member';
  if(!target||!granted.includes(target)){account=null;authUI(false);staffTabs();return;}
  if((staff&&!['organizer','reviewer'].includes(v.account.role))||(!staff&&v.account.role!=='member'))v=await api('switch-role',{role:target});
- account=v.account;role=account.role;authUI(true);if(staff)staffTabs();await dashboard();
+ account=v.account;role=account.role;authUI(true);if(staff)staffTabs();else setupProfileFields(v.profile_enabled===true);await dashboard();
  }catch(e){account=null;authUI(false);if(staff)staffTabs();if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
 function setupAuth(){
 const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
@@ -68,6 +119,8 @@ $(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logou
 async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else await renderJudge()}else await renderMember()}
 function drawEntry(a){
  const box=node('article',undefined,'entry'),head=node('strong',a.stage_name+' · '+a.song_title);
+ const avatar=profileImage(a.photo_url_1);
+ if(avatar)box.append(avatar);
  box.append(head,node('p',mt('entryId')+': '+a.id,'minor'));
  const isPaid=a.payment_status==='simulated_paid';
  box.append(node('span',mt(isPaid?'testPaid':'testPending'),'pill '+(isPaid?'pill-pass':'pill-warn')));
@@ -118,17 +171,28 @@ function showEdit(a){
  const box=node('div',undefined,'panel');box.dataset.editing='true';
  const heading=node('h3',mt('editHeader'));heading.dataset.l='editHeader';box.append(heading);
  const form=node('form',undefined,'form-grid');
- const fields=[['stage_name','stageName'],['song_title','songTitle'],['original_artist','artist'],['demo_url','videoUrl']];
+ const fields=[['stage_name','stageName'],['song_title','songTitle'],['original_artist','artist'],['demo_url','videoUrl'],...(profileEnabled?[['gender','profileGender'],['photo_url_1','profileMainPhoto'],['photo_url_2','profilePhoto2'],['photo_url_3','profilePhoto3']]:[])];
  for(const [name,key] of fields){
   const lab=node('label',undefined,'field'),label=node('span',mt(key)),input=node('input');label.dataset.l=key;
-  input.name=name;input.value=a[name]||'';input.required=true;
-  if(name==='demo_url')input.type='url';
+  input.name=name;input.value=a[name]||'';input.required=!['gender','photo_url_1','photo_url_2','photo_url_3'].includes(name);
+  if(name==='gender'){
+   const options=[['','不填寫'],['male','男'],['female','女'],['other','其他'],['prefer_not_say','不願透露']];
+   const sel=node('select');sel.name=name;for(const [v,t] of options){const opt=node('option',t);opt.value=v;opt.selected=v===(a.gender||'');sel.append(opt)}
+   lab.append(label,sel);form.append(lab);continue;
+  }
+  if(name==='demo_url'||name.startsWith('photo_url_'))input.type='url';
   lab.append(label,input);if(name==='demo_url')lab.classList.add('full');form.append(lab);
+ }
+ if(profileEnabled){
+  const agree=node('label',undefined,'check full'),check=node('input');
+  check.type='checkbox';check.name='profile_consent';
+  agree.append(check,node('span',mt('profileConsent')));
+  form.append(agree);
  }
  const actions=node('div',undefined,'form-actions full'),save=node('button',mt('saveChanges'),'btn btn-primary');save.type='submit';save.dataset.l='saveChanges';
  const cancel=node('button',mt('cancel'),'btn btn-soft');cancel.type='button';cancel.dataset.l='cancel';cancel.onclick=()=>{box.remove();renderMember().catch(e=>status(friendlyError(e),true))};
  actions.append(save,cancel);form.append(actions);
- form.onsubmit=ev=>{ev.preventDefault();run(async()=>{await api('update-application',{application_id:a.id,...formValues(form)});status(mt('savedChanges'));await renderMember()})};
+ form.onsubmit=ev=>{ev.preventDefault();run(async()=>{await api('update-application',{application_id:a.id,...formValues(form),...(profileEnabled?{profile_consent:form.querySelector('[name=profile_consent]')?.checked===true}:{})});status(mt('savedChanges'));await renderMember()})};
  box.append(form);holder.prepend(box);box.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 function makeRosterPager(target,page,totalPages,onPage){
@@ -176,6 +240,8 @@ async function renderOrganizer(){
    info.append(node('strong',(a.stage_name||'選手')+' · '+(a.song_title||'未命名曲目')));
    info.append(node('p',a.round_code+' · '+(a.category==='university'?'大學組':'社會組')+' · '+(a.song_language||'語言未填'),'minor'));
    info.append(node('p','編號：'+a.id,'minor'));
+   const img=profileImage(a.photo_url_1);
+   if(img)info.prepend(img);
    const stats=node('div',undefined,'roster-entry-side');
    stats.append(node('span',a.payment_status==='simulated_paid'?'模擬付款':'未付款','pill'));
    stats.append(node('small','評審回覆 '+String(Number(a.demo_judges||0)+Number(a.live_judges||0))+' 筆'));
@@ -211,6 +277,8 @@ async function renderJudge(){
   for(const a of found.slice((pageNo-1)*perPage,pageNo*perPage)){
    const row=node('button',undefined,'roster-entry roster-action');row.type='button';
    const body=node('span',undefined,'roster-entry-text');
+   const img=profileImage(a.photo_url_1);
+   if(img)body.append(img);
    body.append(node('strong',a.stage_name||'選手'));
    body.append(node('span',String(a.song_title||'作品')+' · '+a.round_code+' · '+(a.category==='university'?'大學組':'社會組'),'roster-mini'));
    const flag=node('span',scoredByJudge(a)?'已評分':'開始評分','pill');
@@ -228,6 +296,8 @@ async function renderJudge(){
   const phase=a.phase||'demo',demo=phase==='demo';
   box.append(node('h3',(a.stage_name||'選手')+' · '+a.round_code));
   box.append(node('p',(a.song_title||'作品')+' · '+(a.song_language||'')+' · '+(demo?'線上海選':phase==='qualifier'?'現場初賽':'決賽'),'minor'));
+  const pictures=profileGallery(a);if(pictures)box.append(pictures);
+  if(a.gender)box.append(node('p','參賽者填寫的性別：'+({male:'男',female:'女',other:'其他',prefer_not_say:'不願透露'}[a.gender]||'未提供'),'minor'));
   const link=safeLink(a.demo_url);
   if(link){const l=node('a','觀看作品 ↗','small-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l);}
   if(scoredByJudge(a)){
@@ -266,7 +336,7 @@ if(page==='member'){
  details.addEventListener('toggle',syncStart);
  start?.addEventListener('click',()=>{details.open=true;syncStart();details.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>application.querySelector('[name=stage_name]')?.focus({preventScroll:true}),180)});
  application.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
- const v=formValues(application),data={...v,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
+ const v=formValues(application),data={...v,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
  const saved=await api('applications',data);application.reset();toggle();details.open=false;status('✓ '+mt('saved')+' '+mt('entryId')+': '+saved.application_id);await renderMember()})});
  const toggle=()=>{const community=$('category').value==='community';const adult=application.querySelector('[name=adult_confirmed]'),student=application.querySelector('[name=student_confirmed]');$('community-statement').hidden=!community;$('university-statement').hidden=community;adult.required=community;student.required=!community;if(community)student.checked=false;else adult.checked=false;};
  $('category').addEventListener('change',toggle);toggle();
