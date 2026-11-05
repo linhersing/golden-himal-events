@@ -71,3 +71,27 @@ test('a configured Mailgun sandbox can serve invited OTP without a native Email 
  assert.equal((await check({...env,STAGING_MAILGUN_API_KEY:undefined})).readiness,'BLOCKED');
  const publicOutput=JSON.stringify(result);assert(!publicOutput.includes('sandboxabc123'));assert(!publicOutput.includes('test-key-'));
 });
+
+test('photo profile readiness distinguishes migration missing, gate off and operational (no PII)',async()=>{
+ const base={STAGING_SUBMISSION_MODE:'links',STAGING_E2E_ENABLED:'true',
+  STAGING_ALLOWED_EMAILS:'test@test.invalid',STAGING_FROM_EMAIL:'sender@test.invalid',
+  STAGING_IDENTITY_SECRET:'Z'.repeat(64),EMAIL:{async send(){}},
+  E2E_DB:{prepare(sql){return {async first(){
+   if(sql.includes("name='e2e_application_profiles'"))return {name:'e2e_application_profiles'};
+   return {n:9};
+  }}}}
+ };
+ const notEnabled=await check(base);
+ assert.equal(notEnabled.resources.profileTableReady,true);
+ assert.equal(notEnabled.resources.profileFeatureEnabled,false);
+ assert.equal(notEnabled.resources.profileUsable,false);
+ const enabled=await check({...base,STAGING_PROFILE_URLS_ENABLED:'true'});
+ assert.equal(enabled.resources.profileUsable,true);
+ const missing=await check({...base,STAGING_PROFILE_URLS_ENABLED:'true',E2E_DB:{prepare(sql){return {async first(){
+  if(sql.includes("name='e2e_application_profiles'"))return null;
+  return {n:9};
+ }}}}});
+ assert.equal(missing.resources.profileTableReady,false);
+ assert.equal(missing.resources.profileUsable,false);
+ assert(!JSON.stringify(missing).includes('test@test.invalid'));
+});
