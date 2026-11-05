@@ -85,3 +85,25 @@
 .staff-stealth-link:hover {
  color: rgba(120, 110, 100, 0.8);
 }
+
+/* Backoffice roster v1: compact lists; one detailed scoring form at a time. */
+.roster-toolbar{display:grid;grid-template-columns:minmax(210px,2fr) repeat(3,minmax(128px,1fr));gap:12px;margin:16px 0}
+.roster-field{display:flex;flex-direction:column;gap:6px;min-width:0;font-size:.8rem;font-weight:650;color:#71594b}
+.roster-field input,.roster-field select{min-height:44px;width:100%;padding:9px 12px;border:1px solid #dfccb4;border-radius:11px;background:#fff;color:#392e29}
+.roster-count{font-size:.84rem;color:#786555;margin:8px 0 15px}
+.roster-list{display:flex;flex-direction:column;gap:9px}
+.roster-entry{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:15px 16px;background:#fffefb;border:1px solid #e4d4bd;border-radius:13px;min-width:0}
+.roster-entry-text{display:flex;flex-direction:column;gap:4px;min-width:0;text-align:left}
+.roster-entry-text strong{font-size:.94rem;color:#50362d;overflow-wrap:anywhere}
+.roster-mini{font-size:.8rem;color:#796454;overflow-wrap:anywhere}
+.roster-entry .minor{font-size:.79rem;margin:0;overflow-wrap:anywhere}
+.roster-entry-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;flex-shrink:0}
+.roster-entry-side small{font-size:.78rem;color:#806b59}
+.roster-action{width:100%;font:inherit;color:inherit;cursor:pointer;text-align:left}
+.roster-action:hover,.roster-action:focus-visible{border-color:#a76c51;box-shadow:0 0 0 2px #b78a6140}
+.roster-pagination{display:flex;justify-content:center;align-items:center;gap:12px;min-height:48px;margin:16px 0}
+.roster-pagination .btn{min-height:42px}
+.roster-detail{margin-top:15px}
+.roster-detail>#judge-back-list{margin-bottom:14px}
+@media(max-width:760px){.roster-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.roster-toolbar{grid-template-columns:1fr}.roster-entry{padding:13px 12px;gap:8px}.roster-entry-text strong{font-size:.88rem}.roster-pagination{gap:6px}.roster-pagination .btn{min-width:75px;padding-inline:10px}}
