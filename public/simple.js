@@ -85,6 +85,8 @@ function friendlyError(e){
  invalid_public_photo_url:'請輸入公開、安全的 HTTPS 照片網址。',
  invalid_gender:'請選擇有效的性別欄位。',
  main_photo_required:'填寫補充照片前，請先提供主照片網址。',
+ invalid_song_language:'Please choose a supported song language.',
+ readback_mismatch:'Changes were submitted, but we could not verify the saved record. Please refresh before trying again.',
  mock_payment_not_allowed:'This application cannot be checked out.',
  test_payment_result_unverified:'TEST payment could not be verified. No charge was made.'
  };
@@ -117,83 +119,153 @@ const change=$(staff?'back-change':'change-mail');change?.addEventListener('clic
 $(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff)staffTabs();challenge=null;authForms(true);status(page==='member'?mt('signedOut'):'已登出。')}));
 }
 async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else await renderJudge()}else await renderMember()}
+function memberCanEdit(a){
+ return a.can_edit===true||a.can_edit===1||a.can_edit==='1'||
+  (a.can_edit===undefined&&a.payment_status==='unpaid'&&a.status==='submitted');
+}
 function drawEntry(a){
- const box=node('article',undefined,'entry'),head=node('strong',a.stage_name+' · '+a.song_title);
+ const box=node('article',undefined,'entry member-entry');
+ const title=node('div',undefined,'member-entry-main');
  const avatar=profileImage(a.photo_url_1);
- if(avatar)box.append(avatar);
- box.append(head,node('p',mt('entryId')+': '+a.id,'minor'));
- const isPaid=a.payment_status==='simulated_paid';
- box.append(node('span',mt(isPaid?'testPaid':'testPending'),'pill '+(isPaid?'pill-pass':'pill-warn')));
- box.append(node('p',mt('categoryLabel')+': '+mt(a.category==='university'?'university':'community')+' · '+mt('windowLabel')+': '+a.round_code,'minor'));
- const link=safeLink(a.demo_url);
- if(link){const l=node('a',mt('viewVideo'),'small-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l)}
- const actions=node('div',undefined,'inline-actions');
- if(!isPaid&&a.status==='submitted'){
-  const edit=node('button',mt('edit'),'btn btn-soft');edit.type='button';edit.onclick=()=>showEdit(a);
-  const del=node('button',mt('delete'),'btn btn-danger');del.type='button';
+ if(avatar)title.append(avatar);
+ const copy=node('div',undefined,'member-entry-copy');
+ copy.append(node('strong',a.stage_name||mt('unnamedEntry')));
+ copy.append(node('small',(a.song_title||'')+' · '+(a.song_language||'')));
+ title.append(copy);box.append(title);
+ const meta=node('div',undefined,'member-entry-meta');
+ for(const item of [
+  [mt('entryId'),a.id],
+  [mt('categoryLabel'),mt(a.category==='university'?'university':'community')],
+  [mt('windowLabel'),a.round_code]
+ ]){
+  const field=node('div',undefined,'member-entry-field');
+  field.append(node('span',item[0]),node('strong',item[1]));
+  meta.append(field);
+ }
+ box.append(meta);
+ const actions=node('div',undefined,'inline-actions member-entry-buttons');
+ if(memberCanEdit(a)){
+  const edit=node('button',mt('edit'),'btn btn-primary');edit.type='button';edit.onclick=()=>showEdit(a);actions.append(edit);
+ }
+ const url=safeLink(a.demo_url);
+ if(url){const link=node('a',mt('viewVideo'),'btn btn-soft');link.href=url;link.target='_blank';link.rel='noopener noreferrer';actions.append(link);}
+ if(a.payment_status==='unpaid'&&a.status==='submitted'){
+  const del=node('button',mt('delete'),'btn btn-soft');del.type='button';
   del.onclick=()=>{
    if(!confirm(mt('delTitle')+'\n\n'+mt('delBody')+' '+a.id))return;
-   run(async()=>{await api('delete-application',{application_id:a.id});status(mt('deleted'));await renderMember()})
+   run(async()=>{await api('delete-application',{application_id:a.id});status(mt('deleted'));await renderMember()});
   };
-  const pay=node('button',mt('testCheckout'),'btn btn-primary');pay.type='button';
+  const pay=node('button',mt('testCheckout'),'btn btn-soft');pay.type='button';
   pay.onclick=()=>{
    if(!confirm(mt('payTitle')))return;
    run(async()=>{
     const result=await api('mock-payment',{application_id:a.id});
     if(result.status!=='simulated_paid'||result.testOnly!==true||result.realCharge!==false)throw Error('test_payment_result_unverified');
     await renderMember();status(mt('paymentDone'));
-    const note=$('test-completion');
-    if(note){note.hidden=false;note.textContent='✓ '+mt('testComplete')+' — '+mt('entryId')+': '+a.id+'. '+mt('noCharge');note.scrollIntoView({block:'center',behavior:'smooth'});}
-   })
+   });
   };
-  actions.append(edit,del,pay);
- }else actions.append(node('small',mt('locked')));
- box.append(actions);return box;
+  actions.append(pay,del);
+ }
+ box.append(actions);
+ if(!memberCanEdit(a))box.append(node('p',mt('editLockedAfterReview'),'minor'));
+ return box;
 }
 async function renderMember(){
- const holder=$('entries');holder.replaceChildren();
- const v=await api('applications');
- const hasEntries=v.applications.length>0;
+ const holder=$('entries'),editSlot=$('member-edit-panel');
+ holder.replaceChildren();
+ if(editSlot){editSlot.replaceChildren();editSlot.hidden=true;}
+ const v=await api('applications'),rows=Array.isArray(v.applications)?v.applications:[];
+ const hasEntries=rows.length>0,first=rows[0];
  const callout=$('new-application-callout'),form=$('application-details');
  if(callout)callout.hidden=hasEntries;
  if(form){form.hidden=hasEntries;if(hasEntries)form.open=false;}
- if(!hasEntries)holder.append(node('p',mt('noEntries')));
- for(const a of v.applications)holder.append(drawEntry(a));
+ $('member-welcome').hidden=!hasEntries;
+ $('member-entry-overview').hidden=!hasEntries;
+ $('member-state-grid').hidden=!hasEntries;
+ $('member-primary-actions').hidden=!hasEntries;
+ $('member-official-boundary').hidden=!hasEntries;
+ $('member-dashboard-help').hidden=hasEntries;
+ if(hasEntries){
+  $('member-welcome-name').textContent=first.stage_name||mt('unnamedEntry');
+  $('member-welcome-meta').textContent=mt(first.category==='university'?'university':'community')+' · '+first.round_code;
+  const avatar=$('member-hero-avatar');avatar.replaceChildren();
+  avatar.append(profileImage(first.photo_url_1)||node('span','✦'));
+  $('member-state-data').textContent=mt('dataSaved');
+  const paid=first.payment_status==='simulated_paid';
+  $('member-state-payment').textContent=mt(paid?'testPaid':'testPending');
+  $('member-quick-edit').hidden=!memberCanEdit(first);
+  $('member-quick-edit').onclick=()=>showEdit(first);
+  const video=$('member-view-video'),link=safeLink(first.demo_url);
+  video.hidden=!link;if(link)video.href=link;else video.removeAttribute('href');
+  $('member-show-details').onclick=()=>document.getElementById('member-entry-overview').scrollIntoView({behavior:'smooth',block:'start'});
+  for(const a of rows)holder.append(drawEntry(a));
+ }else{
+  $('member-hero-avatar').replaceChildren();
+  $('member-quick-edit').onclick=null;
+ }
+ const paidEntry=rows.find(a=>a.payment_status==='simulated_paid');
  const done=$('test-completion');
- if(done){const paid=v.applications.find(a=>a.payment_status==='simulated_paid');done.hidden=!paid;if(paid)done.textContent='✓ '+mt('testComplete')+' — '+paid.stage_name+' · '+paid.song_title+' · '+mt('entryId')+': '+paid.id+'. '+mt('noCharge');}
- const paid=v.applications.some(a=>a.payment_status==='simulated_paid');
+ if(done){done.hidden=!paidEntry;done.textContent=paidEntry?'✓ '+mt('testCompleteShort'):'';}
  $('step-login')?.classList.add('active');
  $('step-apply')?.classList.toggle('active',hasEntries);
- $('step-checkout')?.classList.toggle('active',paid);
+ $('step-checkout')?.classList.toggle('active',Boolean(paidEntry));
 }
 function showEdit(a){
- const holder=$('entries');let existing=document.querySelector('[data-editing]');if(existing)existing.remove();
- const box=node('div',undefined,'panel');box.dataset.editing='true';
- const heading=node('h3',mt('editHeader'));heading.dataset.l='editHeader';box.append(heading);
+ if(!memberCanEdit(a)){status(mt('editLockedAfterReview'),true);return;}
+ const holder=$('member-edit-panel');holder.replaceChildren();holder.hidden=false;
+ const box=node('div',undefined,'member-edit-box');box.dataset.editing='true';
+ box.append(node('h3',mt('editHeader')),node('p',mt('editGuidance'),'minor'));
  const form=node('form',undefined,'form-grid');
- const fields=[['stage_name','stageName'],['song_title','songTitle'],['original_artist','artist'],['demo_url','videoUrl'],...(profileEnabled?[['gender','profileGender'],['photo_url_1','profileMainPhoto'],['photo_url_2','profilePhoto2'],['photo_url_3','profilePhoto3']]:[])];
+ const fields=[
+  ['stage_name','stageName'],['song_title','songTitle'],
+  ['original_artist','artist'],['song_language','songLang'],['demo_url','videoUrl'],
+  ...(profileEnabled?[['gender','profileGender'],['photo_url_1','profileMainPhoto'],['photo_url_2','profilePhoto2'],['photo_url_3','profilePhoto3']]:[])
+ ];
  for(const [name,key] of fields){
-  const lab=node('label',undefined,'field'),label=node('span',mt(key)),input=node('input');label.dataset.l=key;
-  input.name=name;input.value=a[name]||'';input.required=!['gender','photo_url_1','photo_url_2','photo_url_3'].includes(name);
+  const lab=node('label',undefined,'field'),label=node('span',mt(key));
+  let input;
   if(name==='gender'){
-   const options=[['','不填寫'],['male','男'],['female','女'],['other','其他'],['prefer_not_say','不願透露']];
-   const sel=node('select');sel.name=name;for(const [v,t] of options){const opt=node('option',t);opt.value=v;opt.selected=v===(a.gender||'');sel.append(opt)}
-   lab.append(label,sel);form.append(lab);continue;
+   input=node('select');
+   const options=[['','profileGenderNone'],['male','profileMale'],['female','profileFemale'],['other','profileOther'],['prefer_not_say','profilePreferNot']];
+   for(const [value,textKey] of options){const opt=node('option',mt(textKey));opt.value=value;input.append(opt);}
+  }else if(name==='song_language'){
+   input=$('song-language').cloneNode(true);input.removeAttribute('id');
+  }else{
+   input=node('input');
+   if(name==='demo_url'||name.startsWith('photo_url_'))input.type='url';
+   input.maxLength=name==='demo_url'?1000:name.startsWith('photo_url_')?600:100;
   }
-  if(name==='demo_url'||name.startsWith('photo_url_'))input.type='url';
-  lab.append(label,input);if(name==='demo_url')lab.classList.add('full');form.append(lab);
+  input.name=name;input.value=a[name]||'';
+  input.required=!['gender','photo_url_1','photo_url_2','photo_url_3'].includes(name);
+  lab.append(label,input);
+  if(name==='demo_url')lab.classList.add('full');
+  form.append(lab);
  }
  if(profileEnabled){
-  const agree=node('label',undefined,'check full'),check=node('input');
-  check.type='checkbox';check.name='profile_consent';
-  agree.append(check,node('span',mt('profileConsent')));
-  form.append(agree);
+  const consent=node('label',undefined,'check full'),check=node('input');
+  check.type='checkbox';check.name='profile_consent';check.required=true;
+  consent.append(check,node('span',mt('profileConsent')));
+  form.append(consent);
  }
- const actions=node('div',undefined,'form-actions full'),save=node('button',mt('saveChanges'),'btn btn-primary');save.type='submit';save.dataset.l='saveChanges';
- const cancel=node('button',mt('cancel'),'btn btn-soft');cancel.type='button';cancel.dataset.l='cancel';cancel.onclick=()=>{box.remove();renderMember().catch(e=>status(friendlyError(e),true))};
- actions.append(save,cancel);form.append(actions);
- form.onsubmit=ev=>{ev.preventDefault();run(async()=>{await api('update-application',{application_id:a.id,...formValues(form),...(profileEnabled?{profile_consent:form.querySelector('[name=profile_consent]')?.checked===true}:{})});status(mt('savedChanges'));await renderMember()})};
- box.append(form);holder.prepend(box);box.scrollIntoView({block:'nearest',behavior:'smooth'});
+ const buttons=node('div',undefined,'form-actions full');
+ const save=node('button',mt('saveChanges'),'btn btn-primary');save.type='submit';
+ const cancel=node('button',mt('cancel'),'btn btn-soft');cancel.type='button';
+ cancel.onclick=()=>{holder.replaceChildren();holder.hidden=true;};
+ buttons.append(save,cancel);form.append(buttons);
+ form.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+  const payload={application_id:a.id,...formValues(form)};
+  if(profileEnabled)payload.profile_consent=form.querySelector('[name=profile_consent]')?.checked===true;
+  await api('update-application',payload);
+  const check=await api('applications');
+  const saved=(check.applications||[]).find(row=>row.id===a.id);
+  const names=['stage_name','song_title','original_artist','song_language','demo_url',
+   ...(profileEnabled?['gender','photo_url_1','photo_url_2','photo_url_3']:[])];
+  if(!saved||names.some(key=>String(saved[key]||'')!==String(payload[key]||'')))throw Error('readback_mismatch');
+  await renderMember();status(mt('savedChanges'));
+ })});
+ box.append(form);holder.append(box);
+ holder.scrollIntoView({block:'start',behavior:'smooth'});
+ form.querySelector('input')?.focus({preventScroll:true});
 }
 function makeRosterPager(target,page,totalPages,onPage){
  target.replaceChildren();
