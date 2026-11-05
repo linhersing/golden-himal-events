@@ -2,13 +2,53 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id),page=document.body.dataset.page;
 const translations={
-en:{topline:'GOLDEN HIMAL VOICE · 2027',headline:'Every voice deserves a stage.',subline:'A place for music, talent and connection. Your journey begins here.',apply:'Join the competition',applySub:'Create your singing entry',login:'Member login',loginSub:'View your entry and performance',news:'Latest news',newsSub:'Updates and official results',preview:'Preview stage · Official paid registration is not open',back:'Staff login'},
-ne:{topline:'GOLDEN HIMAL VOICE · 2027',headline:'हरेक आवाजको आफ्नै मञ्च हुन्छ।',subline:'संगीत, प्रतिभा र सम्बन्धको लागि नयाँ मञ्च। यहाँबाट सुरु गर्नुहोस्।',apply:'प्रतियोगितामा सहभागी हुनुहोस्',applySub:'आवेदन सुरु गर्नुहोस्',login:'सदस्य लगइन',loginSub:'आफ्नो आवेदन हेर्नुहोस्',news:'नयाँ सूचना',newsSub:'समाचार र नतिजा',preview:'पूर्वावलोकन · वास्तविक शुल्कसहित दर्ता खुलेको छैन',back:'कर्मचारी लगइन'},
-zh:{topline:'GOLDEN HIMAL VOICE · 2027',headline:'你的聲音，值得被聽見。',subline:'一個為歌聲而生的舞台。從這裡，開啟你的旅程。',apply:'我要報名',applySub:'開始建立我的參賽資料',login:'會員登入',loginSub:'查看我的報名與作品',news:'最新公告',newsSub:'賽事消息與公布資訊',preview:'網站預覽階段｜正式收費報名尚未開放',back:'工作人員入口'}};
+en:{topline:'GOLDEN HIMAL VOICE · 2027',headline:'Every voice deserves a stage.',subline:'A place for music, talent and connection. Your journey begins here.',apply:'Join the competition',applySub:'Create your singing entry',login:'Member login',loginSub:'View your entry and performance',news:'Latest news',newsSub:'Updates and official results',preview:'Preview stage · Official paid registration is not open',back:'Staff login',myHome:'My singer home',myHomeSub:'Review my entry and progress',startEntry:'Start my entry',startEntrySub:'Complete the application',memberArea:'My member area',memberAreaSub:'Continue where I left off'},
+ne:{topline:'GOLDEN HIMAL VOICE · 2027',headline:'हरेक आवाजको आफ्नै मञ्च हुन्छ।',subline:'संगीत, प्रतिभा र सम्बन्धको लागि नयाँ मञ्च। यहाँबाट सुरु गर्नुहोस्।',apply:'प्रतियोगितामा सहभागी हुनुहोस्',applySub:'आवेदन सुरु गर्नुहोस्',login:'सदस्य लगइन',loginSub:'आफ्नो आवेदन हेर्नुहोस्',news:'नयाँ सूचना',newsSub:'समाचार र नतिजा',preview:'पूर्वावलोकन · वास्तविक शुल्कसहित दर्ता खुलेको छैन',back:'कर्मचारी लगइन',myHome:'मेरो प्रतियोगी पृष्ठ',myHomeSub:'मेरो विवरण र स्थिति हेर्नुहोस्',startEntry:'आवेदन सुरु गर्नुहोस्',startEntrySub:'प्रतियोगी विवरण भर्नुहोस्',memberArea:'मेरो सदस्य पृष्ठ',memberAreaSub:'मेरो आवेदन हेर्नुहोस्'},
+zh:{topline:'GOLDEN HIMAL VOICE · 2027',headline:'你的聲音，值得被聽見。',subline:'一個為歌聲而生的舞台。從這裡，開啟你的旅程。',apply:'我要報名',applySub:'開始建立我的參賽資料',login:'會員登入',loginSub:'查看我的報名與作品',news:'最新公告',newsSub:'賽事消息與公布資訊',preview:'網站預覽階段｜正式收費報名尚未開放',back:'工作人員入口',myHome:'我的參賽首頁',myHomeSub:'查看報名資料與進度',startEntry:'開始報名',startEntrySub:'填寫我的參賽資料',memberArea:'我的會員專區',memberAreaSub:'繼續查看自己的資料'}};
 if(page==='home'){
- let lang='zh';try{const stored=localStorage.getItem('ghv_ui_language_v1');if(translations[stored])lang=stored}catch{}
- const apply=()=>{document.documentElement.lang=lang==='zh'?'zh-Hant':lang;document.querySelectorAll('[data-t]').forEach(el=>{const x=translations[lang][el.dataset.t];if(x)el.textContent=x});document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)))};
- document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{lang=b.dataset.lang;try{localStorage.setItem('ghv_ui_language_v1',lang)}catch{}apply()}));apply();return;
+ let lang='zh',homeState='anonymous';
+ try{const stored=localStorage.getItem('ghv_ui_language_v1');if(translations[stored])lang=stored}catch{}
+ const applyHomeState=()=>{
+  const first=document.getElementById('home-apply'),second=document.getElementById('home-login');
+  if(!first||!second)return;
+  const text=translations[lang],applyText=first.querySelector('strong'),applySub=first.querySelector('small'),
+   loginText=second.querySelector('strong'),loginSub=second.querySelector('small');
+  if(homeState==='entry'){
+   applyText.textContent=text.myHome;applySub.textContent=text.myHomeSub;
+   second.hidden=true; // Keep the unchanged login URL in DOM without a redundant second choice.
+  }else if(homeState==='member'){
+   applyText.textContent=text.startEntry;applySub.textContent=text.startEntrySub;
+   loginText.textContent=text.memberArea;loginSub.textContent=text.memberAreaSub;
+   second.hidden=false;
+  }else second.hidden=false;
+ };
+ const apply=()=>{
+  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
+  document.querySelectorAll('[data-t]').forEach(el=>{const x=translations[lang][el.dataset.t];if(x)el.textContent=x});
+  document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)));
+  applyHomeState();
+ };
+ document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{
+  lang=b.dataset.lang;try{localStorage.setItem('ghv_ui_language_v1',lang)}catch{}apply()
+ }));
+ apply();
+ // Read the HttpOnly server session; never infer a member account from localStorage.
+ (async()=>{
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),9000);
+  try{
+   const response=await fetch('/api/e2e/me',{credentials:'same-origin',cache:'no-store',signal:controller.signal});
+   if(!response.ok)return;
+   const data=await response.json();
+   if(data.ok!==true||data.account?.role!=='member')return; // Never switch staff roles here.
+   homeState='member';applyHomeState();
+   const appsResponse=await fetch('/api/e2e/applications',{credentials:'same-origin',cache:'no-store',signal:controller.signal});
+   if(!appsResponse.ok)return;
+   const apps=await appsResponse.json();
+   if(apps.ok===true&&Array.isArray(apps.applications)&&apps.applications.length)homeState='entry';
+   applyHomeState();
+  }catch{}finally{clearTimeout(timeout)}
+ })();
+ return;
 }
 if(page==='news')return;
 const node=(tag,txt,cls)=>{const x=document.createElement(tag);if(txt!==undefined&&txt!==null)x.textContent=String(txt);if(cls)x.className=cls;return x};
@@ -69,7 +109,7 @@ function friendlyError(e){
  if(common[e?.message])return mt(common[e.message]);
  const errors={
  member_only:'This account is not a singer account.',
- update_locked:'This entry is locked after checkout.',
+ update_locked:mt('editLockedAfterReview'),
  delete_locked:'This entry cannot be deleted.',
  invalid_demo_url:'Enter a valid public video link.',
  annual_category_locked:'Your annual competition category is already selected.',
@@ -85,6 +125,8 @@ function friendlyError(e){
  invalid_public_photo_url:'請輸入公開、安全的 HTTPS 照片網址。',
  invalid_gender:'請選擇有效的性別欄位。',
  main_photo_required:'填寫補充照片前，請先提供主照片網址。',
+ invalid_song_language:mt('invalidSongLanguage'),
+ readback_mismatch:mt('readbackFail'),
  mock_payment_not_allowed:'This application cannot be checked out.',
  test_payment_result_unverified:'TEST payment could not be verified. No charge was made.'
  };
@@ -94,7 +136,20 @@ function friendlyError(e){
  const errors={self_review_disallowed:'同一信箱不能評自己的參賽作品，請由其他獨立評審評分。',too_many_code_requests:'驗證信已達次數限制，請稍候再試；登入後切換已授權身分不必重新寄信。',e2e_not_configured:'目前尚未開通 Email 驗證服務，無法登入。正式系統需先完成寄信設定。',test_email_service_unavailable:'寄信服務目前不可使用，請稍後或確認平台設定。',not_on_test_allowlist:'此 Email 尚未獲授權，目前只接受受邀帳號。',expired_or_invalid_code:'驗證碼錯誤或已過期，請重新取得。',login_required:'請先登入。',organizer_only:'這個帳號不是主辦單位，無權查看管理資料。',reviewer_only:'這個帳號不是評審，無權打分。',member_only:'此帳號並非會員。',update_locked:'這筆資料已進入審核或模擬繳費階段，無法直接修改。',delete_locked:'這筆資料已進入評審或後續流程，無法直接刪除。',invalid_demo_url:'請輸入有效的公開作品連結。',annual_category_locked:'年度組別已鎖定。',already_scored_or_unavailable:'你已評過這位選手，不能重複給分。'};return errors[e?.message]||('目前無法完成操作（'+(e?.message||'連線失敗')+'）。')}
 async function api(path,body){const c=new AbortController(),timer=setTimeout(()=>c.abort(),18000);try{const r=await fetch('/api/e2e/'+path,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),credentials:'same-origin',cache:'no-store',signal:c.signal});const data=await r.json();if(!r.ok||data.ok!==true)throw new Error(data.error||('HTTP '+r.status));return data}finally{clearTimeout(timer)}}
 async function run(fn){if(busy)return;busy=true;document.body.classList.add('requesting');try{await fn()}catch(e){status(friendlyError(e),true)}finally{busy=false;document.body.classList.remove('requesting')}}
-function authUI(signedIn){(staff?$('back-signin'):$('signin-panel')).hidden=signedIn;$(prefix+'-dashboard')?.setAttribute('hidden','');if(staff){$('back-dashboard').hidden=!signedIn}else{$('member-panel').hidden=!signedIn}}
+function authUI(signedIn){
+ (staff?$('back-signin'):$('signin-panel')).hidden=signedIn;
+ $(prefix+'-dashboard')?.setAttribute('hidden','');
+ if(staff)$('back-dashboard').hidden=!signedIn;
+ else{
+  $('member-panel').hidden=!signedIn;
+  if(!signedIn){
+   const heading=document.querySelector('.page-heading');
+   if(heading){heading.dataset.l='memberTitle';heading.textContent=mt('memberTitle');}
+   const intro=document.querySelector('.page-intro'),steps=document.querySelector('.steps');
+   if(intro)intro.hidden=false;if(steps)steps.hidden=false;
+  }
+ }
+}
 function authForms(email){$(prefix+'-email-form').hidden=!email;$(prefix+'-code-form').hidden=email}
 function staffTabs(){
  const roles=account?.available_roles||[account?.role];
@@ -117,83 +172,161 @@ const change=$(staff?'back-change':'change-mail');change?.addEventListener('clic
 $(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff)staffTabs();challenge=null;authForms(true);status(page==='member'?mt('signedOut'):'已登出。')}));
 }
 async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else await renderJudge()}else await renderMember()}
+function memberCanEdit(a){
+ return a.can_edit===true||a.can_edit===1||a.can_edit==='1'||
+  (a.can_edit===undefined&&a.payment_status==='unpaid'&&a.status==='submitted');
+}
 function drawEntry(a){
- const box=node('article',undefined,'entry'),head=node('strong',a.stage_name+' · '+a.song_title);
+ const box=node('article',undefined,'entry member-entry');
+ const title=node('div',undefined,'member-entry-main');
  const avatar=profileImage(a.photo_url_1);
- if(avatar)box.append(avatar);
- box.append(head,node('p',mt('entryId')+': '+a.id,'minor'));
- const isPaid=a.payment_status==='simulated_paid';
- box.append(node('span',mt(isPaid?'testPaid':'testPending'),'pill '+(isPaid?'pill-pass':'pill-warn')));
- box.append(node('p',mt('categoryLabel')+': '+mt(a.category==='university'?'university':'community')+' · '+mt('windowLabel')+': '+a.round_code,'minor'));
- const link=safeLink(a.demo_url);
- if(link){const l=node('a',mt('viewVideo'),'small-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l)}
- const actions=node('div',undefined,'inline-actions');
- if(!isPaid&&a.status==='submitted'){
-  const edit=node('button',mt('edit'),'btn btn-soft');edit.type='button';edit.onclick=()=>showEdit(a);
-  const del=node('button',mt('delete'),'btn btn-danger');del.type='button';
+ if(avatar)title.append(avatar);
+ const copy=node('div',undefined,'member-entry-copy');
+ copy.append(node('strong',a.stage_name||mt('unnamedEntry')));
+ copy.append(node('small',(a.song_title||'')+' · '+(a.song_language||'')));
+ title.append(copy);box.append(title);
+ const meta=node('div',undefined,'member-entry-meta');
+ for(const item of [
+  [mt('entryId'),a.id],
+  [mt('categoryLabel'),mt(a.category==='university'?'university':'community')],
+  [mt('windowLabel'),a.round_code]
+ ]){
+  const field=node('div',undefined,'member-entry-field');
+  field.append(node('span',item[0]),node('strong',item[1]));
+  meta.append(field);
+ }
+ box.append(meta);
+ box.append(node('span',mt(a.payment_status==='simulated_paid'?'testPaid':'testPending'),'pill '+(a.payment_status==='simulated_paid'?'pill-pass':'pill-warn')));
+ const actions=node('div',undefined,'inline-actions member-entry-buttons');
+ if(memberCanEdit(a)){
+  const edit=node('button',mt('edit'),'btn btn-primary');edit.type='button';edit.onclick=()=>showEdit(a);actions.append(edit);
+ }
+ const url=safeLink(a.demo_url);
+ if(url){const link=node('a',mt('viewVideo'),'btn btn-soft');link.href=url;link.target='_blank';link.rel='noopener noreferrer';actions.append(link);}
+ if(a.payment_status==='unpaid'&&a.status==='submitted'){
+  const del=node('button',mt('delete'),'btn btn-soft');del.type='button';
   del.onclick=()=>{
    if(!confirm(mt('delTitle')+'\n\n'+mt('delBody')+' '+a.id))return;
-   run(async()=>{await api('delete-application',{application_id:a.id});status(mt('deleted'));await renderMember()})
+   run(async()=>{await api('delete-application',{application_id:a.id});status(mt('deleted'));await renderMember()});
   };
-  const pay=node('button',mt('testCheckout'),'btn btn-primary');pay.type='button';
+  const pay=node('button',mt('testCheckout'),'btn btn-soft');pay.type='button';
   pay.onclick=()=>{
    if(!confirm(mt('payTitle')))return;
    run(async()=>{
     const result=await api('mock-payment',{application_id:a.id});
     if(result.status!=='simulated_paid'||result.testOnly!==true||result.realCharge!==false)throw Error('test_payment_result_unverified');
     await renderMember();status(mt('paymentDone'));
-    const note=$('test-completion');
-    if(note){note.hidden=false;note.textContent='✓ '+mt('testComplete')+' — '+mt('entryId')+': '+a.id+'. '+mt('noCharge');note.scrollIntoView({block:'center',behavior:'smooth'});}
-   })
+   });
   };
-  actions.append(edit,del,pay);
- }else actions.append(node('small',mt('locked')));
- box.append(actions);return box;
+  actions.append(pay,del);
+ }
+ box.append(actions);
+ if(!memberCanEdit(a))box.append(node('p',mt('editLockedAfterReview'),'minor'));
+ return box;
 }
 async function renderMember(){
- const holder=$('entries');holder.replaceChildren();
- const v=await api('applications');
- const hasEntries=v.applications.length>0;
+ const holder=$('entries'),editSlot=$('member-edit-panel');
+ holder.replaceChildren();
+ if(editSlot){editSlot.replaceChildren();editSlot.hidden=true;}
+ const v=await api('applications'),rows=Array.isArray(v.applications)?v.applications:[];
+ const hasEntries=rows.length>0,first=rows[0];
  const callout=$('new-application-callout'),form=$('application-details');
  if(callout)callout.hidden=hasEntries;
  if(form){form.hidden=hasEntries;if(hasEntries)form.open=false;}
- if(!hasEntries)holder.append(node('p',mt('noEntries')));
- for(const a of v.applications)holder.append(drawEntry(a));
+ $('member-welcome').hidden=!hasEntries;
+ $('member-entry-overview').hidden=!hasEntries;
+ $('member-state-grid').hidden=!hasEntries;
+ $('member-primary-actions').hidden=!hasEntries;
+ $('member-official-boundary').hidden=!hasEntries;
+ $('member-dashboard-help').hidden=hasEntries;
+ const heading=document.querySelector('.page-heading'),intro=document.querySelector('.page-intro'),steps=document.querySelector('.steps');
+ if(heading){heading.dataset.l=hasEntries?'dashboard':'memberTitle';heading.textContent=mt(heading.dataset.l);}
+ if(intro)intro.hidden=hasEntries;
+ if(steps)steps.hidden=hasEntries;
+ if(!hasEntries)holder.append(node('p',mt('noEntries'),'minor'));
+ if(hasEntries){
+  $('member-welcome-name').textContent=first.stage_name||mt('unnamedEntry');
+  $('member-welcome-meta').textContent=mt(first.category==='university'?'university':'community')+' · '+first.round_code;
+  const avatar=$('member-hero-avatar');avatar.replaceChildren();
+  avatar.append(profileImage(first.photo_url_1)||node('span','✦'));
+  $('member-state-data').textContent=mt('dataSaved');
+  const paid=first.payment_status==='simulated_paid';
+  $('member-state-payment').textContent=mt(paid?'statusSimulatedPaid':'testPending');
+  $('member-quick-edit').hidden=!memberCanEdit(first);
+  $('member-quick-edit').onclick=()=>showEdit(first);
+  const video=$('member-view-video'),link=safeLink(first.demo_url);
+  video.hidden=!link;if(link)video.href=link;else video.removeAttribute('href');
+  $('member-show-details').onclick=()=>document.getElementById('member-entry-overview').scrollIntoView({behavior:'smooth',block:'start'});
+  for(const a of rows)holder.append(drawEntry(a));
+ }else{
+  $('member-hero-avatar').replaceChildren();
+  $('member-quick-edit').onclick=null;
+ }
+ const paidEntry=rows.find(a=>a.payment_status==='simulated_paid');
  const done=$('test-completion');
- if(done){const paid=v.applications.find(a=>a.payment_status==='simulated_paid');done.hidden=!paid;if(paid)done.textContent='✓ '+mt('testComplete')+' — '+paid.stage_name+' · '+paid.song_title+' · '+mt('entryId')+': '+paid.id+'. '+mt('noCharge');}
- const paid=v.applications.some(a=>a.payment_status==='simulated_paid');
+ if(done){done.hidden=!paidEntry;done.textContent=paidEntry?'✓ '+mt('testComplete')+' · '+mt('noCharge'):'';}
  $('step-login')?.classList.add('active');
  $('step-apply')?.classList.toggle('active',hasEntries);
- $('step-checkout')?.classList.toggle('active',paid);
+ $('step-checkout')?.classList.toggle('active',Boolean(paidEntry));
 }
 function showEdit(a){
- const holder=$('entries');let existing=document.querySelector('[data-editing]');if(existing)existing.remove();
- const box=node('div',undefined,'panel');box.dataset.editing='true';
- const heading=node('h3',mt('editHeader'));heading.dataset.l='editHeader';box.append(heading);
+ if(!memberCanEdit(a)){status(mt('editLockedAfterReview'),true);return;}
+ const holder=$('member-edit-panel');holder.replaceChildren();holder.hidden=false;
+ const box=node('div',undefined,'member-edit-box');box.dataset.editing='true';
+ const heading=node('h3',mt('editHeader'));heading.dataset.l='editHeader';
+ const guidance=node('p',mt('editGuidance'),'minor');guidance.dataset.l='editGuidance';
+ box.append(heading,guidance);
  const form=node('form',undefined,'form-grid');
- const fields=[['stage_name','stageName'],['song_title','songTitle'],['original_artist','artist'],['demo_url','videoUrl'],...(profileEnabled?[['gender','profileGender'],['photo_url_1','profileMainPhoto'],['photo_url_2','profilePhoto2'],['photo_url_3','profilePhoto3']]:[])];
+ const fields=[
+  ['stage_name','stageName'],['song_title','songTitle'],
+  ['original_artist','artist'],['song_language','songLang'],['demo_url','videoUrl'],
+  ...(profileEnabled?[['gender','profileGender'],['photo_url_1','profileMainPhoto'],['photo_url_2','profilePhoto2'],['photo_url_3','profilePhoto3']]:[])
+ ];
  for(const [name,key] of fields){
-  const lab=node('label',undefined,'field'),label=node('span',mt(key)),input=node('input');label.dataset.l=key;
-  input.name=name;input.value=a[name]||'';input.required=!['gender','photo_url_1','photo_url_2','photo_url_3'].includes(name);
+  const lab=node('label',undefined,'field'),label=node('span',mt(key));label.dataset.l=key;
+  let input;
   if(name==='gender'){
-   const options=[['','不填寫'],['male','男'],['female','女'],['other','其他'],['prefer_not_say','不願透露']];
-   const sel=node('select');sel.name=name;for(const [v,t] of options){const opt=node('option',t);opt.value=v;opt.selected=v===(a.gender||'');sel.append(opt)}
-   lab.append(label,sel);form.append(lab);continue;
+   input=node('select');
+   const options=[['','profileGenderNone'],['male','profileMale'],['female','profileFemale'],['other','profileOther'],['prefer_not_say','profilePreferNot']];
+   for(const [value,textKey] of options){const opt=node('option',mt(textKey));opt.value=value;input.append(opt);}
+  }else if(name==='song_language'){
+   input=$('song-language').cloneNode(true);input.removeAttribute('id');
+  }else{
+   input=node('input');
+   if(name==='demo_url'||name.startsWith('photo_url_'))input.type='url';
+   input.maxLength=name==='demo_url'?1000:name.startsWith('photo_url_')?600:100;
   }
-  if(name==='demo_url'||name.startsWith('photo_url_'))input.type='url';
-  lab.append(label,input);if(name==='demo_url')lab.classList.add('full');form.append(lab);
+  input.name=name;input.value=a[name]||'';
+  input.required=!['gender','photo_url_1','photo_url_2','photo_url_3'].includes(name);
+  lab.append(label,input);
+  if(name==='demo_url')lab.classList.add('full');
+  form.append(lab);
  }
  if(profileEnabled){
-  const agree=node('label',undefined,'check full'),check=node('input');
-  check.type='checkbox';check.name='profile_consent';
-  agree.append(check,node('span',mt('profileConsent')));
-  form.append(agree);
+  const consent=node('label',undefined,'check full'),check=node('input');
+  check.type='checkbox';check.name='profile_consent';check.required=true;
+  consent.append(check,node('span',mt('profileConsent')));
+  form.append(consent);
  }
- const actions=node('div',undefined,'form-actions full'),save=node('button',mt('saveChanges'),'btn btn-primary');save.type='submit';save.dataset.l='saveChanges';
- const cancel=node('button',mt('cancel'),'btn btn-soft');cancel.type='button';cancel.dataset.l='cancel';cancel.onclick=()=>{box.remove();renderMember().catch(e=>status(friendlyError(e),true))};
- actions.append(save,cancel);form.append(actions);
- form.onsubmit=ev=>{ev.preventDefault();run(async()=>{await api('update-application',{application_id:a.id,...formValues(form),...(profileEnabled?{profile_consent:form.querySelector('[name=profile_consent]')?.checked===true}:{})});status(mt('savedChanges'));await renderMember()})};
- box.append(form);holder.prepend(box);box.scrollIntoView({block:'nearest',behavior:'smooth'});
+ const buttons=node('div',undefined,'form-actions full');
+ const save=node('button',mt('saveChanges'),'btn btn-primary');save.type='submit';save.dataset.l='saveChanges';
+ const cancel=node('button',mt('cancel'),'btn btn-soft');cancel.type='button';cancel.dataset.l='cancel';
+ cancel.onclick=()=>{holder.replaceChildren();holder.hidden=true;};
+ buttons.append(save,cancel);form.append(buttons);
+ form.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+  const payload={application_id:a.id,...formValues(form)};
+  if(profileEnabled)payload.profile_consent=form.querySelector('[name=profile_consent]')?.checked===true;
+  await api('update-application',payload);
+  const check=await api('applications');
+  const saved=(check.applications||[]).find(row=>row.id===a.id);
+  const names=['stage_name','song_title','original_artist','song_language','demo_url',
+   ...(profileEnabled?['gender','photo_url_1','photo_url_2','photo_url_3']:[])];
+  if(!saved||names.some(key=>String(saved[key]||'')!==String(payload[key]||'')))throw Error('readback_mismatch');
+  await renderMember();status(mt('savedChanges'));
+ })});
+ box.append(form);holder.append(box);
+ holder.scrollIntoView({block:'start',behavior:'smooth'});
+ form.querySelector('input')?.focus({preventScroll:true});
 }
 function makeRosterPager(target,page,totalPages,onPage){
  target.replaceChildren();

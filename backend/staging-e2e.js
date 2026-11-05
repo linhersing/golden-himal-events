@@ -161,7 +161,15 @@ async function logout(request,env,a){
  return json({ok:true},200,{'Set-Cookie':cookie('',0)});
 }
 async function applications(a,env){
- const rows=await env.DB.prepare('SELECT id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,demo_url,media_key IS NOT NULL AS has_uploaded_file,eligibility_key IS NOT NULL AS has_eligibility_file,receipt_key IS NOT NULL AS has_receipt_file,phase,status,payment_status,created_at FROM e2e_applications WHERE account_id=? ORDER BY created_at DESC').bind(a.id).all();
+ const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,p.province,p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url,
+ p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,p.receipt_key IS NOT NULL AS has_receipt_file,
+ p.phase,p.status,p.payment_status,p.created_at,p.updated_at,
+ CASE WHEN p.phase='demo' AND p.status IN ('submitted','under_review') AND p.payment_status IN ('unpaid','simulated_paid')
+ AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
+ AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
+ AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)
+ THEN 1 ELSE 0 END AS can_edit
+ FROM e2e_applications p WHERE p.account_id=? ORDER BY p.created_at DESC`).bind(a.id).all();
  return json({ok:true,account:{id:a.id,role:a.role},applications:await attachProfiles(env,rows.results||[]),testOnly:true});
 }
 async function submitApplication(request,env,a){
@@ -201,13 +209,14 @@ async function submitApplication(request,env,a){
  }catch{return deny(profile?'profile_database_error':'duplicate_round_or_database_rejected',profile?503:409)}
  return json({ok:true,application_id:id,phase:'demo',status:'submitted',source:'cloudflare-d1-staging',testOnly:true},201);
 }
-// A member may correct or remove only their own unreviewed, unpaid TEST application.
+// An invited member may correct an unscored, unpromoted TEST application (including simulated-paid).
+// Deletion stays limited to unpaid entries; neither operation affects real payment or grading.
 // These routes do not change the payment state and cannot update another account.
 async function updateApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request,2500);if(!b)return deny('invalid_json');
  const profileFields=['gender','photo_url_1','photo_url_2','photo_url_3','profile_consent'];
- const allowed=['application_id','stage_name','song_title','original_artist','demo_url',...profileFields];
+ const allowed=['application_id','stage_name','song_title','original_artist','song_language','demo_url',...profileFields];
  if(Object.keys(b).some(k=>!allowed.includes(k)))return deny('update_fields_only',422);
  const id=String(b.application_id||'');
  const values=['stage_name','song_title','original_artist','demo_url'].map(k=>typeof b[k]==='string'?b[k].trim():'');
@@ -219,17 +228,29 @@ async function updateApplication(request,env,a){
  if(editingProfile&&!(await profileReady(env)))return deny('profile_not_enabled',503);
  const app=await selectApplication(env.DB,id,a.id);
  if(!app)return deny('application_not_found',404);
- if(app.payment_status!=='unpaid'||app.status!=='submitted'||app.phase!=='demo')
+ const songLanguage=b.song_language===undefined?app.song_language:String(b.song_language).trim();
+ if(!['Nepali','English','Hindi','Maithili','Bhojpuri','Tamang','Chinese','Other'].includes(songLanguage))return deny('invalid_song_language',422);
+ if(!['unpaid','simulated_paid'].includes(app.payment_status)||!['submitted','under_review'].includes(app.status)||app.phase!=='demo')
    return deny('update_locked',409);
- const updateStmt=env.DB.prepare("UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,demo_url=?,updated_at=? WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo'")
-  .bind(...values,NOW(),id,a.id);
+ const anyScores=await env.DB.prepare("SELECT EXISTS(SELECT 1 FROM e2e_judge_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_live_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_promotion_events WHERE application_id=?) AS n").bind(id,id,id).first();
+ if(Number(anyScores?.n||0)>0)return deny('update_locked',409);
+ const updateStmt=env.DB.prepare(`UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,song_language=?,demo_url=?,updated_at=? WHERE id=? AND account_id=? AND payment_status IN ('unpaid','simulated_paid') AND status IN ('submitted','under_review') AND phase='demo'
+  AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=e2e_applications.id)
+  AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=e2e_applications.id)
+  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=e2e_applications.id)`)
+  .bind(...values.slice(0,3),songLanguage,values[3],NOW(),id,a.id);
  let affected=0;
  try {
   if(editingProfile){
    if(typeof env.DB.batch!=='function')return deny('profile_storage_unavailable',503);
    const profileStmt=parsed.profile?
-    profileUpsert(env.DB,id,parsed.profile,NOW()):
-    env.DB.prepare('DELETE FROM e2e_application_profiles WHERE application_id=?').bind(id);
+    profileUpsert(env.DB,id,a.id,parsed.profile,NOW()):
+    env.DB.prepare(`DELETE FROM e2e_application_profiles WHERE application_id=? AND EXISTS(SELECT 1 FROM e2e_applications p
+    WHERE p.id=? AND p.account_id=? AND p.phase='demo' AND p.status IN ('submitted','under_review')
+    AND p.payment_status IN ('unpaid','simulated_paid')
+    AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
+    AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
+    AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id))`).bind(id,id,a.id);
    const result=await env.DB.batch([updateStmt,profileStmt]);
    affected=Number(result?.[0]?.meta?.changes||0);
   }else{
@@ -239,7 +260,7 @@ async function updateApplication(request,env,a){
  }catch{return deny(editingProfile?'profile_database_error':'update_locked',editingProfile?503:409)}
  if(!affected)return deny('update_locked',409);
  const result=await selectApplication(env.DB,id,a.id);
- return json({ok:true,application_id:result.id,stage_name:result.stage_name,song_title:result.song_title,original_artist:result.original_artist,demo_url:result.demo_url,testOnly:true});
+ return json({ok:true,application_id:result.id,stage_name:result.stage_name,song_title:result.song_title,original_artist:result.original_artist,song_language:result.song_language,demo_url:result.demo_url,testOnly:true});
 }
 async function deleteApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);

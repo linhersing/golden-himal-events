@@ -21,11 +21,29 @@
 <p class="under-actions" data-l="invitedOnly">Only pre-approved accounts can test this site. Public sign-ups are not open.</p>
 </section>
 <section id="member-panel" hidden>
-<div class="panel">
-<div class="page-top"><h2 data-l="dashboard">My singer dashboard</h2><button type="button" id="member-logout" class="btn btn-soft" data-l="logout">Log out</button></div>
-<p data-l="dashboardHelp">View your song, application number, and test payment status.</p>
+<div class="panel member-home">
+<div class="page-top member-home-title">
+ <div><p class="section-eyebrow" data-l="homeKicker">MY ENTRY</p><h2 data-l="entryOverviewTitle">My details</h2></div>
+ <button type="button" id="member-logout" class="btn btn-soft" data-l="logout">Log out</button>
+</div>
+<div id="member-welcome" class="member-welcome" hidden>
+ <div id="member-hero-avatar" class="member-hero-avatar" aria-hidden="true"></div>
+ <div class="member-welcome-copy"><span data-l="welcomeBack">Welcome back</span><strong id="member-welcome-name"></strong><small id="member-welcome-meta"></small></div>
+</div>
+<p id="member-dashboard-help" class="member-dashboard-help" data-l="dashboardHelp">View your song, application number, and test payment status.</p>
+<div id="member-state-grid" class="member-state-grid" hidden>
+ <div class="member-state"><span data-l="statusData">Entry information</span><strong id="member-state-data"></strong></div>
+ <div class="member-state"><span data-l="statusPayment">Test payment</span><strong id="member-state-payment"></strong></div>
+</div>
 <div id="test-completion" class="test-completion" role="status" aria-live="polite" hidden></div>
-<div id="entries" class="cards"></div>
+<p id="member-official-boundary" class="member-official-boundary" data-l="officialBoundary" hidden>TEST mode only. No actual charge and no official entry has been confirmed.</p>
+<div id="member-primary-actions" class="member-primary-actions" hidden>
+ <button id="member-quick-edit" class="btn btn-primary" type="button" data-l="editMyEntry">Edit my application</button>
+ <a id="member-view-video" class="btn btn-soft" target="_blank" rel="noopener noreferrer" data-l="viewVideo" hidden>View my performance</a>
+ <button id="member-show-details" class="btn btn-soft" type="button" data-l="viewDetails">Application details</button>
+</div>
+<section id="member-edit-panel" aria-label="Edit my application" hidden></section>
+<div id="member-entry-overview" hidden><h3 data-l="myEntrySummary">My entry details</h3><div id="entries" class="cards"></div></div>
 </div>
 <section class="start-callout" id="new-application-callout" aria-labelledby="new-application-title">
 <p class="section-eyebrow" data-l="next">NEXT STEP</p>

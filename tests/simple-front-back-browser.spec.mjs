@@ -33,7 +33,7 @@ test('staff page has organizer and judge within one URL, and no invented paid re
  await expect(page.locator('#back-dashboard')).toBeHidden();
 });
 test('member can view own stored entry, edit and delete its unpaid data in guarded endpoints',async({page})=>{
- let entries=[{id:'SYNTH-123',stage_name:'TEST Singer',song_title:'TEST Song',original_artist:'TEST Artist',demo_url:'https://youtu.be/dQw4w9WgXcQ',category:'university',round_code:'2027-01',status:'submitted',payment_status:'unpaid',phase:'demo'}];
+ let entries=[{id:'SYNTH-123',stage_name:'TEST Singer',song_title:'TEST Song',original_artist:'TEST Artist',song_language:'Nepali',demo_url:'https://youtu.be/dQw4w9WgXcQ',category:'university',round_code:'2027-01',status:'submitted',payment_status:'unpaid',phase:'demo'}];
  const requests=[];
  await page.route('**/api/e2e/**',async route=>{
   const u=new URL(route.request().url()),path=u.pathname.split('/').pop(),method=route.request().method();

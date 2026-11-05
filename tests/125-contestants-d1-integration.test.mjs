@@ -103,6 +103,10 @@ test('125 fictional contestants in isolated D1: photos, three roles, search, ant
   const fresh=(await (await handleE2E(get('reviewer-queue',reviewer.cookie),env)).json()).queue;
   assert.equal(fresh.find(x=>x.id==='FAKE-125').demo_technique,52);
   assert.equal(fresh.find(x=>x.id==='FAKE-124').demo_technique,null);
+  // After a first independent score, editing must be locked even in TEST payment mode.
+  insertAccount.run('FAKE-AUDITOR','auditor-fingerprint','NO-REAL-INBOX','reviewer',98765,98765);
+  db.prepare('INSERT INTO e2e_judge_scores(application_id,reviewer_id,technique,interpretation,conflict_checked,created_at) VALUES(?,?,?,?,1,?)')
+   .run('FAKE-001','FAKE-AUDITOR',45,30,98766);
   const lock=await handleE2E(post('update-application',{
    application_id:'FAKE-001',stage_name:'NEW TEST',song_title:'TEST',
    original_artist:'TEST',demo_url:'https://youtu.be/fictional-001',
