@@ -264,7 +264,7 @@ async function renderMember(){
  }
  const paidEntry=rows.find(a=>a.payment_status==='simulated_paid');
  const done=$('test-completion');
- if(done){done.hidden=!paidEntry;done.textContent=paidEntry?'✓ '+mt('testCompleteShort'):'';}
+ if(done){done.hidden=!paidEntry;done.textContent=paidEntry?'✓ '+mt('testComplete')+' · '+mt('noCharge'):'';}
  $('step-login')?.classList.add('active');
  $('step-apply')?.classList.toggle('active',hasEntries);
  $('step-checkout')?.classList.toggle('active',Boolean(paidEntry));
