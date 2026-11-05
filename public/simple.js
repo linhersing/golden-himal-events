@@ -243,6 +243,7 @@ async function renderMember(){
  if(heading){heading.dataset.l=hasEntries?'dashboard':'memberTitle';heading.textContent=mt(heading.dataset.l);}
  if(intro)intro.hidden=hasEntries;
  if(steps)steps.hidden=hasEntries;
+ if(!hasEntries)holder.append(node('p',mt('noEntries'),'minor'));
  if(hasEntries){
   $('member-welcome-name').textContent=first.stage_name||mt('unnamedEntry');
   $('member-welcome-meta').textContent=mt(first.category==='university'?'university':'community')+' · '+first.round_code;
