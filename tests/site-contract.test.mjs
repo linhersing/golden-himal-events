@@ -58,3 +58,15 @@ test('home retains English Nepali and Traditional Chinese switch',async()=>{
  const html=await read('index.html'),js=await read('public/simple.js');
  for(const lang of ['en','ne','zh']){assert.match(html,new RegExp('data-lang="'+lang+'"'));assert.match(js,new RegExp('\\b'+lang+':\\s*\\{'))}
 });
+
+test('backoffice roster retains one guarded staff entry and one scoring workbench',async()=>{
+ const [html,js]=await Promise.all([read('public/backoffice.html'),read('public/simple.js')]);
+ for(const id of ['back-email-form','back-code-form','judge-queue','judge-list','admin-apps','organizer-search']){
+  assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id);
+ }
+ assert.match(html,/data-page="back"/);
+ assert.match(html,/data-role-tab="reviewer"/);
+ assert.match(js,/if\(page==='back'\)/);
+ assert.match(js,/api\('score',payload\)/);
+ assert.doesNotMatch(js,/ghv_photo_url|ghv_gender/);
+});
