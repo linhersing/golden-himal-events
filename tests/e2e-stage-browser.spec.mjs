@@ -202,12 +202,16 @@ test('minimal staff reviewer submits phase-specific V2 scoring without crossing 
  await page.goto('/backoffice.html');
  await expect(page.locator('[data-role-tab=reviewer]')).toHaveClass(/active/);
  await expect(page.locator('#judge-dashboard')).toBeVisible();
+ await expect(page.locator('#judge-list .roster-entry')).toHaveCount(1);
+ await page.locator('#judge-list .roster-entry').click();
+ await expect(page.locator('#judge-detail')).toBeVisible();
  await page.locator('#judge-queue [name=technique]').fill('32');
  await page.locator('#judge-queue [name=interpretation]').fill('20');
  await page.locator('#judge-queue [name=stage_presence]').fill('15');
  await page.locator('#judge-queue [name=appearance]').fill('7');
  await page.locator('#judge-queue [name=conflict]').check();
  await page.locator('#judge-queue button[type=submit]').click();
- await expect(page.locator('#judge-queue')).toContainText('已評分：74 分');
+ await page.locator('#judge-list .roster-entry').click();
+ await expect(page.locator('#judge-queue')).toContainText('此階段已評分：74 分');
  expect(scoreData).toMatchObject({application_id:'test-application',phase:'qualifier',technique:32,interpretation:20,stage_presence:15,appearance:7,no_conflict:true});
 });
