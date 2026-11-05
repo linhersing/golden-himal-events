@@ -39,6 +39,21 @@
 <p class="helper-banner" data-l-html="demoRules">...</p>
 <form id="application-form" class="form-grid" style="margin-top:16px">
 <label class="field"><span data-l="stageName">Singer or stage name *</span><input name="stage_name" maxlength="60" required autocomplete="name" data-l-placeholder="stagePlaceholder" placeholder="Name shown to judges"></label>
+<fieldset id="entrant-profile-fields" class="full entrant-profile-fields" hidden>
+<legend data-l="profileHeading">選手照片與基本資料（選填）</legend>
+<p class="field-hint" data-l="profileExplainer">貼上公開的 HTTPS 圖片網址；IG、Facebook 或 YouTube 一般分享連結可能無法直接顯示照片。不會上傳圖片檔案。</p>
+<label class="field"><span data-l="profileGender">性別（選填）</span>
+<select name="gender" id="profile-gender">
+<option value="" data-l="profileGenderNone">不填寫</option><option value="male" data-l="profileMale">男</option><option value="female" data-l="profileFemale">女</option><option value="other" data-l="profileOther">其他</option><option value="prefer_not_say" data-l="profilePreferNot">不願透露</option>
+</select></label>
+<label class="field"><span data-l="profileMainPhoto">主照片網址（選填）</span>
+<input name="photo_url_1" type="url" inputmode="url" maxlength="600" placeholder="https://example.com/photo.jpg" id="entrant-photo-url-1"><small class="field-hint" data-l="profileMainHelp">請使用可公開觀看的照片網址。</small></label>
+<div class="photo-preview" id="entrant-photo-preview" hidden><img id="entrant-preview-img" alt="照片預覽" loading="lazy" referrerpolicy="no-referrer"><small data-l="profilePreview">照片預覽（未必能跨網站顯示）</small></div>
+<details class="entrant-profile-more"><summary data-l="profileMore">再加最多兩張照片（選填）</summary>
+<label class="field"><span data-l="profilePhoto2">補充照片 2</span><input name="photo_url_2" type="url" maxlength="600" placeholder="https://example.com/photo2.jpg"></label>
+<label class="field"><span data-l="profilePhoto3">補充照片 3</span><input name="photo_url_3" type="url" maxlength="600" placeholder="https://example.com/photo3.jpg"></label></details>
+<label class="check"><input name="profile_consent" type="checkbox" id="entrant-profile-consent"><span data-l="profileConsent">我同意主辦方及授權評審查看所填照片網址及性別；外部圖片服務可能取得瀏覽器連線資訊。</span></label>
+</fieldset>
 <label class="field"><span data-l="window">Audition window *</span><select name="round_code"><option value="2027-01" data-l="jan">January 2027</option><option value="2027-04" data-l="apr">April 2027</option></select><small class="field-hint" data-l="windowHelp">Choose the online audition window.</small></label>
 <label class="field"><span data-l="category">Competition category *</span><select name="category" id="category"><option value="university" data-l="university">University student</option><option value="community" data-l="community">Community (18+)</option></select><small class="field-hint" data-l="categoryHelp">Select ONE. A current university student belongs in the university category, even when working part-time.</small></label>
 <label class="field"><span data-l="province">Province *</span><select name="province"><option value="bagmati" data-l="bagmati">Bagmati Province</option><option value="gandaki" data-l="gandaki">Gandaki Province</option></select><small class="field-hint" data-l="provinceHelp">Eligible provinces in the V2 rules.</small></label>

@@ -1,6 +1,6 @@
 // Alan V2 competition logic, STAGING ONLY. Called only after verified session,
 // same-origin checks and configured() gate in staging-e2e.js.
-export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication}){
+export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles}){
  const path=new URL(request.url).pathname,post=request.method==='POST';
  const db=env.DB;
  // Explicit closed rehearsal: link evidence is not identity or payment verification.
@@ -20,7 +20,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    WHERE p.payment_status='simulated_paid' AND ${evidence}
     AND p.status NOT IN ('withdrawn','rejected')
    ORDER BY p.created_at DESC LIMIT 500`).bind(a.id,a.id).all();
-  return json({ok:true,queue:r.results||[],testOnly:true});
+  return json({ok:true,queue:await attachProfiles(env,r.results||[]),testOnly:true});
  }
  if(path==='/api/e2e/score'&&post){
   if(forbidden('reviewer'))return forbidden('reviewer');
@@ -55,7 +55,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_judges,
    (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean
    FROM e2e_applications p ORDER BY p.created_at ASC LIMIT 500`).all();
-  return json({ok:true,applications:r.results||[],testOnly:true});
+  return json({ok:true,applications:await attachProfiles(env,r.results||[]),testOnly:true});
  }
  if(path==='/api/e2e/organizer-promote'&&post){
   if(forbidden('organizer'))return forbidden('organizer');
