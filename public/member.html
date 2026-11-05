@@ -10,7 +10,69 @@
 <main id="main" class="page-shell">
 <p class="section-eyebrow" data-l="kicker">SINGER PORTAL</p>
 <h1 class="page-heading" data-l="memberTitle">Singer registration & login</h1>
+<p class="page-intro" data-l="memberIntro<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#4c302a">
+<title>Singer registration & member login | Golden Himal Voice</title>
+<link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./simple.css">
+</head>
+<body data-page="member"><a class="skip" href="#main">Skip to content</a>
+<header class="masthead wrap"><a class="brand" href="./"><img src="./images/brand-identity.png" width="60" height="60" alt=""><span><strong>GOLDEN HIMAL</strong><small>VOICE · CHITWAN 2027</small></span></a><a class="small-link" data-l="home" href="./">Home</a></header>
+<main id="main" class="page-shell">
+<p class="section-eyebrow" data-l="kicker">SINGER PORTAL</p>
+<h1 class="page-heading" data-l="memberTitle">Singer registration & login</h1>
 <p class="page-intro" data-l="memberIntro">Get your email code, complete one application, then return any time to check your entry.</p>
+<div class="steps" aria-label="Application steps"><span class="active" id="step-login" data-l="stepLogin">1 · Email login</span><span id="step-apply" data-l="stepApply">2 · Application form</span><span id="step-pay" data-l="stepPay">3 · Confirmation</span></div>
+<p class="notice"><strong data-l="testOnly">TEST ENVIRONMENT</strong> <span data-l="testBoundary">No real payment. TEST registration is not an official acceptance.</span></p>
+<div id="member-status" class="feedback" role="status" aria-live="polite" hidden></div>
+<section id="signin-panel" class="panel">
+<h2 data-l="signinHeader">Log in or create an account</h2><p data-l="emailIntro">Enter your email address. We will send a six-digit, one-time verification code.</p>
+<form id="member-email-form"><label class="field"><span data-l="email">Email address</span><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-l="sendCode">Send verification code</button></div></form>
+<form id="member-code-form" hidden><label class="field"><span data-l="sixCode">Six-digit code from email</span><input name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required placeholder="123456"></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-l="memberEnter">Enter portal</button><button type="button" class="btn btn-soft" id="member-change" data-l="changeEmail">Change email</button></div></form>
+<p class="under-actions" data-l="invitedOnly">Only pre-approved accounts can test this site. Public sign-ups are not open.</p>
+</section>
+<section id="member-panel" hidden>
+<div class="panel">
+<div class="page-top"><h2 data-l="dashboard">My singer dashboard</h2><button type="button" id="member-logout" class="btn btn-soft" data-l="logout">Log out</button></div>
+<p data-l="dashboardHelp">View your song, application number, and test payment status.</p>
+<div id="test-completion" class="test-completion" role="status" aria-live="polite" hidden></div>
+<div id="entries" class="cards"></div>
+</div>
+<section class="start-callout" id="new-application-callout" aria-labelledby="new-application-title">
+<p class="section-eyebrow" data-l="next">NEXT STEP</p>
+<h2 id="new-application-title" data-l="ready">Ready to enter the competition?</h2>
+<p data-l="startHelp">Tap below to open the form.</p>
+<button type="button" class="btn btn-primary btn-apply" id="start-application" aria-controls="application-details" aria-expanded="false"><span aria-hidden="true">🎤</span> <span data-l="startBtn">Start application form</span></button>
+</section>
+<details id="application-details" class="panel application-panel">
+<summary data-l="formSummary">Registration details form <small data-l="summarySub">Expand or collapse</small></summary>
+<form id="application-form" class="form-grid" style="margin-top:16px">
+<label class="field"><span data-l="stageName">Singer or stage name *</span><input name="stage_name" maxlength="60" required autocomplete="name" data-l-placeholder="artistNamePlaceholder" placeholder="e.g. Aasha Shrestha"></label>
+<label class="field"><span data-l="gender">Gender / 性別 *</span><select name="gender" required><option value="" disabled selected data-l="selectGender">-- Select Gender / 請選擇性別 --</option><option value="male" data-l="genderMale">男 Male</option><option value="female" data-l="genderFemale">女 Female</option><option value="other" data-l="genderOther">其他 Other</option></select></label>
+<label class="field"><span data-l="photoUrl">Photo URL (Public Image Link) / 選手照片外部連結</span><input name="photo_url" id="photo-url-input" type="url" placeholder="https://example.com/avatar.jpg" data-l-placeholder="photoUrlPlaceholder"><div class="avatar-preview-box" style="margin-top:8px;display:flex;align-items:center;gap:12px;"><img id="photo-preview" src="" alt="Avatar Preview" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:1px solid #ccc;display:none;"><span id="photo-preview-placeholder" style="font-size:12px;color:#777;">貼上網址即可預覽頭貼</span></div></label>
+<label class="field"><span data-l="roundCode">Entry track *</span><select name="round_code" required><option value="chitwan_singing_2027" data-l="trackChitwan">Chitwan singing competition 2027</option></select></label>
+<label class="field"><span data-l="category">Division *</span><select name="category" required><option value="university" data-l="catUniversity">University division</option><option value="community" data-l="catCommunity">General community division</option></select></label>
+<label class="field"><span data-l="province">Province *</span><select name="province" required><option value="bagmati" data-l="bagmati">Bagmati Province</option><option value="koshi" data-l="koshi">Koshi Province</option><option value="madhesh" data-l="madhesh">Madhesh Province</option><option value="gandaki" data-l="gandaki">Gandaki Province</option><option value="lumbini" data-l="lumbini">Lumbini Province</option><option value="karnali" data-l="karnali">Karnali Province</option><option value="sudurpashchim" data-l="sudurpashchim">Sudurpashchim Province</option><option value="outside" data-l="outside">Resident outside Nepal</option></select></label>
+<label class="field"><span data-l="locBasis">Location basis *</span><select name="location_basis" required><option value="home" data-l="homeRes">Home residence</option><option value="school" data-l="schoolLoc">School location</option><option value="work" data-l="workLoc">Work location</option></select></label>
+<label class="field"><span data-l="affiliation">School / workplace / town *</span><input name="affiliation" maxlength="120" required data-l-placeholder="affiliationPlaceholder" placeholder="e.g. Tribhuvan University, Bharatpur"></label>
+<label class="field"><span data-l="songTitle">Song title *</span><input name="song_title" maxlength="120" required data-l-placeholder="songTitlePlaceholder" placeholder="e.g. Resham Firiri"></label>
+<label class="field"><span data-l="origArtist">Original artist</span><input name="original_artist" maxlength="120" data-l-placeholder="origArtistPlaceholder" placeholder="e.g. Sundar Shrestha"></label>
+<label class="field"><span data-l="songLang">Song language *</span><select name="song_language" required><option value="nepali" data-l="langNepali">Nepali</option><option value="english" data-l="langEnglish">English</option><option value="other" data-l="langOther">Other language</option></select></label>
+<label class="field"><span data-l="songKey">Song key / pitch</span><input name="song_key" maxlength="30" data-l-placeholder="keyPlaceholder" placeholder="e.g. G major / Natural"></label>
+<label class="field"><span data-l="demoUrl">Performance link *</span><input name="demo_url" type="url" required data-l-placeholder="urlPlaceholder" placeholder="https://youtube.com/... or https://drive.google.com/..."></label>
+<label class="field check eligibility-group"><input type="checkbox" name="eligible" required> <span data-l="eligibilityCheck">I confirm I am eligible under the guidelines.</span></label>
+<label class="field check"><input type="checkbox" name="agree_terms" required> <span data-l="termsCheck">I agree to the competition rules and video review terms.</span></label>
+<p class="privacy-notice" data-l="privacy">We use your details solely for contest organization. No commercial marketing.</p>
+<div class="form-actions"><button class="btn btn-primary" type="submit" data-l="submitApp">Save application</button></div>
+</form>
+</details>
+</section>
+<footer class="site-footer"><a href="./" class="small-link" data-l="home">Home</a><small data-l="footerNotice">Self-service registration portal.</small></footer>
+</main>
+<script src="./page-locale.js" defer></script>
+<script src="./simple.js" defer></script>
+</body></html>">Get your email code, complete one application, then return any time to check your entry.</p>
 <div class="steps" aria-label="Application steps"><span class="active" id="step-login" data-l="stepLogin">1 · Email login</span><span id="step-apply" data-l="stepApply">2 · Song & details</span><span id="step-checkout" data-l="stepPay">3 · Test checkout</span></div>
 <p class="notice"><strong data-l="testOnly">TEST ENVIRONMENT</strong> <span data-l="testBoundary">No real payment. TEST registration is not an official accepted entry.</span></p>
 <div id="member-status" class="feedback" role="status" aria-live="polite" hidden></div>
