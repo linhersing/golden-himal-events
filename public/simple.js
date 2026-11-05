@@ -251,7 +251,7 @@ async function renderMember(){
   avatar.append(profileImage(first.photo_url_1)||node('span','✦'));
   $('member-state-data').textContent=mt('dataSaved');
   const paid=first.payment_status==='simulated_paid';
-  $('member-state-payment').textContent=mt(paid?'testPaid':'testPending');
+  $('member-state-payment').textContent=mt(paid?'statusSimulatedPaid':'testPending');
   $('member-quick-edit').hidden=!memberCanEdit(first);
   $('member-quick-edit').onclick=()=>showEdit(first);
   const video=$('member-view-video'),link=safeLink(first.demo_url);
@@ -273,7 +273,9 @@ function showEdit(a){
  if(!memberCanEdit(a)){status(mt('editLockedAfterReview'),true);return;}
  const holder=$('member-edit-panel');holder.replaceChildren();holder.hidden=false;
  const box=node('div',undefined,'member-edit-box');box.dataset.editing='true';
- box.append(node('h3',mt('editHeader')),node('p',mt('editGuidance'),'minor'));
+ const heading=node('h3',mt('editHeader'));heading.dataset.l='editHeader';
+ const guidance=node('p',mt('editGuidance'),'minor');guidance.dataset.l='editGuidance';
+ box.append(heading,guidance);
  const form=node('form',undefined,'form-grid');
  const fields=[
   ['stage_name','stageName'],['song_title','songTitle'],
@@ -281,7 +283,7 @@ function showEdit(a){
   ...(profileEnabled?[['gender','profileGender'],['photo_url_1','profileMainPhoto'],['photo_url_2','profilePhoto2'],['photo_url_3','profilePhoto3']]:[])
  ];
  for(const [name,key] of fields){
-  const lab=node('label',undefined,'field'),label=node('span',mt(key));
+  const lab=node('label',undefined,'field'),label=node('span',mt(key));label.dataset.l=key;
   let input;
   if(name==='gender'){
    input=node('select');
@@ -307,8 +309,8 @@ function showEdit(a){
   form.append(consent);
  }
  const buttons=node('div',undefined,'form-actions full');
- const save=node('button',mt('saveChanges'),'btn btn-primary');save.type='submit';
- const cancel=node('button',mt('cancel'),'btn btn-soft');cancel.type='button';
+ const save=node('button',mt('saveChanges'),'btn btn-primary');save.type='submit';save.dataset.l='saveChanges';
+ const cancel=node('button',mt('cancel'),'btn btn-soft');cancel.type='button';cancel.dataset.l='cancel';
  cancel.onclick=()=>{holder.replaceChildren();holder.hidden=true;};
  buttons.append(save,cancel);form.append(buttons);
  form.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
