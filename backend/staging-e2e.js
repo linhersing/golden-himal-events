@@ -1,6 +1,7 @@
 import {mailProviderReady,mailSenderReady,sendTestEmail} from './staging-mail.js';
 import {validPerformanceLink} from '../public/performance-link.js';
 import {handleV2Route} from './staging-v2-flow.js';
+import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Explicit opt-in and allowlisted emails. No production applicants, actual payments,
  * public registration, raw passwords, magic-code shortcuts or exposed R2 URLs.
@@ -161,7 +162,7 @@ async function logout(request,env,a){
 }
 async function applications(a,env){
  const rows=await env.DB.prepare('SELECT id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,demo_url,media_key IS NOT NULL AS has_uploaded_file,eligibility_key IS NOT NULL AS has_eligibility_file,receipt_key IS NOT NULL AS has_receipt_file,phase,status,payment_status,created_at FROM e2e_applications WHERE account_id=? ORDER BY created_at DESC').bind(a.id).all();
- return json({ok:true,account:{id:a.id,role:a.role},applications:rows.results||[],testOnly:true});
+ return json({ok:true,account:{id:a.id,role:a.role},applications:await attachProfiles(env,rows.results||[]),testOnly:true});
 }
 async function submitApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
@@ -180,15 +181,24 @@ async function submitApplication(request,env,a){
  if(values.some(x=>x.length<1||x.length>100)||values[0].length<2)return deny('missing_song_or_identity_test_fields',422);
  const url=String(b.demo_url||'').trim();
  if((env.STAGING_SUBMISSION_MODE==='links'&&!url)||(url&&!validPerformanceLink(url)))return deny('invalid_demo_url',422);
+ const parsed=parseProfileInput(b);
+ if(parsed.error)return deny(parsed.error,422);
+ const profile=parsed.profile;
+ if(profile&&!(await profileReady(env)))return deny('profile_not_enabled',503);
  const prior=await env.DB.prepare('SELECT category,phase FROM e2e_applications WHERE account_id=? LIMIT 1').bind(a.id).first();
  if(prior&&prior.category!==b.category)return deny('annual_category_locked',409);
  const finalist=await env.DB.prepare("SELECT id FROM e2e_applications WHERE account_id=? AND phase='final' LIMIT 1").bind(a.id).first();
  if(finalist)return deny('already_finalist',409);
- const id=uuid();
+ const id=uuid(),now=NOW();
  try{
-  await env.DB.prepare('INSERT INTO e2e_applications(id,account_id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,demo_url,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-   .bind(id,a.id,b.round_code,b.category,b.province,b.location_basis,...values.slice(1,2),values[0],...values.slice(2),url||null,NOW(),NOW()).run();
- }catch{return deny('duplicate_round_or_database_rejected',409)}
+  const createApp=env.DB.prepare('INSERT INTO e2e_applications(id,account_id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,demo_url,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+   .bind(id,a.id,b.round_code,b.category,b.province,b.location_basis,...values.slice(1,2),values[0],...values.slice(2),url||null,now,now);
+  // D1 batch is atomic. A profile write failure must NOT leave a half-created entry.
+  if(profile){
+   if(typeof env.DB.batch!=='function')return deny('profile_storage_unavailable',503);
+   await env.DB.batch([createApp,profileInsert(env.DB,id,profile,now)]);
+  }else await createApp.run();
+ }catch{return deny(profile?'profile_database_error':'duplicate_round_or_database_rejected',profile?503:409)}
  return json({ok:true,application_id:id,phase:'demo',status:'submitted',source:'cloudflare-d1-staging',testOnly:true},201);
 }
 // A member may correct or remove only their own unreviewed, unpaid TEST application.
@@ -196,19 +206,38 @@ async function submitApplication(request,env,a){
 async function updateApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request,2500);if(!b)return deny('invalid_json');
- const allowed=['application_id','stage_name','song_title','original_artist','demo_url'];
+ const profileFields=['gender','photo_url_1','photo_url_2','photo_url_3','profile_consent'];
+ const allowed=['application_id','stage_name','song_title','original_artist','demo_url',...profileFields];
  if(Object.keys(b).some(k=>!allowed.includes(k)))return deny('update_fields_only',422);
  const id=String(b.application_id||'');
  const values=['stage_name','song_title','original_artist','demo_url'].map(k=>typeof b[k]==='string'?b[k].trim():'');
  if(values.some((v,i)=>!v||v.length>(i===3?1000:100))||values[0].length<2||!validPerformanceLink(values[3]))
    return deny('invalid_demo_url_or_fields',422);
+ const editingProfile=profileFields.some(key=>Object.hasOwn(b,key));
+ const parsed=editingProfile?parseProfileInput(b):{profile:null};
+ if(parsed.error)return deny(parsed.error,422);
+ if(editingProfile&&!(await profileReady(env)))return deny('profile_not_enabled',503);
  const app=await selectApplication(env.DB,id,a.id);
  if(!app)return deny('application_not_found',404);
  if(app.payment_status!=='unpaid'||app.status!=='submitted'||app.phase!=='demo')
    return deny('update_locked',409);
- const changed=await env.DB.prepare("UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,demo_url=?,updated_at=? WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo'")
-  .bind(...values,NOW(),id,a.id).run();
- if(!changed.meta?.changes)return deny('update_locked',409);
+ const updateStmt=env.DB.prepare("UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,demo_url=?,updated_at=? WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo'")
+  .bind(...values,NOW(),id,a.id);
+ let affected=0;
+ try {
+  if(editingProfile){
+   if(typeof env.DB.batch!=='function')return deny('profile_storage_unavailable',503);
+   const profileStmt=parsed.profile?
+    profileUpsert(env.DB,id,parsed.profile,NOW()):
+    env.DB.prepare('DELETE FROM e2e_application_profiles WHERE application_id=?').bind(id);
+   const result=await env.DB.batch([updateStmt,profileStmt]);
+   affected=Number(result?.[0]?.meta?.changes||0);
+  }else{
+   const result=await updateStmt.run();
+   affected=Number(result?.meta?.changes||0);
+  }
+ }catch{return deny(editingProfile?'profile_database_error':'update_locked',editingProfile?503:409)}
+ if(!affected)return deny('update_locked',409);
  const result=await selectApplication(env.DB,id,a.id);
  return json({ok:true,application_id:result.id,stage_name:result.stage_name,song_title:result.song_title,original_artist:result.original_artist,demo_url:result.demo_url,testOnly:true});
 }
@@ -321,10 +350,10 @@ export async function handleE2E(request,env){
   if(pathname==='/api/e2e/verify-code'&&isPost)return await verifyCode(request,env);
   const a=await account(request,env);
   if(!a)return deny('login_required',401);
-  const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication});
+  const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles});
   if(v2)return v2;
   if(pathname==='/api/e2e/logout'&&isPost)return await logout(request,env,a);
-  if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),testOnly:true});
+  if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),testOnly:true});
   if(pathname==='/api/e2e/switch-role'&&isPost)return await switchRole(request,env,a);
   if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env);
   if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
