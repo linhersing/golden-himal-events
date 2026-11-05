@@ -109,7 +109,7 @@ function friendlyError(e){
  if(common[e?.message])return mt(common[e.message]);
  const errors={
  member_only:'This account is not a singer account.',
- update_locked:'This entry is locked after checkout.',
+ update_locked:mt('editLockedAfterReview'),
  delete_locked:'This entry cannot be deleted.',
  invalid_demo_url:'Enter a valid public video link.',
  annual_category_locked:'Your annual competition category is already selected.',
@@ -125,8 +125,8 @@ function friendlyError(e){
  invalid_public_photo_url:'請輸入公開、安全的 HTTPS 照片網址。',
  invalid_gender:'請選擇有效的性別欄位。',
  main_photo_required:'填寫補充照片前，請先提供主照片網址。',
- invalid_song_language:'Please choose a supported song language.',
- readback_mismatch:'Changes were submitted, but we could not verify the saved record. Please refresh before trying again.',
+ invalid_song_language:mt('invalidSongLanguage'),
+ readback_mismatch:mt('readbackFail'),
  mock_payment_not_allowed:'This application cannot be checked out.',
  test_payment_result_unverified:'TEST payment could not be verified. No charge was made.'
  };
