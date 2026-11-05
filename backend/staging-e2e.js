@@ -161,7 +161,15 @@ async function logout(request,env,a){
  return json({ok:true},200,{'Set-Cookie':cookie('',0)});
 }
 async function applications(a,env){
- const rows=await env.DB.prepare('SELECT id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,demo_url,media_key IS NOT NULL AS has_uploaded_file,eligibility_key IS NOT NULL AS has_eligibility_file,receipt_key IS NOT NULL AS has_receipt_file,phase,status,payment_status,created_at FROM e2e_applications WHERE account_id=? ORDER BY created_at DESC').bind(a.id).all();
+ const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,p.province,p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url,
+ p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,p.receipt_key IS NOT NULL AS has_receipt_file,
+ p.phase,p.status,p.payment_status,p.created_at,p.updated_at,
+ CASE WHEN p.phase='demo' AND p.status IN ('submitted','under_review') AND p.payment_status IN ('unpaid','simulated_paid')
+ AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
+ AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
+ AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)
+ THEN 1 ELSE 0 END AS can_edit
+ FROM e2e_applications p WHERE p.account_id=? ORDER BY p.created_at DESC`).bind(a.id).all();
  return json({ok:true,account:{id:a.id,role:a.role},applications:await attachProfiles(env,rows.results||[]),testOnly:true});
 }
 async function submitApplication(request,env,a){
@@ -219,9 +227,14 @@ async function updateApplication(request,env,a){
  if(editingProfile&&!(await profileReady(env)))return deny('profile_not_enabled',503);
  const app=await selectApplication(env.DB,id,a.id);
  if(!app)return deny('application_not_found',404);
- if(app.payment_status!=='unpaid'||app.status!=='submitted'||app.phase!=='demo')
+ if(!['unpaid','simulated_paid'].includes(app.payment_status)||!['submitted','under_review'].includes(app.status)||app.phase!=='demo')
    return deny('update_locked',409);
- const updateStmt=env.DB.prepare("UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,demo_url=?,updated_at=? WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo'")
+ const anyScores=await env.DB.prepare("SELECT EXISTS(SELECT 1 FROM e2e_judge_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_live_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_promotion_events WHERE application_id=?) AS n").bind(id,id,id).first();
+ if(Number(anyScores?.n||0)>0)return deny('update_locked',409);
+ const updateStmt=env.DB.prepare(`UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,demo_url=?,updated_at=? WHERE id=? AND account_id=? AND payment_status IN ('unpaid','simulated_paid') AND status IN ('submitted','under_review') AND phase='demo'
+  AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=e2e_applications.id)
+  AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=e2e_applications.id)
+  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=e2e_applications.id)`)
   .bind(...values,NOW(),id,a.id);
  let affected=0;
  try {
