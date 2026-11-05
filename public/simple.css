@@ -107,3 +107,19 @@
 .roster-detail>#judge-back-list{margin-bottom:14px}
 @media(max-width:760px){.roster-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.roster-toolbar{grid-template-columns:1fr}.roster-entry{padding:13px 12px;gap:8px}.roster-entry-text strong{font-size:.88rem}.roster-pagination{gap:6px}.roster-pagination .btn{min-width:75px;padding-inline:10px}}
+
+/* Optional entrant photo URLs; no raw uploads or remote-image proxy. */
+.entrant-profile-fields{border:1px solid #eadac7;border-radius:16px;background:#fffdf9;padding:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
+.entrant-profile-fields[hidden]{display:none!important}
+.entrant-profile-fields legend{font-weight:750;color:#654134;padding:0 6px}
+.entrant-profile-fields>p,.entrant-profile-more,.entrant-profile-fields>.check{grid-column:1/-1}
+.entrant-profile-more summary{font-size:.87rem;font-weight:650;cursor:pointer;padding:9px 0;color:#704d42}
+.entrant-profile-more .field{margin-top:8px}
+.photo-preview{display:flex;align-items:center;gap:10px}
+.photo-preview img{width:72px;height:72px;object-fit:cover;border-radius:12px}
+.entrant-avatar{width:44px;height:44px;object-fit:cover;border-radius:11px;flex-shrink:0;border:1px solid #dbcab2}
+.entrant-gallery{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.entrant-photo-link{display:block;border:1px solid #e5d8c5;border-radius:12px;overflow:hidden;background:#eee6db;min-width:90px;min-height:90px}
+.entrant-gallery-img{width:108px;height:108px;object-fit:cover;display:block}
+.entrant-image-fallback{font-size:.74rem;color:#796453}
+@media(max-width:520px){.entrant-profile-fields{grid-template-columns:1fr;padding:12px}.entrant-gallery-img{width:82px;height:82px}}
