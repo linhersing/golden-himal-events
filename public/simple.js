@@ -220,8 +220,8 @@ async function renderJudge(){
  }
  function openDetail(a){
   rosterPanel.hidden=true;detail.hidden=false;holder.replaceChildren();
-  back.onclick=()=>{if(holder.querySelector('form')&&holder.querySelector('input:not([type=checkbox]):not(:placeholder-shown)')&&
-   !confirm('返回名單將放棄未儲存的分數，確定返回嗎？'))return;
+  let modified=false;
+  back.onclick=()=>{if(modified&&!confirm('返回名單將放棄未儲存的分數，確定返回嗎？'))return;
    holder.replaceChildren();detail.hidden=true;rosterPanel.hidden=false;back.focus();paint();
   };
   const box=node('article',undefined,'entry');
@@ -236,6 +236,7 @@ async function renderJudge(){
    holder.append(box);back.focus();return;
   }
   const form=node('form',undefined,'form-grid');
+  form.addEventListener('input',()=>{modified=true});
   const criteria=demo?[['technique','技巧（0–60）',60],['interpretation','表現（0–40）',40]]:
    [['technique','技巧（0–40）',40],['interpretation','表現（0–30）',30],['stage_presence','台風（0–20）',20],['appearance','儀容（0–10）',10]];
   for(const [name,labelText,max] of criteria){
