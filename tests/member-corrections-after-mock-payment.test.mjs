@@ -12,7 +12,7 @@ const read=(path,cookie)=>new Request(host+'/api/e2e/'+path,{headers:{Cookie:coo
 function dbAdapter(db){return {prepare(sql){let args=[];return {
  bind(...v){args=v;return this},
  first(){return db.prepare(sql).get(...args)||null},
- all(){return {results:db.prepare(sql).all(...args)},
+ all(){return {results:db.prepare(sql).all(...args)}},
  run(){const r=db.prepare(sql).run(...args);return {meta:{changes:r.changes}}}
 }}}}
 test('mock-paid member may correct owned song before judging, then scores lock all edits',async()=>{
