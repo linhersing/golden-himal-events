@@ -10,7 +10,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
  const forbidden=role=>a?.role!==role?deny(role+'_only',403):null;
  if(path==='/api/e2e/reviewer-queue'&&!post){
   if(forbidden('reviewer'))return forbidden('reviewer');
-  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.original_artist,p.demo_url,p.phase,
+  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.original_artist,p.demo_url,p.phase,
    p.media_key IS NOT NULL AS has_uploaded_file,p.status,p.payment_status,
    d.technique AS demo_technique,d.interpretation AS demo_interpretation,
    l.technique AS live_technique,l.interpretation AS live_interpretation,l.stage_presence,l.appearance
@@ -19,7 +19,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    LEFT JOIN e2e_live_scores l ON l.application_id=p.id AND l.reviewer_id=? AND l.stage=p.phase
    WHERE p.payment_status='simulated_paid' AND ${evidence}
     AND p.status NOT IN ('withdrawn','rejected')
-   ORDER BY p.created_at DESC LIMIT 100`).bind(a.id,a.id).all();
+   ORDER BY p.created_at DESC LIMIT 500`).bind(a.id,a.id).all();
   return json({ok:true,queue:r.results||[],testOnly:true});
  }
  if(path==='/api/e2e/score'&&post){
@@ -47,14 +47,14 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
  }
  if(path==='/api/e2e/organizer-queue'&&!post){
   if(forbidden('organizer'))return forbidden('organizer');
-  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.demo_url,p.phase,p.status,p.payment_status,
+  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.demo_url,p.phase,p.status,p.payment_status,
    p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,
    p.receipt_key IS NOT NULL AS has_receipt_file,
    (SELECT COUNT(*) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_judges,
    (SELECT ROUND(AVG(technique+interpretation),2) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_mean,
    (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_judges,
    (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean
-   FROM e2e_applications p ORDER BY p.created_at ASC LIMIT 200`).all();
+   FROM e2e_applications p ORDER BY p.created_at ASC LIMIT 500`).all();
   return json({ok:true,applications:r.results||[],testOnly:true});
  }
  if(path==='/api/e2e/organizer-promote'&&post){
