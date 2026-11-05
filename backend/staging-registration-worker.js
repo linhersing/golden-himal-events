@@ -165,6 +165,15 @@ async function handleE2EReadiness(request,env){
    schemaReady=Number(row?.n)===9;
   }catch{schemaReady=false}
  }
+ // Read-only profile rollout gate: show why photo fields are still hidden.
+ let profileTableReady=false;
+ if(databaseBound){
+  try{
+   const row=await env.E2E_DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='e2e_application_profiles'").first();
+   profileTableReady=row?.name==='e2e_application_profiles';
+  }catch{profileTableReady=false}
+ }
+ const profileFeatureEnabled=env.STAGING_PROFILE_URLS_ENABLED==='true';
  const otpEnabled=env.STAGING_E2E_ENABLED==='true';
  const linkMode=env.STAGING_SUBMISSION_MODE==='links';
  const ready=databaseBound&&schemaReady&&(linkMode||mediaBound)&&emailConfigured&&senderSet&&allowlistSet&&secretSet&&otpEnabled;
@@ -173,7 +182,8 @@ async function handleE2EReadiness(request,env){
   submissionMode:linkMode?'external_links':'private_uploads',privateMediaRequired:!linkMode,
   resources:{databaseBound,schemaReady,privateMediaBound:mediaBound,emailBound,emailServiceConfigured:emailConfigured,
    senderConfigured:senderSet,memberAllowlistConfigured:allowlistSet,
-   identitySecretConfigured:secretSet,explicitTestModeEnabled:otpEnabled},
+   identitySecretConfigured:secretSet,explicitTestModeEnabled:otpEnabled,
+   profileTableReady,profileFeatureEnabled,profileUsable:profileTableReady&&profileFeatureEnabled},
   note:'Read-only capability flags. READY does not prove an email was delivered, a record saved, or a file uploaded.'
  });
 }
