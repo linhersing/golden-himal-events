@@ -136,7 +136,20 @@ function friendlyError(e){
  const errors={self_review_disallowed:'同一信箱不能評自己的參賽作品，請由其他獨立評審評分。',too_many_code_requests:'驗證信已達次數限制，請稍候再試；登入後切換已授權身分不必重新寄信。',e2e_not_configured:'目前尚未開通 Email 驗證服務，無法登入。正式系統需先完成寄信設定。',test_email_service_unavailable:'寄信服務目前不可使用，請稍後或確認平台設定。',not_on_test_allowlist:'此 Email 尚未獲授權，目前只接受受邀帳號。',expired_or_invalid_code:'驗證碼錯誤或已過期，請重新取得。',login_required:'請先登入。',organizer_only:'這個帳號不是主辦單位，無權查看管理資料。',reviewer_only:'這個帳號不是評審，無權打分。',member_only:'此帳號並非會員。',update_locked:'這筆資料已進入審核或模擬繳費階段，無法直接修改。',delete_locked:'這筆資料已進入評審或後續流程，無法直接刪除。',invalid_demo_url:'請輸入有效的公開作品連結。',annual_category_locked:'年度組別已鎖定。',already_scored_or_unavailable:'你已評過這位選手，不能重複給分。'};return errors[e?.message]||('目前無法完成操作（'+(e?.message||'連線失敗')+'）。')}
 async function api(path,body){const c=new AbortController(),timer=setTimeout(()=>c.abort(),18000);try{const r=await fetch('/api/e2e/'+path,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),credentials:'same-origin',cache:'no-store',signal:c.signal});const data=await r.json();if(!r.ok||data.ok!==true)throw new Error(data.error||('HTTP '+r.status));return data}finally{clearTimeout(timer)}}
 async function run(fn){if(busy)return;busy=true;document.body.classList.add('requesting');try{await fn()}catch(e){status(friendlyError(e),true)}finally{busy=false;document.body.classList.remove('requesting')}}
-function authUI(signedIn){(staff?$('back-signin'):$('signin-panel')).hidden=signedIn;$(prefix+'-dashboard')?.setAttribute('hidden','');if(staff){$('back-dashboard').hidden=!signedIn}else{$('member-panel').hidden=!signedIn}}
+function authUI(signedIn){
+ (staff?$('back-signin'):$('signin-panel')).hidden=signedIn;
+ $(prefix+'-dashboard')?.setAttribute('hidden','');
+ if(staff)$('back-dashboard').hidden=!signedIn;
+ else{
+  $('member-panel').hidden=!signedIn;
+  if(!signedIn){
+   const heading=document.querySelector('.page-heading');
+   if(heading){heading.dataset.l='memberTitle';heading.textContent=mt('memberTitle');}
+   const intro=document.querySelector('.page-intro'),steps=document.querySelector('.steps');
+   if(intro)intro.hidden=false;if(steps)steps.hidden=false;
+  }
+ }
+}
 function authForms(email){$(prefix+'-email-form').hidden=!email;$(prefix+'-code-form').hidden=email}
 function staffTabs(){
  const roles=account?.available_roles||[account?.role];
@@ -183,6 +196,7 @@ function drawEntry(a){
   meta.append(field);
  }
  box.append(meta);
+ box.append(node('span',mt(a.payment_status==='simulated_paid'?'testPaid':'testPending'),'pill '+(a.payment_status==='simulated_paid'?'pill-pass':'pill-warn')));
  const actions=node('div',undefined,'inline-actions member-entry-buttons');
  if(memberCanEdit(a)){
   const edit=node('button',mt('edit'),'btn btn-primary');edit.type='button';edit.onclick=()=>showEdit(a);actions.append(edit);
@@ -225,6 +239,10 @@ async function renderMember(){
  $('member-primary-actions').hidden=!hasEntries;
  $('member-official-boundary').hidden=!hasEntries;
  $('member-dashboard-help').hidden=hasEntries;
+ const heading=document.querySelector('.page-heading'),intro=document.querySelector('.page-intro'),steps=document.querySelector('.steps');
+ if(heading){heading.dataset.l=hasEntries?'dashboard':'memberTitle';heading.textContent=mt(heading.dataset.l);}
+ if(intro)intro.hidden=hasEntries;
+ if(steps)steps.hidden=hasEntries;
  if(hasEntries){
   $('member-welcome-name').textContent=first.stage_name||mt('unnamedEntry');
   $('member-welcome-meta').textContent=mt(first.category==='university'?'university':'community')+' · '+first.round_code;
