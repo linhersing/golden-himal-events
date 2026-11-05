@@ -2,13 +2,53 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id),page=document.body.dataset.page;
 const translations={
-en:{topline:'GOLDEN HIMAL VOICE · 2027',headline:'Every voice deserves a stage.',subline:'A place for music, talent and connection. Your journey begins here.',apply:'Join the competition',applySub:'Create your singing entry',login:'Member login',loginSub:'View your entry and performance',news:'Latest news',newsSub:'Updates and official results',preview:'Preview stage · Official paid registration is not open',back:'Staff login'},
-ne:{topline:'GOLDEN HIMAL VOICE · 2027',headline:'हरेक आवाजको आफ्नै मञ्च हुन्छ।',subline:'संगीत, प्रतिभा र सम्बन्धको लागि नयाँ मञ्च। यहाँबाट सुरु गर्नुहोस्।',apply:'प्रतियोगितामा सहभागी हुनुहोस्',applySub:'आवेदन सुरु गर्नुहोस्',login:'सदस्य लगइन',loginSub:'आफ्नो आवेदन हेर्नुहोस्',news:'नयाँ सूचना',newsSub:'समाचार र नतिजा',preview:'पूर्वावलोकन · वास्तविक शुल्कसहित दर्ता खुलेको छैन',back:'कर्मचारी लगइन'},
-zh:{topline:'GOLDEN HIMAL VOICE · 2027',headline:'你的聲音，值得被聽見。',subline:'一個為歌聲而生的舞台。從這裡，開啟你的旅程。',apply:'我要報名',applySub:'開始建立我的參賽資料',login:'會員登入',loginSub:'查看我的報名與作品',news:'最新公告',newsSub:'賽事消息與公布資訊',preview:'網站預覽階段｜正式收費報名尚未開放',back:'工作人員入口'}};
+en:{topline:'GOLDEN HIMAL VOICE · 2027',headline:'Every voice deserves a stage.',subline:'A place for music, talent and connection. Your journey begins here.',apply:'Join the competition',applySub:'Create your singing entry',login:'Member login',loginSub:'View your entry and performance',news:'Latest news',newsSub:'Updates and official results',preview:'Preview stage · Official paid registration is not open',back:'Staff login',myHome:'My singer home',myHomeSub:'Review my entry and progress',startEntry:'Start my entry',startEntrySub:'Complete the application',memberArea:'My member area',memberAreaSub:'Continue where I left off'},
+ne:{topline:'GOLDEN HIMAL VOICE · 2027',headline:'हरेक आवाजको आफ्नै मञ्च हुन्छ।',subline:'संगीत, प्रतिभा र सम्बन्धको लागि नयाँ मञ्च। यहाँबाट सुरु गर्नुहोस्।',apply:'प्रतियोगितामा सहभागी हुनुहोस्',applySub:'आवेदन सुरु गर्नुहोस्',login:'सदस्य लगइन',loginSub:'आफ्नो आवेदन हेर्नुहोस्',news:'नयाँ सूचना',newsSub:'समाचार र नतिजा',preview:'पूर्वावलोकन · वास्तविक शुल्कसहित दर्ता खुलेको छैन',back:'कर्मचारी लगइन',myHome:'मेरो प्रतियोगी पृष्ठ',myHomeSub:'मेरो विवरण र स्थिति हेर्नुहोस्',startEntry:'आवेदन सुरु गर्नुहोस्',startEntrySub:'प्रतियोगी विवरण भर्नुहोस्',memberArea:'मेरो सदस्य पृष्ठ',memberAreaSub:'मेरो आवेदन हेर्नुहोस्'},
+zh:{topline:'GOLDEN HIMAL VOICE · 2027',headline:'你的聲音，值得被聽見。',subline:'一個為歌聲而生的舞台。從這裡，開啟你的旅程。',apply:'我要報名',applySub:'開始建立我的參賽資料',login:'會員登入',loginSub:'查看我的報名與作品',news:'最新公告',newsSub:'賽事消息與公布資訊',preview:'網站預覽階段｜正式收費報名尚未開放',back:'工作人員入口',myHome:'我的參賽首頁',myHomeSub:'查看報名資料與進度',startEntry:'開始報名',startEntrySub:'填寫我的參賽資料',memberArea:'我的會員專區',memberAreaSub:'繼續查看自己的資料'}};
 if(page==='home'){
- let lang='zh';try{const stored=localStorage.getItem('ghv_ui_language_v1');if(translations[stored])lang=stored}catch{}
- const apply=()=>{document.documentElement.lang=lang==='zh'?'zh-Hant':lang;document.querySelectorAll('[data-t]').forEach(el=>{const x=translations[lang][el.dataset.t];if(x)el.textContent=x});document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)))};
- document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{lang=b.dataset.lang;try{localStorage.setItem('ghv_ui_language_v1',lang)}catch{}apply()}));apply();return;
+ let lang='zh',homeState='anonymous';
+ try{const stored=localStorage.getItem('ghv_ui_language_v1');if(translations[stored])lang=stored}catch{}
+ const applyHomeState=()=>{
+  const first=document.getElementById('home-apply'),second=document.getElementById('home-login');
+  if(!first||!second)return;
+  const text=translations[lang],applyText=first.querySelector('strong'),applySub=first.querySelector('small'),
+   loginText=second.querySelector('strong'),loginSub=second.querySelector('small');
+  if(homeState==='entry'){
+   applyText.textContent=text.myHome;applySub.textContent=text.myHomeSub;
+   second.hidden=true; // Keep the unchanged login URL in DOM without a redundant second choice.
+  }else if(homeState==='member'){
+   applyText.textContent=text.startEntry;applySub.textContent=text.startEntrySub;
+   loginText.textContent=text.memberArea;loginSub.textContent=text.memberAreaSub;
+   second.hidden=false;
+  }else second.hidden=false;
+ };
+ const apply=()=>{
+  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
+  document.querySelectorAll('[data-t]').forEach(el=>{const x=translations[lang][el.dataset.t];if(x)el.textContent=x});
+  document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)));
+  applyHomeState();
+ };
+ document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{
+  lang=b.dataset.lang;try{localStorage.setItem('ghv_ui_language_v1',lang)}catch{}apply()
+ }));
+ apply();
+ // Read the HttpOnly server session; never infer a member account from localStorage.
+ (async()=>{
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),9000);
+  try{
+   const response=await fetch('/api/e2e/me',{credentials:'same-origin',cache:'no-store',signal:controller.signal});
+   if(!response.ok)return;
+   const data=await response.json();
+   if(data.ok!==true||data.account?.role!=='member')return; // Never switch staff roles here.
+   homeState='member';applyHomeState();
+   const appsResponse=await fetch('/api/e2e/applications',{credentials:'same-origin',cache:'no-store',signal:controller.signal});
+   if(!appsResponse.ok)return;
+   const apps=await appsResponse.json();
+   if(apps.ok===true&&Array.isArray(apps.applications)&&apps.applications.length)homeState='entry';
+   applyHomeState();
+  }catch{}finally{clearTimeout(timeout)}
+ })();
+ return;
 }
 if(page==='news')return;
 const node=(tag,txt,cls)=>{const x=document.createElement(tag);if(txt!==undefined&&txt!==null)x.textContent=String(txt);if(cls)x.className=cls;return x};
