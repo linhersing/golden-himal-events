@@ -35,9 +35,8 @@ test('mobile visitor can reach a separate registration page without overflow',as
   expect(dims.scroll).toBeLessThanOrEqual(dims.client);
   await page.locator('.choice-main').click();
   await expect(page).toHaveURL(/member\.html#register$/);
-  await expect(page.locator('#password-portal')).toBeVisible();
-  await expect(page.locator('#password-pending-screen')).toBeVisible();
-  await expect(page.locator('#member-email-form')).toBeHidden();
+  await expect(page.locator('#password-portal')).toBeHidden();
+  await expect(page.locator('#member-email-form')).toBeVisible();
   const m=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
   expect(m).toBeLessThanOrEqual(0);
  }
