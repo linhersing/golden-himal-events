@@ -119,7 +119,7 @@ export async function passwordRequest(request,env,context){
  }
  const salt=hex(randomBytes(16)),replacement=recoveryCode();
  const updated=await env.DB.prepare('UPDATE e2e_password_accounts SET password_salt=?,password_hash=?,recovery_fingerprint=?,failed_count=0,locked_until=0 WHERE account_id=? AND recovery_fingerprint=?')
- .bind(salt,await derive(b.password,salt),await sign(env,'password-rescue:'+replacement),record.account_id,record.recovery_fingerprint).run();
+ .bind(salt,await derive(b.password,salt,env),await sign(env,'password-rescue:'+replacement),record.account_id,record.recovery_fingerprint).run();
  if(!updated.meta?.changes)return deny('invalid_recovery',401);
  await env.DB.prepare('DELETE FROM e2e_sessions WHERE account_id=?').bind(record.account_id).run();
  const token=await newSession(env,{id:record.account_id,role:'member'});
