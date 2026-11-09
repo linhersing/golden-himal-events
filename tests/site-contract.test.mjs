@@ -82,3 +82,20 @@ test('TEST MODE notice is visible on the public home, member, and news pages',as
  }
  assert.match(css,/\.test-site-banner/);
 });
+
+test('main singer page contains no-email TEST member controls, retains invited login and TEST warning',async()=>{
+ const [html,ui,backend,migration]=await Promise.all([
+  read('public/member.html'),read('public/password-member.js'),
+  read('backend/staging-e2e.js'),read('backend/migrations/1005_password_members_STAGING_ONLY.sql')
+ ]);
+ for(const id of ['password-portal','password-login-form','password-register-form','password-recover-form','password-recovery-output','member-email-form']){
+  assert.ok(html.includes('id="'+id+'"'),'missing '+id);
+ }
+ assert.match(html,/password-member\.js/);
+ assert.match(html,/請勿正式報名或付款/);
+ assert.match(ui,/password-config/);
+ assert.match(backend,/passwordRequest/);
+ assert.match(migration,/e2e_password_accounts/);
+ assert.doesNotMatch(ui,/localStorage\.setItem\([^)]*(password|recovery)/i);
+ assert.doesNotMatch(html,/value="GHV-[0-9A-F-]+"/);
+});

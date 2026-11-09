@@ -192,3 +192,19 @@
 .test-site-banner p{margin:0}
 .test-site-banner p[lang="en"],.test-site-banner p[lang="ne"]{font-size:.76rem;color:#806e5b}
 @media(max-width:560px){.test-site-banner{width:calc(100% - 28px);margin-top:10px;padding:10px 12px;gap:5px;font-size:.79rem}.test-site-banner p[lang="en"],.test-site-banner p[lang="ne"]{font-size:.73rem}}
+
+/* Optional no-email TEST sign-in; warm, mobile-first and non-invasive. */
+#password-portal{margin:0 0 20px;padding:17px;border-radius:16px;background:#fffaf2;border:1px solid #e8d7bc}
+#password-portal[hidden],#password-auth-screen[hidden],#password-rescue-screen[hidden],.password-auth-form[hidden]{display:none!important}
+#password-portal h3{color:#5a382d;margin:0 0 9px;font-size:1.2rem}
+.password-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:16px 0}
+.password-tabs button{border:1px solid #dac6a7;border-radius:10px;min-height:49px;padding:10px 8px;line-height:1.35;background:#fff;color:#654b36;font:inherit;font-weight:700;font-size:.82rem;cursor:pointer}
+.password-tabs button[aria-pressed="true"]{background:#6c3d35;color:#fff;border-color:#6c3d35}
+.password-auth-form{display:grid;gap:14px}
+.password-auth-form .btn{min-height:50px;width:100%}
+.password-auth-form .field{margin:0}
+#password-turnstile{min-height:64px}
+.password-recovery-code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:clamp(.95rem,2.8vw,1.16rem);font-weight:800;line-height:1.75;overflow-wrap:anywhere;background:#fff;border:1px dashed #b39365;border-radius:12px;padding:16px;margin:12px 0;user-select:all;color:#513729}
+.password-legacy{margin:12px 0 0;border-top:1px solid #e3d8c5;padding-top:13px}
+.password-legacy>summary{cursor:pointer;font-size:.87rem;color:#745a3d;font-weight:700;margin:5px 0 15px}
+@media(max-width:560px){#password-portal{padding:13px}.password-tabs{gap:5px}.password-tabs button{padding:8px 4px;font-size:.72rem;min-height:52px}.password-recovery-code{font-size:.85rem}}
