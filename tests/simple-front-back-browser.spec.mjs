@@ -18,7 +18,9 @@ test('singer flow does not falsely create an account when email integration is o
  await page.goto('/member.html#register');
  await expect(page.locator('#signin-panel')).toBeVisible();
  await expect(page.locator('#member-panel')).toBeHidden();
- await page.locator('#member-email-form [name=email]').fill('fictional@example.invalid');
+ await expect(page.locator('#member-email-form')).toBeHidden();
+  await page.locator('#email-legacy-summary').click();
+  await page.locator('#member-email-form [name=email]').fill('fictional@example.invalid');
  await page.locator('#member-email-form button').click();
  await expect(page.locator('#member-status')).toContainText('Email 驗證暫時無法使用');
  await expect(page.locator('#member-panel')).toBeHidden();
