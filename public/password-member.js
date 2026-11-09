@@ -12,7 +12,7 @@ const dict={
 const formValue=(form,name)=>String(new FormData(form).get(name)||'');
 let lang='zh',widgetId,challengeToken,ready=false;
 function translation(){lang=window.GHVLocale?.lang||'zh';if(!dict[lang])lang='en';return dict[lang]}
-function apply(){const t=translation();portal.querySelectorAll('[data-pw]').forEach(el=>{el.textContent=t[el.dataset.pw]||el.dataset.pw});portal.querySelectorAll('[data-pw-ph]').forEach(el=>el.placeholder=t[el.dataset.pwPh]||'');if(!ready)fallback.textContent=t.notReady;}
+function apply(){const t=translation();portal.querySelectorAll('[data-pw]').forEach(el=>{el.textContent=t[el.dataset.pw]||el.dataset.pw});portal.querySelectorAll('[data-pw-ph]').forEach(el=>el.placeholder=t[el.dataset.pwPh]||'');if(!ready)fallback.textContent=t.notReady;else{const intro=document.querySelector('#main > .page-intro');if(intro)intro.textContent=t.intro;const step=byId('step-login');if(step)step.textContent='1 · '+t.login;}}
 function message(s,bad=false){const box=byId('password-feedback');box.hidden=false;box.textContent=s;box.className='feedback'+(bad?' error':' success');}
 function panel(name){for(const id of ['password-login-form','password-register-form','password-recover-form'])byId(id).hidden=(id!=='password-'+name+'-form');portal.querySelectorAll('[data-pw-tab]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.pwTab===name)));messageBoxHide();}
 function messageBoxHide(){byId('password-feedback').hidden=true;}
@@ -38,7 +38,7 @@ async function init(){
  apply();
  let conf;try{const r=await fetch('/api/e2e/password-config',{credentials:'same-origin',cache:'no-store'});conf=await r.json()}catch{}
  if(conf?.enabled!==true||typeof conf.siteKey!=='string'){portal.hidden=false;fallback.hidden=false;byId('password-auth-screen').hidden=true;return}
- ready=true;portal.hidden=false;fallback.hidden=true;byId('password-auth-screen').hidden=false;email.open=false;
+ ready=true;apply();portal.hidden=false;fallback.hidden=true;byId('password-auth-screen').hidden=false;email.open=false;
  const script=document.createElement('script');script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';script.async=true;
  script.onload=()=>{try{window.turnstile.ready(()=>{widgetId=window.turnstile.render(byId('password-turnstile'),{sitekey:conf.siteKey,size:'compact',action:'ghv_signup','response-field':false,callback:token=>{challengeToken=token},'expired-callback':()=>{challengeToken=undefined},'error-callback':()=>{challengeToken=undefined}})})}catch{message(translation().errors.human_check_required,true)}};
  script.onerror=()=>message(translation().errors.human_check_required,true);
