@@ -231,3 +231,48 @@ test('switching English Nepali Chinese never discards an unsaved member edit dra
  await page.locator('[data-editing] button[type=button]').click();
  await expect(page.locator('[data-editing]')).toHaveCount(0);
 });
+
+test('main member page sends a fresh Turnstile token and verifies the same mailbox',async({page})=>{
+ let loggedIn=false;
+ const requests=[];
+ await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',r=>r.fulfill({
+  contentType:'application/javascript',body:
+   "window.turnstile={ready(fn){fn()},render(el,options){const button=document.createElement('button');"+
+   "button.type='button';button.textContent='Solve test challenge';el.append(button);"+
+   "button.onclick=()=>options.callback('synthetic-token');return 'synthetic-widget'},reset(){}}"
+ }));
+ await page.route('**/api/e2e/**',r=>{
+  const endpoint=new URL(r.request().url()).pathname.split('/').at(-1);
+  const send=(json,status=200)=>r.fulfill({status,json});
+  if(endpoint==='signup-config')return send({ok:true,mode:'public_test',siteKey:'synthetic-site-key',testOnly:true});
+  if(endpoint==='me'&&loggedIn)return send({ok:true,account:{role:'member',available_roles:['member']}});
+  if(endpoint==='applications')return send({ok:true,applications:[]});
+  if(endpoint==='request-code'||endpoint==='verify-code'){
+   const payload=r.request().postDataJSON();
+   if(endpoint==='request-code'&&!payload.turnstile_token)return send({ok:false,error:'human_check_required'},403);
+   requests.push(payload);
+   if(endpoint==='request-code')return send({ok:true,challenge_id:'synthetic-challenge'});
+   loggedIn=true;
+   return send({ok:true,role:'member'});
+  }
+  return send({ok:false,error:'login_required'},401);
+ });
+ await page.goto('/member.html#register');
+ await page.locator('[data-lang=en]').click();
+ await expect(page.locator('#signup-mode')).toContainText('Self-service test signup is open');
+ await expect(page.getByText('No real payment.',{exact:false}).first()).toBeVisible();
+ await page.locator('#member-email-form [name=email]').fill('singer@example.invalid');
+ await page.locator('#member-email-form button[type=submit]').click();
+ await expect(page.locator('#member-status')).toContainText('Complete the human verification');
+ expect(requests).toHaveLength(0);
+ await page.getByRole('button',{name:'Solve test challenge'}).click();
+ await page.locator('#member-email-form button[type=submit]').click();
+ await expect(page.locator('#member-status')).toContainText('Check your inbox and spam folder');
+ await page.locator('#member-code-form [name=code]').fill('123456');
+ await page.locator('#member-code-form button[type=submit]').click();
+ await expect(page.locator('#start-application')).toBeVisible();
+ expect(requests).toEqual([
+  {email:'singer@example.invalid',role:'member',turnstile_token:'synthetic-token'},
+  {email:'singer@example.invalid',challenge_id:'synthetic-challenge',code:'123456'}
+ ]);
+});

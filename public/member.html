@@ -23,9 +23,9 @@
 <div id="member-status" class="feedback" role="status" aria-live="polite" hidden></div>
 <section id="signin-panel" class="panel">
 <h2 data-l="signinHeader">Log in or create an account</h2><p data-l="emailIntro">Enter your email address. We will send a six-digit, one-time verification code.</p>
-<form id="member-email-form"><label class="field"><span data-l="email">Email address</span><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-l="sendCode">Send verification code</button></div></form>
+<form id="member-email-form"><label class="field"><span data-l="email">Email address</span><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><div id="signup-turnstile" hidden></div><div class="form-actions"><button class="btn btn-primary" type="submit" data-l="sendCode">Send verification code</button></div></form>
 <form id="member-code-form" hidden><label class="field"><span data-l="sixCode">Six-digit code from email</span><input name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" required></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-l="logIn">Log in</button><button class="btn btn-soft" type="button" id="change-mail" data-l="otherEmail">Use another email</button></div></form>
-<p class="under-actions" data-l="invitedOnly">Only pre-approved accounts can test this site. Public sign-ups are not open.</p>
+<p class="under-actions" id="signup-mode" data-l="invitedOnly">Only pre-approved accounts can test this site. Public sign-ups are not open.</p>
 </section>
 <section id="member-panel" hidden>
 <div class="panel member-home">

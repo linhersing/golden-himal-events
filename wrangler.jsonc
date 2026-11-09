@@ -9,7 +9,9 @@
     "binding": "ASSETS",
     "run_worker_first": [
       "/api/staging/*",
-      "/api/e2e/*"
+      "/api/e2e/*",
+      "/member",
+      "/member.html"
     ]
   },
   "d1_databases": [

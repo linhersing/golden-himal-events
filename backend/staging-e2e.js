@@ -1,10 +1,11 @@
-import {mailProviderReady,mailSenderReady,sendTestEmail} from './staging-mail.js';
+import {humanSignupSource,publicSignupReady,reservePublicSend} from './staging-public-signup.js';
+import {emailAddress,mailProviderReady,mailSenderReady,sendTestEmail} from './staging-mail.js';
 import {validPerformanceLink} from '../public/performance-link.js';
 import {handleV2Route} from './staging-v2-flow.js';
 import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
- * Explicit opt-in and allowlisted emails. No production applicants, actual payments,
- * public registration, raw passwords, magic-code shortcuts or exposed R2 URLs.
+ * Invited staff and an opt-in, protected self-service path for test singers.
+ * No official entries, actual payments, or exposed R2 URLs.
  */
 const COOKIE='__Host-ghv-e2e';
 const MAX_AGE=12*3600;
@@ -59,7 +60,7 @@ async function newSession(env,a){
   .bind(sessionHash,a.id,NOW()+MAX_AGE,NOW()).run();
  return token;
 }
-function publicAccount(a,env){return {id:a.id,role:a.role,available_roles:grantedRoles(a.email,env)}}
+function publicAccount(a,env){return {id:a.id,role:a.role,available_roles:a.email?grantedRoles(a.email,env):['member']}}
 async function ownsApplication(env,a,ownerId){
  const owner=await env.DB.prepare('SELECT email_fingerprint FROM e2e_accounts WHERE id=?').bind(ownerId).first();
  if(!owner)return false;
@@ -84,7 +85,10 @@ async function account(request,env){
  const a=await env.DB.prepare('SELECT a.id,a.role,a.email_fingerprint FROM e2e_sessions s JOIN e2e_accounts a ON a.id=s.account_id WHERE s.session_fingerprint=? AND s.expires_at>?').bind(fingerprint,NOW()).first();
  if(!a||!ROLES.includes(a.role))return null;
  const email=await emailForFingerprint(env,a.email_fingerprint,a.role);
- return email?{id:a.id,role:a.role,email}:null;
+ if(email)return {id:a.id,role:a.role,email};
+ if(a.role!=='member'||!await publicSignupReady(env))return null;
+ const proof=await env.DB.prepare('SELECT mailbox_fingerprint FROM e2e_public_signup_accounts WHERE account_id=?').bind(a.id).first();
+ return proof?{id:a.id,role:a.role,mailboxFingerprint:proof.mailbox_fingerprint}:null;
 }
 const sameOrigin=request=>request.headers.get('Origin')===new URL(request.url).origin;
 function requireRole(a,role){return a&&a.role===role}
@@ -96,14 +100,24 @@ async function requestCode(request,env){
  const email=norm(b.email);
  const role=b.role==='staff'?(emailAllowed(email,env,'organizer')?'organizer':'reviewer'):(ROLES.includes(b.role)?b.role:'member');
  if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i.test(email)||email.length>250)return deny('invalid_email');
- if(!emailAllowed(email,env,role))return deny('not_on_test_allowlist',403);
- otpTrace('allowlist_passed');
+ const invited=emailAllowed(email,env,role);
+ const publicTest=!invited&&role==='member'&&await publicSignupReady(env);
+ if(!invited&&!publicTest)return deny('not_on_test_allowlist',403);
+ if(publicTest&&!emailAddress(email))return deny('invalid_email');
+ let source;
+ if(publicTest){
+  source=await humanSignupSource(request,env,b.turnstile_token);
+  if(!source)return deny('human_check_required',403);
+ }
+ otpTrace(publicTest?'human_check_passed':'allowlist_passed');
  const fingerprint=await sign(env,'email:'+email);
  const period=NOW()-600;
  const recent=await env.DB.prepare('SELECT COUNT(*) AS n FROM e2e_email_challenges WHERE email_fingerprint=? AND created_at>?').bind(fingerprint,period).first();
  if(Number(recent?.n||0)>=3)return deny('too_many_code_requests',429);
  const id=uuid(),digits=new Uint32Array(1);crypto.getRandomValues(digits);
  const code=String(digits[0]%1000000).padStart(6,'0');
+ if(source&&!await reservePublicSend(env.DB,id,await sign(env,'signup-source:'+source),NOW()))
+  return deny('too_many_code_requests',429);
  const hashed=await sign(env,'challenge:'+id+':'+code);
  // D1 executes this single write atomically: parallel requests may all pass
  // the early read, but only three may reserve a send slot across all roles.
@@ -117,14 +131,14 @@ async function requestCode(request,env){
    text:'Golden Himal Voice STAGING ONLY. Your one-time verification code is '+code+
         '. It expires in 10 minutes. Request reference: '+id.slice(0,8)+'. Role: '+role+'. If you did not request it, ignore this message. No payments are being collected.',
    html:'<p><strong>Golden Himal Voice — TEST ONLY</strong></p><p>Your one-time verification code is <strong>'+code+
-        '</strong>. Valid for 10 minutes.</p><p>Request reference: '+id.slice(0,8)+' · Role: '+role+'</p><p>No real payment or public registration is enabled.</p>'});
+        '</strong>. Valid for 10 minutes.</p><p>Request reference: '+id.slice(0,8)+' · Role: '+role+'</p><p>No real payment or official registration is enabled.</p>'});
   otpTrace('provider_accepted');
  }catch{
   otpTrace('send_failed');
   await env.DB.prepare('UPDATE e2e_email_challenges SET used_at=? WHERE id=?').bind(NOW(),id).run();
   return deny('test_email_service_unavailable',503)
  }
- return json({ok:true,challenge_id:id,request_ref:id.slice(0,8),resend_after:60,message:'Check the allowlisted test mailbox. Code expires in 10 minutes.'});
+ return json({ok:true,challenge_id:id,request_ref:id.slice(0,8),resend_after:60,message:'Check your test mailbox. Code expires in 10 minutes.'});
 }
 async function verifyCode(request,env){
  const b=await bodyJSON(request);if(!b||!/^\d{6}$/.test(String(b.code||''))||!/^[-a-f0-9]{36}$/i.test(String(b.challenge_id||'')))return deny('invalid_challenge');
@@ -135,20 +149,32 @@ async function verifyCode(request,env){
  if(!attempt.meta?.changes)return deny('expired_or_invalid_code',401);
  const hash=await sign(env,'challenge:'+challenge.id+':'+b.code);
  if(hash!==challenge.code_fingerprint)return deny('expired_or_invalid_code',401);
+ if(!ROLES.includes(challenge.kind))return deny('not_on_test_allowlist',403);
+ const invitedEmail=await emailForFingerprint(env,challenge.email_fingerprint,challenge.kind);
+ let email=invitedEmail;
+ if(!email){
+  if(challenge.kind!=='member'||!await publicSignupReady(env))return deny('not_on_test_allowlist',403);
+  email=norm(b.email);
+  if(email.length>250||!emailAddress(email)||await sign(env,'email:'+email)!==challenge.email_fingerprint)
+   return deny('expired_or_invalid_code',401);
+  const reserved=await env.DB.prepare('SELECT challenge_id FROM e2e_public_signup_attempts WHERE challenge_id=?').bind(challenge.id).first();
+  if(!reserved)return deny('not_on_test_allowlist',403);
+ }
  const used=await env.DB.prepare('UPDATE e2e_email_challenges SET used_at=? WHERE id=? AND used_at IS NULL AND expires_at>? AND attempts<=5').bind(NOW(),challenge.id,NOW()).run();
  if(!used.meta?.changes)return deny('expired_or_invalid_code',401);
- if(!ROLES.includes(challenge.kind))return deny('not_on_test_allowlist',403);
- const email=await emailForFingerprint(env,challenge.email_fingerprint,challenge.kind);
- if(!email)return deny('not_on_test_allowlist',403);
  const a=await roleAccount(env,email,challenge.kind);
  if(!a)return deny('wrong_account_role',403);
+ if(!invitedEmail){
+  await env.DB.prepare('INSERT OR IGNORE INTO e2e_public_signup_accounts(account_id,mailbox_fingerprint) VALUES(?,?)')
+   .bind(a.id,challenge.email_fingerprint).run();
+ }
  const token=await newSession(env,a);
- return json({ok:true,role:a.role,account_id:a.id,available_roles:grantedRoles(email,env)},200, {'Set-Cookie':cookie(token)});
+ return json({ok:true,role:a.role,account_id:a.id,available_roles:publicAccount({...a,email:invitedEmail},env).available_roles},200, {'Set-Cookie':cookie(token)});
 }
 async function switchRole(request,env,a){
  const b=await bodyJSON(request);
  if(!b||!ROLES.includes(b.role))return deny('invalid_role');
- if(!emailAllowed(a.email,env,b.role))return deny('not_on_test_allowlist',403);
+ if(!a.email||!emailAllowed(a.email,env,b.role))return deny('not_on_test_allowlist',403);
  const target=await roleAccount(env,a.email,b.role);
  if(!target)return deny('wrong_account_role',403);
  const token=await newSession(env,target);
@@ -353,7 +379,7 @@ async function eraseMember(env,a){
  for(const row of rows.results||[])for(const key of [row.media_key,row.eligibility_key,row.receipt_key])if(key)await env.STAGING_MEDIA.delete(key);
  // Remove pending verification challenges too. Otherwise an unused emailed OTP
  // could recreate the just-deleted TEST member until its expiry.
- await env.DB.prepare("DELETE FROM e2e_email_challenges WHERE email_fingerprint=? AND kind='member'").bind(await sign(env,'email:'+a.email)).run();
+ await env.DB.prepare("DELETE FROM e2e_email_challenges WHERE email_fingerprint=? AND kind='member'").bind(a.mailboxFingerprint||await sign(env,'email:'+a.email)).run();
  await env.DB.prepare('DELETE FROM e2e_accounts WHERE id=?').bind(a.id).run();
  return json({ok:true,deletedTestData:true},200,{'Set-Cookie':cookie('',0)});
 }
@@ -367,10 +393,16 @@ export async function handleE2E(request,env){
  if(isPost&&!sameOrigin(request))return deny('origin_not_allowed',403);
  if(!['GET','POST'].includes(request.method))return deny('method_not_allowed',405);
  try{
+  if(pathname==='/api/e2e/signup-config'&&!isPost){
+   const ready=await publicSignupReady(env);
+   return json(ready?{ok:true,testOnly:true,mode:'public_test',siteKey:env.STAGING_TURNSTILE_SITE_KEY}:
+    {ok:true,testOnly:true,mode:'invited'});
+  }
   if(pathname==='/api/e2e/request-code'&&isPost)return await requestCode(request,env);
   if(pathname==='/api/e2e/verify-code'&&isPost)return await verifyCode(request,env);
   const a=await account(request,env);
   if(!a)return deny('login_required',401);
+  if(!a.email&&['/api/e2e/finalists','/api/e2e/test-vote'].includes(pathname))return deny('not_on_test_allowlist',403);
   const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles});
   if(v2)return v2;
   if(pathname==='/api/e2e/logout'&&isPost)return await logout(request,env,a);
