@@ -207,7 +207,7 @@ export default {
     if(pathname==='/api/staging/ci-read')return handleCiFixtureRead(request,env);
     if(pathname==='/api/staging/registration-test')return handleSampleRegistration(request,env);
     if(pathname.startsWith('/api/'))return failure('not_found',404);
-    if(env.STAGING_PUBLIC_SIGNUP_ENABLED!=='true'||!['/member','/member.html'].includes(pathname))
+    if((env.STAGING_PUBLIC_SIGNUP_ENABLED!=='true'&&env.STAGING_PASSWORD_SIGNUP_ENABLED!=='true')||!['/member','/member.html'].includes(pathname))
       return env.ASSETS.fetch(request);
     // The asset ETag identifies the HTML, not the flag-dependent CSP.
     const headers=new Headers(request.headers);
