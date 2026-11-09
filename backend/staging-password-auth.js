@@ -3,7 +3,10 @@
  */
 import {humanSignupSource} from './staging-public-signup.js';
 
-const ITERATIONS=600000;
+// Cloudflare production caps each PBKDF2 operation at 100,000 rounds.
+// TEST-only: HMAC pepper (Worker secret, not D1) + per-account salt + bounded PBKDF2.
+// Production launch still needs a separately reviewed password KDF and live performance test.
+const ITERATIONS=100000;
 const encoder=new TextEncoder();
 const hex=bytes=>Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
 const randomBytes=n=>crypto.getRandomValues(new Uint8Array(n));
@@ -12,8 +15,11 @@ const validPassword=p=>typeof p==='string'&&[...p].length>=15&&[...p].length<=12
 const equal=(a,b)=>{if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;let difference=0;for(let i=0;i<a.length;i++)difference|=a.charCodeAt(i)^b.charCodeAt(i);return difference===0};
 const keyString=s=>typeof s==='string'&&/^0x[A-Za-z0-9_-]{16,}$/.test(s);
 
-async function derive(password,salt){
- const key=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveBits']);
+async function derive(password,salt,env){
+ const pepper=await crypto.subtle.importKey('raw',encoder.encode(env.STAGING_IDENTITY_SECRET),
+  {name:'HMAC',hash:'SHA-256'},false,['sign']);
+ const keyed=await crypto.subtle.sign('HMAC',pepper,encoder.encode('ghv-password-test-v1:'+password));
+ const key=await crypto.subtle.importKey('raw',keyed,'PBKDF2',false,['deriveBits']);
  return hex(new Uint8Array(await crypto.subtle.deriveBits(
   {name:'PBKDF2',hash:'SHA-256',iterations:ITERATIONS,salt:Uint8Array.from(salt.match(/../g).map(x=>parseInt(x,16)))},key,256)));
 }
@@ -74,7 +80,7 @@ export async function passwordRequest(request,env,context){
   if(typeof env.DB.batch!=='function')return deny('password_test_not_ready',503);
   if(await env.DB.prepare('SELECT account_id FROM e2e_password_accounts WHERE username_fingerprint=?').bind(userHash).first())
    return deny('username_taken',409);
-  const accountId=uuid(),salt=hex(randomBytes(16)),passwordHash=await derive(b.password,salt),rescue=recoveryCode();
+  const accountId=uuid(),salt=hex(randomBytes(16)),passwordHash=await derive(b.password,salt,env),rescue=recoveryCode();
   const rescueHash=await sign(env,'password-rescue:'+rescue);
   try{
    await env.DB.batch([
@@ -94,7 +100,7 @@ export async function passwordRequest(request,env,context){
  if(record.locked_until>now)return deny('account_temporarily_locked',429);
  if(action==='login'){
   if(!validPassword(b.password))return deny('invalid_credentials',401);
-  const candidate=await derive(b.password,record.password_salt);
+  const candidate=await derive(b.password,record.password_salt,env);
   if(!equal(candidate,record.password_hash)){
    await env.DB.prepare('UPDATE e2e_password_accounts SET failed_count=failed_count+1,locked_until=CASE WHEN failed_count>=4 THEN ? ELSE locked_until END WHERE account_id=?')
     .bind(now+900,record.account_id).run();
