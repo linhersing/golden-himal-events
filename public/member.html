@@ -22,10 +22,51 @@
 <p class="notice"><strong data-l="testOnly">TEST ENVIRONMENT</strong> <span data-l="testBoundary">No real payment. TEST registration is not an official accepted entry.</span></p>
 <div id="member-status" class="feedback" role="status" aria-live="polite" hidden></div>
 <section id="signin-panel" class="panel">
+<section id="password-portal" hidden aria-label="Username TEST authentication">
+ <p id="password-not-ready" class="notice" hidden></p>
+ <div id="password-auth-disclaimer" class="notice" data-pw="ready"></div>
+ <div id="password-auth-screen" hidden>
+  <h3 data-pw="title">Username &amp; password</h3>
+  <p class="page-intro" data-pw="intro">No Email required to join TEST.</p>
+  <div class="password-tabs" role="group" aria-label="Authentication mode">
+   <button type="button" data-pw-tab="login" aria-pressed="true" data-pw="login">Log in</button>
+   <button type="button" data-pw-tab="register" aria-pressed="false" data-pw="create">Create TEST account</button>
+   <button type="button" data-pw-tab="recover" aria-pressed="false" data-pw="recover">Recovery code</button>
+  </div>
+  <form id="password-login-form" class="password-auth-form" autocomplete="on">
+   <label class="field"><span data-pw="username">Username</span><input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="4" maxlength="32" required></label>
+   <label class="field"><span data-pw="password">Password</span><input name="password" type="password" autocomplete="current-password" minlength="15" maxlength="128" required></label>
+   <button type="submit" class="btn btn-primary" data-pw="doLogin">Log in</button>
+  </form>
+  <form id="password-register-form" class="password-auth-form" hidden>
+   <label class="field"><span data-pw="username">Username</span><input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="4" maxlength="32" required></label>
+   <label class="field"><span data-pw="password">Password</span><input name="password" type="password" autocomplete="new-password" minlength="15" maxlength="128" required></label>
+   <label class="field"><span data-pw="passwordAgain">Confirm password</span><input name="confirm" type="password" autocomplete="new-password" minlength="15" maxlength="128" required></label>
+   <div id="password-turnstile" aria-label="Human verification"></div>
+   <button type="submit" class="btn btn-primary" data-pw="doCreate">Create TEST account</button>
+  </form>
+  <form id="password-recover-form" class="password-auth-form" hidden>
+   <label class="field"><span data-pw="username">Username</span><input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="4" maxlength="32" required></label>
+   <label class="field"><span data-pw="recoverCode">Recovery code</span><input name="recovery_code" autocapitalize="characters" spellcheck="false" autocomplete="off" required></label>
+   <label class="field"><span data-pw="newPassword">New password</span><input name="password" type="password" autocomplete="new-password" minlength="15" maxlength="128" required></label>
+   <button type="submit" class="btn btn-primary" data-pw="doRecover">Reset password</button>
+  </form>
+ </div>
+ <div id="password-rescue-screen" hidden>
+  <h3 data-pw="rescueTitle">Save your recovery code</h3>
+  <p class="notice" data-pw="rescueHint">Shown only once. Keep it private.</p>
+  <div class="password-recovery-code"><output id="password-recovery-output" aria-live="polite"></output></div>
+  <div class="form-actions"><button class="btn btn-soft" id="password-copy-code" type="button">Copy code</button><button class="btn btn-primary" id="password-rescue-continue" type="button" data-pw="continue">I saved it</button></div>
+ </div>
+ <div id="password-feedback" class="feedback" role="status" aria-live="polite" hidden></div>
+</section>
+<details id="email-signin-wrap" class="password-legacy" open>
+<summary>Existing invited Email account / 原有受邀 Email 帳號</summary>
 <h2 data-l="signinHeader">Log in or create an account</h2><p data-l="emailIntro">Enter your email address. We will send a six-digit, one-time verification code.</p>
 <form id="member-email-form"><label class="field"><span data-l="email">Email address</span><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><div id="signup-turnstile" hidden></div><div class="form-actions"><button class="btn btn-primary" type="submit" data-l="sendCode">Send verification code</button></div></form>
 <form id="member-code-form" hidden><label class="field"><span data-l="sixCode">Six-digit code from email</span><input name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" required></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-l="logIn">Log in</button><button class="btn btn-soft" type="button" id="change-mail" data-l="otherEmail">Use another email</button></div></form>
 <p class="under-actions" id="signup-mode" data-l="invitedOnly">Only pre-approved accounts can test this site. Public sign-ups are not open.</p>
+</details>
 </section>
 <section id="member-panel" hidden>
 <div class="panel member-home">
@@ -100,4 +141,4 @@
 </details>
 </section>
 <footer class="site-footer"><a href="./" class="small-link" data-l="home">Home</a><small data-l="footer">TEST portal · No real payment or official registration.</small></footer>
-</main><script src="./page-locale.js" defer></script><script src="./simple.js" defer></script></body></html>
+</main><script src="./page-locale.js" defer></script><script src="./simple.js" defer></script><script src="./password-member.js" defer></script></body></html>
