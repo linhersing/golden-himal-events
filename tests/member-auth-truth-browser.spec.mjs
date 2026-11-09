@@ -248,7 +248,9 @@ test('main member page sends a fresh Turnstile token and verifies the same mailb
   if(endpoint==='me'&&loggedIn)return send({ok:true,account:{role:'member',available_roles:['member']}});
   if(endpoint==='applications')return send({ok:true,applications:[]});
   if(endpoint==='request-code'||endpoint==='verify-code'){
-   requests.push(r.request().postDataJSON());
+   const payload=r.request().postDataJSON();
+   if(endpoint==='request-code'&&!payload.turnstile_token)return send({ok:false,error:'human_check_required'},403);
+   requests.push(payload);
    if(endpoint==='request-code')return send({ok:true,challenge_id:'synthetic-challenge'});
    loggedIn=true;
    return send({ok:true,role:'member'});

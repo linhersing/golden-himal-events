@@ -195,15 +195,14 @@ const signupConfig=staff?Promise.resolve():api('signup-config').then(config=>{
 mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  await signupConfig;
  const {email}=formValues(mailForm);
- if(publicTest&&!humanToken)throw Error('human_check_required');
  const payload={email,role:staff?'staff':role};
- if(publicTest)payload.turnstile_token=humanToken;
+ if(humanToken)payload.turnstile_token=humanToken;
  try{
   const v=await api('request-code',payload);
   challenge=v.challenge_id;
   challengeEmail=publicTest?email:undefined;
  }finally{
-  if(publicTest){
+  if(payload.turnstile_token){
    humanToken=undefined;
    try{window.turnstile.reset(widgetId)}catch{status(mt('signupWidgetUnavailable'),true)}
   }
