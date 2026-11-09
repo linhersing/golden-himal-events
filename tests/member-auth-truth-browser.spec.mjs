@@ -11,7 +11,8 @@ test('member Email integration fails closed when not configured',async({page})=>
  await page.route('**/api/e2e/**',async r=>r.fulfill({status:503,json:{ok:false,error:'e2e_not_configured'}}));
  await page.goto('/member.html#register');
  await page.locator('[data-lang=en]').click();
- await page.locator('#member-email-form [name=email]').fill('fictional@example.invalid');
+ await page.locator('#email-legacy-summary').click();
+  await page.locator('#member-email-form [name=email]').fill('fictional@example.invalid');
  await page.locator('#member-email-form button').click();
  await expect(page.locator('#member-status')).toContainText('Email login is not available yet');
  await expect(page.locator('#member-panel')).toBeHidden();
@@ -191,7 +192,8 @@ test('mobile news and member pages retain full Chinese layout without horizontal
  await page.setViewportSize({width:375,height:812});
  await page.goto('/');await page.locator('[data-lang=zh]').click();
  await page.goto('/member.html');
- await expect(page.locator('#member-email-form')).toBeVisible();
+ await expect(page.locator('#password-pending-screen')).toBeVisible();
+  await expect(page.locator('#member-email-form')).toBeHidden();
  await expect(page.locator('h1')).toContainText('歌手報名');
  await page.screenshot({path:'test-results/ghv-trilingual/03-mobile-member-login-zh.png'});
  await page.goto('/news.html');
@@ -261,7 +263,8 @@ test('main member page sends a fresh Turnstile token and verifies the same mailb
  await page.locator('[data-lang=en]').click();
  await expect(page.locator('#signup-mode')).toContainText('Self-service test signup is open');
  await expect(page.getByText('No real payment.',{exact:false}).first()).toBeVisible();
- await page.locator('#member-email-form [name=email]').fill('singer@example.invalid');
+ await page.locator('#email-legacy-summary').click();
+  await page.locator('#member-email-form [name=email]').fill('singer@example.invalid');
  await page.locator('#member-email-form button[type=submit]').click();
  await expect(page.locator('#member-status')).toContainText('Complete the human verification');
  expect(requests).toHaveLength(0);
