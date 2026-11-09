@@ -207,6 +207,21 @@ export default {
     if(pathname==='/api/staging/ci-read')return handleCiFixtureRead(request,env);
     if(pathname==='/api/staging/registration-test')return handleSampleRegistration(request,env);
     if(pathname.startsWith('/api/'))return failure('not_found',404);
-    return env.ASSETS.fetch(request);
+    if(env.STAGING_PUBLIC_SIGNUP_ENABLED!=='true'||!['/member','/member.html'].includes(pathname))
+      return env.ASSETS.fetch(request);
+    // The asset ETag identifies the HTML, not the flag-dependent CSP.
+    const headers=new Headers(request.headers);
+    headers.delete('If-None-Match');
+    headers.delete('If-Modified-Since');
+    const asset=await env.ASSETS.fetch(new Request(request,{headers}));
+    if(!asset.headers.get('Content-Type')?.includes('text/html'))return asset;
+    const policy=asset.headers.get('Content-Security-Policy');
+    if(!policy?.includes("script-src 'self';"))return asset;
+    const turnstile='https://challenges.cloudflare.com';
+    const response=new Response(asset.body,asset);
+    response.headers.set('Cache-Control','no-store');
+    response.headers.set('Content-Security-Policy',policy.replace("script-src 'self';",
+      "script-src 'self' "+turnstile+"; frame-src "+turnstile+";"));
+    return response;
   }
 };

@@ -218,3 +218,92 @@ test('the actual OTP route can use Mailgun without an EMAIL binding and keeps co
   assert.equal(verified.status,200);assert.equal(db.prepare('SELECT role FROM e2e_accounts').get().role,'member');
  }finally{db.close()}
 });
+
+test('public TEST signup requires a verified sender and Turnstile, and keeps singer records isolated',async t=>{
+ const db=new DatabaseSync(':memory:');
+ t.after(()=>db.close());
+ db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ const inbox=[],tokens=new Set(),hostname=new URL(host).hostname;
+ const env={
+  DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
+  STAGING_IDENTITY_SECRET:'G'.repeat(64),STAGING_ALLOWED_EMAILS:'owner@test.invalid',
+  STAGING_REVIEWER_EMAILS:'first@test.invalid',
+  STAGING_EMAIL_PROVIDER:'resend',STAGING_FROM_EMAIL:'onboarding@resend.dev',
+  STAGING_RESEND_TEST_RECIPIENT:'owner@test.invalid',STAGING_RESEND_API_KEY:'re_'+'x'.repeat(30),
+  STAGING_TURNSTILE_SITE_KEY:'0x4AAAAAA-synthetic-site',
+  STAGING_TURNSTILE_SECRET_KEY:'0x4AAAAAA-synthetic-secret'
+ };
+ t.mock.method(globalThis,'fetch',async (url,options)=>{
+  if(url==='https://challenges.cloudflare.com/turnstile/v0/siteverify'){
+   const token=JSON.parse(options.body).response;
+   const success=!tokens.has(token);
+   tokens.add(token);
+   return Response.json({success,hostname:token==='wrong-host'?'elsewhere.test':hostname,action:'ghv_signup'});
+  }
+  assert.equal(url,'https://api.resend.com/emails');
+  inbox.push(JSON.parse(options.body));
+  return Response.json({id:'synthetic-mail'});
+ });
+ const send=(email,turnstile_token,role='member',ip='203.0.113.1')=>handleE2E(new Request(host+'/api/e2e/request-code',{
+  method:'POST',headers:{Origin:host,'Content-Type':'application/json',...(ip?{'CF-Connecting-IP':ip}:{})},
+  body:JSON.stringify({email,role,turnstile_token})
+ }),env);
+ const config=async()=>(await (await handleE2E(get('/api/e2e/signup-config'),env)).json()).mode;
+ assert.equal(await config(),'invited');
+ assert.equal((await send('first@test.invalid','off')).status,403);
+ env.STAGING_PUBLIC_SIGNUP_ENABLED='true';
+ assert.equal(await config(),'invited','sandbox cannot open registration');
+ env.STAGING_FROM_EMAIL='test@sender.test.invalid';
+ env.STAGING_RESEND_VERIFIED_DOMAIN='sender.test.invalid';
+ assert.equal(await config(),'invited','missing schema cannot open registration');
+ const migration=await readFile(new URL('../backend/migrations/1004_self_service_signup_STAGING_ONLY.sql',import.meta.url),'utf8');
+ db.exec(migration);
+ db.exec(migration);
+ assert.equal(await config(),'public_test');
+ assert.equal((await send('first@test.invalid',undefined)).status,403);
+ assert.equal((await send('first@test.invalid','wrong-host')).status,403);
+ assert.equal((await send('first@test.invalid','no-ip','member',null)).status,403);
+ assert.equal((await send('first@test.invalid','staff','organizer')).status,403);
+ assert.equal(inbox.length,0);
+ async function register(email,token,category){
+  const started=await send(email,token);
+  assert.equal(started.status,200,await started.clone().text());
+  const {challenge_id}=await started.json();
+  const otp=inbox.at(-1).text.match(/\b\d{6}\b/)[0];
+  assert.equal(inbox.at(-1).to[0],email);
+  assert.equal((await send('other@test.invalid',token)).status,403);
+  const verify=(mail)=>handleE2E(req('/api/e2e/verify-code',{challenge_id,code:otp,email:mail}),env);
+  assert.equal((await verify('wrong@test.invalid')).status,401);
+  const verified=await verify(email);
+  assert.equal(verified.status,200,await verified.clone().text());
+  assert.deepEqual((await verified.json()).available_roles,['member']);
+  assert.equal((await verify(email)).status,401);
+  const cookie=verified.headers.get('set-cookie').split(';')[0];
+  assert.equal((await handleE2E(req('/api/e2e/switch-role',{role:'reviewer'},cookie),env)).status,403);
+  assert.equal((await handleE2E(get('/api/e2e/finalists',cookie),env)).status,403);
+  assert.equal((await handleE2E(req('/api/e2e/test-vote',{application_id:'fictional'},cookie),env)).status,403);
+  const request={round_code:'2027-01',category,province:'gandaki',location_basis:'residence',
+   affiliation:'TEST',stage_name:'TEST SINGER',song_title:'TEST SONG',original_artist:'TEST ORIGINAL',
+   song_language:'Nepali',song_key:'C',demo_url:'https://youtu.be/fictional',
+   adult_confirmed:category==='community',student_confirmed:category==='university',no_exclusive_contract:true};
+  const saved=await handleE2E(req('/api/e2e/applications',request,cookie),env);
+  assert.equal(saved.status,201,await saved.clone().text());
+  return cookie;
+ }
+ const first=await register('first@test.invalid','first','community');
+ const second=await register('second@test.invalid','second','university');
+ for(const [cookie,category] of [[first,'community'],[second,'university']]){
+  const {applications}=await (await handleE2E(get('/api/e2e/applications',cookie),env)).json();
+  assert.deepEqual(applications.map(a=>a.category),[category]);
+ }
+ for(let i=0;i<6;i++)assert.equal((await send('load'+i+'@test.invalid','load'+i)).status,200);
+ assert.equal((await send('limited@test.invalid','limited')).status,429);
+ const record=db.prepare('INSERT INTO e2e_public_signup_attempts VALUES(?,?,?)');
+ for(let i=0;i<32;i++)record.run('synthetic-'+i,'synthetic-source',Math.floor(Date.now()/1000));
+ assert.equal((await send('global@test.invalid','global','member','203.0.113.2')).status,429);
+ assert.equal((await send('owner@test.invalid',undefined)).status,200,'public budget does not block the invited owner');
+ env.STAGING_PUBLIC_SIGNUP_ENABLED='false';
+ assert.equal(await config(),'invited');
+ assert.equal((await handleE2E(get('/api/e2e/me',first),env)).status,401);
+ assert.equal((await send('owner@test.invalid',undefined)).status,200);
+});

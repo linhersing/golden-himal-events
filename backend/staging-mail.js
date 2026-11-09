@@ -1,14 +1,21 @@
 // STAGING delivery adapters only. No API keys, inboxes or provider responses are logged.
 // Resend is restricted to a single approved test recipient until a sender domain is verified.
 const sandbox=env=>typeof env.STAGING_MAILGUN_DOMAIN==='string'&&/^sandbox[a-z0-9]+\.mailgun\.org$/.test(env.STAGING_MAILGUN_DOMAIN);
-const emailAddress=v=>typeof v==='string'&&/^[-a-zA-Z0-9._+]+@[-a-zA-Z0-9.]+\.[a-zA-Z]{2,}$/.test(v);
+export const emailAddress=v=>typeof v==='string'&&/^[-a-zA-Z0-9._+]+@[-a-zA-Z0-9.]+\.[a-zA-Z]{2,}$/.test(v);
+export function verifiedResendSender(env){
+ const domain=env.STAGING_RESEND_VERIFIED_DOMAIN;
+ return env.STAGING_EMAIL_PROVIDER==='resend'&&typeof domain==='string'&&
+  /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(domain)&&
+  !/(^|\.)(resend|workers)\.dev$/.test(domain)&&emailAddress(env.STAGING_FROM_EMAIL)&&
+  env.STAGING_FROM_EMAIL.split('@')[1]===domain;
+}
 export function mailProviderReady(env){
  if(env.STAGING_EMAIL_PROVIDER==='mailgun')return sandbox(env)&&
   typeof env.STAGING_MAILGUN_API_KEY==='string'&&env.STAGING_MAILGUN_API_KEY.length>=32&&
   ['us','eu'].includes(env.STAGING_MAILGUN_REGION||'us');
  if(env.STAGING_EMAIL_PROVIDER==='resend')return typeof env.STAGING_RESEND_API_KEY==='string'&&
   /^re_[A-Za-z0-9_-]{20,}$/.test(env.STAGING_RESEND_API_KEY)&&
-  emailAddress(env.STAGING_RESEND_TEST_RECIPIENT);
+  (verifiedResendSender(env)||emailAddress(env.STAGING_RESEND_TEST_RECIPIENT));
  if(env.STAGING_EMAIL_PROVIDER&&env.STAGING_EMAIL_PROVIDER!=='cloudflare')return false;
  return typeof env.EMAIL?.send==='function';
 }
@@ -17,7 +24,7 @@ export function mailSenderReady(env){
  if(!emailAddress(sender))return false;
  if(env.STAGING_EMAIL_PROVIDER==='mailgun')return sandbox(env)&&sender.split('@')[1]===env.STAGING_MAILGUN_DOMAIN;
  if(env.STAGING_EMAIL_PROVIDER==='resend'){
-  // This app has no verified custom email domain yet. Deliberately do not claim public delivery.
+  if(env.STAGING_RESEND_VERIFIED_DOMAIN)return verifiedResendSender(env);
   return sender==='onboarding@resend.dev'&&emailAddress(env.STAGING_RESEND_TEST_RECIPIENT);
  }
  return true;
@@ -30,7 +37,8 @@ export async function sendTestEmail(env,message){
  try{
   if(env.STAGING_EMAIL_PROVIDER==='resend'){
    // Fail closed: Resend's shared test sender can send only to the owner's verified email.
-   if(typeof message.to!=='string'||message.to.toLowerCase()!==env.STAGING_RESEND_TEST_RECIPIENT.toLowerCase())
+   if(verifiedResendSender(env)?!emailAddress(message.to):
+    typeof message.to!=='string'||message.to.toLowerCase()!==env.STAGING_RESEND_TEST_RECIPIENT.toLowerCase())
     throw Error('test_recipient_not_allowed');
    console.info(JSON.stringify({event:'staging_email_fetch_start',provider:'resend'}));
    const response=await fetch('https://api.resend.com/emails',{

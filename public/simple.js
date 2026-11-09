@@ -105,7 +105,7 @@ function setupProfileFields(ready){
 function status(text,bad=false){if(!statusBox)return;statusBox.hidden=false;statusBox.className='feedback'+(bad?' error':' success');statusBox.textContent=text;statusBox.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function friendlyError(e){
  if(page==='member'){
- const common={"e2e_not_configured":"errNoEmail","test_email_service_unavailable":"errMail","not_on_test_allowlist":"errAllow","expired_or_invalid_code":"errInvalid","login_required":"errLogin"};
+ const common={"e2e_not_configured":"errNoEmail","test_email_service_unavailable":"errMail","not_on_test_allowlist":"errAllow","expired_or_invalid_code":"errInvalid","login_required":"errLogin","human_check_required":"signupHumanRequired","too_many_code_requests":"signupLimited"};
  if(common[e?.message])return mt(common[e.message]);
  const errors={
  member_only:'This account is not a singer account.',
@@ -166,9 +166,61 @@ async function loadSession(){try{
  }catch(e){account=null;authUI(false);if(staff)staffTabs();if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
 function setupAuth(){
 const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
-mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{const {email}=formValues(mailForm);const v=await api('request-code',{email,role:staff?'staff':role});challenge=v.challenge_id;authForms(false);status(page==='member'?mt('otpRequested'):'驗證信已要求寄送，請查看 Email（僅限受邀測試帳號）。');codeForm.querySelector('input').focus()})});
-codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{await api('verify-code',{challenge_id:challenge,code:String(formValues(codeForm).code||'').trim()});codeForm.reset();await loadSession();if(account)status(page==='member'?mt('signedIn'):'已登入。')})});
-const change=$(staff?'back-change':'change-mail');change?.addEventListener('click',()=>{authForms(true);challenge=null;statusBox.hidden=true});
+let challengeEmail,publicTest=false,humanToken,widgetId;
+const signupConfig=staff?Promise.resolve():api('signup-config').then(config=>{
+ if(config.mode!=='public_test'||typeof config.siteKey!=='string')return;
+ publicTest=true;
+ const notice=$('signup-mode'),widget=$('signup-turnstile');
+ notice.dataset.l='signupPublicTest';
+ notice.textContent=mt('signupPublicTest');
+ widget.hidden=false;
+ const script=document.createElement('script');
+ script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+ script.async=true;
+ const clearToken=()=>{humanToken=undefined};
+ script.onload=()=>{
+  window.turnstile.ready(()=>{
+   try{
+    widgetId=window.turnstile.render(widget,{
+     sitekey:config.siteKey,size:'compact',action:'ghv_signup','response-field':false,
+     callback:token=>{humanToken=token},
+     'expired-callback':clearToken,'error-callback':clearToken
+    });
+   }catch{status(mt('signupWidgetUnavailable'),true)}
+  });
+ };
+ script.onerror=()=>status(mt('signupWidgetUnavailable'),true);
+ document.head.append(script);
+}).catch(()=>{});
+mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+ await signupConfig;
+ const {email}=formValues(mailForm);
+ if(publicTest&&!humanToken)throw Error('human_check_required');
+ const payload={email,role:staff?'staff':role};
+ if(publicTest)payload.turnstile_token=humanToken;
+ try{
+  const v=await api('request-code',payload);
+  challenge=v.challenge_id;
+  challengeEmail=publicTest?email:undefined;
+ }finally{
+  if(publicTest){
+   humanToken=undefined;
+   try{window.turnstile.reset(widgetId)}catch{status(mt('signupWidgetUnavailable'),true)}
+  }
+ }
+ authForms(false);
+ status(staff?'驗證信已要求寄送，請查看 Email（僅限受邀測試帳號）。':mt(publicTest?'signupCodeRequested':'otpRequested'));
+ codeForm.querySelector('input').focus();
+})});
+codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+ const code=String(formValues(codeForm).code||'').trim();
+ await api('verify-code',{challenge_id:challenge,code,email:challengeEmail});
+ challengeEmail=undefined;
+ codeForm.reset();
+ await loadSession();
+ if(account)status(staff?'已登入。':mt('signedIn'));
+})});
+const change=$(staff?'back-change':'change-mail');change?.addEventListener('click',()=>{authForms(true);challenge=null;challengeEmail=undefined;codeForm.reset();statusBox.hidden=true});
 $(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff)staffTabs();challenge=null;authForms(true);status(page==='member'?mt('signedOut'):'已登出。')}));
 }
 async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else await renderJudge()}else await renderMember()}
