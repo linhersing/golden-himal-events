@@ -85,7 +85,7 @@ test('username signup stays closed unless flag, Turnstile and isolated migration
   assert.equal((await (await handleE2E(get('/api/e2e/password-config'),env)).json()).enabled,false);
   assert.equal((await handleE2E(req('/api/e2e/password-register',{username:'testname',password:'an appropriately long password'}),env)).status,503);
   db.exec(await readFile(new URL('../backend/migrations/1005_password_members_STAGING_ONLY.sql',import.meta.url),'utf8'));
-  assert.equal((await (await handleE2E(get('/api/e2e/password-config'),{...env,STAGING_PASSWORD_SIGNUP_ENABLED:'false'})).json()).enabled,false);
+  assert.equal((await handleE2E(get('/api/e2e/password-config'),{...env,STAGING_PASSWORD_SIGNUP_ENABLED:'false'})).status,503,'with no Email fallback and password switch off the API must fail closed');
   assert.equal((await (await handleE2E(get('/api/e2e/password-config'),{...env,STAGING_TURNSTILE_SECRET_KEY:''})).json()).enabled,false);
  }finally{db.close()}
 });
