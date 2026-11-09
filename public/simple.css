@@ -208,3 +208,13 @@
 .password-legacy{margin:12px 0 0;border-top:1px solid #e3d8c5;padding-top:13px}
 .password-legacy>summary{cursor:pointer;font-size:.87rem;color:#745a3d;font-weight:700;margin:5px 0 15px}
 @media(max-width:560px){#password-portal{padding:13px}.password-tabs{gap:5px}.password-tabs button{padding:8px 4px;font-size:.72rem;min-height:52px}.password-recovery-code{font-size:.85rem}}
+
+/* Username-first member page: never cut off the three mobile steps. */
+body[data-page="member"] .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+body[data-page="member"] .steps span{display:flex;align-items:center;justify-content:center;min-width:0;overflow-wrap:anywhere;line-height:1.4}
+body[data-page="member"] #password-practice-link{display:inline-flex;justify-content:center;width:100%;margin-top:14px;text-align:center}
+body[data-page="member"] #password-pending-screen .password-pending-preview{margin-top:12px}
+@media(max-width:460px){
+ body[data-page="member"] .steps{gap:5px}
+ body[data-page="member"] .steps span{font-size:.72rem;padding:10px 5px}
+}
