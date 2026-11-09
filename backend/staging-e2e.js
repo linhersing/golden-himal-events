@@ -1,4 +1,5 @@
 import {humanSignupSource,publicSignupReady,reservePublicSend} from './staging-public-signup.js';
+import {passwordModeReady,passwordIdentity,passwordRequest} from './staging-password-auth.js';
 import {emailAddress,mailProviderReady,mailSenderReady,sendTestEmail} from './staging-mail.js';
 import {validPerformanceLink} from '../public/performance-link.js';
 import {handleV2Route} from './staging-v2-flow.js';
@@ -62,14 +63,16 @@ async function newSession(env,a){
 }
 function publicAccount(a,env){return {id:a.id,role:a.role,available_roles:a.email?grantedRoles(a.email,env):['member']}}
 async function ownsApplication(env,a,ownerId){
+ if(a.usernameAccount)return a.id===ownerId;
  const owner=await env.DB.prepare('SELECT email_fingerprint FROM e2e_accounts WHERE id=?').bind(ownerId).first();
  if(!owner)return false;
  return owner.email_fingerprint===await sign(env,'email:'+a.email)||owner.email_fingerprint===await sign(env,'role-account:member:'+a.email);
 }
 function configured(env){
- return env.STAGING_E2E_ENABLED==='true'&&env.DB&&mailProviderReady(env)&&mailSenderReady(env)&&
+ return env.STAGING_E2E_ENABLED==='true'&&env.DB&&
  typeof env.STAGING_IDENTITY_SECRET==='string'&&env.STAGING_IDENTITY_SECRET.length>=32&&
- emails(env,'STAGING_ALLOWED_EMAILS').length>0;
+ ((mailProviderReady(env)&&mailSenderReady(env)&&emails(env,'STAGING_ALLOWED_EMAILS').length>0)||
+  env.STAGING_PASSWORD_SIGNUP_ENABLED==='true');
 }
 function cookie(token,age=MAX_AGE){return COOKIE+'='+token+'; Path=/; Max-Age='+age+'; HttpOnly; Secure; SameSite=Lax'}
 async function bodyJSON(request,max=2600){
@@ -86,6 +89,7 @@ async function account(request,env){
  if(!a||!ROLES.includes(a.role))return null;
  const email=await emailForFingerprint(env,a.email_fingerprint,a.role);
  if(email)return {id:a.id,role:a.role,email};
+ if(a.role==='member'&&await passwordIdentity(env,a.id))return {id:a.id,role:'member',usernameAccount:true};
  if(a.role!=='member'||!await publicSignupReady(env))return null;
  const proof=await env.DB.prepare('SELECT mailbox_fingerprint FROM e2e_public_signup_accounts WHERE account_id=?').bind(a.id).first();
  return proof?{id:a.id,role:a.role,mailboxFingerprint:proof.mailbox_fingerprint}:null;
@@ -379,7 +383,7 @@ async function eraseMember(env,a){
  for(const row of rows.results||[])for(const key of [row.media_key,row.eligibility_key,row.receipt_key])if(key)await env.STAGING_MEDIA.delete(key);
  // Remove pending verification challenges too. Otherwise an unused emailed OTP
  // could recreate the just-deleted TEST member until its expiry.
- await env.DB.prepare("DELETE FROM e2e_email_challenges WHERE email_fingerprint=? AND kind='member'").bind(a.mailboxFingerprint||await sign(env,'email:'+a.email)).run();
+ if(a.mailboxFingerprint||a.email)await env.DB.prepare("DELETE FROM e2e_email_challenges WHERE email_fingerprint=? AND kind='member'").bind(a.mailboxFingerprint||await sign(env,'email:'+a.email)).run();
  await env.DB.prepare('DELETE FROM e2e_accounts WHERE id=?').bind(a.id).run();
  return json({ok:true,deletedTestData:true},200,{'Set-Cookie':cookie('',0)});
 }
@@ -398,6 +402,9 @@ export async function handleE2E(request,env){
    return json(ready?{ok:true,testOnly:true,mode:'public_test',siteKey:env.STAGING_TURNSTILE_SITE_KEY}:
     {ok:true,testOnly:true,mode:'invited'});
   }
+  if(pathname==='/api/e2e/password-config'&&!isPost){const ready=await passwordModeReady(env);return json(ready?{ok:true,enabled:true,siteKey:env.STAGING_TURNSTILE_SITE_KEY,testOnly:true}:{ok:true,enabled:false,testOnly:true});}
+  if(['/api/e2e/password-register','/api/e2e/password-login','/api/e2e/password-recover'].includes(pathname)&&isPost)
+   return await passwordRequest(request,env,{json,deny,uuid,NOW,bodyJSON,sign,newSession,cookie});
   if(pathname==='/api/e2e/request-code'&&isPost)return await requestCode(request,env);
   if(pathname==='/api/e2e/verify-code'&&isPost)return await verifyCode(request,env);
   const a=await account(request,env);
