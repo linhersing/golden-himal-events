@@ -1,8 +1,11 @@
 // Read-only live check for the CURRENT invited member OTP preview.
 // GET only: does not request any codes, send emails, mutate D1, or reveal private data.
 const BASE='https://golden-himal-voice-preview.linhersing.workers.dev';
+const bannerMarkers=['TEST MODE','請勿正式報名或付款','Please do not register or make payments','कृपया दर्ता वा भुक्तानी नगर्नुहोस्'];
 const endpoints=[
-  ['/member.html',['id="member-email-form"','id="member-code-form"','id="member-status"','simple.js']],
+  ['/',['class="test-site-banner wrap"',...bannerMarkers]],
+  ['/member.html',['class="test-site-banner wrap"',...bannerMarkers,'id="member-email-form"','id="member-code-form"','id="member-status"','simple.js']],
+  ['/news.html',['class="test-site-banner wrap"',...bannerMarkers]],
   ['/simple.js',['request-code','test_email_service_unavailable','verify-code']]
 ];
 async function read(path) {
