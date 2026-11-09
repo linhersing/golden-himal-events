@@ -17,14 +17,23 @@
 <main id="main" class="page-shell">
 <p class="section-eyebrow" data-l="kicker">SINGER PORTAL</p>
 <h1 class="page-heading" data-l="memberTitle">Singer registration & login</h1>
-<p class="page-intro" data-l="memberIntro">Get your email code, complete one application, then return any time to check your entry.</p>
-<div class="steps" aria-label="Application steps"><span class="active" id="step-login" data-l="stepLogin">1 · Email login</span><span id="step-apply" data-l="stepApply">2 · Song & details</span><span id="step-checkout" data-l="stepPay">3 · Test checkout</span></div>
+<p class="page-intro" id="member-auth-intro">Username-and-password TEST sign-in is being prepared. You can still rehearse the journey below.</p>
+<div class="steps" aria-label="Application steps"><span class="active" id="step-login">1 · Account sign-in</span><span id="step-apply" data-l="stepApply">2 · Song & details</span><span id="step-checkout" data-l="stepPay">3 · Test checkout</span></div>
 <p class="notice"><strong data-l="testOnly">TEST ENVIRONMENT</strong> <span data-l="testBoundary">No real payment. TEST registration is not an official accepted entry.</span></p>
 <div id="member-status" class="feedback" role="status" aria-live="polite" hidden></div>
 <section id="signin-panel" class="panel">
 <section id="password-portal" hidden aria-label="Username TEST authentication">
  <p id="password-not-ready" class="notice" hidden></p>
- <div id="password-auth-disclaimer" class="notice" data-pw="ready"></div>
+ <div id="password-pending-screen" hidden>
+  <h3 data-pw="title">Username &amp; password</h3>
+  <div class="password-auth-form password-pending-preview" aria-label="Disabled preview of username and password sign-in">
+   <label class="field"><span data-pw="username">Username</span><input name="username-preview" type="text" autocomplete="off" disabled aria-disabled="true"></label>
+   <label class="field"><span data-pw="password">Password</span><input name="password-preview" type="password" autocomplete="off" disabled aria-disabled="true"></label>
+   <button type="button" class="btn btn-primary" disabled data-pw="doLogin">Log in</button>
+  </div>
+  <a id="password-practice-link" class="btn btn-soft" href="./practice.html">Try the no-email internal practice</a>
+ </div>
+ <div id="password-auth-disclaimer" class="notice" data-pw="ready" hidden></div>
  <div id="password-auth-screen" hidden>
   <h3 data-pw="title">Username &amp; password</h3>
   <p class="page-intro" data-pw="intro">No Email required to join TEST.</p>
@@ -60,8 +69,8 @@
  </div>
  <div id="password-feedback" class="feedback" role="status" aria-live="polite" hidden></div>
 </section>
-<details id="email-signin-wrap" class="password-legacy" open>
-<summary>Existing invited Email account / 原有受邀 Email 帳號</summary>
+<details id="email-signin-wrap" class="password-legacy">
+<summary id="email-legacy-summary">Existing invited account (legacy test)</summary>
 <h2 data-l="signinHeader">Log in or create an account</h2><p data-l="emailIntro">Enter your email address. We will send a six-digit, one-time verification code.</p>
 <form id="member-email-form"><label class="field"><span data-l="email">Email address</span><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><div id="signup-turnstile" hidden></div><div class="form-actions"><button class="btn btn-primary" type="submit" data-l="sendCode">Send verification code</button></div></form>
 <form id="member-code-form" hidden><label class="field"><span data-l="sixCode">Six-digit code from email</span><input name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" required></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-l="logIn">Log in</button><button class="btn btn-soft" type="button" id="change-mail" data-l="otherEmail">Use another email</button></div></form>
