@@ -70,3 +70,15 @@ test('backoffice roster retains one guarded staff entry and one scoring workbenc
  assert.match(js,/api\('score',payload\)/);
  assert.doesNotMatch(js,/ghv_photo_url|ghv_gender/);
 });
+
+
+test('TEST MODE notice is visible on the public home, member, and news pages',async()=>{
+ const [home,member,news,css]=await Promise.all([read('index.html'),read('public/member.html'),read('public/news.html'),read('public/simple.css')]);
+ for(const html of [home,member,news]){
+  assert.match(html,/class="test-site-banner wrap"/);
+  assert.match(html,/請勿正式報名或付款/);
+  assert.match(html,/Please do not register or make payments/);
+  assert.match(html,/कृपया दर्ता वा भुक्तानी नगर्नुहोस्/);
+ }
+ assert.match(css,/\.test-site-banner/);
+});
