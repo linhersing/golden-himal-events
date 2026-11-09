@@ -13,12 +13,18 @@ async function mockMemberApi(page,state){
   const url=new URL(route.request().url()),key=url.pathname.split('/').pop(),
    method=route.request().method();
   let result={ok:true},status=200;
-  if(key==='me')result={ok:true,account:{id:'SYNTH-MEMBER-ACCOUNT',role:'member',available_roles:['member']},profile_enabled:false};
+  if(key==='me')result={ok:true,account:{id:'SYNTH-MEMBER-ACCOUNT',role:'member',available_roles:['member']},profile_enabled:state.profileEnabled??false};
   else if(key==='applications'&&method==='GET')result={ok:true,applications:state.entries};
   else if(key==='update-application'&&method==='POST'){
    const payload=route.request().postDataJSON();
    writes.push(payload);
-   state.entries=state.entries.map(e=>e.id===payload.application_id?{...e,...payload}:e);
+   const stored={...payload};
+   for(const key of ['stage_name','song_title','original_artist','song_language','demo_url'])stored[key]=stored[key].trim();
+   if(state.profileEnabled){
+    stored.gender=stored.gender||null;
+    for(const key of ['photo_url_1','photo_url_2','photo_url_3'])stored[key]=stored[key]?new URL(stored[key]).href:null;
+   }
+   state.entries=state.entries.map(e=>e.id===payload.application_id?{...e,...stored}:e);
    result={ok:true,application_id:payload.application_id};
   }
   else if(key==='logout')result={ok:true};
@@ -86,6 +92,27 @@ test('member dashboard locks edit button when first judge score exists',async({p
  await expect(page.locator('#entries')).toContainText('已開始評分');
  await expect(page.locator('#member-view-video')).toBeVisible();
  await expect(page.locator('#member-show-details')).toBeVisible();
+});
+test('edit succeeds when the server trims text and canonicalizes an optional photo URL',async({page})=>{
+ const state={entries:[{...entry}],profileEnabled:true};
+ const writes=await mockMemberApi(page,state);
+ await page.route('https://example.org/',route=>route.fulfill({
+  contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"/>'
+ }));
+ await page.setViewportSize({width:390,height:830});
+ await page.goto('/member.html#login');
+ await page.locator('#member-quick-edit').click();
+ const form=page.locator('#member-edit-panel form');
+ await form.locator('[name=stage_name]').fill('  TEST Revised Singer  ');
+ await form.locator('[name=photo_url_1]').fill('https://EXAMPLE.org');
+ await form.locator('[name=profile_consent]').check();
+ await form.locator('button[type=submit]').click();
+ await expect(page.locator('#member-welcome-name')).toHaveText('TEST Revised Singer');
+ await expect(form).toBeHidden();
+ expect(writes).toHaveLength(1);
+ await page.reload();
+ await expect(page.locator('#member-welcome-name')).toHaveText('TEST Revised Singer');
+ await expect(page.locator('#member-hero-avatar img')).toHaveAttribute('src','https://example.org/');
 });
 test('homepage remains anonymous when authorization is missing; staff role cannot be switched by home',async({page})=>{
  let posts=0;

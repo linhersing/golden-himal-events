@@ -321,7 +321,12 @@ function showEdit(a){
   const saved=(check.applications||[]).find(row=>row.id===a.id);
   const names=['stage_name','song_title','original_artist','song_language','demo_url',
    ...(profileEnabled?['gender','photo_url_1','photo_url_2','photo_url_3']:[])];
-  if(!saved||names.some(key=>String(saved[key]||'')!==String(payload[key]||'')))throw Error('readback_mismatch');
+  if(!saved||names.some(key=>{
+   const entered=String(payload[key]??'').trim();
+   // The server trims text and stores accepted photo URLs in their canonical form.
+   const expected=entered&&key.startsWith('photo_url_')?new URL(entered).href:entered;
+   return String(saved[key]??'')!==expected;
+  }))throw Error('readback_mismatch');
   await renderMember();status(mt('savedChanges'));
  })});
  box.append(form);holder.append(box);
