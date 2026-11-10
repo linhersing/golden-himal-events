@@ -246,7 +246,8 @@ test('public TEST signup requires a verified sender and Turnstile, and keeps sin
   STAGING_EMAIL_PROVIDER:'resend',STAGING_FROM_EMAIL:'onboarding@resend.dev',
   STAGING_RESEND_TEST_RECIPIENT:'owner@test.invalid',STAGING_RESEND_API_KEY:'re_'+'x'.repeat(30),
   STAGING_TURNSTILE_SITE_KEY:'0x4AAAAAA-synthetic-site',
-  STAGING_TURNSTILE_SECRET_KEY:'0x4AAAAAA-synthetic-secret'
+  STAGING_TURNSTILE_SECRET_KEY:'0x4AAAAAA-synthetic-secret',
+  STAGING_TEST_APPROVAL_ENABLED:'true'
  };
  t.mock.method(globalThis,'fetch',async (url,options)=>{
   if(url==='https://challenges.cloudflare.com/turnstile/v0/siteverify'){
@@ -274,6 +275,14 @@ test('public TEST signup requires a verified sender and Turnstile, and keeps sin
  const migration=await readFile(new URL('../backend/migrations/1004_self_service_signup_STAGING_ONLY.sql',import.meta.url),'utf8');
  db.exec(migration);
  db.exec(migration);
+ assert.equal(await config(),'invited','approval table is required before public testing');
+ const approvalMigration=await readFile(new URL('../backend/migrations/1007_test_application_approval_STAGING_ONLY.sql',import.meta.url),'utf8');
+ db.exec(approvalMigration);
+ db.exec(approvalMigration);
+ assert.equal(await config(),'public_test');
+ env.STAGING_TEST_APPROVAL_ENABLED='false';
+ assert.equal(await config(),'invited','disabling organizer approval closes public signup');
+ env.STAGING_TEST_APPROVAL_ENABLED='true';
  assert.equal(await config(),'public_test');
  assert.equal((await send('first@test.invalid',undefined)).status,403);
  assert.equal((await send('first@test.invalid','wrong-host')).status,403);
