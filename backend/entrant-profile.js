@@ -51,12 +51,12 @@ export function profileInsert(db,id,data,now){
   .bind(id,data.gender,data.photo_url_1,data.photo_url_2,data.photo_url_3,now,now);
 }
 // Check the app owner AND the same pre-score correction rules before modifying profile URLs.
-export function profileUpsert(db,id,ownerId,data,now){
+export function profileUpsert(db,id,ownerId,data,now,extraGuard=''){
  const guard=`p.id=? AND p.account_id=? AND p.phase='demo'
   AND p.status IN ('submitted','under_review') AND p.payment_status IN ('unpaid','simulated_paid')
   AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
   AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
-  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)`;
+  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${extraGuard}`;
  return db.prepare(`INSERT INTO e2e_application_profiles
   (application_id,gender,photo_url_1,photo_url_2,photo_url_3,consent_at,updated_at)
   SELECT ?,?,?,?,?,?,? FROM e2e_applications p WHERE ${guard}

@@ -1,6 +1,8 @@
+import {approvalColumn,approvalGuard,approveTestApplication} from './test-application-approval.js';
+
 // Alan V2 competition logic, STAGING ONLY. Called only after verified session,
 // same-origin checks and configured() gate in staging-e2e.js.
-export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles}){
+export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval=false}){
  const path=new URL(request.url).pathname,post=request.method==='POST';
  const db=env.DB;
  // Explicit closed rehearsal: link evidence is not identity or payment verification.
@@ -8,6 +10,11 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
  const evidence=links?"p.demo_url IS NOT NULL AND length(trim(p.demo_url))>0":
   "p.eligibility_key IS NOT NULL AND p.receipt_key IS NOT NULL AND (p.media_key IS NOT NULL OR p.demo_url IS NOT NULL)";
  const forbidden=role=>a?.role!==role?deny(role+'_only',403):null;
+ const approved=approvalGuard(approval,'p');
+ if(path==='/api/e2e/approve-test-application'&&post&&approval){
+  if(forbidden('organizer'))return forbidden('organizer');
+  return approveTestApplication(request,db,a,{json,deny,NOW,bodyJSON});
+ }
  if(path==='/api/e2e/reviewer-queue'&&!post){
   if(forbidden('reviewer'))return forbidden('reviewer');
   const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.original_artist,p.demo_url,p.phase,
@@ -17,7 +24,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    FROM e2e_applications p
    LEFT JOIN e2e_judge_scores d ON d.application_id=p.id AND d.reviewer_id=?
    LEFT JOIN e2e_live_scores l ON l.application_id=p.id AND l.reviewer_id=? AND l.stage=p.phase
-   WHERE p.payment_status='simulated_paid' AND ${evidence}
+   WHERE p.payment_status='simulated_paid' AND ${evidence}${approved}
     AND p.status NOT IN ('withdrawn','rejected')
    ORDER BY p.created_at DESC LIMIT 500`).bind(a.id,a.id).all();
   return json({ok:true,queue:await attachProfiles(env,r.results||[]),testOnly:true});
@@ -27,7 +34,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
   const b=await bodyJSON(request);if(!b)return deny('invalid_json');
   if(b.no_conflict!==true)return deny('conflict_declaration_required',422);
   const app=await db.prepare(`SELECT p.id,p.phase,p.account_id FROM e2e_applications p WHERE p.id=?
-   AND p.payment_status='simulated_paid' AND ${evidence}
+   AND p.payment_status='simulated_paid' AND ${evidence}${approved}
    AND p.status NOT IN ('withdrawn','rejected')`).bind(b.application_id).first();
   if(!app)return deny('not_reviewable',409);
   if(await ownsApplication(env,a,app.account_id))return deny('self_review_disallowed',403);
@@ -53,15 +60,16 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    (SELECT COUNT(*) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_judges,
    (SELECT ROUND(AVG(technique+interpretation),2) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_mean,
    (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_judges,
-   (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean
+   (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}
    FROM e2e_applications p ORDER BY p.created_at ASC LIMIT 500`).all();
   return json({ok:true,applications:await attachProfiles(env,r.results||[]),testOnly:true});
  }
  if(path==='/api/e2e/organizer-promote'&&post){
   if(forbidden('organizer'))return forbidden('organizer');
   const b=await bodyJSON(request);if(!b)return deny('invalid_json');
-  const app=await db.prepare('SELECT id,phase,round_code,category,payment_status FROM e2e_applications WHERE id=?').bind(b.application_id).first();
+  const app=await db.prepare(`SELECT p.id,p.phase,p.round_code,p.category,p.payment_status${approvalColumn(approval)} FROM e2e_applications p WHERE p.id=?`).bind(b.application_id).first();
   if(!app)return deny('application_not_found',404);
+  if(approval&&app.approval_state!=='approved')return deny('test_approval_required',409);
   const next=app.phase==='demo'?'qualifier':app.phase==='qualifier'?'final':null;
   if(!next||b.to_phase!==next)return deny('invalid_stage_transition',409);
   if(app.payment_status!=='simulated_paid')return deny('mock_payment_required',409);
@@ -70,7 +78,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
     :await db.prepare('SELECT COUNT(*) AS n FROM e2e_live_scores WHERE application_id=? AND stage=?').bind(app.id,app.phase).first();
   if(Number(scored?.n||0)<3)return deny('three_judges_required_for_test',409);
   try{
-   const updated=await db.prepare("UPDATE e2e_applications SET phase=?,status='shortlisted',updated_at=? WHERE id=? AND phase=?")
+   const updated=await db.prepare(`UPDATE e2e_applications SET phase=?,status='shortlisted',updated_at=? WHERE id=? AND phase=?${approvalGuard(approval,'e2e_applications')}`)
     .bind(next,NOW(),app.id,app.phase).run();
    if(!updated.meta?.changes)return deny('stale_stage',409);
    await db.prepare('INSERT INTO e2e_promotion_events(id,application_id,organizer_id,from_phase,to_phase,created_at) VALUES(?,?,?,?,?,?)')
@@ -80,15 +88,15 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
  }
  if(path==='/api/e2e/finalists'&&!post){
   if(forbidden('member'))return forbidden('member');
-  const r=await db.prepare(`SELECT id,category,round_code,stage_name,song_title FROM e2e_applications
-   WHERE phase='final' AND payment_status='simulated_paid' AND status NOT IN ('withdrawn','rejected')
+  const r=await db.prepare(`SELECT p.id,p.category,p.round_code,p.stage_name,p.song_title FROM e2e_applications p
+   WHERE p.phase='final' AND p.payment_status='simulated_paid' AND p.status NOT IN ('withdrawn','rejected')${approved}
    ORDER BY category,round_code,stage_name`).all();
   return json({ok:true,finalists:r.results||[],testOnly:true});
  }
  if(path==='/api/e2e/test-vote'&&post){
   if(forbidden('member'))return forbidden('member');
   const b=await bodyJSON(request);if(!b)return deny('invalid_json');
-  const app=await db.prepare("SELECT id,account_id FROM e2e_applications WHERE id=? AND phase='final' AND payment_status='simulated_paid' AND status NOT IN ('withdrawn','rejected')")
+  const app=await db.prepare(`SELECT p.id,p.account_id FROM e2e_applications p WHERE p.id=? AND p.phase='final' AND p.payment_status='simulated_paid' AND p.status NOT IN ('withdrawn','rejected')${approved}`)
    .bind(b.application_id).first();
   if(!app)return deny('not_test_finalist',404);
   if(app.account_id===a.id)return deny('test_self_vote_disallowed',403);
@@ -104,7 +112,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
     (SELECT ROUND(AVG(l.technique+l.interpretation+l.stage_presence+l.appearance),4)
      FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage='final') AS judges_mean,
     (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage='final') AS judges_count
-    FROM e2e_applications p WHERE p.phase='final' AND p.status NOT IN ('withdrawn','rejected')
+    FROM e2e_applications p WHERE p.phase='final' AND p.status NOT IN ('withdrawn','rejected')${approved}
     ORDER BY p.category,p.round_code,p.stage_name`).all();
   const all=rows.results||[],max={university:0,community:0};
   for(const x of all)max[x.category]=Math.max(max[x.category]||0,Number(x.votes));

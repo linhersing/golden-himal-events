@@ -173,6 +173,9 @@ const signupConfig=staff?Promise.resolve():api('signup-config').then(config=>{
  const notice=$('signup-mode'),widget=$('signup-turnstile');
  notice.dataset.l='signupPublicTest';
  notice.textContent=mt('signupPublicTest');
+ for(const [id,key] of [['member-auth-intro','signupPilotIntro'],['email-legacy-summary','signupPilotEmail']]){
+  const copy=$(id);if(copy){copy.dataset.l=key;copy.textContent=mt(key);}
+ }
  widget.hidden=false;
  const script=document.createElement('script');
  script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
@@ -248,6 +251,7 @@ function drawEntry(a){
  }
  box.append(meta);
  box.append(node('span',mt(a.payment_status==='simulated_paid'?'testPaid':'testPending'),'pill '+(a.payment_status==='simulated_paid'?'pill-pass':'pill-warn')));
+ if(a.approval_state)box.append(node('p',mt(a.approval_state==='approved'?'approvalAccepted':'approvalPending'),'minor'));
  const actions=node('div',undefined,'inline-actions member-entry-buttons');
  if(memberCanEdit(a)){
   const edit=node('button',mt('edit'),'btn btn-primary');edit.type='button';edit.onclick=()=>showEdit(a);actions.append(edit);
@@ -266,10 +270,10 @@ function drawEntry(a){
    run(async()=>{
     const result=await api('mock-payment',{application_id:a.id});
     if(result.status!=='simulated_paid'||result.testOnly!==true||result.realCharge!==false)throw Error('test_payment_result_unverified');
-    await renderMember();status(mt('paymentDone'));
+    await renderMember();status(mt(a.approval_state==='pending'?'paymentAwaitingApproval':'paymentDone'));
    });
   };
-  actions.append(pay,del);
+  actions.append(pay);if(a.approval_state!=='approved')actions.append(del);
  }
  box.append(actions);
  if(!memberCanEdit(a))box.append(node('p',mt('editLockedAfterReview'),'minor'));
@@ -315,7 +319,11 @@ async function renderMember(){
  }
  const paidEntry=rows.find(a=>a.payment_status==='simulated_paid');
  const done=$('test-completion');
- if(done){done.hidden=!paidEntry;done.textContent=paidEntry?'✓ '+mt('testComplete')+' · '+mt('noCharge'):'';}
+ if(done){
+  done.hidden=!paidEntry;
+  const completion=paidEntry?.approval_state==='pending'?mt('paymentAwaitingApproval'):paidEntry?.approval_state==='approved'?mt('approvalAccepted'):mt('testComplete');
+  done.textContent=paidEntry?'✓ '+completion+' · '+mt('noCharge'):'';
+ }
  $('step-login')?.classList.add('active');
  $('step-apply')?.classList.toggle('active',hasEntries);
  $('step-checkout')?.classList.toggle('active',Boolean(paidEntry));
@@ -433,6 +441,20 @@ async function renderOrganizer(){
    if(img)info.prepend(img);
    const stats=node('div',undefined,'roster-entry-side');
    stats.append(node('span',a.payment_status==='simulated_paid'?'模擬付款':'未付款','pill'));
+   if(a.approval_state==='approved')stats.append(node('span','主辦已核准','pill pill-pass'));
+   if(a.approval_state==='pending'){
+    stats.append(node('span','待主辦核准','pill pill-warn'));
+    const approve=node('button','核准測試報名','btn btn-soft');approve.type='button';
+    approve.onclick=()=>{
+     if(!confirm('核准「'+(a.stage_name||'選手')+'」的測試報名？核准後會鎖定報名資料。'))return;
+     run(async()=>{
+      const result=await api('approve-test-application',{application_id:a.id});
+      if(result.approval_state!=='approved'||result.testOnly!==true)throw Error('approval_readback_failed');
+      a.approval_state='approved';paint();status('已核准測試報名。');
+     });
+    };
+    stats.append(approve);
+   }
    stats.append(node('small','評審回覆 '+String(Number(a.demo_judges||0)+Number(a.live_judges||0))+' 筆'));
    card.append(info,stats);holder.append(card);
   }

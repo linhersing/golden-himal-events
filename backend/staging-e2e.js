@@ -4,6 +4,7 @@ import {emailAddress,mailProviderReady,mailSenderReady,sendTestEmail} from './st
 import {validPerformanceLink} from '../public/performance-link.js';
 import {handleV2Route} from './staging-v2-flow.js';
 import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
+import {approvalRequired,approvalSchemaReady,approvalColumn,approvalGuard,pendingGuard} from './test-application-approval.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
  * No official entries, actual payments, or exposed R2 URLs.
@@ -191,14 +192,15 @@ async function logout(request,env,a){
  return json({ok:true},200,{'Set-Cookie':cookie('',0)});
 }
 async function applications(a,env){
+ const approval=approvalRequired(env);
  const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,p.province,p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url,
  p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,p.receipt_key IS NOT NULL AS has_receipt_file,
  p.phase,p.status,p.payment_status,p.created_at,p.updated_at,
  CASE WHEN p.phase='demo' AND p.status IN ('submitted','under_review') AND p.payment_status IN ('unpaid','simulated_paid')
  AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
  AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
- AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)
- THEN 1 ELSE 0 END AS can_edit
+ AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingGuard(approval,'p')}
+ THEN 1 ELSE 0 END AS can_edit${approvalColumn(approval)}
  FROM e2e_applications p WHERE p.account_id=? ORDER BY p.created_at DESC`).bind(a.id).all();
  return json({ok:true,account:{id:a.id,role:a.role},applications:await attachProfiles(env,rows.results||[]),testOnly:true});
 }
@@ -237,7 +239,8 @@ async function submitApplication(request,env,a){
    await env.DB.batch([createApp,profileInsert(env.DB,id,profile,now)]);
   }else await createApp.run();
  }catch{return deny(profile?'profile_database_error':'duplicate_round_or_database_rejected',profile?503:409)}
- return json({ok:true,application_id:id,phase:'demo',status:'submitted',source:'cloudflare-d1-staging',testOnly:true},201);
+ return json({ok:true,application_id:id,phase:'demo',status:'submitted',source:'cloudflare-d1-staging',testOnly:true,
+  ...(approvalRequired(env)?{approval_state:'pending'}:{})},201);
 }
 // An invited member may correct an unscored, unpromoted TEST application (including simulated-paid).
 // Deletion stays limited to unpaid entries; neither operation affects real payment or grading.
@@ -264,23 +267,24 @@ async function updateApplication(request,env,a){
    return deny('update_locked',409);
  const anyScores=await env.DB.prepare("SELECT EXISTS(SELECT 1 FROM e2e_judge_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_live_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_promotion_events WHERE application_id=?) AS n").bind(id,id,id).first();
  if(Number(anyScores?.n||0)>0)return deny('update_locked',409);
+ const approval=approvalRequired(env),pendingProfile=pendingGuard(approval,'p');
  const updateStmt=env.DB.prepare(`UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,song_language=?,demo_url=?,updated_at=? WHERE id=? AND account_id=? AND payment_status IN ('unpaid','simulated_paid') AND status IN ('submitted','under_review') AND phase='demo'
   AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=e2e_applications.id)
   AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=e2e_applications.id)
-  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=e2e_applications.id)`)
+  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=e2e_applications.id)${pendingGuard(approval,'e2e_applications')}`)
   .bind(...values.slice(0,3),songLanguage,values[3],NOW(),id,a.id);
  let affected=0;
  try {
   if(editingProfile){
    if(typeof env.DB.batch!=='function')return deny('profile_storage_unavailable',503);
    const profileStmt=parsed.profile?
-    profileUpsert(env.DB,id,a.id,parsed.profile,NOW()):
+    profileUpsert(env.DB,id,a.id,parsed.profile,NOW(),pendingProfile):
     env.DB.prepare(`DELETE FROM e2e_application_profiles WHERE application_id=? AND EXISTS(SELECT 1 FROM e2e_applications p
     WHERE p.id=? AND p.account_id=? AND p.phase='demo' AND p.status IN ('submitted','under_review')
     AND p.payment_status IN ('unpaid','simulated_paid')
     AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
     AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
-    AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id))`).bind(id,id,a.id);
+    AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingProfile})`).bind(id,id,a.id);
    const result=await env.DB.batch([updateStmt,profileStmt]);
    affected=Number(result?.[0]?.meta?.changes||0);
   }else{
@@ -301,7 +305,7 @@ async function deleteApplication(request,env,a){
  if(!app)return deny('application_not_found',404);
  if(app.payment_status!=='unpaid'||app.status!=='submitted'||app.phase!=='demo'||app.media_key||app.eligibility_key||app.receipt_key)
    return deny('delete_locked',409);
- const changed=await env.DB.prepare("DELETE FROM e2e_applications WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo' AND media_key IS NULL AND eligibility_key IS NULL AND receipt_key IS NULL")
+ const changed=await env.DB.prepare(`DELETE FROM e2e_applications WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo' AND media_key IS NULL AND eligibility_key IS NULL AND receipt_key IS NULL${pendingGuard(approvalRequired(env),'e2e_applications')}`)
   .bind(id,a.id).run();
  if(!changed.meta?.changes)return deny('delete_locked',409);
  return json({ok:true,deleted_application_id:id,testOnly:true});
@@ -309,12 +313,26 @@ async function deleteApplication(request,env,a){
 async function mockPayment(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request);if(!b)return deny('invalid_json');
- const app=await selectApplication(env.DB,b.application_id,a.id);if(!app)return deny('application_not_found',404);
- if(app.payment_status==='simulated_paid')return json({ok:true,status:'simulated_paid',amount_npr:500,already:true,testOnly:true,realCharge:false});
+ const db=env.DB;
+ const app=await selectApplication(db,b.application_id,a.id);if(!app)return deny('application_not_found',404);
+ const paid={ok:true,status:'simulated_paid',amount_npr:500,testOnly:true,realCharge:false};
+ if(app.payment_status==='simulated_paid')return json({...paid,already:true});
  if(app.status!=='submitted'||app.phase!=='demo')return deny('mock_payment_not_allowed',409);
- const inserted=await env.DB.prepare("INSERT OR IGNORE INTO e2e_payment_events(id,application_id,event_type,created_at) VALUES(?,?,'SIMULATED_PAYMENT',?)").bind(uuid(),app.id,NOW()).run();
- await env.DB.prepare("UPDATE e2e_applications SET payment_status='simulated_paid', status='under_review',updated_at=? WHERE id=? AND account_id=? AND status='submitted'").bind(NOW(),app.id,a.id).run();
- return json({ok:true,status:'simulated_paid',amount_npr:500,testOnly:true,realCharge:false});
+ const payable="id=? AND account_id=? AND phase='demo' AND status='submitted' AND payment_status='unpaid'";
+ const now=NOW();
+ // Commit the event and application state together, with the owner rechecked inside both writes.
+ const [,changed]=await db.batch([
+  db.prepare(`INSERT INTO e2e_payment_events(id,application_id,event_type,created_at)
+   SELECT ?,id,'SIMULATED_PAYMENT',? FROM e2e_applications WHERE ${payable}
+   ON CONFLICT(application_id) DO NOTHING`).bind(uuid(),now,app.id,a.id),
+  db.prepare(`UPDATE e2e_applications SET payment_status='simulated_paid',status='under_review',updated_at=?
+   WHERE ${payable}`).bind(now,app.id,a.id)
+ ]);
+ if(changed.meta?.changes)return json(paid);
+ const current=await selectApplication(db,app.id,a.id);
+ if(!current)return deny('application_not_found',404);
+ if(current.payment_status==='simulated_paid')return json({...paid,already:true});
+ return deny('mock_payment_not_allowed',409);
 }
 // Demo media and private eligibility/TEST receipt evidence share private R2, not URLs.
 // Judge access is limited to performance media, never eligibility/receipt documents.
@@ -337,8 +355,12 @@ async function mediaUpload(request,env,a){
  const column=kind==='demo'?'media_key':kind==='eligibility'?'eligibility_key':'receipt_key';
  const key='e2e/'+app.account_id+'/'+app.id+'/'+kind+'/'+uuid();
  await env.STAGING_MEDIA.put(key,data,{httpMetadata:{contentType:type},customMetadata:{applicationId:app.id,kind}});
- try{await env.DB.prepare('UPDATE e2e_applications SET '+column+'=?,updated_at=? WHERE id=? AND account_id=?')
-   .bind(key,NOW(),app.id,a.id).run()}
+ try{
+  const approval=approvalRequired(env);
+  const changed=await env.DB.prepare(`UPDATE e2e_applications SET ${column}=?,updated_at=? WHERE id=? AND account_id=?${pendingGuard(approval,'e2e_applications')}`)
+   .bind(key,NOW(),app.id,a.id).run();
+  if(approval&&!changed.meta?.changes){await env.STAGING_MEDIA.delete(key);return deny('update_locked',409)}
+ }
  catch{await env.STAGING_MEDIA.delete(key);return deny('database_unavailable',503)}
  if(app[column])await env.STAGING_MEDIA.delete(app[column]);
  return json({ok:true,stored:true,kind,application_id:app.id,bytes:data.byteLength,private:true,testOnly:true});
@@ -349,7 +371,8 @@ async function streamMedia(request,env,a){
  const url=new URL(request.url),kind=url.searchParams.get('kind')||'demo';
  if(!['demo','eligibility','receipt'].includes(kind))return deny('not_found',404);
  const column=kind==='demo'?'media_key':kind==='eligibility'?'eligibility_key':'receipt_key';
- const app=await env.DB.prepare('SELECT id,account_id,'+column+' AS asset_key FROM e2e_applications WHERE id=?').bind(url.searchParams.get('application')).first();
+ const reviewerGate=approvalRequired(env)&&a.role==='reviewer';
+ const app=await env.DB.prepare(`SELECT p.id,p.account_id,p.${column} AS asset_key FROM e2e_applications p WHERE p.id=?${approvalGuard(reviewerGate,'p')}${reviewerGate?" AND p.payment_status='simulated_paid' AND p.status NOT IN ('withdrawn','rejected')":''}`).bind(url.searchParams.get('application')).first();
  if(!app||!app.asset_key)return deny('not_found',404);
  if(app.account_id!==a.id&&a.role!=='organizer'&&!(a.role==='reviewer'&&kind==='demo'))return deny('not_found',404);
  const obj=await env.STAGING_MEDIA.get(app.asset_key);if(!obj)return deny('not_found',404);
@@ -415,12 +438,14 @@ export async function handleE2E(request,env){
    return json({ok:true,testOnly:true,...report,
     note:'TEST configuration only. Ready does not prove email delivery, login or official registration.'});
   }
-  if(!a.email&&['/api/e2e/finalists','/api/e2e/test-vote'].includes(pathname))return deny('not_on_test_allowlist',403);
-  const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles});
-  if(v2)return v2;
   if(pathname==='/api/e2e/logout'&&isPost)return await logout(request,env,a);
-  if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),testOnly:true});
   if(pathname==='/api/e2e/switch-role'&&isPost)return await switchRole(request,env,a);
+  const approval=approvalRequired(env);
+  if(approval&&!await approvalSchemaReady(env))return deny('test_approval_schema_unavailable',503);
+  if(!a.email&&['/api/e2e/finalists','/api/e2e/test-vote'].includes(pathname))return deny('not_on_test_allowlist',403);
+  const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval});
+  if(v2)return v2;
+  if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),testOnly:true,...(approval?{approval_enabled:true}:{})});
   if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env);
   if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
    if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a);
