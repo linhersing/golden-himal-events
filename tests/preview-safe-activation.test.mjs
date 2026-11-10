@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {publicSignupChecklist} from '../backend/staging-public-signup.js';
 
-test('preview signup is opted-in but fails closed without real Turnstile and migrations',async()=>{
+test('preview signup requires explicit Cloudflare runtime opt-in and valid Turnstile',async()=>{
  const config=JSON.parse(await readFile(new URL('../wrangler.jsonc',import.meta.url),'utf8'));
  assert.equal(config.name,'golden-himal-voice-preview');
  assert.equal(config.keep_vars,true);
  assert.equal(config.vars.STAGING_TEST_APPROVAL_ENABLED,'true');
- assert.equal(config.vars.STAGING_PUBLIC_SIGNUP_ENABLED,'true');
+ assert.equal(config.vars.STAGING_PUBLIC_SIGNUP_ENABLED,undefined);
  assert.equal(config.vars.STAGING_TEST_WRITE_ENABLED,'false');
  assert.equal(config.vars.STAGING_SUBMISSION_MODE,'links');
  const env={
@@ -22,5 +22,5 @@ test('preview signup is opted-in but fails closed without real Turnstile and mig
  assert.equal(missingTurnstile.ready,false);
  assert.equal(missingTurnstile.checks.turnstileSiteConfigured,false);
  assert.equal(missingTurnstile.checks.turnstileSecretConfigured,false);
- assert.equal(missingTurnstile.checks.publicTestApproved,true);
+ assert.equal(missingTurnstile.checks.publicTestApproved,false);
 });
