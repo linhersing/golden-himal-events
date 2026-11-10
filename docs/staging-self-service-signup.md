@@ -14,3 +14,27 @@ The initial rehearsal budget is three sends per mailbox and eight public attempt
 ## Stop or recover
 
 Set `STAGING_PUBLIC_SIGNUP_ENABLED=false` to pause self-service and public-only member sessions. The code and database changes are additive. Retain the recorded Worker version as the release rollback point. The sandbox sender and its single recipient can be restored together when needed. The verified sender domain setting must be removed when reverting to the sandbox sender. No real charge or official acceptance occurs in this rehearsal.
+
+## 2026-11-10: external Email pilot decision and GitHub safety preflight
+
+**Two different types of registration must not be confused:**
+
+- **A. Two invited, consenting real TEST emails (recommended first):** keep `STAGING_PUBLIC_SIGNUP_ENABLED` false/unset. Add only the two approved test mailbox addresses to the existing comma-separated Cloudflare Worker **`STAGING_ALLOWED_EMAILS`** list, keeping the existing owner address. The existing invited Email OTP flow then allows each to verify, sign in and submit test-only D1 data. This is a Cloudflare runtime change; a GitHub merge alone cannot add private testers' emails. Verify receipt and account isolation. Do not put these email addresses or API keys in GitHub.
+- **B. Self-service TEST signup for any uninvited Email:** leave OFF until a Cloudflare Turnstile widget is created and restricted to the preview hostname, the public signup schema migration 1004 is applied to the isolated `E2E_DB` after backup, real verified Resend sender credentials work, and a staff-approved security test plan is recorded. Only then set `STAGING_PUBLIC_SIGNUP_ENABLED=true`. Never enable actual paid registration or official participant approval this way.
+
+After signing in to the **organizer-only** acceptance page `/organizer-stage.html`, use **"Check safety prerequisites / 檢查開通條件"**. This calls `GET /api/e2e/organizer-signup-readiness`, which returns only boolean checks (never mailboxes, password hashes, secrets, OTPs, or keys). Non-organizers receive 403; an unauthenticated caller receives 401. The panel never enables a flag or changes any D1 table.
+
+Preflight checks: STAGING mode, explicit public TEST opt-in, links-only submission, exact verified-domain sender match, Resend Sending key configured, valid Turnstile site/secret key formats, and presence of both additive public signup tables in the isolated DB. **All green is necessary but not sufficient**: at least two independent external mailboxes must receive real OTPs, sign in, submit test entries and be read back by the organizer while unauthorized cross-account access remains denied.
+
+### Current Cloudflare state at the 2026-11-10 21:45 screenshot
+The owner verified:
+- `STAGING_EMAIL_PROVIDER=resend`
+- `STAGING_FROM_EMAIL=verify@voice.cma-mission.com`
+- `STAGING_RESEND_VERIFIED_DOMAIN=voice.cma-mission.com`
+- `STAGING_RESEND_API_KEY` stored as a Secret
+- `STAGING_ALLOWED_EMAILS` still restricted to the owner's test email
+- The public signup flag and Turnstile credentials were not shown as configured.
+
+Therefore external uninvited Email registration is **not yet open**. Do not describe "Resend verified" or "Cloudflare variables saved" as a successful external registration test. The repo's `wrangler.jsonc` has `keep_vars: true`; verify Dashboard values again after any deployment. Never commit runtime secret values.
+
+**Next acceptance sequence:** confirm Deployment SHA and rollback, invited TEST external mailbox OTP delivery, valid session and logout/login, application D1 readback, organizer can see each independent test application, role isolation, failure/abuse checks, then archive only redacted evidence in the two SSOT Google Docs. The manual organizer approval workflow is separately tracked in #79 and is **not implemented or enabled** by this PR. Real payments remain OFF.
