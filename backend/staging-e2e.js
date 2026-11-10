@@ -1,4 +1,4 @@
-import {humanSignupSource,publicSignupReady,reservePublicSend} from './staging-public-signup.js';
+import {humanSignupSource,publicSignupReady,publicSignupChecklist,reservePublicSend} from './staging-public-signup.js';
 import {passwordModeReady,passwordIdentity,passwordRequest} from './staging-password-auth.js';
 import {emailAddress,mailProviderReady,mailSenderReady,sendTestEmail} from './staging-mail.js';
 import {validPerformanceLink} from '../public/performance-link.js';
@@ -409,6 +409,12 @@ export async function handleE2E(request,env){
   if(pathname==='/api/e2e/verify-code'&&isPost)return await verifyCode(request,env);
   const a=await account(request,env);
   if(!a)return deny('login_required',401);
+  if(pathname==='/api/e2e/organizer-signup-readiness'&&!isPost){
+   if(a.role!=='organizer')return deny('organizer_only',403);
+   const report=await publicSignupChecklist(env);
+   return json({ok:true,testOnly:true,...report,
+    note:'TEST configuration only. Ready does not prove email delivery, login or official registration.'});
+  }
   if(!a.email&&['/api/e2e/finalists','/api/e2e/test-vote'].includes(pathname))return deny('not_on_test_allowlist',403);
   const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles});
   if(v2)return v2;
