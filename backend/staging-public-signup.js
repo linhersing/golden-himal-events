@@ -1,17 +1,33 @@
-import {verifiedResendSender} from './staging-mail.js';
+import {verifiedResendSender,mailProviderReady} from './staging-mail.js';
 
 const VERIFY_URL='https://challenges.cloudflare.com/turnstile/v0/siteverify';
 const ACTION='ghv_signup';
 const liveKey=value=>typeof value==='string'&&/^0x[A-Za-z0-9_-]{16,}$/.test(value);
 
-export async function publicSignupReady(env){
- if(env.STAGING_PUBLIC_SIGNUP_ENABLED!=='true'||env.STAGING_SUBMISSION_MODE!=='links'||
-    !verifiedResendSender(env)||!liveKey(env.STAGING_TURNSTILE_SITE_KEY)||
-    !liveKey(env.STAGING_TURNSTILE_SECRET_KEY))return false;
+// Read-only checklist: booleans only, never mailboxes, secrets, IPs or tokens.
+// The checklist is exposed only to authenticated TEST organizers.
+export async function publicSignupChecklist(env){
+ const checks={
+  stagingEnabled:env.STAGING_E2E_ENABLED==='true',
+  publicTestApproved:env.STAGING_PUBLIC_SIGNUP_ENABLED==='true',
+  linksOnly:env.STAGING_SUBMISSION_MODE==='links',
+  verifiedSenderConfigured:verifiedResendSender(env),
+  resendKeyConfigured:env.STAGING_EMAIL_PROVIDER==='resend'&&mailProviderReady(env),
+  turnstileSiteConfigured:liveKey(env.STAGING_TURNSTILE_SITE_KEY),
+  turnstileSecretConfigured:liveKey(env.STAGING_TURNSTILE_SECRET_KEY),
+  isolatedDatabaseReady:false
+ };
  try{
-  await env.DB.prepare("SELECT mailbox_fingerprint,source_fingerprint FROM e2e_public_signup_accounts, e2e_public_signup_attempts LIMIT 0").all();
-  return true;
- }catch{return false}
+  if(env.DB&&typeof env.DB.prepare==='function'){
+   await env.DB.prepare("SELECT mailbox_fingerprint,source_fingerprint FROM e2e_public_signup_accounts, e2e_public_signup_attempts LIMIT 0").all();
+   checks.isolatedDatabaseReady=true;
+  }
+ }catch{}
+ return {ready:Object.values(checks).every(Boolean),checks};
+}
+
+export async function publicSignupReady(env){
+ return (await publicSignupChecklist(env)).ready;
 }
 
 export async function humanSignupSource(request,env,token){

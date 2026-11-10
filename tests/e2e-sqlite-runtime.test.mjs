@@ -83,6 +83,17 @@ for (const mode of ['uploads','links']) test(`Alan V2 ${mode}: persisted auditio
   const reviewers=[];
   for(let i=1;i<=3;i++)reviewers.push(await auth('judge'+i+'@test.invalid','reviewer'));
   const org=await auth('organizer@test.invalid','organizer');
+  // Only the server-authorized organizer may inspect TEST signup prerequisites.
+  assert.equal((await handleE2E(get('/api/e2e/organizer-signup-readiness'),env)).status,401);
+  assert.equal((await handleE2E(get('/api/e2e/organizer-signup-readiness',member),env)).status,403);
+  assert.equal((await handleE2E(get('/api/e2e/organizer-signup-readiness',reviewers[0]),env)).status,403);
+  const diagnostics=await handleE2E(get('/api/e2e/organizer-signup-readiness',org),env);
+  assert.equal(diagnostics.status,200);
+  const checks=await diagnostics.json();
+  assert.equal(checks.ready,false);
+  assert.equal(checks.testOnly,true);
+  assert.equal(checks.checks.publicTestApproved,false);
+  assert.equal(typeof checks.checks.isolatedDatabaseReady,'boolean');
   assert.equal((await handleE2E(get('/api/e2e/reviewer-queue',member),env)).status,403);
   assert.equal((await handleE2E(get('/api/e2e/organizer-queue',reviewers[0]),env)).status,403);
   const queue=(await (await handleE2E(get('/api/e2e/reviewer-queue',reviewers[0]),env)).json()).queue;

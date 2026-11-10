@@ -42,10 +42,18 @@
 </section>
 <section id="workspace" hidden>
  <div class="summary"><h2 id="welcome"></h2><button id="logout" type="button" class="secondary" data-i18n="logout">Log out</button></div>
+ <section class="panel" aria-labelledby="external-test-title">
+  <span class="eyebrow">PRIVATE TEST · READ ONLY</span>
+  <h2 id="external-test-title">Other Email testing · 其他 Email 測試檢查</h2>
+  <p>Check whether external TEST registration is ready. This does not open registration, approve contestants, or change Cloudflare settings.</p>
+  <button type="button" id="external-email-check" class="secondary">Check safety prerequisites · 檢查開通條件</button>
+  <div id="external-email-results" class="status" role="status" aria-live="polite" hidden></div>
+ </section>
  <section class="panel" aria-labelledby="review-title"><span class="eyebrow" data-i18n="organizerOnlyLabel">INVITED ORGANIZERS</span><h2 id="review-title" data-i18n="organizerReviewTitle">Review entries & promote qualifiers</h2>
  <p data-i18n="organizerReviewIntro">Only invite-listed organizers can promote contestants; three reviewers must independently score each stage.</p><div id="admin-apps"></div></section><section class="panel"><h2 data-i18n="standingTitle">Final: mock website vote 51% + judge mean 49%</h2><div id="standings"></div></section>
  </section>
  <div class="notice"><p data-i18n="notLive">Staging has actual D1 records when enabled. It is not public registration, not verified eligibility and not real payment. Review scores are for functional testing only.</p></div>
 </main><footer class="foot" data-i18n="footerLabel">GOLDEN HIMAL VOICE · RESTRICTED ACCEPTANCE · TEST ONLY</footer>
 <script type="module" src="./e2e-stage.js"></script>
+<script type="module" src="./external-email-readiness.js"></script>
 </body></html>
