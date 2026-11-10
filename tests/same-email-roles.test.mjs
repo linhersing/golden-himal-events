@@ -9,6 +9,11 @@ const get=(path,cookie)=>new Request(host+'/api/e2e/'+path,{headers:{Cookie:cook
 async function fixture(){
  const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
  const inbox=[],env={STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'T'.repeat(64),STAGING_FROM_EMAIL:'test@example.invalid',STAGING_ALLOWED_EMAILS:'owner@example.invalid,member@example.invalid',STAGING_ORGANIZER_EMAILS:'owner@example.invalid',STAGING_REVIEWER_EMAILS:'owner@example.invalid,judge@example.invalid',EMAIL:{async send(m){inbox.push(m)}},DB:{prepare(sql){let args=[];return {bind(...v){args=v;return this},first(){return db.prepare(sql).get(...args)||null},all(){return {results:db.prepare(sql).all(...args)}},run(){return {meta:{changes:db.prepare(sql).run(...args).changes}}}}}}};
+ env.DB.batch=statements=>{
+  db.exec('BEGIN');
+  try{const results=statements.map(statement=>statement.run());db.exec('COMMIT');return results}
+  catch(error){db.exec('ROLLBACK');throw error}
+ };
  async function start(email,role){const r=await handleE2E(post('request-code',{email,role}),env);assert.equal(r.status,200);return {...await r.json(),code:inbox.at(-1).text.match(/\b\d{6}\b/)[0]}}
  async function verify(c){return handleE2E(post('verify-code',{challenge_id:c.challenge_id,code:c.code}),env)}
  async function auth(email,role){const r=await verify(await start(email,role));assert.equal(r.status,200,await r.clone().text());return {cookie:r.headers.get('set-cookie').split(';')[0],...await r.json()}}

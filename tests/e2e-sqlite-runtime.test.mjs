@@ -10,7 +10,11 @@ function adapter(db){return {prepare(sql){let args=[];return {
  first(){return db.prepare(sql).get(...args)||null},
  all(){return {results:db.prepare(sql).all(...args)}},
  run(){const r=db.prepare(sql).run(...args);return {meta:{changes:r.changes}}}
-}}}}
+}},batch(statements){
+ db.exec('BEGIN');
+ try{const results=statements.map(statement=>statement.run());db.exec('COMMIT');return results}
+ catch(error){db.exec('ROLLBACK');throw error}
+}}}
 const req=(path,obj,cookie)=>new Request(host+path,{method:'POST',headers:{Origin:host,'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(obj)});
 const get=(path,cookie)=>new Request(host+path,{headers:cookie?{Cookie:cookie}:{}});
 

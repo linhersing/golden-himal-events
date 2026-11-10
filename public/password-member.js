@@ -21,9 +21,9 @@ function apply(){
  const t=translation(),ui=shell[lang];
  portal.querySelectorAll('[data-pw]').forEach(el=>{el.textContent=t[el.dataset.pw]||el.dataset.pw});
  portal.querySelectorAll('[data-pw-ph]').forEach(el=>el.placeholder=t[el.dataset.pwPh]||'');
- const intro=byId('member-auth-intro');if(intro)intro.textContent=ready?ui.readyIntro:ui.pendingIntro;
+ const intro=byId('member-auth-intro');if(intro&&!intro.dataset.l)intro.textContent=ready?ui.readyIntro:ui.pendingIntro;
  const step=byId('step-login');if(step)step.textContent=ui.step;
- const legacy=byId('email-legacy-summary');if(legacy)legacy.textContent=ui.legacy;
+ const legacy=byId('email-legacy-summary');if(legacy&&!legacy.dataset.l)legacy.textContent=ui.legacy;
 }
 function message(s,bad=false){const box=byId('password-feedback');box.hidden=false;box.textContent=s;box.className='feedback'+(bad?' error':' success');}
 function panel(name){for(const id of ['password-login-form','password-register-form','password-recover-form'])byId(id).hidden=(id!=='password-'+name+'-form');portal.querySelectorAll('[data-pw-tab]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.pwTab===name)));messageBoxHide();}

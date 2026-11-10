@@ -1,5 +1,30 @@
 import {test,expect} from '@playwright/test';
 
+test('organizer explicitly approves a test entry and member sees pending until approval',async({page})=>{
+ let approval='pending',role='member';
+ const entry={id:'QA-TEST-ENTRY',stage_name:'QA TEST Singer',song_title:'QA Test Song',song_language:'Nepali',
+  round_code:'2027-01',category:'community',payment_status:'simulated_paid',status:'under_review'};
+ await page.route('**/api/e2e/**',async route=>{
+  const path=new URL(route.request().url()).pathname.split('/').at(-1);
+  if(path==='me')return route.fulfill({json:{ok:true,account:{role,available_roles:[role]},approval_enabled:true}});
+  if(path==='applications'||path==='organizer-queue')return route.fulfill({json:{ok:true,applications:[{...entry,approval_state:approval,can_edit:approval==='pending'}]}});
+  if(path==='approve-test-application'){
+   expect(role).toBe('organizer');expect(route.request().postDataJSON()).toEqual({application_id:entry.id});
+   approval='approved';return route.fulfill({json:{ok:true,approval_state:approval,testOnly:true}});
+  }
+  return route.fulfill({json:{ok:true,mode:'invited',enabled:false}});
+ });
+ await page.goto('/member.html');await page.locator('[data-lang=zh]').click();
+ await expect(page.locator('#test-completion')).toContainText('等待主辦方核准');
+ role='organizer';await page.goto('/backoffice.html');
+ await expect(page.locator('#admin-apps')).toContainText('待主辦核准');
+ page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'核准測試報名'}).click();
+ await expect(page.locator('#admin-apps')).toContainText('主辦已核准');
+ await expect(page.locator('#paid-count')).toHaveText('0');
+ role='member';await page.goto('/member.html');
+ await expect(page.locator('#test-completion')).toContainText('主辦方已核准測試報名');
+});
+
 function fakeQueue(n=135){
  return Array.from({length:n},(_,i)=>({
   id:'SYNTH-'+String(i+1).padStart(3,'0'),stage_name:'EXAMPLE Singer '+String(i+1).padStart(3,'0'),
