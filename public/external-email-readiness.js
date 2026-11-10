@@ -5,6 +5,8 @@ const output=document.getElementById('external-email-results');
 const labels={
  stagingEnabled:'測試登入模式／TEST login enabled',
  publicTestApproved:'外部 Email 測試已獲准／External TEST switch approved',
+ organizerApprovalEnabled:'主辦人工核准已強制啟用／Organizer approval required',
+ organizerApprovalSchemaReady:'主辦審核資料表已備妥／Approval table ready',
  linksOnly:'僅使用外部作品連結／Links-only submissions',
  verifiedSenderConfigured:'Resend 寄件網域符合／Verified sender configured',
  resendKeyConfigured:'Resend 寄件金鑰可供檢查／Sender key configured',
