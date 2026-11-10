@@ -1,4 +1,5 @@
 import {verifiedResendSender,mailProviderReady} from './staging-mail.js';
+import {approvalSchemaReady} from './test-application-approval.js';
 
 const VERIFY_URL='https://challenges.cloudflare.com/turnstile/v0/siteverify';
 const ACTION='ghv_signup';
@@ -10,17 +11,20 @@ export async function publicSignupChecklist(env){
  const checks={
   stagingEnabled:env.STAGING_E2E_ENABLED==='true',
   publicTestApproved:env.STAGING_PUBLIC_SIGNUP_ENABLED==='true',
+  organizerApprovalEnabled:env.STAGING_TEST_APPROVAL_ENABLED==='true',
   linksOnly:env.STAGING_SUBMISSION_MODE==='links',
   verifiedSenderConfigured:verifiedResendSender(env),
   resendKeyConfigured:env.STAGING_EMAIL_PROVIDER==='resend'&&mailProviderReady(env),
   turnstileSiteConfigured:liveKey(env.STAGING_TURNSTILE_SITE_KEY),
   turnstileSecretConfigured:liveKey(env.STAGING_TURNSTILE_SECRET_KEY),
-  isolatedDatabaseReady:false
+  isolatedDatabaseReady:false,
+  organizerApprovalSchemaReady:false
  };
  try{
   if(env.DB&&typeof env.DB.prepare==='function'){
    await env.DB.prepare("SELECT mailbox_fingerprint,source_fingerprint FROM e2e_public_signup_accounts, e2e_public_signup_attempts LIMIT 0").all();
    checks.isolatedDatabaseReady=true;
+   checks.organizerApprovalSchemaReady=await approvalSchemaReady(env);
   }
  }catch{}
  return {ready:Object.values(checks).every(Boolean),checks};
