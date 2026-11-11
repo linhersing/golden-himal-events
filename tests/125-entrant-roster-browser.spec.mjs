@@ -84,6 +84,7 @@ test('125 organizer entries filter 63 Nepali / 62 English, maintain payment 0 an
  await expect(page.locator('#paid-count')).toHaveText('0');
  await expect(page.locator('#admin-apps .roster-entry')).toHaveCount(12);
  await expect(page.locator('#organizer-pagination')).toContainText('1 / 11');
+ await page.locator('.staff-advanced-filters summary').click();
  await page.locator('#organizer-language').selectOption('Nepali');
  await expect(page.locator('#organizer-count')).toContainText('63 筆');
  await page.locator('#organizer-language').selectOption('English');
