@@ -643,7 +643,7 @@ if(page==='member'){
  details.addEventListener('toggle',syncStart);
  start?.addEventListener('click',()=>{details.open=true;syncStart();details.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>application.querySelector('[name=stage_name]')?.focus({preventScroll:true}),180)});
  application.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
- const v=formValues(application),data={...v,video_confirmed:application.querySelector('[name=video_confirmed]')?.checked===true,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
+ const v=formValues(application),data={...v,video_confirmed:application.querySelector('[name=video_confirmed]')?.checked===true,contact_consent:contactEnabled?application.querySelector('[name=contact_consent]')?.checked===true:undefined,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
  const saved=await api('applications',data);
  const check=await api('applications'),record=(check.applications||[]).find(a=>a.id===saved.application_id);
  if(!record||(contactEnabled&&(record.contact_email!==String(data.contact_email||'').trim().toLowerCase()||
