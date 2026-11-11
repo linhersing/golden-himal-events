@@ -467,11 +467,16 @@ function scoredByJudge(a){
  const first=phase==='demo'?a.demo_technique:a.live_technique;
  return first!==null&&first!==undefined;
 }
-function reviewState(a){
+function reviewState(a,submissionMode='links'){
  const approved=a.approval_state===undefined||a.approval_state==='approved';
  const payment=a.payment_status==='simulated_paid';
+ // Match server reviewer-queue evidence rules; do not imply approval alone grants eligibility.
+ const video=Boolean(String(a.demo_url||'').trim())||Boolean(a.has_uploaded_file);
+ const evidence=submissionMode==='uploads'?
+  (Boolean(a.has_eligibility_file)&&Boolean(a.has_receipt_file)&&video):
+  Boolean(String(a.demo_url||'').trim());
  return {
-  approved,payment,ready:approved&&payment,
+  approved,payment,evidence,video,ready:approved&&payment&&evidence,
   waitingApproval:a.approval_state==='pending',
   waitingPayment:!payment
  };
@@ -479,7 +484,7 @@ function reviewState(a){
 function recordStage(a){return a.phase==='qualifier'?'現場初賽':a.phase==='final'?'決賽':'線上海選'}
 async function renderOrganizer(){
  $('organizer-dashboard').hidden=false;$('judge-dashboard').hidden=true;
- const v=await api('organizer-queue');let apps=v.applications||[];
+ const v=await api('organizer-queue');let apps=v.applications||[],submissionMode=v.submission_mode==='uploads'?'uploads':'links';
  $('pending-count').textContent=String(apps.length);
  $('scores-count').textContent=String(apps.reduce((n,a)=>n+Number(a.demo_judges||0)+Number(a.live_judges||0),0));
  $('paid-count').textContent='0'; // TEST payments must never become official registrations.
@@ -491,9 +496,9 @@ async function renderOrganizer(){
  let pageNo=1;const perPage=12;
  detail.hidden=true;roster.hidden=false;
  const countTasks=()=>{
-  $('org-pending-review').textContent=String(apps.filter(a=>reviewState(a).waitingApproval).length);
-  $('org-wait-payment').textContent=String(apps.filter(a=>reviewState(a).waitingPayment).length);
-  $('org-ready-review').textContent=String(apps.filter(a=>reviewState(a).ready).length);
+  $('org-pending-review').textContent=String(apps.filter(a=>reviewState(a,submissionMode).waitingApproval).length);
+  $('org-wait-payment').textContent=String(apps.filter(a=>reviewState(a,submissionMode).waitingPayment).length);
+  $('org-ready-review').textContent=String(apps.filter(a=>reviewState(a,submissionMode).ready).length);
  };
  const closeDetail=()=>{detail.hidden=true;detailContent.replaceChildren();roster.hidden=false;paint()};
  back.onclick=()=>{closeDetail();search.focus({preventScroll:true})};
@@ -504,14 +509,14 @@ async function renderOrganizer(){
    if(response.approval_state!=='approved'||response.testOnly!==true)throw Error('approval_readback_failed');
    const fresh=await api('organizer-queue'),updated=(fresh.applications||[]).find(x=>x.id===a.id);
    if(!updated||updated.approval_state!=='approved')throw Error('approval_readback_failed');
-   apps=fresh.applications;
+   apps=fresh.applications;submissionMode=fresh.submission_mode==='uploads'?'uploads':'links';
    countTasks();closeDetail();
    status('✓ 已核准測試報名。'+(updated.payment_status==='simulated_paid'?'此作品已符合評審名單條件。':'仍需選手完成模擬付款，才會交給評審。'));
   });
  }
  function openDetail(a){
   roster.hidden=true;detail.hidden=false;detailContent.replaceChildren();
-  const current=apps.find(x=>x.id===a.id)||a,state=reviewState(current);
+  const current=apps.find(x=>x.id===a.id)||a,state=reviewState(current,submissionMode);
   const title=node('h3',current.stage_name||'參賽者');detailContent.append(title);
   const intro=node('p',(current.song_title||'未命名歌曲')+' · '+current.round_code+' · '+(current.category==='university'?'大學組':'社會組'),'minor');
   detailContent.append(intro);
@@ -519,6 +524,7 @@ async function renderOrganizer(){
   steps.append(node('p',(state.approved?'✓':'○')+' 主辦資格核准：'+(state.approved?'已核准':'待核准')));
   steps.append(node('p',(state.payment?'✓':'○')+' 選手模擬付款：'+(state.payment?'已完成':'未完成（主辦方不能代替真正付款）')));
   steps.append(node('p',(state.ready?'✓':'○')+' 評審可見：'+(state.ready?'符合進入評審名單條件':'尚未達到條件')));
+  steps.append(node('p',(state.evidence?'✓':'○')+' 作品與資格文件：'+(state.evidence?'已符合目前影片及文件要求':submissionMode==='uploads'?'仍須補齊資格證明、收據與演唱影片':'仍須提供演唱影片連結')));
   detailContent.append(steps);
   detailContent.append(node('p','報名編號：'+current.id,'minor'));
   detailContent.append(node('p','演唱語言：'+(current.song_language||'未提供')+' · '+recordStage(current),'minor'));
@@ -537,7 +543,7 @@ async function renderOrganizer(){
   countTasks();
   const q=search.value.trim().toLowerCase(),lang=language.value,cat=category.value,st=statusFilter.value,task=focus.value;
   const found=apps.filter(a=>{
-   const state=reviewState(a),scoreCount=Number(a.demo_judges||0)+Number(a.live_judges||0);
+   const state=reviewState(a,submissionMode),scoreCount=Number(a.demo_judges||0)+Number(a.live_judges||0);
    if(task==='pending'&&!state.waitingApproval)return false;
    if(task==='waiting_payment'&&!state.waitingPayment)return false;
    if(task==='ready'&&!state.ready)return false;
@@ -556,7 +562,7 @@ async function renderOrganizer(){
   if(apps.length>=500)summary.textContent+='；資料庫列表目前最多讀取500筆，更多資料需伺服器分頁';
   if(!found.length)holder.append(node('p','此篩選條件下沒有資料，可按「清除篩選」查看所有報名。','staff-empty'));
   for(const a of found.slice((pageNo-1)*perPage,pageNo*perPage)){
-   const state=reviewState(a),card=node('article',undefined,'roster-entry');
+   const state=reviewState(a,submissionMode),card=node('article',undefined,'roster-entry');
    const info=node('div',undefined,'roster-entry-text');
    info.append(node('strong',(a.stage_name||'選手')+' · '+(a.song_title||'未命名曲目')));
    info.append(node('p',a.round_code+' · '+(a.category==='university'?'大學組':'社會組')+' · '+(a.song_language||'未填語言'),'minor'));
