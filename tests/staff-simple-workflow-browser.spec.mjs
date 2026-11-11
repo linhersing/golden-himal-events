@@ -95,3 +95,20 @@ test('reviewer single-entry score has live 60/40 total and server readback after
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
  }
 });
+
+test('uploaded-only performance remains scoreable through authenticated video download',async({page})=>{
+ const item={id:'SYNTH-UPLOAD',stage_name:'TEST Uploaded Singer',song_title:'TEST Audio Video',
+  round_code:'2027-01',category:'community',phase:'demo',has_uploaded_file:true,demo_url:null,
+  demo_technique:null,demo_interpretation:null,gender:'female'};
+ await page.route('**/api/e2e/**',async route=>{
+  const routeName=new URL(route.request().url()).pathname.split('/').pop();
+  const response=routeName==='me'?{ok:true,account:{id:'TEST-REVIEWER',role:'reviewer',available_roles:['reviewer']}}:
+   routeName==='reviewer-queue'?{ok:true,queue:[item]}:{ok:true};
+  await route.fulfill({json:response});
+ });
+ await page.goto('/backoffice.html');
+ await page.locator('#judge-list .roster-entry').click();
+ await expect(page.locator('#judge-detail')).toContainText('女');
+ await expect(page.locator('#judge-queue a.staff-video-link')).toHaveAttribute('href','/api/e2e/demo-download?application=SYNTH-UPLOAD');
+ await expect(page.locator('#judge-queue button[type=submit]')).toBeEnabled();
+});
