@@ -206,7 +206,13 @@ function renderHumanWidget(siteKey){
      'error-callback':code=>humanError(code)
     });
     clearTimeout(widgetTimer);widgetLoading=false;
-    if(!humanToken)humanState('signupHumanPrompt');
+    if(!humanToken){
+     humanState('signupHumanPrompt');
+     // Some blockers prevent the iframe without firing a script error.
+     widgetTimer=setTimeout(()=>{
+      if(!humanToken&&!widget.querySelector('iframe'))humanError();
+     },10000);
+    }
    }catch{humanError()}
   });
  }catch{humanError()}
