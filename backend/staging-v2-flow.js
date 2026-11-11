@@ -2,7 +2,7 @@ import {approvalColumn,approvalGuard,approveTestApplication} from './test-applic
 
 // Alan V2 competition logic, STAGING ONLY. Called only after verified session,
 // same-origin checks and configured() gate in staging-e2e.js.
-export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval=false}){
+export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,attachContacts,approval=false}){
  const path=new URL(request.url).pathname,post=request.method==='POST';
  const db=env.DB;
  // Explicit closed rehearsal: link evidence is not identity or payment verification.
@@ -62,7 +62,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_judges,
    (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}
    FROM e2e_applications p ORDER BY p.created_at ASC LIMIT 500`).all();
-  return json({ok:true,applications:await attachProfiles(env,r.results||[]),testOnly:true});
+  return json({ok:true,applications:await attachContacts(env,await attachProfiles(env,r.results||[])),testOnly:true});
  }
  if(path==='/api/e2e/organizer-promote'&&post){
   if(forbidden('organizer'))return forbidden('organizer');
