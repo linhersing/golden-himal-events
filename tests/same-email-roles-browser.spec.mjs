@@ -66,6 +66,7 @@ test('member form sends contact consent as JSON boolean and checks contact readb
   await route.fulfill({status,json:response});
  });
  await page.goto('/member.html');
+ await page.locator('#start-application').click();
  await expect(page.locator('#contact-info-fields')).toBeVisible();
  const form=page.locator('#application-form');
  await form.locator('[name=stage_name]').fill('TEST Singer');
