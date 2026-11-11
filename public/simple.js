@@ -467,63 +467,124 @@ function scoredByJudge(a){
  const first=phase==='demo'?a.demo_technique:a.live_technique;
  return first!==null&&first!==undefined;
 }
+function reviewState(a){
+ const approved=a.approval_state===undefined||a.approval_state==='approved';
+ const payment=a.payment_status==='simulated_paid';
+ return {
+  approved,payment,ready:approved&&payment,
+  waitingApproval:a.approval_state==='pending',
+  waitingPayment:!payment
+ };
+}
+function recordStage(a){return a.phase==='qualifier'?'現場初賽':a.phase==='final'?'決賽':'線上海選'}
 async function renderOrganizer(){
  $('organizer-dashboard').hidden=false;$('judge-dashboard').hidden=true;
- const v=await api('organizer-queue'),apps=v.applications||[];
+ const v=await api('organizer-queue');let apps=v.applications||[];
  $('pending-count').textContent=String(apps.length);
  $('scores-count').textContent=String(apps.reduce((n,a)=>n+Number(a.demo_judges||0)+Number(a.live_judges||0),0));
- $('paid-count').textContent='0';
+ $('paid-count').textContent='0'; // TEST payments must never become official registrations.
  const holder=$('admin-apps'),pager=$('organizer-pagination'),summary=$('organizer-count');
- const search=$('organizer-search'),language=$('organizer-language'),category=$('organizer-category'),statusFilter=$('organizer-status');
+ const search=$('organizer-search'),language=$('organizer-language'),category=$('organizer-category'),
+  statusFilter=$('organizer-status'),focus=$('organizer-focus');
+ const roster=$('organizer-roster-panel'),detail=$('organizer-detail'),
+  detailContent=$('organizer-detail-content'),back=$('organizer-back-list');
  let pageNo=1;const perPage=12;
+ detail.hidden=true;roster.hidden=false;
+ const countTasks=()=>{
+  $('org-pending-review').textContent=String(apps.filter(a=>reviewState(a).waitingApproval).length);
+  $('org-wait-payment').textContent=String(apps.filter(a=>reviewState(a).waitingPayment).length);
+  $('org-ready-review').textContent=String(apps.filter(a=>reviewState(a).ready).length);
+ };
+ const closeDetail=()=>{detail.hidden=true;detailContent.replaceChildren();roster.hidden=false;paint()};
+ back.onclick=()=>{closeDetail();search.focus({preventScroll:true})};
+ async function approve(a){
+  if(!confirm('確定核准「'+(a.stage_name||'選手')+'」的測試報名？核准後資料將鎖定，且必須已完成模擬付款才會出現在評審名單。'))return;
+  await run(async()=>{
+   const response=await api('approve-test-application',{application_id:a.id});
+   if(response.approval_state!=='approved'||response.testOnly!==true)throw Error('approval_readback_failed');
+   const fresh=await api('organizer-queue'),updated=(fresh.applications||[]).find(x=>x.id===a.id);
+   if(!updated||updated.approval_state!=='approved')throw Error('approval_readback_failed');
+   apps=fresh.applications;
+   countTasks();closeDetail();
+   status('✓ 已核准測試報名。'+(updated.payment_status==='simulated_paid'?'此作品已符合評審名單條件。':'仍需選手完成模擬付款，才會交給評審。'));
+  });
+ }
+ function openDetail(a){
+  roster.hidden=true;detail.hidden=false;detailContent.replaceChildren();
+  const current=apps.find(x=>x.id===a.id)||a,state=reviewState(current);
+  const title=node('h3',current.stage_name||'參賽者');detailContent.append(title);
+  const intro=node('p',(current.song_title||'未命名歌曲')+' · '+current.round_code+' · '+(current.category==='university'?'大學組':'社會組'),'minor');
+  detailContent.append(intro);
+  const steps=node('div',undefined,'staff-checklist');
+  steps.append(node('p',(state.approved?'✓':'○')+' 主辦資格核准：'+(state.approved?'已核准':'待核准')));
+  steps.append(node('p',(state.payment?'✓':'○')+' 選手模擬付款：'+(state.payment?'已完成':'未完成（主辦方不能代替真正付款）')));
+  steps.append(node('p',(state.ready?'✓':'○')+' 評審可見：'+(state.ready?'符合進入評審名單條件':'尚未達到條件')));
+  detailContent.append(steps);
+  detailContent.append(node('p','報名編號：'+current.id,'minor'));
+  detailContent.append(node('p','演唱語言：'+(current.song_language||'未提供')+' · '+recordStage(current),'minor'));
+  const photo=profileGallery(current);if(photo)detailContent.append(photo);
+  const link=safeLink(current.demo_url);
+  if(link){const aLink=node('a','開啟參賽影片（新分頁） ↗','btn btn-soft staff-video-link');aLink.href=link;aLink.target='_blank';aLink.rel='noopener noreferrer';detailContent.append(aLink)}
+  else detailContent.append(node('p','未提供可開啟的影片連結，請先請選手補正。','staff-warning'));
+  if(state.waitingApproval){
+   const button=node('button','核准測試報名','btn btn-primary');button.type='button';
+   button.onclick=()=>approve(current);detailContent.append(button);
+  }
+  detailContent.append(node('p','此處是 TEST 管理。核准不等於正式付款、正式錄取或通過作品內容審查。','minor'));
+  back.focus({preventScroll:true});detail.scrollIntoView({block:'start',behavior:'smooth'});
+ }
  function paint(){
-  const q=search.value.trim().toLowerCase(),lang=language.value,cat=category.value,st=statusFilter.value;
+  countTasks();
+  const q=search.value.trim().toLowerCase(),lang=language.value,cat=category.value,st=statusFilter.value,task=focus.value;
   const found=apps.filter(a=>{
+   const state=reviewState(a),scoreCount=Number(a.demo_judges||0)+Number(a.live_judges||0);
+   if(task==='pending'&&!state.waitingApproval)return false;
+   if(task==='waiting_payment'&&!state.waitingPayment)return false;
+   if(task==='ready'&&!state.ready)return false;
+   if(task==='scored'&&!scoreCount)return false;
    if(q&&![a.stage_name,a.song_title,a.id,a.round_code].some(x=>String(x||'').toLowerCase().includes(q)))return false;
    if(lang&&a.song_language!==lang)return false;
    if(cat&&a.category!==cat)return false;
-   if(st==='scored'&&!(Number(a.demo_judges||0)+Number(a.live_judges||0)))return false;
-   if(st==='unscored'&&(Number(a.demo_judges||0)+Number(a.live_judges||0)))return false;
+   if(st==='scored'&&!scoreCount)return false;
+   if(st==='unscored'&&scoreCount)return false;
    if(['unpaid','simulated_paid'].includes(st)&&a.payment_status!==st)return false;
    return true;
   });
   const pages=Math.max(1,Math.ceil(found.length/perPage));
   pageNo=Math.min(pageNo,pages);holder.replaceChildren();
-  summary.textContent='符合 '+found.length+' 筆報名資料（目前全部為測試資料；正式付款 0 筆）';
-  if(!found.length)holder.append(node('p','沒有符合條件的資料。'));
+  summary.textContent='符合 '+found.length+' 筆報名資料（每頁最多 '+perPage+' 筆；正式付款 0 筆）';
+  if(apps.length>=500)summary.textContent+='；資料庫列表目前最多讀取500筆，更多資料需伺服器分頁';
+  if(!found.length)holder.append(node('p','此篩選條件下沒有資料，可按「清除篩選」查看所有報名。','staff-empty'));
   for(const a of found.slice((pageNo-1)*perPage,pageNo*perPage)){
-   const card=node('article',undefined,'roster-entry');
+   const state=reviewState(a),card=node('article',undefined,'roster-entry');
    const info=node('div',undefined,'roster-entry-text');
    info.append(node('strong',(a.stage_name||'選手')+' · '+(a.song_title||'未命名曲目')));
-   info.append(node('p',a.round_code+' · '+(a.category==='university'?'大學組':'社會組')+' · '+(a.song_language||'語言未填'),'minor'));
+   info.append(node('p',a.round_code+' · '+(a.category==='university'?'大學組':'社會組')+' · '+(a.song_language||'未填語言'),'minor'));
    info.append(node('p','編號：'+a.id,'minor'));
-   const img=profileImage(a.photo_url_1);
-   if(img)info.prepend(img);
-   const stats=node('div',undefined,'roster-entry-side');
-   stats.append(node('span',a.payment_status==='simulated_paid'?'模擬付款':'未付款','pill'));
-   if(a.approval_state==='approved')stats.append(node('span','主辦已核准','pill pill-pass'));
-   if(a.approval_state==='pending'){
-    stats.append(node('span','待主辦核准','pill pill-warn'));
-    const approve=node('button','核准測試報名','btn btn-soft');approve.type='button';
-    approve.onclick=()=>{
-     if(!confirm('核准「'+(a.stage_name||'選手')+'」的測試報名？核准後會鎖定報名資料。'))return;
-     run(async()=>{
-      const result=await api('approve-test-application',{application_id:a.id});
-      if(result.approval_state!=='approved'||result.testOnly!==true)throw Error('approval_readback_failed');
-      a.approval_state='approved';paint();status('已核准測試報名。');
-     });
-    };
-    stats.append(approve);
+   const img=profileImage(a.photo_url_1);if(img)info.prepend(img);
+   const side=node('div',undefined,'roster-entry-side');
+   side.append(node('span',state.payment?'已模擬付款':'待模擬付款','pill'));
+   side.append(node('span',state.waitingApproval?'待主辦核准':state.approved?'主辦已核准':'待確認','pill '+(state.waitingApproval?'pill-warn':'pill-pass')));
+   side.append(node('small','評審回覆 '+String(Number(a.demo_judges||0)+Number(a.live_judges||0))+' 筆'));
+   const action=node('button','查看資料與下一步','btn btn-soft');action.type='button';action.onclick=()=>openDetail(a);
+   side.append(action);
+   // Preserve the existing one-click approval action for already-trained staff.
+   if(state.waitingApproval){
+    const button=node('button','核准測試報名','btn btn-soft staff-inline-approve');
+    button.type='button';button.onclick=()=>approve(a);side.append(button);
    }
-   stats.append(node('small','評審回覆 '+String(Number(a.demo_judges||0)+Number(a.live_judges||0))+' 筆'));
-   card.append(info,stats);holder.append(card);
+   card.append(info,side);holder.append(card);
   }
   makeRosterPager(pager,pageNo,pages,p=>{pageNo=p;paint()});
  }
- for(const control of [search,language,category,statusFilter]){
+ for(const control of [search,language,category,statusFilter,focus]){
   control.oninput=()=>{pageNo=1;paint()};
   control.onchange=()=>{pageNo=1;paint()};
  }
+ $('organizer-clear-filters').onclick=()=>{
+  for(const control of [search,language,category,statusFilter,focus])control.value='';
+  pageNo=1;paint();
+ };
  paint();
 }
 async function renderJudge(){
@@ -534,6 +595,8 @@ async function renderJudge(){
  const rosterPanel=$('judge-roster-panel'),detail=$('judge-detail'),holder=$('judge-queue'),back=$('judge-back-list');
  let pageNo=1;const perPage=10;
  detail.hidden=true;rosterPanel.hidden=false;holder.replaceChildren();
+ $('judge-unscored-total').textContent=String(queue.filter(a=>!scoredByJudge(a)).length);
+ $('judge-scored-total').textContent=String(queue.filter(scoredByJudge).length);
  function paint(){
   const q=search.value.trim().toLowerCase(),st=statusFilter.value;
   const found=queue.filter(a=>{
@@ -544,15 +607,23 @@ async function renderJudge(){
   const pages=Math.max(1,Math.ceil(found.length/perPage));
   pageNo=Math.min(pageNo,pages);list.replaceChildren();
   summary.textContent='符合 '+found.length+' 位參賽者 · 待評 '+found.filter(a=>!scoredByJudge(a)).length+' 位';
-  if(!found.length)list.append(node('p','目前沒有符合條件的參賽者。'));
+  if(queue.length>=500)summary.textContent+='；名單僅顯示最近500筆，需後端分頁處理更多資料';
+  if(!queue.length){
+   const empty=node('section',undefined,'staff-empty staff-judge-empty');
+   empty.append(node('h3','目前沒有可評分的作品'));
+   empty.append(node('p','這不代表報名資料不見了。只有「主辦方已核准」而且「選手已完成模擬付款」的作品才會進入這裡。'));
+   empty.append(node('p','請先請主辦方在「報名紀錄」核准測試報名；若選手還沒完成模擬付款，也需由選手在會員頁操作。','minor'));
+   const refresh=node('button','重新整理評審名單','btn btn-soft');refresh.type='button';
+   refresh.onclick=()=>run(async()=>{await renderJudge();status('已重新查詢評審名單。')});
+   empty.append(refresh);list.append(empty);
+  }else if(!found.length)list.append(node('p','目前沒有符合搜尋或篩選條件的作品。'));
   for(const a of found.slice((pageNo-1)*perPage,pageNo*perPage)){
    const row=node('button',undefined,'roster-entry roster-action');row.type='button';
    const body=node('span',undefined,'roster-entry-text');
-   const img=profileImage(a.photo_url_1);
-   if(img)body.append(img);
+   const img=profileImage(a.photo_url_1);if(img)body.append(img);
    body.append(node('strong',a.stage_name||'選手'));
    body.append(node('span',String(a.song_title||'作品')+' · '+a.round_code+' · '+(a.category==='university'?'大學組':'社會組'),'roster-mini'));
-   const flag=node('span',scoredByJudge(a)?'已評分':'開始評分','pill');
+   const flag=node('span',scoredByJudge(a)?'已評分':'開始評分','pill '+(scoredByJudge(a)?'pill-pass':'pill-warn'));
    row.append(body,flag);row.onclick=()=>openDetail(a);list.append(row);
   }
   makeRosterPager(pager,pageNo,pages,p=>{pageNo=p;paint()});
@@ -563,37 +634,61 @@ async function renderJudge(){
   back.onclick=()=>{if(modified&&!confirm('返回名單將放棄未儲存的分數，確定返回嗎？'))return;
    holder.replaceChildren();detail.hidden=true;rosterPanel.hidden=false;back.focus();paint();
   };
-  const box=node('article',undefined,'entry');
+  const box=node('article',undefined,'entry staff-score-detail');
   const phase=a.phase||'demo',demo=phase==='demo';
+  box.append(node('p','步驟 2／3 · 觀看作品，再完成評分','staff-step-label'));
   box.append(node('h3',(a.stage_name||'選手')+' · '+a.round_code));
   box.append(node('p',(a.song_title||'作品')+' · '+(a.song_language||'')+' · '+(demo?'線上海選':phase==='qualifier'?'現場初賽':'決賽'),'minor'));
   const pictures=profileGallery(a);if(pictures)box.append(pictures);
-  if(a.gender)box.append(node('p','參賽者填寫的性別：'+({male:'男',female:'女',other:'其他',prefer_not_say:'不願透露'}[a.gender]||'未提供'),'minor'));
   const link=safeLink(a.demo_url);
-  if(link){const l=node('a','觀看作品 ↗','small-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l);}
+  if(link){
+   const l=node('a','先觀看本人演唱影片 ↗','btn btn-soft staff-video-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l);
+   box.append(node('p','請確認影片連續60～90秒、本人入鏡、臉部與歌聲清楚。影片內容由評審自行查核。','minor'));
+  }else box.append(node('p','沒有可開啟的影片連結；請通知主辦方處理，勿憑空給分。','staff-warning'));
   if(scoredByJudge(a)){
    const xs=demo?[a.demo_technique,a.demo_interpretation]:[a.live_technique,a.live_interpretation,a.stage_presence,a.appearance];
    box.append(node('p','此階段已評分：'+xs.reduce((n,x)=>n+Number(x||0),0)+' 分（不能覆蓋）'));
    holder.append(box);back.focus();return;
   }
-  const form=node('form',undefined,'form-grid');
+  const form=node('form',undefined,'staff-score-form');
   form.addEventListener('input',()=>{modified=true});
-  const criteria=demo?[['technique','技巧（0–60）',60],['interpretation','表現（0–40）',40]]:
-   [['technique','技巧（0–40）',40],['interpretation','表現（0–30）',30],['stage_presence','台風（0–20）',20],['appearance','儀容（0–10）',10]];
+  const criteria=demo?[['technique','技巧',60],['interpretation','表現',40]]:
+   [['technique','技巧',40],['interpretation','表現',30],['stage_presence','台風',20],['appearance','儀容',10]];
+  const heading=node('h4','步驟 3／3 · 逐項評分','staff-score-form-heading');form.append(heading);
+  const instructions=node('p','請每格輸入 0 到該項滿分的整數。送出前先核對總分；同一階段送出後不能修改。','minor');form.append(instructions);
+  const grid=node('div',undefined,'staff-score-grid'),fields=[];
   for(const [name,labelText,max] of criteria){
-   const lab=node('label',undefined,'field'),input=node('input');
-   input.name=name;input.type='number';input.min='0';input.max=String(max);input.step='1';input.required=true;
-   lab.append(node('span',labelText),input);form.append(lab);
+   const lab=node('label',undefined,'staff-score-field'),input=node('input');
+   input.name=name;input.type='number';input.min='0';input.max=String(max);input.step='1';input.required=true;input.inputMode='numeric';
+   input.setAttribute('aria-label',labelText+' 0到'+max+'分');
+   lab.append(node('span',labelText+' · 滿分 '+max,'staff-score-name'),input);
+   grid.append(lab);fields.push(input);
   }
-  const agree=node('label',undefined,'check'),checkbox=node('input');checkbox.type='checkbox';checkbox.name='conflict';checkbox.required=true;
-  agree.append(checkbox,node('span','我確認此次評分沒有利益衝突。'));form.append(agree);
-  const save=node('button','儲存我的評分','btn btn-primary');save.type='submit';form.append(save);
+  form.append(grid);
+  const total=node('output','尚有 '+criteria.length+' 項未評分','staff-score-total');total.setAttribute('aria-live','polite');form.append(total);
+  const updateTotal=()=>{
+   let count=0,sum=0;
+   for(const input of fields){
+    if(input.value==='')continue;
+    if(!input.validity.valid)return total.textContent='請輸入各項有效的整數分數（不可超過滿分）';
+    count++;sum+=Number(input.value);
+   }
+   total.textContent=count===criteria.length?'目前總分：'+sum+'／100':('還有 '+(criteria.length-count)+' 項尚未填寫 · 已填分數合計 '+sum+'／100');
+  };
+  grid.addEventListener('input',updateTotal);
+  const agree=node('label',undefined,'check staff-score-consent'),checkbox=node('input');checkbox.type='checkbox';checkbox.name='conflict';checkbox.required=true;
+  agree.append(checkbox,node('span','我確認此評分沒有利益衝突，並已核對上述分數。'));form.append(agree);
+  const save=node('button','確認並儲存我的評分','btn btn-primary staff-score-submit');save.type='submit';form.append(save);
+  if(!link){save.disabled=true;form.append(node('p','沒有作品影片連結，請先請主辦方補正。','staff-warning'))}
   form.onsubmit=e=>{e.preventDefault();run(async()=>{
    const inputs=formValues(form),payload={application_id:a.id,phase,no_conflict:checkbox.checked};
    for(const [name] of criteria)payload[name]=Number(inputs[name]);
-   await api('score',payload);status('評分已儲存。');await renderJudge();
+   const saved=await api('score',payload);
+   const sum=criteria.reduce((n,[name])=>n+payload[name],0);
+   if(Number(saved.score)!==sum)throw Error('score_write_unverified');
+   await renderJudge();status('✓ '+(a.stage_name||'參賽者')+'：評分 '+sum+'／100 已由伺服器儲存；此階段不得覆蓋。');
   })};
-  box.append(form);holder.append(box);back.focus();
+  box.append(form);holder.append(box);back.focus();detail.scrollIntoView({block:'start',behavior:'smooth'});
  }
  search.oninput=()=>{pageNo=1;paint()};statusFilter.onchange=()=>{pageNo=1;paint()};
  paint();
