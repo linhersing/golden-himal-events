@@ -511,7 +511,7 @@ async function renderOrganizer(){
    if(!updated||updated.approval_state!=='approved')throw Error('approval_readback_failed');
    apps=fresh.applications;submissionMode=fresh.submission_mode==='uploads'?'uploads':'links';
    countTasks();closeDetail();
-   status('✓ 已核准測試報名。'+(updated.payment_status==='simulated_paid'?'此作品已符合評審名單條件。':'仍需選手完成模擬付款，才會交給評審。'));
+   status('✓ 已核准測試報名。'+(reviewState(updated,submissionMode).ready?'此作品已符合評審名單條件。':updated.payment_status!=='simulated_paid'?'仍需選手完成模擬付款，才會交給評審。':'請補齊作品與相關資格文件，才會交給評審。'));
   });
  }
  function openDetail(a){
