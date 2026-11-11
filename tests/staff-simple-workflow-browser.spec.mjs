@@ -112,3 +112,26 @@ test('uploaded-only performance remains scoreable through authenticated video do
  await expect(page.locator('#judge-queue a.staff-video-link')).toHaveAttribute('href','/api/e2e/demo-download?application=SYNTH-UPLOAD');
  await expect(page.locator('#judge-queue button[type=submit]')).toBeEnabled();
 });
+
+test('organizer upload-mode readiness requires identity and receipt evidence as reviewer queue does',async({page})=>{
+ let proof=false;
+ const entry={id:'QA-UPLOAD',stage_name:'TEST Evidence Singer',song_title:'TEST Song',round_code:'2027-01',
+  category:'community',song_language:'Nepali',payment_status:'simulated_paid',approval_state:'approved',
+  demo_url:null,has_uploaded_file:true,has_eligibility_file:false,has_receipt_file:false,
+  demo_judges:0,live_judges:0};
+ await page.route('**/api/e2e/**',async route=>{
+  const path=new URL(route.request().url()).pathname.split('/').pop();
+  const reply=path==='me'?{ok:true,account:{id:'QA-ORG',role:'organizer',available_roles:['organizer']}}:
+   path==='organizer-queue'?{ok:true,submission_mode:'uploads',applications:[{...entry,has_eligibility_file:proof,has_receipt_file:proof}]}:{ok:true};
+  await route.fulfill({json:reply});
+ });
+ await page.goto('/backoffice.html');
+ await expect(page.locator('#org-ready-review')).toHaveText('0');
+ await page.locator('#admin-apps .roster-entry button').filter({hasText:'查看資料與下一步'}).click();
+ await expect(page.locator('#organizer-detail')).toContainText('仍須補齊資格證明、收據與演唱影片');
+ await page.locator('#organizer-back-list').click();
+ proof=true;await page.reload();
+ await expect(page.locator('#org-ready-review')).toHaveText('1');
+ await page.locator('#organizer-focus').selectOption('ready');
+ await expect(page.locator('#admin-apps .roster-entry')).toHaveCount(1);
+});
