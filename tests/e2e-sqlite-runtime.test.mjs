@@ -314,6 +314,8 @@ test('public TEST signup requires a verified sender and Turnstile, and keeps sin
   assert.equal(saved.status,201,await saved.clone().text());
   return cookie;
  }
+ env.STAGING_ALLOWED_EMAILS='';
+ assert.equal(await config(),'public_test','public signup does not require an invited mailbox');
  const first=await register('first@test.invalid','first','community');
  const second=await register('second@test.invalid','second','university');
  for(const [cookie,category] of [[first,'community'],[second,'university']]){
@@ -325,6 +327,7 @@ test('public TEST signup requires a verified sender and Turnstile, and keeps sin
  const record=db.prepare('INSERT INTO e2e_public_signup_attempts VALUES(?,?,?)');
  for(let i=0;i<32;i++)record.run('synthetic-'+i,'synthetic-source',Math.floor(Date.now()/1000));
  assert.equal((await send('global@test.invalid','global','member','203.0.113.2')).status,429);
+ env.STAGING_ALLOWED_EMAILS='owner@test.invalid';
  assert.equal((await send('owner@test.invalid',undefined)).status,200,'public budget does not block the invited owner');
  env.STAGING_PUBLIC_SIGNUP_ENABLED='false';
  assert.equal(await config(),'invited');

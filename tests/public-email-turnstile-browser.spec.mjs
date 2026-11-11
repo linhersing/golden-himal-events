@@ -30,17 +30,20 @@ test('blocked Cloudflare script shows actionable retry instead of an invisible c
 });
 
 test('synthetic successful challenge enables Email code request and sends token',async({page})=>{
+ await page.clock.install();
  const sends=[];
  await routeAPI(page,sends);
  await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',route=>route.fulfill({
   status:200,contentType:'application/javascript',
-  body:"window.turnstile={ready:cb=>cb(),render:(el,cfg)=>{const b=document.createElement('div');b.textContent='TEST HUMAN CHECK';el.append(b);window.__solveTestChallenge=()=>cfg.callback('synthetic-one-time-turnstile-token');return 'widget-test'},reset:()=>{},remove:()=>{}};"
+  body:"window.turnstile={ready:()=>{throw Error('Turnstile ready rejects async loading')},render:(el,cfg)=>{const b=document.createElement('div');b.textContent='TEST HUMAN CHECK';b.attachShadow({mode:'closed'}).append(document.createElement('iframe'));el.append(b);window.__solveTestChallenge=()=>cfg.callback('synthetic-one-time-turnstile-token');return 'widget-test'},reset:()=>{},remove:()=>{}};"
  }));
  await page.goto('/member.html#register');
  await page.locator('[data-lang=zh]').click();
  const send=page.locator('#member-email-form button[type=submit]');
  await expect(page.locator('#signup-turnstile')).toContainText('TEST HUMAN CHECK');
  await expect(send).toBeDisabled();
+ await page.clock.fastForward(11000);
+ await expect(page.locator('#signup-human-retry')).toBeHidden();
  await page.evaluate(()=>window.__solveTestChallenge());
  await expect(page.locator('#signup-human-status')).toContainText('真人驗證已完成');
  await expect(send).toBeEnabled();

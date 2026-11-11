@@ -166,7 +166,7 @@ async function loadSession(){try{
  }catch(e){account=null;authUI(false);if(staff)staffTabs();if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
 function setupAuth(){
 const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
-let challengeEmail,publicTest=false,humanToken,widgetId,widgetTimer;
+let challengeEmail,publicTest=false,humanToken,widgetId,widgetTimer,widgetScript;
 const humanBox=$('signup-human-status'),retryButton=$('signup-human-retry');
 const sendButton=mailForm?.querySelector('button[type="submit"]');
 let widgetLoading=false;
@@ -184,37 +184,34 @@ function humanError(code){
  clearTimeout(widgetTimer);widgetLoading=false;clearHumanToken();
  humanState('signupHumanBlocked','error');
  // A public Cloudflare error code helps diagnosis; do not log the widget token or keys.
- if(code&&/^\\d{4,7}$/.test(String(code)))humanBox.textContent+=' (CF '+code+')';
+ if(code&&/^\d{4,7}$/.test(String(code)))humanBox.textContent+=' (CF '+code+')';
 }
 function renderHumanWidget(siteKey){
  const widget=$('signup-turnstile');
  try{
   if(!window.turnstile||typeof window.turnstile.render!=='function')throw Error('widget_unavailable');
-  window.turnstile.ready(()=>{
-   try{
-    widgetId=window.turnstile.render(widget,{
-     sitekey:siteKey,size:'normal',appearance:'always',theme:'light',
-     action:'ghv_signup','response-field':false,
-     callback:token=>{
-      clearTimeout(widgetTimer);widgetLoading=false;
-      if(typeof token!=='string'||!token){humanError();return}
-      humanToken=token;
-      humanState('signupHumanVerified','verified');
-     },
-     'expired-callback':()=>{clearHumanToken();humanState('signupHumanExpired','pending')},
-     'timeout-callback':()=>{clearHumanToken();humanState('signupHumanExpired','pending')},
-     'error-callback':code=>humanError(code)
-    });
+  // The async script's load event makes render available. Turnstile.ready rejects async scripts.
+  widgetId=window.turnstile.render(widget,{
+   sitekey:siteKey,size:widget.clientWidth<300?'compact':'normal',appearance:'always',theme:'light',
+   action:'ghv_signup','response-field':false,
+   callback:token=>{
     clearTimeout(widgetTimer);widgetLoading=false;
-    if(!humanToken){
-     humanState('signupHumanPrompt');
-     // Some blockers prevent the iframe without firing a script error.
-     widgetTimer=setTimeout(()=>{
-      if(!humanToken&&!widget.querySelector('iframe'))humanError();
-     },10000);
-    }
-   }catch{humanError()}
+    if(typeof token!=='string'||!token){humanError();return}
+    humanToken=token;
+    humanState('signupHumanVerified','verified');
+   },
+   'expired-callback':()=>{clearHumanToken();humanState('signupHumanExpired','pending')},
+   'timeout-callback':()=>{clearHumanToken();humanState('signupHumanExpired','pending')},
+   'error-callback':code=>humanError(code)
   });
+  clearTimeout(widgetTimer);widgetLoading=false;
+  if(!humanToken){
+   humanState('signupHumanPrompt');
+   // Turnstile mounts an iframe in a closed shadow tree. Check its host.
+   widgetTimer=setTimeout(()=>{
+    if(!humanToken&&!widget.firstElementChild)humanError();
+   },10000);
+  }
  }catch{humanError()}
 }
 function beginHumanWidget(siteKey){
@@ -225,11 +222,12 @@ function beginHumanWidget(siteKey){
  humanState('signupHumanLoading');
  widgetTimer=setTimeout(()=>{if(widgetLoading)humanError()},12000);
  if(window.turnstile?.render){renderHumanWidget(siteKey);return}
- const script=document.createElement('script');
+ widgetScript?.remove();
+ const script=widgetScript=document.createElement('script');
  script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
  script.async=true;
- script.onload=()=>renderHumanWidget(siteKey);
- script.onerror=()=>humanError();
+ script.onload=()=>{if(script===widgetScript)renderHumanWidget(siteKey)};
+ script.onerror=()=>{if(script===widgetScript)humanError()};
  document.head.append(script);
 }
 const signupConfig=staff?Promise.resolve():api('signup-config').then(config=>{

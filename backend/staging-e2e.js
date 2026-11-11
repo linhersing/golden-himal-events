@@ -72,7 +72,8 @@ async function ownsApplication(env,a,ownerId){
 function configured(env){
  return env.STAGING_E2E_ENABLED==='true'&&env.DB&&
  typeof env.STAGING_IDENTITY_SECRET==='string'&&env.STAGING_IDENTITY_SECRET.length>=32&&
- ((mailProviderReady(env)&&mailSenderReady(env)&&emails(env,'STAGING_ALLOWED_EMAILS').length>0)||
+ ((mailProviderReady(env)&&mailSenderReady(env)&&
+   (env.STAGING_PUBLIC_SIGNUP_ENABLED==='true'||emails(env,'STAGING_ALLOWED_EMAILS').length>0))||
   env.STAGING_PASSWORD_SIGNUP_ENABLED==='true');
 }
 function cookie(token,age=MAX_AGE){return COOKIE+'='+token+'; Path=/; Max-Age='+age+'; HttpOnly; Secure; SameSite=Lax'}
