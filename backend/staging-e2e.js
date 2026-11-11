@@ -5,6 +5,7 @@ import {validPerformanceLink} from '../public/performance-link.js';
 import {handleV2Route} from './staging-v2-flow.js';
 import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
 import {approvalRequired,approvalSchemaReady,approvalColumn,approvalGuard,pendingGuard} from './test-application-approval.js';
+import {contactReady,parseContact,contactInsert,contactUpsert,attachContacts} from './entrant-contacts.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
  * No official entries, actual payments, or exposed R2 URLs.
@@ -203,7 +204,7 @@ async function applications(a,env){
  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingGuard(approval,'p')}
  THEN 1 ELSE 0 END AS can_edit${approvalColumn(approval)}
  FROM e2e_applications p WHERE p.account_id=? ORDER BY p.created_at DESC`).bind(a.id).all();
- return json({ok:true,account:{id:a.id,role:a.role},applications:await attachProfiles(env,rows.results||[]),testOnly:true});
+ return json({ok:true,account:{id:a.id,role:a.role},applications:await attachContacts(env,await attachProfiles(env,rows.results||[])),testOnly:true});
 }
 async function submitApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
@@ -217,6 +218,8 @@ async function submitApplication(request,env,a){
  if(b.category==='community'&&b.adult_confirmed!==true)return deny('community_age_confirmation_required',422);
  if(b.category==='university'&&b.student_confirmed!==true)return deny('university_student_confirmation_required',422);
  if(b.no_exclusive_contract!==true)return deny('contract_declaration_required',422);
+ // Self-declaration only: organizers must still watch the linked performance.
+ if(Object.hasOwn(b,'video_confirmed')&&b.video_confirmed!==true)return deny('video_self_recording_confirmation_required',422);
  const fields=['stage_name','affiliation','song_title','original_artist','song_language','song_key'];
  const values=fields.map(k=>String(b[k]||'').trim());
  if(values.some(x=>x.length<1||x.length>100)||values[0].length<2)return deny('missing_song_or_identity_test_fields',422);
@@ -226,6 +229,17 @@ async function submitApplication(request,env,a){
  if(parsed.error)return deny(parsed.error,422);
  const profile=parsed.profile;
  if(profile&&!(await profileReady(env)))return deny('profile_not_enabled',503);
+ const contactsEnabled=await contactReady(env);
+ let contact=null;
+ if(contactsEnabled){
+  const checked=parseContact(b);
+  if(checked.error)return deny(checked.error,422);
+  contact=checked.contact;
+  const verified=a.email?norm(a.email)===contact.contact_email:
+   a.mailboxFingerprint?await sign(env,'email:'+contact.contact_email)===a.mailboxFingerprint:false;
+  if(!verified)return deny('contact_email_must_match_verified_login',422);
+ }else if(['contact_email','contact_phone','contact_consent'].some(key=>Object.hasOwn(b,key)))
+  return deny('contact_storage_not_enabled',503);
  const prior=await env.DB.prepare('SELECT category,phase FROM e2e_applications WHERE account_id=? LIMIT 1').bind(a.id).first();
  if(prior&&prior.category!==b.category)return deny('annual_category_locked',409);
  const finalist=await env.DB.prepare("SELECT id FROM e2e_applications WHERE account_id=? AND phase='final' LIMIT 1").bind(a.id).first();
@@ -234,12 +248,15 @@ async function submitApplication(request,env,a){
  try{
   const createApp=env.DB.prepare('INSERT INTO e2e_applications(id,account_id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,demo_url,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
    .bind(id,a.id,b.round_code,b.category,b.province,b.location_basis,...values.slice(1,2),values[0],...values.slice(2),url||null,now,now);
-  // D1 batch is atomic. A profile write failure must NOT leave a half-created entry.
-  if(profile){
-   if(typeof env.DB.batch!=='function')return deny('profile_storage_unavailable',503);
-   await env.DB.batch([createApp,profileInsert(env.DB,id,profile,now)]);
+  // D1 batch is atomic. Contact/profile failure must never leave a partial entry.
+  if(profile||contact){
+   if(typeof env.DB.batch!=='function')return deny('application_storage_unavailable',503);
+   const writes=[createApp];
+   if(profile)writes.push(profileInsert(env.DB,id,profile,now));
+   if(contact)writes.push(contactInsert(env.DB,id,contact,now));
+   await env.DB.batch(writes);
   }else await createApp.run();
- }catch{return deny(profile?'profile_database_error':'duplicate_round_or_database_rejected',profile?503:409)}
+ }catch{return deny(profile||contact?'application_storage_unavailable':'duplicate_round_or_database_rejected',profile||contact?503:409)}
  return json({ok:true,application_id:id,phase:'demo',status:'submitted',source:'cloudflare-d1-staging',testOnly:true,
   ...(approvalRequired(env)?{approval_state:'pending'}:{})},201);
 }
@@ -250,7 +267,8 @@ async function updateApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request,2500);if(!b)return deny('invalid_json');
  const profileFields=['gender','photo_url_1','photo_url_2','photo_url_3','profile_consent'];
- const allowed=['application_id','stage_name','song_title','original_artist','song_language','demo_url',...profileFields];
+ const contactFields=['contact_email','contact_phone','contact_consent'];
+ const allowed=['application_id','stage_name','song_title','original_artist','song_language','demo_url',...profileFields,...contactFields];
  if(Object.keys(b).some(k=>!allowed.includes(k)))return deny('update_fields_only',422);
  const id=String(b.application_id||'');
  const values=['stage_name','song_title','original_artist','demo_url'].map(k=>typeof b[k]==='string'?b[k].trim():'');
@@ -260,6 +278,16 @@ async function updateApplication(request,env,a){
  const parsed=editingProfile?parseProfileInput(b):{profile:null};
  if(parsed.error)return deny(parsed.error,422);
  if(editingProfile&&!(await profileReady(env)))return deny('profile_not_enabled',503);
+ const editingContact=contactFields.some(key=>Object.hasOwn(b,key));
+ if(editingContact&&!(await contactReady(env)))return deny('contact_storage_not_enabled',503);
+ let contact=null;
+ if(editingContact){
+  const checked=parseContact(b);if(checked.error)return deny(checked.error,422);
+  contact=checked.contact;
+  const verified=a.email?norm(a.email)===contact.contact_email:
+   a.mailboxFingerprint?await sign(env,'email:'+contact.contact_email)===a.mailboxFingerprint:false;
+  if(!verified)return deny('contact_email_must_match_verified_login',422);
+ }
  const app=await selectApplication(env.DB,id,a.id);
  if(!app)return deny('application_not_found',404);
  const songLanguage=b.song_language===undefined?app.song_language:String(b.song_language).trim();
@@ -276,8 +304,10 @@ async function updateApplication(request,env,a){
   .bind(...values.slice(0,3),songLanguage,values[3],NOW(),id,a.id);
  let affected=0;
  try {
-  if(editingProfile){
-   if(typeof env.DB.batch!=='function')return deny('profile_storage_unavailable',503);
+  if(editingProfile||editingContact){
+   if(typeof env.DB.batch!=='function')return deny('application_storage_unavailable',503);
+   const statements=[updateStmt];
+   if(editingProfile){
    const profileStmt=parsed.profile?
     profileUpsert(env.DB,id,a.id,parsed.profile,NOW(),pendingProfile):
     env.DB.prepare(`DELETE FROM e2e_application_profiles WHERE application_id=? AND EXISTS(SELECT 1 FROM e2e_applications p
@@ -286,13 +316,16 @@ async function updateApplication(request,env,a){
     AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
     AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
     AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingProfile})`).bind(id,id,a.id);
-   const result=await env.DB.batch([updateStmt,profileStmt]);
+   statements.push(profileStmt);
+   }
+   if(editingContact)statements.push(contactUpsert(env.DB,id,a.id,contact,NOW(),pendingProfile));
+   const result=await env.DB.batch(statements);
    affected=Number(result?.[0]?.meta?.changes||0);
   }else{
    const result=await updateStmt.run();
    affected=Number(result?.meta?.changes||0);
   }
- }catch{return deny(editingProfile?'profile_database_error':'update_locked',editingProfile?503:409)}
+ }catch{return deny(editingProfile||editingContact?'application_storage_unavailable':'update_locked',editingProfile||editingContact?503:409)}
  if(!affected)return deny('update_locked',409);
  const result=await selectApplication(env.DB,id,a.id);
  return json({ok:true,application_id:result.id,stage_name:result.stage_name,song_title:result.song_title,original_artist:result.original_artist,song_language:result.song_language,demo_url:result.demo_url,testOnly:true});
@@ -444,9 +477,9 @@ export async function handleE2E(request,env){
   const approval=approvalRequired(env);
   if(approval&&!await approvalSchemaReady(env))return deny('test_approval_schema_unavailable',503);
   if(!a.email&&['/api/e2e/finalists','/api/e2e/test-vote'].includes(pathname))return deny('not_on_test_allowlist',403);
-  const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval});
+  const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,attachContacts,approval});
   if(v2)return v2;
-  if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),testOnly:true,...(approval?{approval_enabled:true}:{})});
+  if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),contact_enabled:await contactReady(env),testOnly:true,...(approval?{approval_enabled:true}:{})});
   if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env);
   if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
    if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a);

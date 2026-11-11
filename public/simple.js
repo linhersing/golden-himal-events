@@ -56,7 +56,7 @@ const safeLink=(url)=>{try{const u=new URL(url);return u.protocol==='https:'?u.h
 const formValues=form=>Object.fromEntries(new FormData(form));
 const mt=k=>window.GHVLocale?.t(k)||k;
 const staff=page==='back',prefix=staff?'back':'member';
-let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false;
+let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,contactEnabled=false;
 const statusBox=$(prefix+'-status');
 function permittedPhoto(url){const href=safeLink(url);if(!href)return null;try{const x=new URL(href);if(x.username||x.password||(x.port&&x.port!=='443')||x.hostname==='localhost'||x.hostname.endsWith('.local')||x.hostname.endsWith('.internal'))return null;return href}catch{return null}}
 function profileImage(url,large=false){
@@ -102,6 +102,18 @@ function setupProfileFields(ready){
  sync();
 }
 
+function setupContactFields(ready){
+ contactEnabled=Boolean(ready);
+ const group=$('contact-info-fields'),pending=$('contact-pending');
+ if(group){
+  group.hidden=!contactEnabled;
+  group.querySelectorAll('input').forEach(input=>{input.disabled=!contactEnabled;});
+  const email=group.querySelector('[name=contact_email]');
+  const loggedEmail=$('member-email-form')?.querySelector('[name=email]')?.value?.trim();
+  if(contactEnabled&&email&&!email.value&&loggedEmail)email.value=loggedEmail;
+ }
+ if(pending)pending.hidden=contactEnabled;
+}
 function status(text,bad=false){if(!statusBox)return;statusBox.hidden=false;statusBox.className='feedback'+(bad?' error':' success');statusBox.textContent=text;statusBox.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function friendlyError(e){
  if(page==='member'){
@@ -125,6 +137,13 @@ function friendlyError(e){
  invalid_public_photo_url:'請輸入公開、安全的 HTTPS 照片網址。',
  invalid_gender:'請選擇有效的性別欄位。',
  main_photo_required:'填寫補充照片前，請先提供主照片網址。',
+ contact_email_invalid:mt('contactEmail')+'：請輸入有效信箱。',
+ contact_phone_invalid:mt('contactPhoneHelp'),
+ contact_consent_required:mt('contactConsent'),
+ contact_email_must_match_verified_login:'聯絡 Email 必須與剛才通過驗證的登入信箱相同。',
+ contact_storage_not_enabled:'聯絡資料尚未開通安全儲存，沒有送出電話。',
+ application_storage_unavailable:'聯絡資料或報名資料無法確認寫入，請勿重複送出。',
+ video_self_recording_confirmation_required:mt('videoConfirm'),
  invalid_song_language:mt('invalidSongLanguage'),
  readback_mismatch:mt('readbackFail'),
  mock_payment_not_allowed:'This application cannot be checked out.',
@@ -161,8 +180,12 @@ async function loadSession(){try{
  const granted=v.account.available_roles||[v.account.role];
  const target=staff?(granted.includes('organizer')?'organizer':granted.includes('reviewer')?'reviewer':null):'member';
  if(!target||!granted.includes(target)){account=null;authUI(false);staffTabs();return;}
- if((staff&&!['organizer','reviewer'].includes(v.account.role))||(!staff&&v.account.role!=='member'))v=await api('switch-role',{role:target});
- account=v.account;role=account.role;authUI(true);if(staff)staffTabs();else setupProfileFields(v.profile_enabled===true);await dashboard();
+ if((staff&&!['organizer','reviewer'].includes(v.account.role))||(!staff&&v.account.role!=='member')){
+  await api('switch-role',{role:target});
+  // switch-role returns account only; re-read the capability flags from /me.
+  v=await api('me');
+ }
+ account=v.account;role=account.role;authUI(true);if(staff)staffTabs();else {setupProfileFields(v.profile_enabled===true);setupContactFields(v.contact_enabled===true);}await dashboard();
  }catch(e){account=null;authUI(false);if(staff)staffTabs();if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
 function setupAuth(){
 const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
@@ -399,6 +422,7 @@ function showEdit(a){
  const fields=[
   ['stage_name','stageName'],['song_title','songTitle'],
   ['original_artist','artist'],['song_language','songLang'],['demo_url','videoUrl'],
+  ...(contactEnabled?[['contact_email','contactEmail'],['contact_phone','contactPhone']]:[]),
   ...(profileEnabled?[['gender','profileGender'],['photo_url_1','profileMainPhoto'],['photo_url_2','profilePhoto2'],['photo_url_3','profilePhoto3']]:[])
  ];
  for(const [name,key] of fields){
@@ -413,13 +437,20 @@ function showEdit(a){
   }else{
    input=node('input');
    if(name==='demo_url'||name.startsWith('photo_url_'))input.type='url';
-   input.maxLength=name==='demo_url'?1000:name.startsWith('photo_url_')?600:100;
+   if(name==='contact_email')input.type='email';
+   if(name==='contact_phone')input.type='tel';
+   input.maxLength=name==='demo_url'?1000:name.startsWith('photo_url_')?600:name==='contact_email'?250:name==='contact_phone'?30:100;
   }
   input.name=name;input.value=a[name]||'';
   input.required=!['gender','photo_url_1','photo_url_2','photo_url_3'].includes(name);
   lab.append(label,input);
   if(name==='demo_url')lab.classList.add('full');
   form.append(lab);
+ }
+ if(contactEnabled){
+  const consent=node('label',undefined,'check full'),check=node('input');
+  check.type='checkbox';check.name='contact_consent';check.required=true;
+  consent.append(check,node('span',mt('contactConsent')));form.append(consent);
  }
  if(profileEnabled){
   const consent=node('label',undefined,'check full'),check=node('input');
@@ -435,11 +466,13 @@ function showEdit(a){
  form.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
   const payload={application_id:a.id,...formValues(form)};
   if(profileEnabled)payload.profile_consent=form.querySelector('[name=profile_consent]')?.checked===true;
+  if(contactEnabled)payload.contact_consent=form.querySelector('[name=contact_consent]')?.checked===true;
   await api('update-application',payload);
   const check=await api('applications');
   const saved=(check.applications||[]).find(row=>row.id===a.id);
   const names=['stage_name','song_title','original_artist','song_language','demo_url',
-   ...(profileEnabled?['gender','photo_url_1','photo_url_2','photo_url_3']:[])];
+   ...(profileEnabled?['gender','photo_url_1','photo_url_2','photo_url_3']:[]),
+   ...(contactEnabled?['contact_email','contact_phone']:[])];
   if(!saved||names.some(key=>{
    const entered=String(payload[key]??'').trim();
    // The server trims text and stores accepted photo URLs in their canonical form.
@@ -479,7 +512,7 @@ async function renderOrganizer(){
  function paint(){
   const q=search.value.trim().toLowerCase(),lang=language.value,cat=category.value,st=statusFilter.value;
   const found=apps.filter(a=>{
-   if(q&&![a.stage_name,a.song_title,a.id,a.round_code].some(x=>String(x||'').toLowerCase().includes(q)))return false;
+   if(q&&![a.stage_name,a.song_title,a.id,a.round_code,a.contact_email,a.contact_phone].some(x=>String(x||'').toLowerCase().includes(q)))return false;
    if(lang&&a.song_language!==lang)return false;
    if(cat&&a.category!==cat)return false;
    if(st==='scored'&&!(Number(a.demo_judges||0)+Number(a.live_judges||0)))return false;
@@ -497,6 +530,9 @@ async function renderOrganizer(){
    info.append(node('strong',(a.stage_name||'選手')+' · '+(a.song_title||'未命名曲目')));
    info.append(node('p',a.round_code+' · '+(a.category==='university'?'大學組':'社會組')+' · '+(a.song_language||'語言未填'),'minor'));
    info.append(node('p','編號：'+a.id,'minor'));
+   // This renders ONLY in an authenticated organizer view, never a judge queue.
+   if(a.contact_email)info.append(node('p',mt('contactEmail')+': '+a.contact_email,'minor'));
+   if(a.contact_phone)info.append(node('p',mt('contactPhone')+': '+a.contact_phone,'minor'));
    const img=profileImage(a.photo_url_1);
    if(img)info.prepend(img);
    const stats=node('div',undefined,'roster-entry-side');
@@ -607,8 +643,12 @@ if(page==='member'){
  details.addEventListener('toggle',syncStart);
  start?.addEventListener('click',()=>{details.open=true;syncStart();details.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>application.querySelector('[name=stage_name]')?.focus({preventScroll:true}),180)});
  application.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
- const v=formValues(application),data={...v,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
- const saved=await api('applications',data);application.reset();toggle();details.open=false;status('✓ '+mt('saved')+' '+mt('entryId')+': '+saved.application_id);await renderMember()})});
+ const v=formValues(application),data={...v,video_confirmed:application.querySelector('[name=video_confirmed]')?.checked===true,contact_consent:contactEnabled?application.querySelector('[name=contact_consent]')?.checked===true:undefined,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
+ const saved=await api('applications',data);
+ const check=await api('applications'),record=(check.applications||[]).find(a=>a.id===saved.application_id);
+ if(!record||(contactEnabled&&(record.contact_email!==String(data.contact_email||'').trim().toLowerCase()||
+  record.contact_phone!==String(data.contact_phone||'').trim())))throw Error('readback_mismatch');
+ application.reset();toggle();details.open=false;status('✓ '+mt('saved')+' '+mt('entryId')+': '+saved.application_id);await renderMember()})});
  const toggle=()=>{const community=$('category').value==='community';const adult=application.querySelector('[name=adult_confirmed]'),student=application.querySelector('[name=student_confirmed]');$('community-statement').hidden=!community;$('university-statement').hidden=community;adult.required=community;student.required=!community;if(community)student.checked=false;else adult.checked=false;};
  $('category').addEventListener('change',toggle);toggle();
  if(location.hash==='#register')details.open=true;syncStart();

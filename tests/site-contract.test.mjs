@@ -99,3 +99,27 @@ test('main singer page contains no-email TEST member controls, retains invited l
  assert.doesNotMatch(ui,/localStorage\.setItem\([^)]*(password|recovery)/i);
  assert.doesNotMatch(html,/value="GHV-[0-9A-F-]+"/);
 });
+
+test('audition video is self-filmed, clear and shareable without account access',async()=>{
+ const [html,js,css]=await Promise.all([
+  read('public/member.html'),read('public/page-locale.js'),read('public/simple.css')
+ ]);
+ for(const key of ['videoGuideBody','videoTechPicture','videoTechFraming','videoTechLighting',
+  'videoTechSound','videoTechFile','videoTechAccess','videoHelp','videoConfirm']){
+  assert.ok(html.includes('data-l="'+key+'"'),'missing accessible video field '+key);
+  assert.ok(js.includes('\\\"'+key+'\\\"')||js.includes('"'+key+'"'),'missing translation '+key);
+ }
+ assert.match(html,/<details class="audition-technical">/);
+ assert.match(html,/name="demo_url"/);
+ assert.match(html,/name="video_confirmed" type="checkbox" required/);
+ assert.match(js,/1920 × 1080/);
+ assert.match(js,/1280 × 720/);
+ assert.match(js,/1080p/);
+ assert.match(js,/720p/);
+ assert.match(js,/Google Drive/);
+ assert.match(js,/YouTube/);
+ assert.match(js,/無痕視窗/);
+ assert.match(js,/यो वेबसाइट|अडिसन|भिडियो/);
+ assert.match(css,/audition-technical summary:focus-visible/);
+ assert.doesNotMatch(html,/name="demo_url"[^>]*type="file"/);
+});
