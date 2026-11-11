@@ -263,10 +263,11 @@ test('main member page sends a fresh Turnstile token and verifies the same mailb
  await expect(page.locator('#signup-mode')).toContainText('Self-service test signup is open');
  await expect(page.getByText('No real payment.',{exact:false}).first()).toBeVisible();
   await page.locator('#member-email-form [name=email]').fill('singer@example.invalid');
- await page.locator('#member-email-form button[type=submit]').click();
- await expect(page.locator('#member-status')).toContainText('Complete the human verification');
+ await expect(page.locator('#member-email-form button[type=submit]')).toBeDisabled();
+ await expect(page.locator('#signup-human-status')).toContainText('Complete the human verification');
  expect(requests).toHaveLength(0);
  await page.getByRole('button',{name:'Solve test challenge'}).click();
+ await expect(page.locator('#member-email-form button[type=submit]')).toBeEnabled();
  await page.locator('#member-email-form button[type=submit]').click();
  await expect(page.locator('#member-status')).toContainText('Check your inbox and spam folder');
  await page.locator('#member-code-form [name=code]').fill('123456');
