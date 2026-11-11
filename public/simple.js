@@ -640,11 +640,17 @@ async function renderJudge(){
   box.append(node('h3',(a.stage_name||'選手')+' · '+a.round_code));
   box.append(node('p',(a.song_title||'作品')+' · '+(a.song_language||'')+' · '+(demo?'線上海選':phase==='qualifier'?'現場初賽':'決賽'),'minor'));
   const pictures=profileGallery(a);if(pictures)box.append(pictures);
-  const link=safeLink(a.demo_url);
+  if(a.gender)box.append(node('p','參賽者填寫的性別：'+({male:'男',female:'女',other:'其他',prefer_not_say:'不願透露'}[a.gender]||'未提供'),'minor'));
+  const link=safeLink(a.demo_url),uploaded=Boolean(a.has_uploaded_file);
   if(link){
    const l=node('a','先觀看本人演唱影片 ↗','btn btn-soft staff-video-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l);
    box.append(node('p','請確認影片連續60～90秒、本人入鏡、臉部與歌聲清楚。影片內容由評審自行查核。','minor'));
-  }else box.append(node('p','沒有可開啟的影片連結；請通知主辦方處理，勿憑空給分。','staff-warning'));
+  }else if(uploaded){
+   const l=node('a','觀看受權限保護的上傳影片 ↗','btn btn-soft staff-video-link');
+   l.href='/api/e2e/demo-download?application='+encodeURIComponent(a.id);l.target='_blank';
+   l.rel='noopener noreferrer';box.append(l);
+   box.append(node('p','此影片存於受保護的測試儲存空間，需使用受邀評審登入才可觀看。請先確認本人演唱和影像/聲音清楚。','minor'));
+  }else box.append(node('p','沒有可開啟的影片連結或上傳影片；請通知主辦方處理，勿憑空給分。','staff-warning'));
   if(scoredByJudge(a)){
    const xs=demo?[a.demo_technique,a.demo_interpretation]:[a.live_technique,a.live_interpretation,a.stage_presence,a.appearance];
    box.append(node('p','此階段已評分：'+xs.reduce((n,x)=>n+Number(x||0),0)+' 分（不能覆蓋）'));
@@ -679,7 +685,7 @@ async function renderJudge(){
   const agree=node('label',undefined,'check staff-score-consent'),checkbox=node('input');checkbox.type='checkbox';checkbox.name='conflict';checkbox.required=true;
   agree.append(checkbox,node('span','我確認此評分沒有利益衝突，並已核對上述分數。'));form.append(agree);
   const save=node('button','確認並儲存我的評分','btn btn-primary staff-score-submit');save.type='submit';form.append(save);
-  if(!link){save.disabled=true;form.append(node('p','沒有作品影片連結，請先請主辦方補正。','staff-warning'))}
+  if(!link&&!uploaded){save.disabled=true;form.append(node('p','沒有作品影片連結或上傳影片，請先請主辦方補正。','staff-warning'))}
   form.onsubmit=e=>{e.preventDefault();run(async()=>{
    const inputs=formValues(form),payload={application_id:a.id,phase,no_conflict:checkbox.checked};
    for(const [name] of criteria)payload[name]=Number(inputs[name]);
