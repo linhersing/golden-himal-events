@@ -6,7 +6,7 @@ test('one staff OTP shows only server-granted roles and switches without another
  await page.route('**/api/e2e/**',async route=>{
   const path=new URL(route.request().url()).pathname.split('/').pop();
   let result={ok:true},status=200;
-  if(path==='me'){if(!role){status=401;result={ok:false,error:'login_required'}}else result={ok:true,account:{id:'test-'+role,role,available_roles}}}
+  if(path==='me'){if(!role){status=401;result={ok:false,error:'login_required'}}else result={ok:true,account:{id:'test-'+role,role,available_roles},contact_enabled:role==='member',profile_enabled:false}}
   else if(path==='request-code'){expect(route.request().postDataJSON().role).toBe('staff');emails++;result={ok:true,challenge_id:'fictional-qa'}}
   else if(path==='verify-code'){role='organizer'}
   else if(path==='switch-role'){role=route.request().postDataJSON().role;result={ok:true,account:{id:'test-'+role,role,available_roles}}}
@@ -31,6 +31,8 @@ test('one staff OTP shows only server-granted roles and switches without another
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
  await page.reload();await expect(page.locator('#judge-dashboard')).toBeVisible();
  await page.goto('/member.html');await expect(page.locator('#member-panel')).toBeVisible();expect(role).toBe('member');
+ await expect(page.locator('#contact-info-fields')).toBeVisible();
+ await expect(page.locator('#contact-info-fields [name=contact_email]')).toBeEnabled();
  await page.goto('/backoffice.html');await expect(page.locator('#organizer-dashboard')).toBeVisible();expect(emails).toBe(1);
  await page.locator('#back-logout').click();await expect(page.locator('.role-tabs')).toBeHidden();
 });
