@@ -238,7 +238,7 @@ test('main member page sends a fresh Turnstile token and verifies the same mailb
  const requests=[];
  await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',r=>r.fulfill({
   contentType:'application/javascript',body:
-   "window.turnstile={ready(fn){fn()},render(el,options){const button=document.createElement('button');"+
+   "window.turnstile={ready(){throw Error('ready rejects async scripts')},render(el,options){const button=document.createElement('button');"+
    "button.type='button';button.textContent='Solve test challenge';el.append(button);"+
    "button.onclick=()=>options.callback('synthetic-token');return 'synthetic-widget'},reset(){}}"
  }));
