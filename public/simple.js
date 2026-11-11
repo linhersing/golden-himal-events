@@ -180,7 +180,11 @@ async function loadSession(){try{
  const granted=v.account.available_roles||[v.account.role];
  const target=staff?(granted.includes('organizer')?'organizer':granted.includes('reviewer')?'reviewer':null):'member';
  if(!target||!granted.includes(target)){account=null;authUI(false);staffTabs();return;}
- if((staff&&!['organizer','reviewer'].includes(v.account.role))||(!staff&&v.account.role!=='member'))v=await api('switch-role',{role:target});
+ if((staff&&!['organizer','reviewer'].includes(v.account.role))||(!staff&&v.account.role!=='member')){
+  await api('switch-role',{role:target});
+  // switch-role returns account only; re-read the capability flags from /me.
+  v=await api('me');
+ }
  account=v.account;role=account.role;authUI(true);if(staff)staffTabs();else {setupProfileFields(v.profile_enabled===true);setupContactFields(v.contact_enabled===true);}await dashboard();
  }catch(e){account=null;authUI(false);if(staff)staffTabs();if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
 function setupAuth(){
