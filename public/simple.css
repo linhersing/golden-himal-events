@@ -238,3 +238,52 @@ body[data-page="member"] #password-pending-screen .password-pending-preview{marg
 .audition-technical-list li{padding-left:2px;overflow-wrap:anywhere}
 .video-confirm{padding:10px 0}
 @media(max-width:520px){.audition-guidance{padding:14px}.audition-technical summary{font-size:.9rem}.audition-technical-list{padding-left:19px;gap:9px;font-size:.85rem}}
+
+/* Staff task-first layout; design stays consistent with Golden Himal warm neutral palette. */
+.staff-flow-line{font-size:.88rem;line-height:1.7;background:#f8f0e2;border-left:3px solid #ba9160;padding:11px 14px;border-radius:10px;color:#684b3c;margin:14px 0}
+.staff-flow-line strong{display:block;margin-bottom:3px}
+.staff-tasks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 18px}
+.staff-task{background:#fff9ee;border:1px solid #e9d7bc;border-radius:13px;padding:13px;display:flex;flex-direction:column;gap:6px}
+.staff-task span{font-size:.78rem;line-height:1.45;color:#71594b}
+.staff-task strong{font-size:1.55rem;line-height:1.2;color:#553a30;font-variant-numeric:tabular-nums}
+.staff-filter-primary{display:flex;align-items:end;gap:12px;margin:8px 0 14px}
+.staff-filter-primary .roster-field{flex:1}
+.staff-filter-primary #organizer-clear-filters{flex:0 0 auto;min-height:44px}
+.staff-advanced-filters{border:1px solid #e7d8c6;background:#fffcf6;border-radius:12px;margin:0 0 14px;padding:0 13px}
+.staff-advanced-filters summary{display:list-item;cursor:pointer;min-height:44px;padding:12px 4px;line-height:1.5;color:#654a37;font-weight:700}
+.staff-advanced-filters summary:focus-visible{outline:2px solid #a47a42;outline-offset:2px}
+.staff-advanced-filters[open] .roster-toolbar{padding:0 0 14px;margin:0}
+.staff-checklist{display:grid;gap:7px;margin:16px 0;padding:12px 14px;border-radius:13px;background:#f8f3e9}
+.staff-checklist p{margin:0;color:#604b3b;line-height:1.6;font-size:.88rem}
+.staff-video-link{display:inline-flex;align-items:center;margin:12px 0;min-height:48px}
+.staff-warning{color:#9a482d;font-weight:650;font-size:.87rem;line-height:1.7}
+.staff-empty{border:1px dashed #d7bea3;border-radius:14px;padding:18px;background:#fffdf9;line-height:1.7;color:#654f40}
+.staff-empty h3{margin:0 0 8px;font-size:1.05rem;color:#51352c}
+.staff-empty p{margin:0 0 10px}
+.staff-judge-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 14px}
+.staff-judge-steps span{padding:11px 9px;border-radius:11px;background:#f4ead9;color:#624b38;font-weight:700;font-size:.79rem;line-height:1.5;text-align:center}
+.staff-judge-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+.staff-score-detail h3{margin:6px 0 12px}
+.staff-step-label{font-size:.8rem;font-weight:750;color:#9c6a32;text-transform:none}
+.staff-score-form{margin:15px 0 0;padding:17px;background:#fffdf7;border:1px solid #e2cdb5;border-radius:15px;display:grid;gap:14px}
+.staff-score-form-heading{font-size:1.08rem;color:#553a2f;margin:0}
+.staff-score-form>.minor{margin:0;line-height:1.65}
+.staff-score-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.staff-score-field{display:flex;flex-direction:column;gap:8px;background:#fff;border:1px solid #e8d8c5;border-radius:12px;padding:13px;min-width:0}
+.staff-score-name{font-weight:700;color:#4f362d;font-size:.88rem}
+.staff-score-field input{width:100%;max-width:100%;min-height:52px;border:1px solid #d7bda0;border-radius:10px;background:#fff;color:#392c25;padding:8px 12px;font:700 1.25rem/1.4 system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.staff-score-field input:focus-visible{outline:2px solid #af7541;outline-offset:2px}
+.staff-score-total{display:block;background:#f6ebd8;padding:13px 15px;border-radius:12px;color:#533b2e;font-weight:800;font-size:1.08rem}
+.staff-score-consent{margin:0;line-height:1.7}
+.staff-score-submit{min-height:50px;width:100%;font-size:.98rem}
+#organizer-detail[hidden],#organizer-roster-panel[hidden],#judge-detail[hidden],#judge-roster-panel[hidden]{display:none!important}
+#organizer-detail #organizer-back-list{margin:0 0 14px;min-height:44px}
+@media(max-width:560px){
+ .staff-tasks{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ .staff-task{padding:10px 8px}.staff-task span{font-size:.71rem}.staff-task strong{font-size:1.34rem}
+ .staff-filter-primary{align-items:stretch;flex-direction:column}.staff-filter-primary #organizer-clear-filters{width:100%}
+ .staff-judge-steps{gap:5px}.staff-judge-steps span{padding:9px 5px;font-size:.72rem}
+ .staff-score-form{padding:12px}.staff-score-grid{grid-template-columns:1fr;gap:9px}
+ .staff-score-field{padding:11px}.staff-video-link{width:100%;justify-content:center}
+ .staff-advanced-filters{padding:0 11px}
+}
