@@ -99,3 +99,27 @@ test('main singer page contains no-email TEST member controls, retains invited l
  assert.doesNotMatch(ui,/localStorage\.setItem\([^)]*(password|recovery)/i);
  assert.doesNotMatch(html,/value="GHV-[0-9A-F-]+"/);
 });
+
+test('singer video guidance has explicit quality, lighting, sound and accessible sharing instructions',async()=>{
+ const [html,locale,css,ui,backend]=await Promise.all([
+  read('public/member.html'),read('public/page-locale.js'),read('public/simple.css'),
+  read('public/simple.js'),read('backend/staging-e2e.js')
+ ]);
+ for(const field of ['videoGuideTitle','videoGuideBody','videoTechToggle','videoTechPicture',
+ 'videoTechFraming','videoTechLighting','videoTechSound','videoTechFile',
+ 'videoTechAccess','videoHelp','videoConfirm']){
+  assert.match(html,new RegExp('data-l="'+field+'"'));
+  assert.match(locale,new RegExp('"'+field+'"'));
+ }
+ assert.match(html,/<details class="audition-technical">/);
+ assert.match(html,/name="demo_url" type="url"/);
+ assert.match(html,/name="video_confirmed" type="checkbox" required/);
+ assert.match(locale,/1920 × 1080/);
+ assert.match(locale,/1280 × 720/);
+ assert.match(locale,/無痕視窗/);
+ assert.match(locale,/Anyone with the link/);
+ assert.match(locale,/अनुहार/);
+ assert.match(css,/audition-technical summary:focus-visible/);
+ assert.match(ui,/video_confirmed:application\.querySelector/);
+ assert.match(backend,/video_self_recording_confirmation_required/);
+});

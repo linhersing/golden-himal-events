@@ -226,3 +226,15 @@ body[data-page="member"] #password-pending-screen .password-pending-preview{marg
 #signup-human-status[data-state="verified"]{color:#326841}
 #signup-human-retry:not([hidden]){display:inline-flex;margin:10px 0 2px;min-height:42px;font-size:.85rem}
 @media(max-width:420px){#signup-turnstile:not([hidden]){overflow-x:auto}}
+
+/* Mobile-first audition recording standards and optional detailed help. */
+.audition-guidance{padding:16px 18px;border-left:4px solid #b68c4c;border-radius:12px;background:#f6f0e4;color:#5d493b}
+.audition-guidance h3{font-size:1.02rem;line-height:1.45;margin:0 0 8px;color:#563a2d}
+.audition-guidance p{font-size:.89rem;line-height:1.7;margin:0}
+.audition-technical{margin-top:14px;border-top:1px solid #dccbb7;padding-top:10px}
+.audition-technical summary{cursor:pointer;min-height:44px;display:list-item;list-style-position:inside;font-size:.91rem;font-weight:700;color:#66482e;line-height:1.5;padding:8px 0}
+.audition-technical summary:focus-visible{outline:2px solid #a47a42;outline-offset:3px;border-radius:6px}
+.audition-technical-list{margin:8px 0 0;padding:0 0 0 22px;color:#5a483b;display:grid;gap:10px;font-size:.86rem;line-height:1.65}
+.audition-technical-list li{padding-left:2px;overflow-wrap:anywhere}
+.video-confirm{padding:10px 0}
+@media(max-width:520px){.audition-guidance{padding:14px}.audition-technical summary{font-size:.9rem}.audition-technical-list{padding-left:19px;gap:9px;font-size:.85rem}}
