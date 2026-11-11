@@ -243,3 +243,14 @@ body[data-page="member"] #password-pending-screen .password-pending-preview{marg
  .contact-info-fields{grid-template-columns:1fr;padding:12px}
  .audition-guidance{padding:14px}
 }
+
+/* Film quality tips: compact disclosure on phones, no compulsory long form. */
+.audition-technical{margin-top:14px;border-top:1px solid #dccbb7;padding-top:10px}
+.audition-technical summary{cursor:pointer;min-height:44px;display:list-item;list-style-position:inside;
+ font-size:.91rem;font-weight:700;color:#66482e;line-height:1.5;padding:8px 0}
+.audition-technical summary:focus-visible{outline:2px solid #a47a42;outline-offset:3px;border-radius:6px}
+.audition-technical-list{margin:8px 0 0;padding:0 0 0 22px;color:#5a483b;
+ display:grid;gap:10px;font-size:.86rem;line-height:1.65}
+.audition-technical-list li{padding-left:2px;overflow-wrap:anywhere}
+@media(max-width:520px){.audition-technical summary{font-size:.9rem}
+ .audition-technical-list{padding-left:19px;gap:9px;font-size:.85rem}}
