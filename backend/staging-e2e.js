@@ -217,6 +217,8 @@ async function submitApplication(request,env,a){
  if(b.category==='community'&&b.adult_confirmed!==true)return deny('community_age_confirmation_required',422);
  if(b.category==='university'&&b.student_confirmed!==true)return deny('university_student_confirmation_required',422);
  if(b.no_exclusive_contract!==true)return deny('contract_declaration_required',422);
+ // A self-declared filming checklist is not automatic inspection of an external video.
+ if(Object.hasOwn(b,'video_confirmed')&&b.video_confirmed!==true)return deny('video_self_recording_confirmation_required',422);
  const fields=['stage_name','affiliation','song_title','original_artist','song_language','song_key'];
  const values=fields.map(k=>String(b[k]||'').trim());
  if(values.some(x=>x.length<1||x.length>100)||values[0].length<2)return deny('missing_song_or_identity_test_fields',422);
