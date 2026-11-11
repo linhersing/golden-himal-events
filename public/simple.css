@@ -218,3 +218,11 @@ body[data-page="member"] #password-pending-screen .password-pending-preview{marg
  body[data-page="member"] .steps{gap:5px}
  body[data-page="member"] .steps span{font-size:.72rem;padding:10px 5px}
 }
+
+/* Public TEST signup: never make human verification invisible or silently blocked. */
+#signup-turnstile:not([hidden]){display:block;min-height:76px;margin:14px 0 4px;max-width:100%;overflow-x:auto}
+#signup-human-status:not([hidden]){display:block;margin:8px 0 0;color:#715c43;font-size:.86rem;line-height:1.6}
+#signup-human-status[data-state="error"]{color:#a13b33}
+#signup-human-status[data-state="verified"]{color:#326841}
+#signup-human-retry:not([hidden]){display:inline-flex;margin:10px 0 2px;min-height:42px;font-size:.85rem}
+@media(max-width:420px){#signup-turnstile:not([hidden]){overflow-x:auto}}
