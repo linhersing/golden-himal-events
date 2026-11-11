@@ -166,37 +166,90 @@ async function loadSession(){try{
  }catch(e){account=null;authUI(false);if(staff)staffTabs();if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
 function setupAuth(){
 const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
-let challengeEmail,publicTest=false,humanToken,widgetId;
+let challengeEmail,publicTest=false,humanToken,widgetId,widgetTimer;
+const humanBox=$('signup-human-status'),retryButton=$('signup-human-retry');
+const sendButton=mailForm?.querySelector('button[type="submit"]');
+let widgetLoading=false;
+function humanState(key,kind='pending'){
+ if(!humanBox)return;
+ humanBox.hidden=false;
+ humanBox.dataset.l=key;
+ humanBox.dataset.state=kind;
+ humanBox.textContent=mt(key);
+ if(retryButton)retryButton.hidden=kind!=='error';
+ if(publicTest&&sendButton)sendButton.disabled=!humanToken;
+}
+function clearHumanToken(){humanToken=undefined;if(publicTest&&sendButton)sendButton.disabled=true}
+function humanError(code){
+ clearTimeout(widgetTimer);widgetLoading=false;clearHumanToken();
+ humanState('signupHumanBlocked','error');
+ // A public Cloudflare error code helps diagnosis; do not log the widget token or keys.
+ if(code&&/^\\d{4,7}$/.test(String(code)))humanBox.textContent+=' (CF '+code+')';
+}
+function renderHumanWidget(siteKey){
+ const widget=$('signup-turnstile');
+ try{
+  if(!window.turnstile||typeof window.turnstile.render!=='function')throw Error('widget_unavailable');
+  window.turnstile.ready(()=>{
+   try{
+    widgetId=window.turnstile.render(widget,{
+     sitekey:siteKey,size:'normal',appearance:'always',theme:'light',
+     action:'ghv_signup','response-field':false,
+     callback:token=>{
+      clearTimeout(widgetTimer);widgetLoading=false;
+      if(typeof token!=='string'||!token){humanError();return}
+      humanToken=token;
+      humanState('signupHumanVerified','verified');
+     },
+     'expired-callback':()=>{clearHumanToken();humanState('signupHumanExpired','pending')},
+     'timeout-callback':()=>{clearHumanToken();humanState('signupHumanExpired','pending')},
+     'error-callback':code=>humanError(code)
+    });
+    clearTimeout(widgetTimer);widgetLoading=false;
+    if(!humanToken)humanState('signupHumanPrompt');
+   }catch{humanError()}
+  });
+ }catch{humanError()}
+}
+function beginHumanWidget(siteKey){
+ clearTimeout(widgetTimer);widgetLoading=true;
+ clearHumanToken();widgetId=undefined;
+ const widget=$('signup-turnstile');
+ widget.hidden=false;widget.replaceChildren();
+ humanState('signupHumanLoading');
+ widgetTimer=setTimeout(()=>{if(widgetLoading)humanError()},12000);
+ if(window.turnstile?.render){renderHumanWidget(siteKey);return}
+ const script=document.createElement('script');
+ script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+ script.async=true;
+ script.onload=()=>renderHumanWidget(siteKey);
+ script.onerror=()=>humanError();
+ document.head.append(script);
+}
 const signupConfig=staff?Promise.resolve():api('signup-config').then(config=>{
  if(config.mode!=='public_test'||typeof config.siteKey!=='string')return;
  publicTest=true;
- const notice=$('signup-mode'),widget=$('signup-turnstile');
+ const notice=$('signup-mode');
  notice.dataset.l='signupPublicTest';
  notice.textContent=mt('signupPublicTest');
  for(const [id,key] of [['member-auth-intro','signupPilotIntro'],['email-legacy-summary','signupPilotEmail']]){
   const copy=$(id);if(copy){copy.dataset.l=key;copy.textContent=mt(key);}
  }
- widget.hidden=false;
- const script=document.createElement('script');
- script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
- script.async=true;
- const clearToken=()=>{humanToken=undefined};
- script.onload=()=>{
-  window.turnstile.ready(()=>{
-   try{
-    widgetId=window.turnstile.render(widget,{
-     sitekey:config.siteKey,size:'compact',action:'ghv_signup','response-field':false,
-     callback:token=>{humanToken=token},
-     'expired-callback':clearToken,'error-callback':clearToken
-    });
-   }catch{status(mt('signupWidgetUnavailable'),true)}
-  });
- };
- script.onerror=()=>status(mt('signupWidgetUnavailable'),true);
- document.head.append(script);
+ retryButton?.addEventListener('click',()=>{
+  if(widgetId!==undefined&&window.turnstile?.remove){
+   try{window.turnstile.remove(widgetId)}catch{}
+  }
+  beginHumanWidget(config.siteKey);
+ });
+ beginHumanWidget(config.siteKey);
 }).catch(()=>{});
 mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  await signupConfig;
+ if(publicTest&&!humanToken){
+  status(mt('signupHumanRequired'),true);
+  $('signup-turnstile')?.scrollIntoView({block:'center',behavior:'smooth'});
+  return;
+ }
  const {email}=formValues(mailForm);
  const payload={email,role:staff?'staff':role};
  if(humanToken)payload.turnstile_token=humanToken;
@@ -206,8 +259,11 @@ mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
   challengeEmail=publicTest?email:undefined;
  }finally{
   if(payload.turnstile_token){
-   humanToken=undefined;
-   try{window.turnstile.reset(widgetId)}catch{status(mt('signupWidgetUnavailable'),true)}
+   clearHumanToken();
+   if(widgetId!==undefined&&window.turnstile?.reset){
+    try{window.turnstile.reset(widgetId);humanState('signupHumanPrompt')}
+    catch{humanError()}
+   }else humanError();
   }
  }
  authForms(false);
