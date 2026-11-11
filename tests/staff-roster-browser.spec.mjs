@@ -94,6 +94,7 @@ test('organizer filters language, category and scoring with 133 synthetic entrie
  await expect(page.locator('#pending-count')).toHaveText('133');
  await expect(page.locator('#paid-count')).toHaveText('0');
  await expect(page.locator('#admin-apps .roster-entry')).toHaveCount(12);
+ await page.locator('.staff-advanced-filters summary').click();
  await page.locator('#organizer-language').selectOption('English');
  await expect(page.locator('#organizer-count')).toContainText('66 筆');
  await page.locator('#organizer-category').selectOption('university');
