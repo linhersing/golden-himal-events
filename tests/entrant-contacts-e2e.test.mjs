@@ -62,6 +62,13 @@ test('contact validation, deployment guard and role-scoped TEST D1 readback',asy
   assert.equal(created.status,201,await created.clone().text());
   const id=(await created.json()).application_id;
   assert.equal(db.prepare('SELECT contact_phone FROM e2e_application_contacts WHERE application_id=?').get(id).contact_phone,application.contact_phone);
+  // Updating only contact details must not reference optional profile tables.
+  const updated=await handleE2E(post('update-application',{
+   application_id:id,stage_name:application.stage_name,song_title:application.song_title,
+   original_artist:application.original_artist,demo_url:application.demo_url,
+   contact_email:application.contact_email,contact_phone:application.contact_phone,contact_consent:true
+  },member),env);
+  assert.equal(updated.status,200,await updated.clone().text());
   const own=await (await handleE2E(get('applications',member),env)).json();
   assert.equal(own.applications[0].contact_email,'singer@test.invalid');
   assert.equal(own.applications[0].contact_phone,application.contact_phone);
