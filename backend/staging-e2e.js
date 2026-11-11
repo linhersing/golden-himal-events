@@ -306,6 +306,8 @@ async function updateApplication(request,env,a){
  try {
   if(editingProfile||editingContact){
    if(typeof env.DB.batch!=='function')return deny('application_storage_unavailable',503);
+   const statements=[updateStmt];
+   if(editingProfile){
    const profileStmt=parsed.profile?
     profileUpsert(env.DB,id,a.id,parsed.profile,NOW(),pendingProfile):
     env.DB.prepare(`DELETE FROM e2e_application_profiles WHERE application_id=? AND EXISTS(SELECT 1 FROM e2e_applications p
@@ -314,8 +316,8 @@ async function updateApplication(request,env,a){
     AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
     AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
     AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingProfile})`).bind(id,id,a.id);
-   const statements=[updateStmt];
-   if(editingProfile)statements.push(profileStmt);
+   statements.push(profileStmt);
+   }
    if(editingContact)statements.push(contactUpsert(env.DB,id,a.id,contact,NOW(),pendingProfile));
    const result=await env.DB.batch(statements);
    affected=Number(result?.[0]?.meta?.changes||0);
