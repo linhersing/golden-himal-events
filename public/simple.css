@@ -226,3 +226,20 @@ body[data-page="member"] #password-pending-screen .password-pending-preview{marg
 #signup-human-status[data-state="verified"]{color:#326841}
 #signup-human-retry:not([hidden]){display:inline-flex;margin:10px 0 2px;min-height:42px;font-size:.85rem}
 @media(max-width:420px){#signup-turnstile:not([hidden]){overflow-x:auto}}
+
+/* Singer TEST contact & self-recorded video: compact desktop, readable mobile. */
+.contact-info-fields{border:1px solid #eadac7;border-radius:16px;background:#fffdf9;padding:16px;
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:10px 0}
+.contact-info-fields[hidden]{display:none!important}
+.contact-info-fields legend{font-weight:750;color:#654134;padding:0 6px}
+.contact-info-fields>.field-hint,.contact-info-fields>.check{grid-column:1/-1}
+.contact-info-fields>.field{min-width:0}
+.audition-guidance{padding:16px 18px;border-left:4px solid #b68c4c;border-radius:12px;
+ background:#f6f0e4;color:#5d493b}
+.audition-guidance h3{font-size:1.02rem;line-height:1.45;margin:0 0 8px;color:#563a2d}
+.audition-guidance p{font-size:.89rem;line-height:1.7;margin:0}
+.video-confirm{padding:10px 0}
+@media(max-width:600px){
+ .contact-info-fields{grid-template-columns:1fr;padding:12px}
+ .audition-guidance{padding:14px}
+}
