@@ -13,13 +13,13 @@ export const approvalColumn=enabled=>enabled?`, CASE WHEN ${hasTestApproval('p')
 export const approvalGuard=(enabled,alias)=>enabled?` AND ${hasTestApproval(alias)}`:'';
 export const pendingGuard=(enabled,alias)=>enabled?` AND NOT ${hasTestApproval(alias)}`:'';
 
-export async function approveTestApplication(request,db,organizer,{json,deny,NOW,bodyJSON}){
+export async function approveTestApplication(request,db,organizer,{json,deny,NOW,bodyJSON},extraGuard=''){
  const body=await bodyJSON(request);
  if(!body||Object.keys(body).length!==1||typeof body.application_id!=='string'||!body.application_id||body.application_id.length>100)
   return deny('invalid_application_id',422);
  const id=body.application_id;
  const result=await db.prepare(`INSERT INTO e2e_test_application_approvals(application_id,approved_by,approved_at)
-  SELECT p.id,?,? FROM e2e_applications p WHERE p.id=? AND p.status NOT IN ('withdrawn','rejected')
+  SELECT p.id,?,? FROM e2e_applications p WHERE p.id=? AND p.status NOT IN ('withdrawn','rejected')${extraGuard}
   ON CONFLICT(application_id) DO NOTHING`).bind(organizer.id,NOW(),id).run();
  const approved={ok:true,application_id:id,approval_state:'approved',testOnly:true};
  if(result.meta?.changes)return json(approved);
@@ -27,5 +27,6 @@ export async function approveTestApplication(request,db,organizer,{json,deny,NOW
  if(!existing)return deny('application_not_found',404);
  if(['withdrawn','rejected'].includes(existing.status))return deny('test_approval_not_allowed',409);
  if(existing.approval_state==='approved')return json({...approved,already:true});
+ if(extraGuard)return deny('video_supplement_pending_or_expired',409);
  return deny('test_approval_unavailable',503);
 }

@@ -11,7 +11,7 @@ const entry={round_code:'2027-01',category:'community',province:'gandaki',locati
  song_language:'Nepali',song_key:'C',demo_url:'https://youtu.be/dQw4w9WgXcQ',adult_confirmed:true,no_exclusive_contract:true};
 const corrections={stage_name:'TEST SINGER',song_title:'Corrected TEST SONG',original_artist:'TEST ARTIST',demo_url:entry.demo_url};
 
-async function fixture(t,{enabled=true,migrated=true}={}){
+async function fixture(t,{enabled=true,migrated=true,supplements=false}={}){
  const db=new DatabaseSync(':memory:');t.after(()=>db.close());
  for(const file of ['1000_e2e_staging_acceptance_ONLY.sql',...(migrated?['1007_test_application_approval_STAGING_ONLY.sql']:[])]){
   db.exec(await readFile(new URL('../backend/migrations/'+file,import.meta.url),'utf8'));
@@ -37,12 +37,43 @@ async function fixture(t,{enabled=true,migrated=true}={}){
    try{const results=statements.map(statement=>statement.run());db.exec('COMMIT');return results}
    catch(error){db.exec('ROLLBACK');throw error}
   }}};
+ if(supplements)db.exec(await readFile(new URL('../backend/migrations/1009_test_video_supplements_STAGING_ONLY.sql',import.meta.url),'utf8'));
  const call=(route,role,body,origin=host)=>handleE2E(new Request(host+'/api/e2e/'+route,{
   method:body?'POST':'GET',headers:{...(role?{Cookie:cookies[role]}:{}),...(body?{Origin:origin,'Content-Type':'application/json'}:{})},
   ...(body?{body:JSON.stringify(body)}:{})
  }),env);
  return {db,env,call};
 }
+
+test('organizer records a notified video correction, and the member can replace the link exactly once before approval',async t=>{
+ const {db,call}=await fixture(t,{supplements:true});
+ const {application_id}=await (await call('applications','member',entry)).json();
+ const request={application_id};
+ assert.equal((await call('request-video-supplement','reviewer',request)).status,403);
+ assert.equal((await call('request-video-supplement','organizer',request)).status,200);
+ const [pending]=(await (await call('applications','member')).json()).applications;
+ assert.equal(pending.video_supplement_state,'pending');
+ assert.equal(pending.video_supplement_deadline-pending.video_supplement_requested_at,48*3600);
+ assert.equal(pending.can_edit,0);
+ assert.equal((await call('approve-test-application','organizer',request)).status,409);
+ assert.equal((await call('update-application','member',{...request,...corrections})).status,409);
+ const replacement={...request,demo_url:'https://youtu.be/test-replacement'};
+ assert.equal((await call('submit-video-supplement','member',replacement)).status,200);
+ assert.equal((await call('submit-video-supplement','member',replacement)).status,409);
+ assert.equal((await call('request-video-supplement','organizer',request)).status,409);
+ assert.equal(db.prepare('SELECT demo_url FROM e2e_applications WHERE id=?').get(application_id).demo_url,replacement.demo_url);
+ assert.equal((await call('approve-test-application','organizer',request)).status,200);
+});
+
+test('expired video corrections stay ineligible for approval',async t=>{
+ const {db,call}=await fixture(t,{supplements:true});
+ const {application_id}=await (await call('applications','member',entry)).json();
+ assert.equal((await call('request-video-supplement','organizer',{application_id})).status,200);
+ db.prepare('UPDATE e2e_test_video_supplements SET requested_at=1 WHERE application_id=?').run(application_id);
+ assert.equal((await (await call('applications','member')).json()).applications[0].video_supplement_state,'expired');
+ assert.equal((await call('submit-video-supplement','member',{application_id,demo_url:'https://youtu.be/test-replacement'})).status,409);
+ assert.equal((await call('approve-test-application','organizer',{application_id})).status,409);
+});
 
 test('configured approval mode fails closed until the migration is available',async t=>{
  const {db,call}=await fixture(t,{migrated:false});
