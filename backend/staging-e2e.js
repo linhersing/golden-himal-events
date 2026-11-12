@@ -194,6 +194,10 @@ async function switchRole(request,env,a){
  const b=await bodyJSON(request);
  if(!b||!ROLES.includes(b.role))return deny('invalid_role');
  if(!a.email||!emailAllowed(a.email,env,b.role))return deny('not_on_test_allowlist',403);
+ // Block member->staff switching around the required human check on staff OTP.
+ // A dual-role staff user can switch organizer/reviewer only after authenticating as staff.
+ if(staffHumanRequired(env)&&a.role==='member'&&(b.role==='organizer'||b.role==='reviewer'))
+  return deny('staff_reauthentication_required',403);
  const target=await roleAccount(env,a.email,b.role);
  if(!target)return deny('wrong_account_role',403);
  const token=await newSession(env,target);
