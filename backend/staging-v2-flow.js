@@ -43,13 +43,22 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
   const inputs=demo?[b.technique,b.interpretation]:[b.technique,b.interpretation,b.stage_presence,b.appearance];
   if(inputs.some((v,i)=>!Number.isInteger(v)||v<0||v>caps[i]))return deny('invalid_stage_scores',422);
   try{
-   if(demo)await db.prepare('INSERT INTO e2e_judge_scores(application_id,reviewer_id,technique,interpretation,conflict_checked,created_at) VALUES(?,?,?,?,1,?)')
-    .bind(app.id,a.id,...inputs,NOW()).run();
-   else await db.prepare('INSERT INTO e2e_live_scores(application_id,reviewer_id,stage,technique,interpretation,stage_presence,appearance,conflict_checked,created_at) VALUES(?,?,?,?,?,?,?,1,?)')
-    .bind(app.id,a.id,app.phase,...inputs,NOW()).run();
+   const now=NOW();
+   const eligible=`FROM e2e_applications p WHERE p.id=? AND p.phase=?
+    AND p.payment_status='simulated_paid' AND ${evidence}${approved}
+    AND p.status NOT IN ('withdrawn','rejected')`;
+   const insert=demo
+    ?db.prepare(`INSERT INTO e2e_judge_scores(application_id,reviewer_id,technique,interpretation,conflict_checked,created_at)
+      SELECT p.id,?,?,?,1,? ${eligible}`).bind(a.id,...inputs,now,app.id,app.phase)
+    :db.prepare(`INSERT INTO e2e_live_scores(application_id,reviewer_id,stage,technique,interpretation,stage_presence,appearance,conflict_checked,created_at)
+      SELECT p.id,?,p.phase,?,?,?,?,1,? ${eligible}`).bind(a.id,...inputs,now,app.id,app.phase);
+   const [inserted]=await db.batch([
+    insert,
+    db.prepare("UPDATE e2e_applications SET status='scored',updated_at=? WHERE id=? AND changes()=1")
+     .bind(now,app.id)
+   ]);
+   if(!inserted.meta?.changes)return deny('not_reviewable',409);
   }catch{return deny('already_scored_or_unavailable',409)}
-  await db.prepare("UPDATE e2e_applications SET status='scored',updated_at=? WHERE id=? AND phase=? AND status NOT IN ('withdrawn','rejected')")
-   .bind(NOW(),app.id,app.phase).run();
   return json({ok:true,phase:app.phase,score:inputs.reduce((x,y)=>x+y,0),storedIn:'cloudflare-d1-staging',official:false});
  }
  if(path==='/api/e2e/organizer-queue'&&!post){
@@ -73,16 +82,24 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
   const next=app.phase==='demo'?'qualifier':app.phase==='qualifier'?'final':null;
   if(!next||b.to_phase!==next)return deny('invalid_stage_transition',409);
   if(app.payment_status!=='simulated_paid')return deny('mock_payment_required',409);
-  const scored=app.phase==='demo'
-    ?await db.prepare('SELECT COUNT(*) AS n FROM e2e_judge_scores WHERE application_id=?').bind(app.id).first()
-    :await db.prepare('SELECT COUNT(*) AS n FROM e2e_live_scores WHERE application_id=? AND stage=?').bind(app.id,app.phase).first();
+  const judgeCount=app.phase==='demo'
+   ?'SELECT COUNT(*) FROM e2e_judge_scores WHERE application_id=p.id'
+   :'SELECT COUNT(*) FROM e2e_live_scores WHERE application_id=p.id AND stage=p.phase';
+  const scored=await db.prepare(`SELECT (${judgeCount}) AS n FROM e2e_applications p WHERE p.id=?`).bind(app.id).first();
   if(Number(scored?.n||0)<3)return deny('three_judges_required_for_test',409);
   try{
-   const updated=await db.prepare(`UPDATE e2e_applications SET phase=?,status='shortlisted',updated_at=? WHERE id=? AND phase=?${approvalGuard(approval,'e2e_applications')}`)
-    .bind(next,NOW(),app.id,app.phase).run();
+   const now=NOW();
+   // Keep the stage change and its audit event in one D1 transaction.
+   // SQLite changes() refers to the preceding UPDATE on the same connection.
+   const [updated]=await db.batch([
+    db.prepare(`UPDATE e2e_applications AS p SET phase=?,status='shortlisted',updated_at=?
+     WHERE p.id=? AND p.phase=? AND p.payment_status='simulated_paid'
+     AND p.status NOT IN ('withdrawn','rejected') AND (${judgeCount})>=3${approved}`)
+     .bind(next,now,app.id,app.phase),
+    db.prepare(`INSERT INTO e2e_promotion_events(id,application_id,organizer_id,from_phase,to_phase,created_at)
+     SELECT ?,?,?,?,?,? WHERE changes()=1`).bind(uuid(),app.id,a.id,app.phase,next,now)
+   ]);
    if(!updated.meta?.changes)return deny('stale_stage',409);
-   await db.prepare('INSERT INTO e2e_promotion_events(id,application_id,organizer_id,from_phase,to_phase,created_at) VALUES(?,?,?,?,?,?)')
-    .bind(uuid(),app.id,a.id,app.phase,next,NOW()).run();
   }catch{return deny('quota_reached_or_transition_blocked',409)}
   return json({ok:true,phase:next,official:false,message:'ORGANIZER TEST PROMOTION, NOT OFFICIAL ENTRY'});
  }

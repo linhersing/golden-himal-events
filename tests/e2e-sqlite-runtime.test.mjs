@@ -106,6 +106,14 @@ for (const mode of ['uploads','links']) test(`Alan V2 ${mode}: persisted auditio
   const docDenied=await handleE2E(get('/api/e2e/demo-download?application='+appId+'&kind=eligibility',reviewers[0]),env);
   assert.equal(docDenied.status,mode==='links'?503:404);
   assert.equal((await handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'qualifier'},org),env)).status,409);
+  if(mode==='links'){
+   db.exec(`CREATE TRIGGER test_score_status_write_failure BEFORE UPDATE OF status ON e2e_applications
+    WHEN NEW.status='scored' BEGIN SELECT RAISE(ABORT,'simulated_storage_error'); END;`);
+   const failedScore=await handleE2E(req('/api/e2e/score',{application_id:appId,phase:'demo',technique:50,interpretation:30,no_conflict:true},reviewers[0]),env);
+   assert.equal(failedScore.ok,false);
+   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_judge_scores').get().n,0,'failed status write must roll back the score');
+   db.exec('DROP TRIGGER test_score_status_write_failure');
+  }
   for(const cookie of reviewers){
    const s=await handleE2E(req('/api/e2e/score',{application_id:appId,phase:'demo',technique:50,interpretation:30,no_conflict:true},cookie),env);
    assert.equal(s.status,200);
@@ -115,8 +123,19 @@ for (const mode of ['uploads','links']) test(`Alan V2 ${mode}: persisted auditio
   // An April retry may be opened before the January results are known.
   const april=await handleE2E(req('/api/e2e/applications',{...request,round_code:'2027-04'},member),env);
   assert.equal(april.status,201);const aprilId=(await april.json()).application_id;
-  const toLive=await handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'qualifier'},org),env);
-  assert.equal(toLive.status,200);assert.equal((await toLive.json()).phase,'qualifier');
+  if(mode==='uploads'){
+   db.exec(`CREATE TRIGGER test_promotion_log_write_failure BEFORE INSERT ON e2e_promotion_events
+    BEGIN SELECT RAISE(ABORT,'simulated_storage_error'); END;`);
+   const failedPromotion=await handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'qualifier'},org),env);
+   assert.equal(failedPromotion.ok,false);
+   assert.equal(db.prepare('SELECT phase FROM e2e_applications WHERE id=?').get(appId).phase,'demo','failed log write must roll back the promotion');
+   db.exec('DROP TRIGGER test_promotion_log_write_failure');
+  }
+  const promote=()=>handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'qualifier'},org),env);
+  const attempts=await Promise.all([promote(),promote()]);
+  assert.deepEqual(attempts.map(response=>response.status).sort(),[200,409]);
+  assert.equal((await attempts.find(response=>response.ok).json()).phase,'qualifier');
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_promotion_events WHERE application_id=? AND to_phase=?').get(appId,'qualifier').n,1);
   assert.equal((await (await handleE2E(get('/api/e2e/reviewer-queue',reviewers[0]),env)).json()).queue[0].phase,'qualifier');
   assert.equal((await handleE2E(req('/api/e2e/score',{application_id:appId,phase:'qualifier',technique:50,interpretation:30,no_conflict:true},reviewers[0]),env)).status,422);
   for(const cookie of reviewers){
