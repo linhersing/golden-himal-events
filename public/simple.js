@@ -231,22 +231,37 @@ function beginHumanWidget(siteKey){
  script.onerror=()=>{if(script===widgetScript)humanError()};
  document.head.append(script);
 }
+let currentHumanSiteKey;
 function enableHuman(siteKey){
- retryButton?.addEventListener('click',()=>{
-  if(widgetId!==undefined&&window.turnstile?.remove){
-   try{window.turnstile.remove(widgetId)}catch{}
-  }
-  beginHumanWidget(siteKey);
- });
+ currentHumanSiteKey=siteKey;
+ if(widgetId!==undefined&&window.turnstile?.remove){
+  try{window.turnstile.remove(widgetId)}catch{}
+ }
  beginHumanWidget(siteKey);
 }
+async function loadStaffHumanConfig(){
+ const config=await api('staff-login-config');
+ if(config.required!==true){
+  staffHumanRequired=false;
+  clearHumanToken();
+  if(sendButton)sendButton.disabled=false;
+  if(humanBox)humanBox.hidden=true;
+  if(retryButton)retryButton.hidden=true;
+  return;
+ }
+ staffHumanRequired=true;
+ if(typeof config.siteKey!=='string'||!config.siteKey){humanError();return}
+ enableHuman(config.siteKey);
+}
+retryButton?.addEventListener('click',()=>{
+ if(staff){
+  // Re-fetch status and site key: a transient config failure must be recoverable.
+  loadStaffHumanConfig().catch(()=>{staffHumanRequired=true;humanError()});
+ }else if(currentHumanSiteKey)enableHuman(currentHumanSiteKey);
+ else humanError();
+});
 const signupConfig=staff?
- api('staff-login-config').then(config=>{
-  if(config.required!==true)return; // Existing staff login continues until explicit, verified rollout.
-  staffHumanRequired=true;
-  if(typeof config.siteKey!=='string'||!config.siteKey){humanError();return}
-  enableHuman(config.siteKey);
- }).catch(()=>{staffHumanRequired=true;humanError()}) :
+ loadStaffHumanConfig().catch(()=>{staffHumanRequired=true;humanError()}) :
  api('signup-config').then(config=>{
   if(config.mode!=='public_test'||typeof config.siteKey!=='string')return;
   publicTest=true;
