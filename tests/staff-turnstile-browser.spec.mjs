@@ -64,3 +64,27 @@ test('staff login missing keys fails closed, flag disabled remains backward comp
  expect(sends).toHaveLength(1);
  expect(sends[0]).not.toHaveProperty('turnstile_token');
 });
+
+test('staff retry button recovers after config becomes available without page reload',async({page})=>{
+ const sends=[];await mockStaff(page,'on',sends);
+ let served=0;
+ await page.route('**/api/e2e/staff-login-config',async route=>{
+  served++;
+  const json=served===1?{ok:true,required:true}:
+   {ok:true,required:true,siteKey:'0x4AAAA-synthetic-site'};
+  await route.fulfill({json});
+ });
+ await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',r=>r.fulfill({
+  status:200,contentType:'application/javascript',
+  body:"window.turnstile={render:(el,cfg)=>{const d=document.createElement('div');d.textContent='RECOVERED HUMAN';el.append(d);window.__staffSolve=()=>cfg.callback('recovered-token');return 'widget-id'},reset:()=>{},remove:()=>{}};"
+ }));
+ await page.goto('/backoffice.html');
+ const button=page.locator('#back-email-form button[type=submit]');
+ await expect(page.locator('#signup-human-retry')).toBeVisible();
+ await expect(button).toBeDisabled();
+ await page.locator('#signup-human-retry').click();
+ await expect(page.locator('#signup-turnstile')).toContainText('RECOVERED HUMAN');
+ await page.evaluate(()=>window.__staffSolve());
+ await expect(button).toBeEnabled();
+ expect(served).toBeGreaterThanOrEqual(2);
+});
