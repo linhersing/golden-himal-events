@@ -45,7 +45,7 @@ test('April audition opens from the member home and keeps the original category'
  await page.getByRole('button',{name:'報名第二梯次'}).click();
  await expect(page.locator('#application-form [name=round_code]')).toHaveValue('2027-04');
  await expect(page.locator('#application-form [name=category]')).toHaveValue('community');
- await expect(page.locator('#application-form [name=category] option[value=university]')).toBeDisabled();
+ await expect(page.locator('#application-form [name=category] option[value=university]')).toHaveJSProperty('disabled',true);
  state.nextAudition=null;state.entries[0].phase='final';
  await page.reload();
  await expect(page.locator('#member-welcome-name')).toContainText('TEST Singer');
