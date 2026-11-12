@@ -166,7 +166,8 @@ async function loadSession(){try{
  }catch(e){account=null;authUI(false);if(staff)staffTabs();if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
 function setupAuth(){
 const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
-let challengeEmail,publicTest=false,humanToken,widgetId,widgetTimer,widgetScript;
+let challengeEmail,publicTest=false,staffHumanRequired=false,humanToken,widgetId,widgetTimer,widgetScript;
+const needsHuman=()=>publicTest||staffHumanRequired;
 const humanBox=$('signup-human-status'),retryButton=$('signup-human-retry');
 const sendButton=mailForm?.querySelector('button[type="submit"]');
 let widgetLoading=false;
@@ -177,9 +178,9 @@ function humanState(key,kind='pending'){
  humanBox.dataset.state=kind;
  humanBox.textContent=mt(key);
  if(retryButton)retryButton.hidden=kind!=='error';
- if(publicTest&&sendButton)sendButton.disabled=!humanToken;
+ if(needsHuman()&&sendButton)sendButton.disabled=!humanToken;
 }
-function clearHumanToken(){humanToken=undefined;if(publicTest&&sendButton)sendButton.disabled=true}
+function clearHumanToken(){humanToken=undefined;if(needsHuman()&&sendButton)sendButton.disabled=true}
 function humanError(code){
  clearTimeout(widgetTimer);widgetLoading=false;clearHumanToken();
  humanState('signupHumanBlocked','error');
@@ -193,7 +194,7 @@ function renderHumanWidget(siteKey){
   // The async script's load event makes render available. Turnstile.ready rejects async scripts.
   widgetId=window.turnstile.render(widget,{
    sitekey:siteKey,size:widget.clientWidth<300?'compact':'normal',appearance:'always',theme:'light',
-   action:'ghv_signup','response-field':false,
+   action:staff?'ghv_staff_login':'ghv_signup','response-field':false,
    callback:token=>{
     clearTimeout(widgetTimer);widgetLoading=false;
     if(typeof token!=='string'||!token){humanError();return}
@@ -230,26 +231,36 @@ function beginHumanWidget(siteKey){
  script.onerror=()=>{if(script===widgetScript)humanError()};
  document.head.append(script);
 }
-const signupConfig=staff?Promise.resolve():api('signup-config').then(config=>{
- if(config.mode!=='public_test'||typeof config.siteKey!=='string')return;
- publicTest=true;
- const notice=$('signup-mode');
- notice.dataset.l='signupPublicTest';
- notice.textContent=mt('signupPublicTest');
- for(const [id,key] of [['member-auth-intro','signupPilotIntro'],['email-legacy-summary','signupPilotEmail']]){
-  const copy=$(id);if(copy){copy.dataset.l=key;copy.textContent=mt(key);}
- }
+function enableHuman(siteKey){
  retryButton?.addEventListener('click',()=>{
   if(widgetId!==undefined&&window.turnstile?.remove){
    try{window.turnstile.remove(widgetId)}catch{}
   }
-  beginHumanWidget(config.siteKey);
+  beginHumanWidget(siteKey);
  });
- beginHumanWidget(config.siteKey);
-}).catch(()=>{});
+ beginHumanWidget(siteKey);
+}
+const signupConfig=staff?
+ api('staff-login-config').then(config=>{
+  if(config.required!==true)return; // Existing staff login continues until explicit, verified rollout.
+  staffHumanRequired=true;
+  if(typeof config.siteKey!=='string'||!config.siteKey){humanError();return}
+  enableHuman(config.siteKey);
+ }).catch(()=>{staffHumanRequired=true;humanError()}) :
+ api('signup-config').then(config=>{
+  if(config.mode!=='public_test'||typeof config.siteKey!=='string')return;
+  publicTest=true;
+  const notice=$('signup-mode');
+  notice.dataset.l='signupPublicTest';
+  notice.textContent=mt('signupPublicTest');
+  for(const [id,key] of [['member-auth-intro','signupPilotIntro'],['email-legacy-summary','signupPilotEmail']]){
+   const copy=$(id);if(copy){copy.dataset.l=key;copy.textContent=mt(key)}
+  }
+  enableHuman(config.siteKey);
+ }).catch(()=>{});
 mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  await signupConfig;
- if(publicTest&&!humanToken){
+ if(needsHuman()&&!humanToken){
   status(mt('signupHumanRequired'),true);
   $('signup-turnstile')?.scrollIntoView({block:'center',behavior:'smooth'});
   return;
