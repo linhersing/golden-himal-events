@@ -23,7 +23,7 @@
 
 1. **Do not merge without CI and independent review** of this PR. Existing Cloudflare Worker active deployment SHA and rollback version must first be recorded.
 2. Verify Cloudflare Turnstile widget is restricted to `golden-himal-voice-preview.linhersing.workers.dev`; public site key may be in Worker vars, server secret must be in Worker Secrets only. Separate widget and keys for staff recommended for production.
-3. Deploy the UI and backend together to a controlled preview, **leaving `STAGING_STAFF_TURNSTILE_REQUIRED` unset**. Confirm existing organizer/reviewer login still works.
+3. Deploy the UI and backend **and the updated `wrangler.jsonc` asset routing** together to a controlled preview, **leaving `STAGING_STAFF_TURNSTILE_REQUIRED` unset**. Confirm existing organizer/reviewer login still works. Verify the Worker intercepts `/backoffice` and `/backoffice.html`; with the flag enabled it must serve a CSP allowing `https://challenges.cloudflare.com` under `script-src` and `frame-src`, without weakening unrelated pages.
 4. Test the staff widget in two real invited browsers (one organizer and one reviewer), including blocked scripts, expired token, wrong token/action/hostname, per-mailbox quota, staff permissions, and blocked member→staff switch.
 5. Before enabling the flag, revoke existing staff sessions and expire any still-unused staff OTP challenges, or wait out the 12-hour session expiry and 10-minute OTP expiry; ensure a safe recovery path for the actual organizer. Do not expose or log codes.
 6. Only then set `STAGING_STAFF_TURNSTILE_REQUIRED=true` on the **preview Worker**, deploy/restart as required, and verify `staff-login-config.required=true`, widget visible, two real staff can log in, and tokenless POST is rejected.
