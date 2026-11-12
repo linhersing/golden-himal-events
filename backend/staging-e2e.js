@@ -125,8 +125,10 @@ async function requestCode(request,env){
   // Frontend checks are not trusted; every staff OTP request must pass Siteverify.
   if(!siteKeyReady(env.STAGING_TURNSTILE_SITE_KEY)||!siteKeyReady(env.STAGING_TURNSTILE_SECRET_KEY))
    return deny('staff_human_check_unavailable',503);
-  source=await humanSignupSource(request,env,b.turnstile_token,staffHumanAction);
-  if(!source)return deny('human_check_required',403);
+  const staffHumanProof=await humanSignupSource(request,env,b.turnstile_token,staffHumanAction);
+  if(!staffHumanProof)return deny('human_check_required',403);
+  // The public-signup send ledger belongs to public visitors only; staff retains
+  // its existing per-mailbox challenge limit and should not depend on its migration.
  }
  otpTrace(publicTest?'human_check_passed':'allowlist_passed');
  const fingerprint=await sign(env,'email:'+email);
