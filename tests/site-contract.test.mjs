@@ -162,21 +162,28 @@ test('singer video guidance has explicit quality, lighting, sound and accessible
  assert.match(backend,/video_self_recording_confirmation_required/);
 });
 
-test('Golden Himal Palace brand story uses verified site images and labels the concept board',async()=>{
+test('Golden Himal Palace story uses optimized on-site-photo-based AI imagery, avoids phase boards and discloses enhancements',async()=>{
  const [home,story,styles,language]=await Promise.all([
   read('index.html'),read('public/golden-himal.html'),read('public/brand-portal.css'),read('public/brand-portal.js')
  ]);
- for(const src of ['golden-himal-phase1-exterior.png','golden-himal-rooftop.png','golden-himal-phase2-construction.png','golden-himal-phase2-visualization.png']){
-  assert.match(story,new RegExp(src.replaceAll('.','\\.')));
+ const gallery=['grand-hall','grand-hall-elevated','sky-lounge','fountain-day','fountain-night','lamaste-tower','guesthouse-night','mountain-view'];
+ for(const file of gallery){
+  assert.match(home+story,new RegExp('gh-gallery-'+file+'-ai\\.webp'));
  }
- assert.match(story,/data-p="visionBody"/);
- assert.match(story,/非已完成現場照片/);
+ assert.doesNotMatch(story,/golden-himal-phase2-visualization|golden-himal-phase2-construction|<[^>]+>第一期|<[^>]+>第二期/);
+ assert.doesNotMatch(home,/第一期建築實景/);
+ assert.match(story,/data-p="imageDisclaimer"/);
+ assert.match(story,/AI 修飾形象影像/);
+ assert.match(story,/class="story-more"/);
  assert.match(story,/data-p="goldenText"/);
  assert.match(story,/data-p="himalText"/);
  assert.match(story,/data-p="palaceText"/);
  assert.match(story,/id="location"/);
  assert.match(home,/id="home-competition"/);
+ for(const label of ['galleryHall','galleryLounge','galleryWater','galleryNight','galleryTower','galleryWaterNight','galleryView','galleryMore','imageDisclaimer']){
+  assert.match(language,new RegExp('"'+label+'"'));
+ }
  assert.match(language,/ghv_ui_language_v1/);
- assert.match(styles,/@media\(max-width:560px\)/);
+ assert.match(styles,/@media\(max-width:520px\)/);
  assert.doesNotMatch(story,/class="v2-rule-summary"|id="registration-form"/);
 });
