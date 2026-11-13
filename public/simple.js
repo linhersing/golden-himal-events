@@ -398,6 +398,7 @@ async function renderMember(){
  if(editSlot){editSlot.replaceChildren();editSlot.hidden=true;}
  const v=await api('applications'),rows=Array.isArray(v.applications)?v.applications:[];
  const hasEntries=rows.length>0,first=rows[0];
+ // The API must explicitly open the later TEST round; a January entry alone is not permission.
  const secondAudition=hasEntries&&v.next_audition_round==='2027-04';
  const callout=$('new-application-callout'),form=$('application-details');
  if(callout){
@@ -411,7 +412,10 @@ async function renderMember(){
  if(form){form.hidden=hasEntries;if(hasEntries)form.open=false;}
  const fields=$('application-form')?.elements;
  if(fields){
-  for(const option of fields.round_code.options)option.disabled=secondAudition&&option.value!=='2027-04';
+  for(const option of fields.round_code.options){
+   if(option.value==='2027-04'){option.hidden=!secondAudition;option.disabled=!secondAudition;}
+   else option.disabled=secondAudition;
+  }
   for(const option of fields.category.options)option.disabled=secondAudition&&option.value!==first.category;
   if(secondAudition){
    fields.round_code.value='2027-04';fields.category.value=first.category;
@@ -439,6 +443,9 @@ async function renderMember(){
   $('member-state-payment').textContent=mt(paid?'statusSimulatedPaid':'testPending');
   $('member-quick-edit').hidden=!memberCanEdit(first);
   $('member-quick-edit').onclick=()=>showEdit(first);
+  const editReason=$('member-edit-lock-reason');
+  editReason.hidden=memberCanEdit(first);
+  editReason.textContent=editReason.hidden?'':editLockMessage(first);
   const video=$('member-view-video'),link=safeLink(first.demo_url);
   video.hidden=!link;if(link)video.href=link;else video.removeAttribute('href');
   $('member-show-details').onclick=()=>document.getElementById('member-entry-overview').scrollIntoView({behavior:'smooth',block:'start'});
@@ -446,6 +453,7 @@ async function renderMember(){
  }else{
   $('member-hero-avatar').replaceChildren();
   $('member-quick-edit').onclick=null;
+  $('member-edit-lock-reason').hidden=true;
  }
  const paidEntry=rows.find(a=>a.payment_status==='simulated_paid');
  const done=$('test-completion');
