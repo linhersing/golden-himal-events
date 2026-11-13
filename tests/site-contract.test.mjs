@@ -180,8 +180,8 @@ test('Golden Himal Palace story presents selective venue imagery and compact gro
  assert.match(home,/class="portal-top-nav"/);
  assert.match(home,/class="portal-about wrap"/);
  assert.match(home,/class="portal-photo-grid"/);
- assert.match(home,/gh-real-hall-hero-20261113\\.webp/);
- assert.match(styles,/\.portal-stage\\.portal-hero/);
+ assert.ok(home.includes("gh-real-hall-hero-20261113.webp"));
+ assert.ok(styles.includes(".portal-stage.portal-hero"));
  assert.match(story,/data-p="journeyHeading"/);
  assert.match(story,/data-p="journeyText"/);
  assert.match(story,/data-p="journeyNext"/);
