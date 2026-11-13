@@ -51,6 +51,14 @@ test('member form supports the seven provinces when the database capability is r
  await expect(location).toHaveJSProperty('required',true);
 });
 
+test('April audition remains invisible until explicitly enabled in the member API',async({page})=>{
+ await mockMemberApi(page,{entries:[{...entry}],nextAudition:null});
+ await page.goto('/member.html#login');
+ await expect(page.locator('#new-application-callout')).toBeHidden();
+ await expect(page.locator('#application-form option[value="2027-04"]')).toHaveJSProperty('disabled',true);
+ await expect(page.locator('#member-quick-edit')).toBeVisible();
+});
+
 test('April audition opens from the member home and keeps the original category',async({page})=>{
  const state={entries:[{...entry}],nextAudition:'2027-04'};
  await mockMemberApi(page,state);
@@ -135,6 +143,8 @@ test('member dashboard locks edit button when first judge score exists',async({p
  const state={entries:[{...entry,can_edit:0}]};await mockMemberApi(page,state);
  await page.goto('/member.html#login');
  await expect(page.locator('#member-quick-edit')).toBeHidden();
+ await expect(page.locator('#member-edit-lock-reason')).toBeVisible();
+ await expect(page.locator('#member-edit-lock-reason')).toContainText('已開始評分');
  await expect(page.locator('#entries')).toContainText('已開始評分');
  await expect(page.locator('#member-view-video')).toBeVisible();
  await expect(page.locator('#member-show-details')).toBeVisible();

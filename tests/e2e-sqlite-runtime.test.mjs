@@ -65,6 +65,9 @@ for (const mode of ['uploads','links']) test(`Alan V2 ${mode}: persisted auditio
   assert.equal(db.prepare('SELECT round_code FROM e2e_applications').get().round_code,'2027-01');
   // D1 table, not the browser, is the authoritative application record.
   assert.equal((await (await handleE2E(get('/api/e2e/applications',member),env)).json()).applications[0].id,appId);
+  // Documented April round stays closed until a deliberate separate TEST enablement.
+  assert.equal((await (await handleE2E(get('/api/e2e/applications',member),env)).json()).next_audition_round,null);
+  assert.equal((await handleE2E(req('/api/e2e/applications',{...request,round_code:'2027-04'},member),env)).status,409);
   assert.equal((await handleE2E(req('/api/e2e/applications',{...request,round_code:'2027-04',category:'university',student_confirmed:true},member),env)).status,409);
   if(mode==='links'){
    assert.equal(db.prepare('SELECT demo_url FROM e2e_applications WHERE id=?').get(appId).demo_url,request.demo_url);
@@ -112,7 +115,9 @@ for (const mode of ['uploads','links']) test(`Alan V2 ${mode}: persisted auditio
    assert.equal((await s.json()).phase,'demo');
   }
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_judge_scores').get().n,3);
-  // An April retry may be opened before the January results are known.
+  // A separate TEST gate is required before rehearsing the April re-entry flow.
+  env.STAGING_SECOND_AUDITION_ENABLED='true';
+  assert.equal((await (await handleE2E(get('/api/e2e/applications',member),env)).json()).next_audition_round,'2027-04');
   const april=await handleE2E(req('/api/e2e/applications',{...request,round_code:'2027-04'},member),env);
   assert.equal(april.status,201);const aprilId=(await april.json()).application_id;
   const toLive=await handleE2E(req('/api/e2e/organizer-promote',{application_id:appId,to_phase:'qualifier'},org),env);

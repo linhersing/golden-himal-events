@@ -46,9 +46,11 @@ async function fixture(t,{enabled=true,migrated=true,supplements=false}={}){
 }
 
 test('the current rules allow all seven Nepal provinces and retain the actual location privately',async t=>{
- const {db,call}=await fixture(t);
+ const {db,env,call}=await fixture(t);
  const legacy=await call('applications','member',entry);
  assert.equal(legacy.status,201);
+ // This test exercises location persistence, not the April release schedule.
+ env.STAGING_SECOND_AUDITION_ENABLED='true';
  const location={...entry,round_code:'2027-04',province:'karnali',location_detail:'Birendranagar, Surkhet'};
  const migration=new URL('../backend/migrations/1010_nepal_locations_STAGING_ONLY.sql',import.meta.url);
  assert.equal((await call('applications','member',location)).status,503);

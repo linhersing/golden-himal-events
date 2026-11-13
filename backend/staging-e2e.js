@@ -207,7 +207,8 @@ async function applications(a,env,supplements){
  THEN 1 ELSE 0 END AS can_edit${approvalColumn(approval)}${supplementColumns(supplements)}
  FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)} WHERE p.account_id=? ORDER BY p.created_at DESC,p.round_code DESC`).bind(a.id).all();
  const entries=rows.results||[];
- const nextRound=entries.some(row=>row.round_code==='2027-01')&&
+ // April is a separately released TEST window, never auto-opened simply because January was saved.
+ const nextRound=env.STAGING_SECOND_AUDITION_ENABLED==='true'&&entries.some(row=>row.round_code==='2027-01')&&
   !entries.some(row=>row.round_code==='2027-04'||row.phase==='final')?'2027-04':null;
  return json({ok:true,account:{id:a.id,role:a.role},applications:await attachProfiles(env,entries),next_audition_round:nextRound,testOnly:true});
 }
@@ -215,6 +216,11 @@ async function submitApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request,4500);if(!b)return deny('invalid_json');
  if(!['2027-01','2027-04'].includes(b.round_code))return deny('invalid_audition_window');
+ if(b.round_code==='2027-04'){
+  if(env.STAGING_SECOND_AUDITION_ENABLED!=='true')return deny('second_audition_not_open',409);
+  const january=await env.DB.prepare("SELECT id FROM e2e_applications WHERE account_id=? AND round_code='2027-01' LIMIT 1").bind(a.id).first();
+  if(!january)return deny('january_entry_required',409);
+ }
  if(!['university','community'].includes(b.category))return deny('invalid_category');
  const location=parseLocation(b);
  if(location.error)return deny(location.error,location.status);

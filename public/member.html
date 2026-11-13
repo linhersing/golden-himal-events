@@ -89,6 +89,7 @@
  <a id="member-view-video" class="btn btn-soft" target="_blank" rel="noopener noreferrer" data-l="viewVideo" hidden>View my performance</a>
  <button id="member-show-details" class="btn btn-soft" type="button" data-l="viewDetails">Application details</button>
 </div>
+<p id="member-edit-lock-reason" class="minor" role="status" aria-live="polite" hidden></p>
 <section id="member-edit-panel" aria-label="Edit my application" hidden></section>
 <div id="member-entry-overview" hidden><h3 data-l="myEntrySummary">My entry details</h3><div id="entries" class="cards"></div></div>
 </div>
@@ -120,7 +121,7 @@
 <label class="field"><span data-l="profilePhoto3">補充照片 3</span><input name="photo_url_3" type="url" maxlength="600" placeholder="https://example.com/photo3.jpg"></label></details>
 <label class="check"><input name="profile_consent" type="checkbox" id="entrant-profile-consent"><span data-l="profileConsent">我同意主辦方及授權評審查看所填照片網址及性別；外部圖片服務可能取得瀏覽器連線資訊。</span></label>
 </fieldset>
-<label class="field"><span data-l="window">Audition window *</span><select name="round_code"><option value="2027-01" data-l="jan">January 2027</option><option value="2027-04" data-l="apr">April 2027</option></select><small class="field-hint" data-l="windowHelp">Choose the online audition window.</small></label>
+<label class="field"><span data-l="window">Audition window *</span><select name="round_code"><option value="2027-01" data-l="jan">January 2027</option><option value="2027-04" data-l="apr" hidden disabled>April 2027</option></select><small class="field-hint" data-l="windowHelp">Choose the online audition window.</small></label>
 <label class="field"><span data-l="category">Competition category *</span><select name="category" id="category"><option value="university" data-l="university">University student</option><option value="community" data-l="community">Community (18+)</option></select><small class="field-hint" data-l="categoryHelp">Select ONE. A current university student belongs in the university category, even when working part-time.</small></label>
 <label class="field"><span data-l="province">Province *</span><select name="province"><option value="bagmati" data-l="bagmati">Bagmati Province</option><option value="gandaki" data-l="gandaki">Gandaki Province</option><option value="koshi" data-l="koshi" hidden disabled>Koshi</option><option value="madhesh" data-l="madhesh" hidden disabled>Madhesh</option><option value="lumbini" data-l="lumbini" hidden disabled>Lumbini</option><option value="karnali" data-l="karnali" hidden disabled>Karnali</option><option value="sudurpashchim" data-l="sudurpashchim" hidden disabled>Sudurpashchim</option></select><small class="field-hint" id="province-note" data-l="provincePending">This preview has not yet enabled nationwide registration.</small></label>
 <label class="field"><span data-l="basis">How do you qualify in this area? *</span><select name="location_basis"><option value="residence" data-l="live">I live here</option><option value="study" data-l="study">I study here</option><option value="work" data-l="work">I work here</option></select></label>
