@@ -1,0 +1,129 @@
+/* Golden Himal public brand layer — distinct from the existing authenticated Voice/member flows. */
+.brand-portal{background:#fbf8f3;color:#362b26;overflow-wrap:anywhere}
+.brand-portal .portal-header{min-height:104px;border-bottom:1px solid #eadfd0}
+.brand-portal .brand strong{font-size:1.2rem;color:#463129}
+.brand-portal .brand small{color:#9a7854}
+.portal-kicker,.portal-section-tag{color:#ac8352;letter-spacing:.2em;font-size:.69rem;font-weight:850}
+.portal-kicker{margin:0 0 18px}
+.portal-hero{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(320px,.82fr);align-items:center;gap:7%;min-height:620px;padding-block:56px 65px}
+.portal-copy h1,.story-hero h1{font-family:Georgia,"Noto Serif TC","Noto Serif Devanagari",serif;color:#4a302b;font-weight:650;line-height:1.22;letter-spacing:.005em}
+.portal-copy h1{font-size:clamp(2.6rem,5.1vw,4.3rem);margin:0 0 24px}
+.portal-lead{color:#7b6558;font-size:1.02rem;line-height:1.86;max-width:620px;margin:0 0 30px}
+.portal-choices{display:grid;gap:11px;max-width:490px}
+.portal-choice{display:flex;align-items:center;gap:17px;min-height:87px;padding:16px 20px;border-radius:16px;border:1px solid #e6d8c5;background:#fffefb;box-shadow:0 8px 26px #64462b0b;transition:transform .18s,border-color .18s,box-shadow .18s}
+.portal-choice:hover{transform:translateY(-2px);border-color:#ccad76;box-shadow:0 15px 30px #64462b18}
+.portal-choice-primary{background:linear-gradient(110deg,#583a34,#8a5c4d);color:#fff8ee;border-color:#654238;box-shadow:0 12px 28px #59403323}
+.portal-index{font:700 .79rem Georgia,serif;letter-spacing:.1em;color:#a4866e;min-width:32px;text-align:center}
+.portal-choice-primary .portal-index{color:#f8d9a4}
+.portal-choice-copy{display:grid;gap:2px;min-width:0}
+.portal-choice-copy strong{font-size:1.21rem;line-height:1.36}
+.portal-choice-copy small{font-size:.77rem;opacity:.77;line-height:1.45}
+.portal-chevron{margin-left:auto;color:#b1895d;font-size:1.4rem;line-height:1}
+.portal-choice-primary .portal-chevron{color:#ffe1b8}
+.portal-scene{margin:0;position:relative;min-height:520px;border-radius:48% 48% 22px 22px;border:8px solid #efe7d9;box-shadow:0 28px 55px #523a2921;background:#eee0c8;overflow:hidden}
+.portal-scene img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;transform:scale(1.01);filter:saturate(.83) contrast(1.02)}
+.portal-scene:after{content:"";position:absolute;inset:40% 0 0;background:linear-gradient(0deg,#31261cc4,transparent 80%);pointer-events:none}
+.portal-scene figcaption{position:absolute;bottom:27px;left:28px;right:28px;z-index:1;display:flex;flex-direction:column;gap:6px;color:white;letter-spacing:.13em;font-size:.67rem;font-weight:720;text-shadow:0 2px 7px #0007}
+.portal-scene figcaption span:first-child{color:#f0d4a6;letter-spacing:.2em}
+.portal-footer{border-top:1px solid #e8dccd;background:#f5f0e8}
+.portal-location{display:flex;justify-content:space-between;align-items:center;gap:20px;padding-top:30px;padding-bottom:28px;border-bottom:1px solid #dfd1bc}
+.portal-location h2{font-family:Georgia,"Noto Serif TC",serif;font-size:1.36rem;margin:9px 0 2px;color:#4c352e}
+.portal-location p{margin:0 0 3px;font-size:.89rem;color:#7c6b5f}
+.portal-location small{font-size:.74rem;color:#9a8a7b;letter-spacing:.055em}
+.portal-map{display:inline-flex;align-items:center;justify-content:center;min-height:46px;border-radius:12px;border:1px solid #d2b78c;background:#fffaf1;color:#75543b;padding:10px 16px;font-weight:750;font-size:.86rem;flex:none}
+.portal-map:hover{background:#efe0c6}
+.portal-footer-row{min-height:60px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:#887564;font-size:.78rem}
+.portal-footer-row a{color:#85664e;font-size:.77rem}
+.brand-portal .test-site-banner.test-site-footer{margin-bottom:0;padding:13px 0 20px}
+.story-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(295px,.95fr);align-items:center;gap:7%;padding-block:44px 72px}
+.story-back{font-size:.79rem;color:#96775a;display:inline-flex;align-items:center;min-height:44px;margin:0 0 38px}
+.story-hero h1{font-size:clamp(2.3rem,4.7vw,4rem);margin:0 0 24px}
+.story-hero .portal-lead{max-width:560px}
+.story-hero-image{position:relative;margin:0;height:480px;border-radius:30px 30px 130px 30px;overflow:hidden;background:#e9d9be;box-shadow:0 22px 55px #42312418}
+.story-hero-image img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
+.story-hero-image figcaption{position:absolute;bottom:16px;left:20px;background:#fffaf0ed;color:#674a34;padding:7px 11px;border-radius:9px;font-size:.73rem}
+.story-name{padding-block:58px 79px;border-top:1px solid #ebdfce}
+.story-section-intro{max-width:660px;margin-bottom:31px}
+.story-section-intro h2,.story-closing h2{font:650 clamp(1.85rem,3.4vw,2.8rem)/1.25 Georgia,"Noto Serif TC","Noto Serif Devanagari",serif;color:#513830;margin:13px 0 13px}
+.story-section-intro p,.story-closing p{font-size:.98rem;line-height:1.85;color:#7b685b;margin:0}
+.name-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.name-piece{background:#fffdf8;border:1px solid #e9dcc7;border-radius:17px;padding:26px 25px;min-width:0}
+.name-piece>span{font:750 .76rem Georgia,serif;color:#b58e54;letter-spacing:.16em}
+.name-piece h3{margin:17px 0 11px;font-size:1.18rem;color:#523a32}
+.name-piece p{margin:0;font-size:.89rem;color:#77695e;line-height:1.85}
+.story-place{background:#f4efe7;padding:70px 0 79px}
+.story-place-title{margin-bottom:31px}
+.story-gallery{display:grid;grid-template-columns:1.12fr .88fr .88fr;gap:14px}
+.gallery-card{position:relative;display:flex;flex-direction:column;margin:0;min-width:0;background:#fffdf8;border:1px solid #e4d8c8;border-radius:17px;overflow:hidden;box-shadow:0 10px 28px #5d453015}
+.gallery-card img{height:270px;width:100%;object-fit:cover;object-position:center top;background:#e6d9c8}
+.gallery-card:nth-child(2) img{object-position:center top}
+.gallery-card:nth-child(3) img{object-position:center top}
+.gallery-card figcaption{display:grid;gap:2px;padding:15px 16px 17px;min-height:84px}
+.gallery-card figcaption strong{font-size:.98rem;color:#4a342e}
+.gallery-card figcaption small{font-size:.74rem;color:#9b7d62}
+.concept-panel{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr);gap:30px;align-items:center;background:#fffdf9;border:1px solid #e4d8c9;border-radius:18px;padding:17px;margin-top:19px}
+.concept-panel img{width:100%;height:auto;border-radius:10px}
+.concept-panel h3{font-size:1.28rem;color:#51362f;margin:14px 0 10px}
+.concept-panel p{font-size:.89rem;color:#7d695a;line-height:1.8;margin:0}
+.story-closing{padding-block:76px 82px;text-align:center;max-width:745px}
+.story-closing p{margin:0 auto 24px}
+.story-next{display:inline-flex;align-items:center;justify-content:space-between;gap:20px;padding:13px 19px;min-height:52px;background:#6a443a;color:#fff8ec;border-radius:12px;font-weight:750;max-width:100%}
+.story-next:hover{background:#7f5446}
+@media(max-width:840px){
+ .portal-hero,.story-hero{grid-template-columns:1fr;gap:23px;padding-block:34px 48px}
+ .portal-copy{order:0}.portal-scene{order:1;min-height:290px;max-height:390px;border-radius:20px 20px 75px 20px}
+ .portal-scene img{object-position:center 18%}
+ .story-hero-copy{order:0}.story-hero-image{height:350px}
+ .story-back{margin-bottom:17px}
+ .portal-copy h1{font-size:clamp(2.35rem,6.5vw,3.4rem)}
+ .portal-choices{max-width:100%}
+ .name-grid{gap:10px}.name-piece{padding:20px}
+ .story-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .gallery-card-wide{grid-column:1/-1}
+ .gallery-card-wide img{height:290px}
+ .concept-panel{grid-template-columns:1fr;gap:15px}
+ .concept-panel img{max-height:380px;object-fit:contain}
+}
+@media(max-width:560px){
+ .brand-portal .wrap{width:calc(100% - 34px)}
+ .brand-portal .portal-header{min-height:79px}
+ .brand-portal .brand{gap:8px}.brand-portal .brand img{width:43px;height:43px}
+ .brand-portal .brand strong{font-size:.94rem;letter-spacing:.035em}
+ .brand-portal .brand small{font-size:.53rem;letter-spacing:.075em}
+ .brand-portal .locale button{min-width:41px;min-height:42px;font-size:.73rem;padding:5px}
+ .portal-hero{padding-top:30px}
+ .portal-kicker{font-size:.65rem;margin-bottom:12px}
+ .portal-copy h1{font-size:clamp(2.05rem,9vw,2.75rem);margin-bottom:13px}
+ .portal-lead{font-size:.91rem;line-height:1.78;margin-bottom:23px}
+ .portal-choice{min-height:76px;padding:12px 14px;gap:12px}
+ .portal-choice-copy strong{font-size:1.06rem}
+ .portal-choice-copy small{font-size:.72rem}
+ .portal-index{min-width:25px}
+ .portal-scene{min-height:275px;border-width:5px}
+ .portal-scene figcaption{bottom:17px;left:18px}
+ .portal-location{align-items:flex-start;flex-direction:column;padding-top:23px;padding-bottom:23px;gap:13px}
+ .portal-location h2{font-size:1.18rem}
+ .portal-map{width:100%}
+ .portal-footer-row{min-height:59px}
+ .story-hero{padding-block:20px 48px}
+ .story-hero h1{font-size:clamp(2rem,8.5vw,2.85rem);margin-bottom:16px}
+ .story-hero-image{height:300px;border-radius:20px 20px 76px 20px}
+ .story-name,.story-place{padding-block:47px 55px}
+ .name-grid,.story-gallery{grid-template-columns:1fr}
+ .gallery-card-wide{grid-column:auto}
+ .gallery-card img,.gallery-card-wide img{height:250px}
+ .name-piece{padding:20px 22px}
+ .story-gallery{gap:13px}
+ .concept-panel{padding:12px}
+ .story-closing{padding-block:58px}
+}
+
+@media(max-width:380px){
+ .brand-portal .portal-header{gap:7px}
+ .brand-portal .brand{gap:6px}
+ .brand-portal .brand img{width:34px;height:34px}
+ .brand-portal .brand strong{font-size:.82rem;letter-spacing:.01em}
+ .brand-portal .brand small{font-size:.48rem;letter-spacing:0}
+ .brand-portal .locale{padding:2px;gap:0}
+ .brand-portal .locale button{min-width:36px;min-height:39px;padding:4px;font-size:.68rem}
+}

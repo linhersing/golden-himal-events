@@ -2,22 +2,28 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import test from 'node:test';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
-test('home is focused on registration, member login and news only',async()=>{
- const html=await read('index.html');
- assert.match(html,/class="front-actions"/);
- for(const href of ['./member.html#register','./member.html#login','./news.html'])assert.ok(html.includes('href="'+href+'"'),href);
- // One discreet staff link is intentional; it is navigation, never authentication.
- const forbiddenStaffHref=/<a\b[^>]*\bhref\s*=\s*["'][^"']*(?:backoffice|admin-center)[^"']*["']/i;
- assert.match('<a href="./backoffice.html">staff</a>',forbiddenStaffHref);
- assert.match('<a href="./admin-center.html">admin</a>',forbiddenStaffHref);
- assert.equal((html.match(forbiddenStaffHref)||[]).length,1);
- assert.match(html,/<a href="\.\/backoffice.html" class="staff-stealth-link"/);
- assert.match(html,/class="front-footer wrap"/);
- assert.match(html,/data-t="organizerValue"/);
- assert.match(html,/data-t="missionDescription"/);
- assert.match(html,/class="test-site-banner test-site-footer wrap"/);
- assert.doesNotMatch(html,/<form[^>]+action\s*=/i);
- assert.doesNotMatch(html,/class="v2-rule-summary"|class="season-preview"|id="vote-dialog"/);
+test('new brand homepage keeps only three routes; original Voice entry remains intact',async()=>{
+ const home=await read('index.html'),voice=await read('public/voice.html');
+ for(const [id,href] of [['home-about','./golden-himal.html'],['home-competition','./voice.html'],['home-news','./news.html']]){
+  assert.match(home,new RegExp('id="'+id+'"[^>]*href="'+href.replaceAll('.','\\.')+'"'));
+ }
+ assert.equal((home.match(/class="portal-choice(?: portal-choice-primary)?"/g)||[]).length,3);
+ assert.match(home,/id="location"/);
+ assert.match(home,/27\.666389%2C84\.228333/);
+ assert.match(home,/href="\.\/backoffice\.html"/);
+ assert.doesNotMatch(home,/id="home-apply"/);
+ assert.match(home,/class="test-site-banner test-site-footer wrap"/);
+ for(const href of ['./member.html#register','./member.html#login','./news.html']){
+  assert.ok(voice.includes('href="'+href+'"'),href);
+ }
+ assert.match(voice,/data-page="home"/);
+ assert.match(voice,/id="home-apply"/);
+ assert.match(voice,/id="home-login"/);
+ assert.match(voice,/data-t="organizerValue"/);
+ assert.match(voice,/data-t="missionDescription"/);
+ assert.match(voice,/class="front-footer wrap"/);
+ assert.doesNotMatch(home,/<form[^>]+action\s*=/i);
+ assert.doesNotMatch(home,/class="v2-rule-summary"|class="season-preview"|id="vote-dialog"/);
 });
 test('previous site resources and links remain in an immutable design archive',async()=>{
  const html=await read('docs/archive/2026-11-02-index-before-simple-front.html');
@@ -57,8 +63,13 @@ test('social preview metadata remains neutral and noindex until go live',async()
  assert.doesNotMatch(html,/\b(?:CMA|Chinese Mission Alliance|wanjun|cma-mission\.com)\b/i);
 });
 test('home retains English Nepali and Traditional Chinese switch',async()=>{
- const html=await read('index.html'),js=await read('public/simple.js');
- for(const lang of ['en','ne','zh']){assert.match(html,new RegExp('data-lang="'+lang+'"'));assert.match(js,new RegExp('\\b'+lang+':\\s*\\{'))}
+ const html=await read('index.html'),js=await read('public/brand-portal.js'),voice=await read('public/voice.html'),simple=await read('public/simple.js');
+ for(const lang of ['en','ne','zh']){
+  assert.match(html,new RegExp('data-lang="'+lang+'"'));
+  assert.match(voice,new RegExp('data-lang="'+lang+'"'));
+  assert.ok(js.includes('"'+lang+'":{'));
+  assert.ok(simple.includes(lang+':{'));
+ }
 });
 
 test('backoffice roster retains one guarded staff entry and one scoring workbench',async()=>{
@@ -84,7 +95,7 @@ test('TEST MODE notice remains visible only in footer on home, singer and news p
   assert.ok(html.indexOf('TEST MODE ·')>html.indexOf('</main>'),'notice must follow main content');
   assert.equal((html.match(/class="test-site-banner test-site-footer wrap"/g)||[]).length,1);
  }
- assert.match(home,/data-t="testNotice"/);
+ assert.match(home,/data-p="testNotice"/);
  assert.match(member,/data-l="testNotice"/);
  assert.match(news,/data-l="testNotice"/);
  assert.match(locale,/TEST PREVIEW ONLY/);
@@ -94,7 +105,7 @@ test('TEST MODE notice remains visible only in footer on home, singer and news p
 
 test('frontline rules appear with a concise homepage and expandable schedule',async()=>{
  const [home,news,member,locale]=await Promise.all([
-  read('index.html'),read('public/news.html'),read('public/member.html'),read('public/page-locale.js')
+  read('public/voice.html'),read('public/news.html'),read('public/member.html'),read('public/page-locale.js')
  ]);
  assert.match(home,/Golden Himal Palace/);
  assert.match(home,/Synergy FM/);assert.match(home,/Kalika FM/);
@@ -149,4 +160,23 @@ test('singer video guidance has explicit quality, lighting, sound and accessible
  assert.match(css,/audition-technical summary:focus-visible/);
  assert.match(ui,/video_confirmed:application\.querySelector/);
  assert.match(backend,/video_self_recording_confirmation_required/);
+});
+
+test('Golden Himal Palace brand story uses verified site images and labels the concept board',async()=>{
+ const [home,story,styles,language]=await Promise.all([
+  read('index.html'),read('public/golden-himal.html'),read('public/brand-portal.css'),read('public/brand-portal.js')
+ ]);
+ for(const src of ['golden-himal-phase1-exterior.png','golden-himal-rooftop.png','golden-himal-phase2-construction.png','golden-himal-phase2-visualization.png']){
+  assert.match(story,new RegExp(src.replaceAll('.','\\.')));
+ }
+ assert.match(story,/data-p="visionBody"/);
+ assert.match(story,/非已完成現場照片/);
+ assert.match(story,/data-p="goldenText"/);
+ assert.match(story,/data-p="himalText"/);
+ assert.match(story,/data-p="palaceText"/);
+ assert.match(story,/id="location"/);
+ assert.match(home,/id="home-competition"/);
+ assert.match(language,/ghv_ui_language_v1/);
+ assert.match(styles,/@media\(max-width:560px\)/);
+ assert.doesNotMatch(story,/class="v2-rule-summary"|id="registration-form"/);
 });

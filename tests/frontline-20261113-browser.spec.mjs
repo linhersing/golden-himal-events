@@ -1,9 +1,9 @@
 import {test,expect} from '@playwright/test';
 
-test('frontline identity appears without extra homepage actions on mobile and desktop',async({page})=>{
+test('frontline organizers and purpose appear in the second-layer Voice home',async({page})=>{
  for(const width of [320,375,390,1280]){
   await page.setViewportSize({width,height:850});
-  await page.goto('/');
+  await page.goto('/voice.html');
   await expect(page.locator('.event-credits')).toContainText('Golden Himal Palace');
   await expect(page.locator('.event-credits')).toContainText('Synergy FM');
   await expect(page.locator('.event-credits')).toContainText('Kalika FM');

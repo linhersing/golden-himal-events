@@ -67,7 +67,7 @@ test('Nepali and Chinese keep clear sign-in instructions on small phone',async({
 });
 test('mobile homepage points to clean member flow without exposed engineer test links',async({page})=>{
  await page.setViewportSize({width:375,height:812});
- await page.goto('/');
+ await page.goto('/voice.html');
  await expect(page.locator('.front-actions .choice')).toHaveCount(3);
  await expect(page.locator('.choice-main')).toHaveAttribute('href','./member.html#register');
  await expect(page.locator('.front-actions a').nth(1)).toHaveAttribute('href','./member.html#login');
@@ -79,7 +79,7 @@ test('mobile homepage points to clean member flow without exposed engineer test 
  await expect(page.locator('#back-signin')).toBeVisible();
  await expect(page.locator('#back-dashboard')).toBeHidden();
  await page.screenshot({path:'test-results/ghv-hide-public-staff-nav-20261104/01-mobile-private-staff-login.png'});
- await page.goto('/');
+ await page.goto('/voice.html');
  await expect(page.locator('.front-actions .choice')).toHaveCount(3);
  await page.screenshot({path:'test-results/ghv-hide-public-staff-nav-20261104/02-mobile-public-home-no-staff-link.png'});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
@@ -101,7 +101,7 @@ test('desktop print brief exists and is A4 portrait printable with V2 dates',asy
 
 test('desktop public homepage does not advertise backstage; private direct staff URL is still a login',async({page})=>{
  await page.setViewportSize({width:1280,height:860});
- await page.goto('/');
+ await page.goto('/voice.html');
  await expect(page.locator('.front-actions .choice')).toHaveCount(3);
  await expect(page.locator('.backoffice-link')).toHaveCount(0);
  await expect(page.locator('footer a.staff-stealth-link')).toHaveCount(1);

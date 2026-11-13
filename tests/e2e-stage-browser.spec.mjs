@@ -36,8 +36,8 @@ test('staging member and judge login remain mobile usable',async({page})=>{
 });
 
 
-test('short public homepage leads to a separate singer portal and staff surface',async({page})=>{
- await page.goto('/');
+test('Voice home leads to singer registration and staff surface, nested under brand home',async({page})=>{
+ await page.goto('/voice.html');
  await expect(page.locator('.front-actions a')).toHaveCount(3);
  await expect(page.locator('.front-actions a').first()).toHaveAttribute('href','./member.html#register');
  await expect(page.locator('.backoffice-link')).toHaveCount(0);

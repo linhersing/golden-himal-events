@@ -1,8 +1,8 @@
 import {test,expect} from '@playwright/test';
-test('singer-first homepage shows just register login and announcements on mobile and desktop',async({page})=>{
+test('second-layer Voice homepage keeps registration, login and news on mobile and desktop',async({page})=>{
  for(const width of [320,375,768,1280]){
   await page.setViewportSize({width,height:850});
-  await page.goto('/');
+  await page.goto('/voice.html');
   await expect(page.locator('.front-actions .choice')).toHaveCount(3);
   await expect(page.locator('.choice-main')).toContainText('我要報名');
   await expect(page.locator('.front-actions a').nth(1)).toHaveAttribute('href','./member.html#login');

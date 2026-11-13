@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 test('public homepage has no fake registration form or fake success message',async({page})=>{
  await page.goto('/');
- await expect(page.locator('.front-actions .choice')).toHaveCount(3);
+ await expect(page.locator('.portal-choices .portal-choice')).toHaveCount(3);
  await expect(page.locator('#registration-form')).toHaveCount(0);
  await expect(page.locator('footer .test-site-footer')).toContainText('尚未開放');
  const state=await page.evaluate(()=>localStorage.getItem('ghv_member_sandbox_v1'));
@@ -144,6 +144,8 @@ test('deleting a TEST entry requires confirmation and cancel leaves the record i
 test('Chinese selected on homepage remains Chinese through singer and news; language controls switch all three',async({page})=>{
  await page.goto('/');
  await page.locator('[data-lang=zh]').click();
+ await page.locator('#home-competition').click();
+ await expect(page.locator('#home-apply')).toBeVisible();
  await page.locator('a.choice-main').click();
  await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
  await expect(page.locator('h1')).toContainText('歌手報名');

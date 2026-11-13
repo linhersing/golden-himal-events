@@ -88,7 +88,7 @@ test('member sends a replacement link and sees the saved state',async({page})=>{
 });
 test('homepage keeps same URLs but switches to personal home after confirmed server session and saved application',async({page})=>{
  const state={entries:[{...entry}]};await mockMemberApi(page,state);
- await page.goto('/');
+ await page.goto('/voice.html');
  await expect(page.locator('#home-apply')).toContainText('我的參賽首頁');
  await expect(page.locator('#home-apply')).toHaveAttribute('href','./member.html#register');
  await expect(page.locator('#home-login')).toHaveAttribute('href','./member.html#login');
@@ -101,7 +101,7 @@ test('homepage keeps same URLs but switches to personal home after confirmed ser
 });
 test('unregistered member has separate start and member links, without changing their URL',async({page})=>{
  const state={entries:[]};await mockMemberApi(page,state);
- await page.goto('/');
+ await page.goto('/voice.html');
  await expect(page.locator('#home-apply')).toContainText('開始報名');
  await expect(page.locator('#home-login')).toContainText('我的會員專區');
  await expect(page.locator('#home-apply')).toHaveAttribute('href','./member.html#register');
@@ -179,7 +179,7 @@ test('homepage remains anonymous when authorization is missing; staff role canno
    {ok:false,error:'not_authorized'};
   await route.fulfill({status:key==='me'?200:403,json:result});
  });
- await page.goto('/');
+ await page.goto('/voice.html');
  await expect(page.locator('#home-login')).toBeVisible();
  await expect(page.locator('#home-apply')).toContainText('我要報名');
  expect(posts).toBe(0);
