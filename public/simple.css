@@ -238,3 +238,28 @@ body[data-page="member"] #password-pending-screen .password-pending-preview{marg
 .audition-technical-list li{padding-left:2px;overflow-wrap:anywhere}
 .video-confirm{padding:10px 0}
 @media(max-width:520px){.audition-guidance{padding:14px}.audition-technical summary{font-size:.9rem}.audition-technical-list{padding-left:19px;gap:9px;font-size:.85rem}}
+
+/* 2026-11-13 frontline identity: concise credits and purpose, mobile-first. */
+.event-credits{display:grid;gap:2px;border-top:1px solid #ede2d4;border-bottom:1px solid #ede2d4;padding:10px 2px;color:#645246;font-size:.78rem}
+.event-credits p{margin:0;display:flex;align-items:baseline;gap:12px;line-height:1.55}
+.event-credits p>span:first-child{flex:none;min-width:4.5em;font-size:.73rem;letter-spacing:.02em;color:#99764c;font-weight:750}
+.event-credits strong{font-weight:760}
+.event-credits [data-t="partnersValue"]{overflow-wrap:anywhere}
+.mission-intro{display:grid;gap:5px;color:#78665c;font-size:.96rem;line-height:1.72;max-width:535px;margin:14px 0 26px}
+.mission-intro strong{font-size:.72rem;letter-spacing:.12em;color:#a17d4b}
+.site-shell-footer{border-top:1px solid #e4d9c9}
+.site-shell-footer .front-footer{border-top:0}
+.test-site-banner.test-site-footer{margin:4px auto 18px;padding:12px 0;background:transparent;border:0;border-top:1px solid #e9e0d4;border-radius:0;box-shadow:none;display:flex;align-items:baseline;flex-wrap:wrap;gap:5px 12px;font-size:.73rem;color:#837468}
+.test-site-banner.test-site-footer strong{font-size:.7rem;color:#8e785f;font-weight:750}
+.test-site-banner.test-site-footer p{font-size:.73rem;line-height:1.5;color:#837468}
+.news-schedule{list-style:none;margin:14px 0 6px;padding:0;display:grid;gap:7px}
+.news-schedule li{display:grid;grid-template-columns:minmax(85px,120px) 1fr;gap:12px;align-items:baseline;padding:10px 12px;border:1px solid #ede4d8;border-radius:10px;background:#fffdf9;color:#655347}
+.news-schedule li strong{font-size:.87rem;color:#694332}
+.news-schedule li span{font-size:.89rem;overflow-wrap:anywhere}
+.news-schedule li:first-child{border-color:#d9bd8c;background:#fbf6eb}
+.evidence-plan{border:1px solid #e7dac9;border-radius:12px;background:#faf7ef;padding:12px 15px;color:#665449}
+.evidence-plan summary{cursor:pointer;min-height:44px;font-weight:750;display:list-item;list-style-position:inside}
+.evidence-plan p,.evidence-plan li{font-size:.88rem;line-height:1.7}
+.evidence-plan ul{margin:6px 0 4px;padding-left:24px}
+@media(max-width:830px){.front-copy{order:-1}.front-visual{order:0}.front-copy .mission-intro{text-align:center;margin-inline:auto}}
+@media(max-width:520px){.event-credits{font-size:.72rem;padding:8px 0}.event-credits p{gap:8px}.event-credits p>span:first-child{min-width:4.5em;font-size:.69rem}.mission-intro{font-size:.85rem;margin:12px auto 19px;gap:2px}.news-schedule li{grid-template-columns:1fr;gap:2px;padding:9px 10px}.test-site-banner.test-site-footer{padding:10px 0;margin-bottom:12px}}

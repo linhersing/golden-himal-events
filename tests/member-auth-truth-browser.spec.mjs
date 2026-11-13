@@ -3,7 +3,7 @@ test('public homepage has no fake registration form or fake success message',asy
  await page.goto('/');
  await expect(page.locator('.front-actions .choice')).toHaveCount(3);
  await expect(page.locator('#registration-form')).toHaveCount(0);
- await expect(page.locator('.under-actions')).toContainText('尚未開放');
+ await expect(page.locator('footer .test-site-footer')).toContainText('尚未開放');
  const state=await page.evaluate(()=>localStorage.getItem('ghv_member_sandbox_v1'));
  expect(state).toBeNull();
 });
@@ -109,7 +109,7 @@ test('latest news remains short expandable cards (synthetic UI screenshot)',asyn
  await page.goto('/news.html');
  await page.locator('[data-lang=en]').click();
  await expect(page.locator('.news-row')).toHaveCount(4);
- await page.locator('.news-row').first().locator('summary').click();
+ // The annual schedule is the highest-priority announcement and opens by default.
  await expect(page.locator('.news-row').first()).toHaveAttribute('open','');
  await expect(page.getByText(/January 1–31/)).toBeVisible();
  await page.screenshot({path:'test-results/ghv-singer-ux-20261104/04-mobile-news-accordion.png'});
@@ -156,7 +156,7 @@ test('Chinese selected on homepage remains Chinese through singer and news; lang
  await expect(page.locator('h1')).toContainText('नयाँ');
  await page.locator('[data-lang=zh]').click();
  await expect(page.locator('h1')).toContainText('最新消息');
- await expect(page.locator('.news-row').first().locator('strong')).toContainText('海選報名時間');
+ await expect(page.locator('.news-row').first().locator('summary strong[data-l=news01]')).toContainText('2027年度賽程');
  await page.reload();
  await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
  await expect(page.locator('h1')).toContainText('最新消息');
