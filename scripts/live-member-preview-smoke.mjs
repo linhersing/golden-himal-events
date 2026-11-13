@@ -6,7 +6,7 @@ const BASE='https://golden-himal-voice-preview.linhersing.workers.dev';
 const footerMarkers=['TEST MODE','class="test-site-banner test-site-footer wrap"'];
 const endpoints=[
   ['/',['id="home-about"','id="home-competition"','id="home-news"','href="./golden-himal.html"','href="./voice.html"','id="location"',...footerMarkers]],
-  ['/golden-himal.html',['data-page="story"','story-name','story-gallery','DESIGN VISION',...footerMarkers]],
+  ['/golden-himal.html',['data-page="story"','story-name','story-gallery','imageDisclaimer','gh-gallery-grand-hall-ai.webp',...footerMarkers]],
   ['/voice.html',['data-page="home"','id="home-apply"','id="home-login"',...footerMarkers]],
   ['/member.html',[...footerMarkers,'id="member-email-form"','id="member-code-form"','id="member-status"','simple.js']],
   ['/news.html',[...footerMarkers,'news-schedule']],
