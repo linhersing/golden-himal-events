@@ -24,14 +24,16 @@ test('brand-first homepage has exactly three visible primary destinations and fo
  }
 });
 
-test('brand story features elegant venue gallery labeled as AI-enhanced, with working back links',async({page})=>{
+test('brand story balances venue photos with authentic narrative and quiet image details, with working back links',async({page})=>{
  for(const width of [320,390,1280]){
   await page.setViewportSize({width,height:850});
   await page.goto('/golden-himal.html');
-  await expect(page.locator('h1')).toContainText('記住的精彩');
+  await expect(page.locator('h1')).toContainText('金色晨光');
   await expect(page.locator('.name-piece')).toHaveCount(3);
   await expect(page.locator('.story-gallery .gallery-card')).toHaveCount(4);
-  await expect(page.locator('.gallery-disclaimer')).toContainText('AI 修飾');
+  await expect(page.locator('.gallery-disclaimer')).toContainText('數位重製');
+  await expect(page.locator('[data-p="journeyHeading"]')).toBeVisible();
+  await expect(page.locator('.story-gallery figcaption [data-p="galleryEnhanced"]')).toHaveCount(0);
   await expect(page.locator('.story-more')).not.toHaveAttribute('open','');
   await page.locator('.story-more summary').click();
   await expect(page.locator('.story-gallery-more .gallery-card')).toHaveCount(3);
@@ -56,7 +58,7 @@ test('brand, Voice and latest news share EN / Nepali / Chinese language preferen
  await expect(page.locator('#home-about')).toContainText('Discover Golden Himal');
  await page.locator('#home-about').click();
  await expect(page.locator('html')).toHaveAttribute('lang','en');
- await expect(page.locator('h1')).toContainText('remarkable setting');
+ await expect(page.locator('h1')).toContainText('golden Himalayan light');
  await page.locator('[data-lang=ne]').click();
  await expect(page.locator('html')).toHaveAttribute('lang','ne');
  await expect(page.locator('.name-piece').first()).toContainText('सुनौला');
