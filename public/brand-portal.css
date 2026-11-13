@@ -117,3 +117,13 @@
  .concept-panel{padding:12px}
  .story-closing{padding-block:58px}
 }
+
+@media(max-width:380px){
+ .brand-portal .portal-header{gap:7px}
+ .brand-portal .brand{gap:6px}
+ .brand-portal .brand img{width:34px;height:34px}
+ .brand-portal .brand strong{font-size:.82rem;letter-spacing:.01em}
+ .brand-portal .brand small{font-size:.48rem;letter-spacing:0}
+ .brand-portal .locale{padding:2px;gap:0}
+ .brand-portal .locale button{min-width:36px;min-height:39px;padding:4px;font-size:.68rem}
+}
