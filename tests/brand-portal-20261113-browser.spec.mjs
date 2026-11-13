@@ -24,14 +24,17 @@ test('brand-first homepage has exactly three visible primary destinations and fo
  }
 });
 
-test('brand story shows real place and clearly labeled unbuilt concept, with working back links',async({page})=>{
+test('brand story features elegant venue gallery labeled as AI-enhanced, with working back links',async({page})=>{
  for(const width of [320,390,1280]){
   await page.setViewportSize({width,height:850});
   await page.goto('/golden-himal.html');
-  await expect(page.locator('h1')).toContainText('重要時刻');
+  await expect(page.locator('h1')).toContainText('記住的精彩');
   await expect(page.locator('.name-piece')).toHaveCount(3);
-  await expect(page.locator('.gallery-card')).toHaveCount(3);
-  await expect(page.locator('.concept-panel')).toContainText('不代表現場已照圖完成');
+  await expect(page.locator('.story-gallery .gallery-card')).toHaveCount(4);
+  await expect(page.locator('.gallery-disclaimer')).toContainText('AI 修飾');
+  await expect(page.locator('.story-more')).not.toHaveAttribute('open','');
+  await page.locator('.story-more summary').click();
+  await expect(page.locator('.story-gallery-more .gallery-card')).toHaveCount(3);
   await expect(page.locator('#location')).toContainText('尼泊爾奇旺');
   for(const im of await page.locator('.story-gallery img').all()){
    await im.scrollIntoViewIfNeeded();
@@ -53,7 +56,7 @@ test('brand, Voice and latest news share EN / Nepali / Chinese language preferen
  await expect(page.locator('#home-about')).toContainText('Discover Golden Himal');
  await page.locator('#home-about').click();
  await expect(page.locator('html')).toHaveAttribute('lang','en');
- await expect(page.locator('h1')).toContainText('beautiful setting');
+ await expect(page.locator('h1')).toContainText('remarkable setting');
  await page.locator('[data-lang=ne]').click();
  await expect(page.locator('html')).toHaveAttribute('lang','ne');
  await expect(page.locator('.name-piece').first()).toContainText('सुनौला');
