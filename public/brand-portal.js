@@ -74,7 +74,10 @@ const key='ghv_ui_language_v1',translations={
   "homePhotoArchitectureSub": "夜色中的溫暖光影",
   "homeReadMore": "閱讀 Golden Himal 的完整故事",
   "outlookText": "一片風景，也是一段故事的開始。",
-  "galleryGateway": "園區入口與窗景"
+  "galleryGateway": "園區入口與窗景",
+  "galleryHint": "欣賞更多場地照片",
+  "galleryPrevious": "上一張照片",
+  "galleryNext": "下一張照片"
  },
  "en": {
   "portalEyebrow": "GOLDEN HIMAL PALACE · CHITWAN",
@@ -149,7 +152,10 @@ const key='ghv_ui_language_v1',translations={
   "homePhotoArchitectureSub": "A warm evening glow",
   "homeReadMore": "Read the full Golden Himal story",
   "outlookText": "Every landscape has a story to tell.",
-  "galleryGateway": "The entrance from above"
+  "galleryGateway": "The entrance from above",
+  "galleryHint": "Explore more venue photos",
+  "galleryPrevious": "Previous photo",
+  "galleryNext": "Next photo"
  },
  "ne": {
   "portalEyebrow": "GOLDEN HIMAL PALACE · CHITWAN",
@@ -224,15 +230,62 @@ const key='ghv_ui_language_v1',translations={
   "homePhotoArchitectureSub": "न्यानो प्रकाश",
   "homeReadMore": "Golden Himal को पूरा कथा पढ्नुहोस्",
   "outlookText": "हरेक दृश्यसँग आफ्नै कथा हुन्छ।",
-  "galleryGateway": "झ्यालबाट प्रवेशद्वारको दृश्य"
+  "galleryGateway": "झ्यालबाट प्रवेशद्वारको दृश्य",
+  "galleryHint": "थप स्थलका तस्बिरहरू",
+  "galleryPrevious": "अघिल्लो तस्बिर",
+  "galleryNext": "अर्को तस्बिर"
  }
 };
 let lang='zh';try{const saved=localStorage.getItem(key);if(Object.prototype.hasOwnProperty.call(translations,saved))lang=saved}catch{}
 function apply(){document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
  document.querySelectorAll('[data-p]').forEach(el=>{const value=translations[lang][el.dataset.p];if(value!==undefined)el.textContent=value});
  document.querySelectorAll('[data-lang]').forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.lang===lang)));
+ const previous=document.getElementById('portal-gallery-prev'),next=document.getElementById('portal-gallery-next');
+ if(previous)previous.setAttribute('aria-label',translations[lang].galleryPrevious);
+ if(next)next.setAttribute('aria-label',translations[lang].galleryNext);
  document.title=document.body.dataset.page==='story'?(lang==='zh'?'認識 Golden Himal｜Golden Himal Palace':'Our Story | Golden Himal Palace'):'Golden Himal Palace | Chitwan, Nepal';
 }
 document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>{const next=btn.dataset.lang;if(!Object.prototype.hasOwnProperty.call(translations,next))return;lang=next;try{localStorage.setItem(key,lang)}catch{}apply()}));
+// Mobile photo browsing must not depend on discovering a hidden swipe gesture.
+const gallery=document.getElementById('portal-photo-gallery');
+const previous=document.getElementById('portal-gallery-prev');
+const next=document.getElementById('portal-gallery-next');
+const counter=document.getElementById('portal-gallery-count');
+if(gallery&&previous&&next&&counter){
+ const photos=[...gallery.querySelectorAll('.portal-photo-card')];
+ let selected=0;
+ function sync(){
+  if(!photos.length)return;
+  const left=gallery.getBoundingClientRect().left;
+  let closest=0,distance=Infinity;
+  photos.forEach((photo,i)=>{
+   const dx=Math.abs(photo.getBoundingClientRect().left-left);
+   if(dx<distance){distance=dx;closest=i}
+  });
+  if(selected!==closest){
+   selected=closest;
+   counter.textContent=(selected+1)+' / '+photos.length;
+  }
+  previous.disabled=selected===0;
+  next.disabled=selected===photos.length-1;
+ }
+ function show(index){
+  if(!photos.length)return;
+  const target=Math.max(0,Math.min(index,photos.length-1));
+  const position=gallery.scrollLeft+
+   photos[target].getBoundingClientRect().left-gallery.getBoundingClientRect().left;
+  gallery.scrollTo({left:position,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+  // Reflect the intended destination even before smooth scrolling has ended.
+  selected=target;
+  counter.textContent=(selected+1)+' / '+photos.length;
+  previous.disabled=selected===0;
+  next.disabled=selected===photos.length-1;
+ }
+ previous.addEventListener('click',()=>show(selected-1));
+ next.addEventListener('click',()=>show(selected+1));
+ gallery.addEventListener('scroll',sync,{passive:true});
+ window.addEventListener('resize',sync,{passive:true});
+ sync();
+}
 apply();
 })();

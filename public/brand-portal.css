@@ -336,3 +336,120 @@
 .brand-portal .portal-photo-card:nth-child(2) img{
  object-position:center 41%;
 }
+
+
+/* 2026-11-13 approved design baseline: quiet ivory/champagne + readable for senior reviewers.
+   Keep the existing layout, colors and genuine photos; only strengthen affordances. */
+.brand-portal .portal-top-nav a{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ min-height:44px;
+ line-height:1.45;
+ border-radius:9px;
+ text-underline-offset:5px;
+ box-shadow:inset 0 -2px 0 #d1b38d80;
+}
+.brand-portal .portal-top-nav a[aria-current="page"]{
+ background:#f4eadb;
+ box-shadow:inset 0 -2px 0 #a67536;
+}
+.brand-portal .portal-top-nav a:focus-visible,
+.brand-portal .portal-choice:focus-visible,
+.brand-portal .portal-more:focus-visible,
+.brand-portal .portal-gallery-arrow:focus-visible{
+ outline:3px solid #a87535;
+ outline-offset:3px;
+}
+.brand-portal .portal-choice-copy small{font-size:.85rem;opacity:.97}
+.brand-portal .portal-about-body p{font-size:1rem}
+.brand-portal .portal-traits span{font-size:.9rem}
+.brand-portal .portal-photo-card figcaption strong{font-size:1.08rem}
+.brand-portal .portal-photo-card figcaption small{font-size:.85rem}
+.brand-portal .portal-more{font-size:.98rem;min-height:44px}
+.brand-portal .story-meaning-copy p,
+.brand-portal .name-piece p{font-size:1rem;line-height:1.86}
+.brand-portal .story-section-intro p,
+.brand-portal .story-closing p{font-size:1.02rem}
+.brand-portal .gallery-card figcaption strong{font-size:1.02rem}
+.brand-portal .story-more summary{font-size:.96rem;min-height:48px}
+.brand-portal .story-back{font-size:.95rem}
+.portal-gallery-controls{display:none}
+@media(max-width:980px){
+ .brand-portal .portal-top-nav a{font-size:.86rem}
+ .brand-portal .portal-about-body p{font-size:.98rem}
+}
+@media(max-width:650px){
+ .brand-portal .portal-top-nav{
+  gap:5px;
+  min-height:51px;
+  padding:6px 0;
+ }
+ .brand-portal .portal-top-nav a{
+  font-size:.83rem;
+  font-weight:690;
+  min-height:44px;
+  padding:7px 3px;
+  white-space:normal;
+  border:1px solid #e8dbc8;
+  background:#f9f2e8;
+  box-shadow:none;
+  line-height:1.32;
+ }
+ .brand-portal .portal-top-nav a[aria-current="page"]{
+  color:#704621;
+  background:#ecddc5;
+  border-color:#c7a779;
+  box-shadow:inset 0 -2px 0 #a67536;
+ }
+ .brand-portal .portal-header .locale button{
+  min-height:44px;
+  min-width:36px;
+  font-size:.76rem;
+ }
+ .brand-portal .portal-choice{min-height:81px}
+ .brand-portal .portal-choice-copy strong{font-size:1.14rem;line-height:1.42}
+ .brand-portal .portal-choice-copy small{font-size:.85rem;line-height:1.47;opacity:.97}
+ .brand-portal .portal-tagline{font-size:1.075rem}
+ .brand-portal .portal-lead{font-size:.91rem;max-width:340px;line-height:1.66}
+ .brand-portal .portal-about-body p{font-size:.97rem;line-height:1.84}
+ .brand-portal .portal-traits span{font-size:.81rem}
+ .brand-portal .portal-photo-card figcaption strong{font-size:1.06rem}
+ .brand-portal .portal-photo-card figcaption small{font-size:.86rem}
+ .brand-portal .portal-more{font-size:.93rem}
+ .brand-portal .story-meaning-copy p{font-size:.97rem;line-height:1.83}
+ .brand-portal .name-piece p{font-size:.96rem}
+ .brand-portal .story-section-intro p,
+ .brand-portal .story-closing p{font-size:.97rem}
+ .portal-gallery-controls{
+  display:flex;align-items:center;justify-content:flex-end;
+  gap:8px;min-height:48px;margin:4px 0 0;
+ }
+ .portal-gallery-hint{flex:1;min-width:0;color:#785d47;font-size:.85rem;font-weight:650}
+ .portal-gallery-count{font:700 .9rem Georgia,serif;color:#78563c;white-space:nowrap;min-width:39px;text-align:center}
+ .portal-gallery-arrow{
+  appearance:none;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid #c7ab80;
+  background:#fffaf1;color:#684527;
+  border-radius:50%;width:44px;height:44px;min-width:44px;
+  padding:0;cursor:pointer;
+  font:600 1.75rem/1 Georgia,serif;
+  transition:background-color .15s,border-color .15s;
+ }
+ .portal-gallery-arrow:hover:not(:disabled){background:#f3e3ca;border-color:#ad8350}
+ .portal-gallery-arrow:disabled{opacity:.32;cursor:default}
+ .brand-portal .portal-photo-grid{scroll-behavior:smooth}
+}
+@media(max-width:370px){
+ .brand-portal .portal-top-nav a{font-size:.78rem}
+ .brand-portal .portal-header .locale button{font-size:.72rem}
+ .brand-portal .portal-choice-copy strong{font-size:1.09rem}
+ .brand-portal .portal-choice-copy small{font-size:.8rem}
+ .portal-gallery-hint{font-size:.78rem}
+ .portal-gallery-controls{gap:6px}
+}
+@media(prefers-reduced-motion:reduce){
+ .brand-portal .portal-photo-grid{scroll-behavior:auto}
+ .portal-gallery-arrow{transition:none}
+}

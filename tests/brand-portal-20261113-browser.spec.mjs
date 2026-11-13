@@ -23,6 +23,33 @@ test('brand-first homepage has exactly three visible primary destinations and fo
   expect(await image.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
   await expect(page.locator('.portal-top-nav a')).toHaveCount(4);
   await expect(page.locator('.portal-photo-card')).toHaveCount(3);
+  if(width<=650){
+   const [prev,next]=[page.locator('#portal-gallery-prev'),page.locator('#portal-gallery-next')];
+   await expect(prev).toBeVisible();
+   await expect(next).toBeVisible();
+   await expect(prev).toBeDisabled();
+   await expect(page.locator('#portal-gallery-count')).toHaveText('1 / 3');
+   for(const b of [prev,next]){
+    const rect=await b.boundingBox();
+    expect(rect?.height).toBeGreaterThanOrEqual(44);
+    expect(rect?.width).toBeGreaterThanOrEqual(44);
+   }
+   await next.click();
+   await expect(page.locator('#portal-gallery-count')).toHaveText('2 / 3');
+   await expect(prev).toBeEnabled();
+   await prev.click();
+   await expect(page.locator('#portal-gallery-count')).toHaveText('1 / 3');
+  }else{
+   await expect(page.locator('.portal-gallery-controls')).toBeHidden();
+  }
+  const menuLinks=page.locator('.portal-top-nav a');
+  await expect(menuLinks).toHaveCount(4);
+  if(width<=650){
+   for(const link of await menuLinks.all()){
+    const box=await link.boundingBox();
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+   }
+  }
   await expect(page.locator('#home-about')).toHaveAttribute('href','./golden-himal.html');
   await expect(page.locator('.portal-photo-card img[src*="gh-real-fountain-20261113.webp"]')).toHaveCount(0);
   await expect(page.locator('.portal-photo-card img[src*="gh-real-fountain-night-landscape"]')).toHaveCount(1);
@@ -73,6 +100,7 @@ test('brand, Voice and latest news share EN / Nepali / Chinese language preferen
  await page.goto('/');
  await page.locator('[data-lang=en]').click();
  await expect(page.locator('#home-about')).toContainText('Discover Golden Himal');
+ await expect(page.locator('#portal-gallery-next')).toHaveAttribute('aria-label','Next photo');
  await page.locator('#home-about').click();
  await expect(page.locator('html')).toHaveAttribute('lang','en');
  await expect(page.locator('h1')).toContainText('golden Himalayan light');
