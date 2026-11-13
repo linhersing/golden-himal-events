@@ -13,7 +13,9 @@ test('home is focused on registration, member login and news only',async()=>{
  assert.equal((html.match(forbiddenStaffHref)||[]).length,1);
  assert.match(html,/<a href="\.\/backoffice.html" class="staff-stealth-link"/);
  assert.match(html,/class="front-footer wrap"/);
- assert.match(html,/網站預覽階段/);
+ assert.match(html,/data-t="organizerValue"/);
+ assert.match(html,/data-t="missionDescription"/);
+ assert.match(html,/class="test-site-banner test-site-footer wrap"/);
  assert.doesNotMatch(html,/<form[^>]+action\s*=/i);
  assert.doesNotMatch(html,/class="v2-rule-summary"|class="season-preview"|id="vote-dialog"/);
 });
@@ -72,15 +74,40 @@ test('backoffice roster retains one guarded staff entry and one scoring workbenc
 });
 
 
-test('TEST MODE notice is visible on the public home, member, and news pages',async()=>{
- const [home,member,news,css]=await Promise.all([read('index.html'),read('public/member.html'),read('public/news.html'),read('public/simple.css')]);
+test('TEST MODE notice remains visible only in footer on home, singer and news pages',async()=>{
+ const [home,member,news,css,locale]=await Promise.all([
+  read('index.html'),read('public/member.html'),read('public/news.html'),
+  read('public/simple.css'),read('public/page-locale.js')
+ ]);
  for(const html of [home,member,news]){
-  assert.match(html,/class="test-site-banner wrap"/);
-  assert.match(html,/請勿正式報名或付款/);
-  assert.match(html,/Please do not register or make payments/);
-  assert.match(html,/कृपया दर्ता वा भुक्तानी नगर्नुहोस्/);
+  assert.match(html,/class="test-site-banner test-site-footer wrap"/);
+  assert.ok(html.indexOf('TEST MODE ·')>html.indexOf('</main>'),'notice must follow main content');
+  assert.equal((html.match(/class="test-site-banner test-site-footer wrap"/g)||[]).length,1);
  }
- assert.match(css,/\.test-site-banner/);
+ assert.match(home,/data-t="testNotice"/);
+ assert.match(member,/data-l="testNotice"/);
+ assert.match(news,/data-l="testNotice"/);
+ assert.match(locale,/TEST PREVIEW ONLY/);
+ assert.match(locale,/आधिकारिक दर्ता/);
+ assert.match(css,/\.test-site-banner\.test-site-footer/);
+});
+
+test('frontline rules appear with a concise homepage and expandable schedule',async()=>{
+ const [home,news,member,locale]=await Promise.all([
+  read('index.html'),read('public/news.html'),read('public/member.html'),read('public/page-locale.js')
+ ]);
+ assert.match(home,/Golden Himal Palace/);
+ assert.match(home,/Synergy FM/);assert.match(home,/Kalika FM/);
+ assert.match(home,/帶動尼泊爾音樂發展/);
+ assert.equal((home.match(/class="choice(?: choice-main)?"/g)||[]).length,3);
+ for(const field of ['scheduleJan','scheduleMar','scheduleApr','scheduleJun','scheduleSep']){
+  assert.match(news,new RegExp('data-l="'+field+'"'));
+  assert.match(locale,new RegExp('"'+field+'"'));
+ }
+ assert.match(news,/class="news-row" open/);
+ assert.match(member,/class="full evidence-plan"/);
+ assert.doesNotMatch(member,/<input[^>]*name="eligibility"/);
+ assert.match(locale,/安全上傳待開通/);
 });
 
 test('main singer page contains no-email TEST member controls, retains invited login and TEST warning',async()=>{
@@ -92,7 +119,7 @@ test('main singer page contains no-email TEST member controls, retains invited l
   assert.ok(html.includes('id="'+id+'"'),'missing '+id);
  }
  assert.match(html,/password-member\.js/);
- assert.match(html,/請勿正式報名或付款/);
+ assert.match(html,/data-l="testNotice"/);
  assert.match(ui,/password-config/);
  assert.match(backend,/passwordRequest/);
  assert.match(migration,/e2e_password_accounts/);
