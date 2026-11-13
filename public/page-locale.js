@@ -43,6 +43,27 @@ Object.assign(texts.ne,{
  finalSongTitle:'फाइनलको गीत र सङ्गीत साथ',finalSongBody:'आयोजकको सूचीबाट एउटा गीत छानेर तोकिएको म्यादभित्र गीत र स्वर पुष्टि गर्नुहोस्। सहयोगी कलाकार र मञ्चको विवरण १४ दिनअघि बुझाउनुहोस्। प्रत्यक्ष स्ट्रिमिङले आवश्यक अडियो फाइलको ठाउँ लिन सक्दैन।',
  resultsTitle:'मतदान, पुरस्कार र आपत्ति',resultsBody:'वेबसाइटको मत ५१% र निर्णायकको अङ्क ४९% हुन्छ। हरेक समूहमा पहिलो स्थान, दोस्रोदेखि चौथो र पाँचौँदेखि नवौँ स्थानले क्रमशः पहिलो, दोस्रो र तेस्रो पुरस्कार पाउँछन्। नतिजा प्रकाशित भएको ४८ घण्टाभित्र प्रमाणसहित आपत्ति दिनुहोस्।'
 });
+Object.assign(texts.en,{
+ secondAuditionTitle:'April audition',secondAuditionStart:'Apply for the April audition',
+ secondAuditionHelp:'Use the same competition category as your first entry.',nepalTime:'Nepal time',
+ supplementPending:'A replacement video link is required. You can submit it once before the deadline.',
+ supplementExpired:'The video correction deadline has passed.',supplementSubmitted:'The replacement video link has been saved.',
+ supplementSubmit:'Submit the replacement link',supplementUnavailable:'The video correction is closed or has already been submitted.'
+});
+Object.assign(texts.zh,{
+ secondAuditionTitle:'4 月第二梯次海選',secondAuditionStart:'報名第二梯次',
+ secondAuditionHelp:'第二梯次沿用首次報名的競賽組別。',nepalTime:'尼泊爾時間',
+ supplementPending:'請在期限內補交可公開觀看的影片連結。每筆報名限補一次。',
+ supplementExpired:'影片補件已逾期。',supplementSubmitted:'新的影片連結已儲存。',
+ supplementSubmit:'送出補件連結',supplementUnavailable:'補件已截止或已提交。'
+});
+Object.assign(texts.ne,{
+ secondAuditionTitle:'अप्रिलको अडिसन',secondAuditionStart:'अप्रिलको अडिसनका लागि आवेदन दिनुहोस्',
+ secondAuditionHelp:'पहिलो आवेदनकै प्रतियोगिता समूह प्रयोग गर्नुहोस्।',nepalTime:'नेपाल समय',
+ supplementPending:'म्यादभित्र हेर्न मिल्ने नयाँ भिडियो लिङ्क एक पटक बुझाउनुहोस्।',
+ supplementExpired:'भिडियो सच्याउने म्याद सकिएको छ।',supplementSubmitted:'नयाँ भिडियो लिङ्क सुरक्षित भएको छ।',
+ supplementSubmit:'नयाँ लिङ्क बुझाउनुहोस्',supplementUnavailable:'सच्याउने म्याद सकिएको छ वा लिङ्क पहिले नै बुझाइएको छ।'
+});
 const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;

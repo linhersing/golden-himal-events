@@ -6,6 +6,7 @@ import {handleV2Route} from './staging-v2-flow.js';
 import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
 import {approvalRequired,approvalSchemaReady,approvalColumn,approvalGuard,pendingGuard} from './test-application-approval.js';
 import {parseLocation,entrantLocationsReady,entrantLocationFields,entrantLocationJoin,insertEntrantLocation} from './entrant-location.js';
+import {handleVideoSupplement,supplementColumns,supplementGuard,supplementJoin,videoSupplementsReady} from './test-video-supplement.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
  * No official entries, actual payments, or exposed R2 URLs.
@@ -193,7 +194,7 @@ async function logout(request,env,a){
  if(match)await env.DB.prepare('DELETE FROM e2e_sessions WHERE session_fingerprint=?').bind(await sign(env,'session:'+match[1])).run();
  return json({ok:true},200,{'Set-Cookie':cookie('',0)});
 }
-async function applications(a,env){
+async function applications(a,env,supplements){
  const approval=approvalRequired(env);
  const locations=await entrantLocationsReady(env.DB);
  const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,${entrantLocationFields(locations)},p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url,
@@ -202,10 +203,13 @@ async function applications(a,env){
  CASE WHEN p.phase='demo' AND p.status IN ('submitted','under_review') AND p.payment_status IN ('unpaid','simulated_paid')
  AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
  AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
- AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingGuard(approval,'p')}
- THEN 1 ELSE 0 END AS can_edit${approvalColumn(approval)}
- FROM e2e_applications p${entrantLocationJoin(locations)} WHERE p.account_id=? ORDER BY p.created_at DESC`).bind(a.id).all();
- return json({ok:true,account:{id:a.id,role:a.role},applications:await attachProfiles(env,rows.results||[]),testOnly:true});
+ AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingGuard(approval,'p')}${supplementGuard(supplements,'p')}
+ THEN 1 ELSE 0 END AS can_edit${approvalColumn(approval)}${supplementColumns(supplements)}
+ FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)} WHERE p.account_id=? ORDER BY p.created_at DESC,p.round_code DESC`).bind(a.id).all();
+ const entries=rows.results||[];
+ const nextRound=entries.some(row=>row.round_code==='2027-01')&&
+  !entries.some(row=>row.round_code==='2027-04'||row.phase==='final')?'2027-04':null;
+ return json({ok:true,account:{id:a.id,role:a.role},applications:await attachProfiles(env,entries),next_audition_round:nextRound,testOnly:true});
 }
 async function submitApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
@@ -255,7 +259,7 @@ async function submitApplication(request,env,a){
 // An invited member may correct an unscored, unpromoted TEST application (including simulated-paid).
 // Deletion stays limited to unpaid entries; neither operation affects real payment or grading.
 // These routes do not change the payment state and cannot update another account.
-async function updateApplication(request,env,a){
+async function updateApplication(request,env,a,supplements){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request,2500);if(!b)return deny('invalid_json');
  const profileFields=['gender','photo_url_1','photo_url_2','photo_url_3','profile_consent'];
@@ -277,11 +281,11 @@ async function updateApplication(request,env,a){
    return deny('update_locked',409);
  const anyScores=await env.DB.prepare("SELECT EXISTS(SELECT 1 FROM e2e_judge_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_live_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_promotion_events WHERE application_id=?) AS n").bind(id,id,id).first();
  if(Number(anyScores?.n||0)>0)return deny('update_locked',409);
- const approval=approvalRequired(env),pendingProfile=pendingGuard(approval,'p');
+ const approval=approvalRequired(env),pendingProfile=pendingGuard(approval,'p')+supplementGuard(supplements,'p');
  const updateStmt=env.DB.prepare(`UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,song_language=?,demo_url=?,updated_at=? WHERE id=? AND account_id=? AND payment_status IN ('unpaid','simulated_paid') AND status IN ('submitted','under_review') AND phase='demo'
   AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=e2e_applications.id)
   AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=e2e_applications.id)
-  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=e2e_applications.id)${pendingGuard(approval,'e2e_applications')}`)
+  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=e2e_applications.id)${pendingGuard(approval,'e2e_applications')}${supplementGuard(supplements,'e2e_applications')}`)
   .bind(...values.slice(0,3),songLanguage,values[3],NOW(),id,a.id);
  let affected=0;
  try {
@@ -306,7 +310,7 @@ async function updateApplication(request,env,a){
  const result=await selectApplication(env.DB,id,a.id);
  return json({ok:true,application_id:result.id,stage_name:result.stage_name,song_title:result.song_title,original_artist:result.original_artist,song_language:result.song_language,demo_url:result.demo_url,testOnly:true});
 }
-async function deleteApplication(request,env,a){
+async function deleteApplication(request,env,a,supplements){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request);if(!b||Object.keys(b).some(k=>k!=='application_id'))
    return deny('invalid_json',422);
@@ -315,7 +319,7 @@ async function deleteApplication(request,env,a){
  if(!app)return deny('application_not_found',404);
  if(app.payment_status!=='unpaid'||app.status!=='submitted'||app.phase!=='demo'||app.media_key||app.eligibility_key||app.receipt_key)
    return deny('delete_locked',409);
- const changed=await env.DB.prepare(`DELETE FROM e2e_applications WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo' AND media_key IS NULL AND eligibility_key IS NULL AND receipt_key IS NULL${pendingGuard(approvalRequired(env),'e2e_applications')}`)
+ const changed=await env.DB.prepare(`DELETE FROM e2e_applications WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo' AND media_key IS NULL AND eligibility_key IS NULL AND receipt_key IS NULL${pendingGuard(approvalRequired(env),'e2e_applications')}${supplementGuard(supplements,'e2e_applications')}`)
   .bind(id,a.id).run();
  if(!changed.meta?.changes)return deny('delete_locked',409);
  return json({ok:true,deleted_application_id:id,testOnly:true});
@@ -452,15 +456,18 @@ export async function handleE2E(request,env){
   if(pathname==='/api/e2e/switch-role'&&isPost)return await switchRole(request,env,a);
   const approval=approvalRequired(env);
   if(approval&&!await approvalSchemaReady(env))return deny('test_approval_schema_unavailable',503);
+   const supplements=await videoSupplementsReady(env,approval);
+   if(supplements&&isPost&&['/api/e2e/request-video-supplement','/api/e2e/submit-video-supplement'].includes(pathname))
+    return await handleVideoSupplement(pathname,request,env,a,{json,deny,NOW,bodyJSON});
   if(!a.email&&['/api/e2e/finalists','/api/e2e/test-vote'].includes(pathname))return deny('not_on_test_allowlist',403);
-  const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval});
+   const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval,supplements});
   if(v2)return v2;
    if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),testOnly:true,
     ...(a.role==='member'&&await entrantLocationsReady(env.DB)?{nepal_locations_enabled:true}:{}),...(approval?{approval_enabled:true}:{})});
-  if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env);
+  if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env,supplements);
   if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
-   if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a);
-   if(pathname==='/api/e2e/delete-application'&&isPost)return await deleteApplication(request,env,a);
+    if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a,supplements);
+    if(pathname==='/api/e2e/delete-application'&&isPost)return await deleteApplication(request,env,a,supplements);
   if(pathname==='/api/e2e/mock-payment'&&isPost)return await mockPayment(request,env,a);
   if(pathname==='/api/e2e/demo-upload'&&isPost)return await mediaUpload(request,env,a);
   if(pathname==='/api/e2e/demo-download'&&!isPost)return await streamMedia(request,env,a);

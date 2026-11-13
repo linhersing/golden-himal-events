@@ -1,9 +1,10 @@
 import {approvalColumn,approvalGuard,approveTestApplication} from './test-application-approval.js';
 import {entrantLocationsReady,entrantLocationFields,entrantLocationJoin} from './entrant-location.js';
+import {supplementColumns,supplementGuard,supplementJoin} from './test-video-supplement.js';
 
 // Alan V2 competition logic, STAGING ONLY. Called only after verified session,
 // same-origin checks and configured() gate in staging-e2e.js.
-export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval=false}){
+export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval=false,supplements=false}){
  const path=new URL(request.url).pathname,post=request.method==='POST';
  const db=env.DB;
  // Explicit closed rehearsal: link evidence is not identity or payment verification.
@@ -14,7 +15,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
  const approved=approvalGuard(approval,'p');
  if(path==='/api/e2e/approve-test-application'&&post&&approval){
   if(forbidden('organizer'))return forbidden('organizer');
-  return approveTestApplication(request,db,a,{json,deny,NOW,bodyJSON});
+  return approveTestApplication(request,db,a,{json,deny,NOW,bodyJSON},supplementGuard(supplements,'p',true));
  }
  if(path==='/api/e2e/reviewer-queue'&&!post){
   if(forbidden('reviewer'))return forbidden('reviewer');
@@ -62,8 +63,8 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    (SELECT COUNT(*) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_judges,
    (SELECT ROUND(AVG(technique+interpretation),2) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_mean,
    (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_judges,
-   (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}
-   FROM e2e_applications p${entrantLocationJoin(locations)} ORDER BY p.created_at ASC LIMIT 500`).all();
+   (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}${supplementColumns(supplements)}
+   FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)} ORDER BY p.created_at ASC LIMIT 500`).all();
   return json({ok:true,applications:await attachProfiles(env,r.results||[]),testOnly:true});
  }
  if(path==='/api/e2e/organizer-promote'&&post){

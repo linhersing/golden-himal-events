@@ -14,7 +14,7 @@ test('successful SQL file import with progress output still verifies actual sche
  const root=mkdtempSync(join(tmpdir(),'ghv-provision-output-')),script=resolve('scripts/provision-practice.mjs');
  try{
   mkdirSync(join(root,'bin'));mkdirSync(join(root,'backend/migrations'),{recursive:true});
-  for(const file of ['1002_private_practice_ONLY.sql','1004_self_service_signup_STAGING_ONLY.sql','1007_test_application_approval_STAGING_ONLY.sql','1010_nepal_locations_STAGING_ONLY.sql'])
+  for(const file of ['1002_private_practice_ONLY.sql','1004_self_service_signup_STAGING_ONLY.sql','1007_test_application_approval_STAGING_ONLY.sql','1009_test_video_supplements_STAGING_ONLY.sql','1010_nepal_locations_STAGING_ONLY.sql'])
    copyFileSync('backend/migrations/'+file,join(root,'backend/migrations',file));
   const cli=`#!/usr/bin/env node
 import {DatabaseSync} from 'node:sqlite';import {readFileSync} from 'node:fs';
@@ -28,7 +28,7 @@ db.close();`;
   const r=spawnSync(process.execPath,[script],{cwd:root,env:{...process.env,PATH:join(root,'bin')+':'+process.env.PATH,WORKERS_CI:'1',WORKERS_CI_BRANCH:'codex/initial-site',WORKERS_CI_COMMIT_SHA:'a'.repeat(40)},encoding:'utf8'});
   assert.equal(r.status,0);const evidence=JSON.parse(readFileSync(join(root,'dist/practice-build.json'),'utf8'));
   assert.equal(evidence.status,'PASS');assert.deepEqual(evidence.before,{accounts:1,applications:1});assert.deepEqual(evidence.after,evidence.before);assert.deepEqual(evidence.schema,{tables:12,triggers:21});
-  assert.deepEqual(evidence.external_test_schema,{signup_tables:2,approval_tables:1});
+  assert.deepEqual(evidence.external_test_schema,{signup_tables:2,approval_tables:1,video_supplement_tables:1});
   assert.deepEqual(evidence.location_schema,{tables:1});
  }finally{rmSync(root,{recursive:true,force:true})}
 });

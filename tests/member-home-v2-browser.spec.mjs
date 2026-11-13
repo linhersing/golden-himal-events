@@ -14,7 +14,13 @@ async function mockMemberApi(page,state){
    method=route.request().method();
   let result={ok:true},status=200;
   if(key==='me')result={ok:true,account:{id:'SYNTH-MEMBER-ACCOUNT',role:'member',available_roles:['member']},profile_enabled:state.profileEnabled??false,nepal_locations_enabled:state.locationsEnabled??false};
-  else if(key==='applications'&&method==='GET')result={ok:true,applications:state.entries};
+  else if(key==='applications'&&method==='GET')result={ok:true,applications:state.entries,next_audition_round:state.nextAudition};
+  else if(key==='submit-video-supplement'&&method==='POST'){
+   const payload=route.request().postDataJSON();
+   writes.push(payload);
+   state.entries=state.entries.map(e=>e.id===payload.application_id?{...e,demo_url:payload.demo_url,video_supplement_state:'submitted'}:e);
+   result={ok:true,application_id:payload.application_id,testOnly:true};
+  }
   else if(key==='update-application'&&method==='POST'){
    const payload=route.request().postDataJSON();
    writes.push(payload);
@@ -45,6 +51,33 @@ test('member form supports the seven provinces when the database capability is r
  await expect(location).toHaveJSProperty('required',true);
 });
 
+test('April audition opens from the member home and keeps the original category',async({page})=>{
+ const state={entries:[{...entry}],nextAudition:'2027-04'};
+ await mockMemberApi(page,state);
+ await page.goto('/member.html#login');
+ await page.getByRole('button',{name:'報名第二梯次'}).click();
+ await expect(page.locator('#application-form [name=round_code]')).toHaveValue('2027-04');
+ await expect(page.locator('#application-form [name=category]')).toHaveValue('community');
+ await expect(page.locator('#application-form [name=category] option[value=university]')).toHaveJSProperty('disabled',true);
+ state.nextAudition=null;state.entries[0].phase='final';
+ await page.reload();
+ await expect(page.locator('#member-welcome-name')).toContainText('TEST Singer');
+ await expect(page.locator('#start-application')).toBeHidden();
+});
+
+test('member sends a replacement link and sees the saved state',async({page})=>{
+ const state={entries:[{...entry,can_edit:0,video_supplement_state:'pending',video_supplement_deadline:1820000000}]};
+ const writes=await mockMemberApi(page,state);
+ await page.setViewportSize({width:375,height:820});
+ await page.goto('/member.html#login');
+ const entries=page.locator('#entries');
+ await expect(entries).toContainText('尼泊爾時間');
+ await entries.locator('input[name=demo_url]').fill('https://youtu.be/test-replacement');
+ await entries.getByRole('button',{name:'送出補件連結'}).click();
+ await expect(entries).toContainText('新的影片連結已儲存');
+ await expect(entries.locator('input[name=demo_url]')).toHaveCount(0);
+ expect(writes).toEqual([{application_id:entry.id,demo_url:'https://youtu.be/test-replacement'}]);
+});
 test('homepage keeps same URLs but switches to personal home after confirmed server session and saved application',async({page})=>{
  const state={entries:[{...entry}]};await mockMemberApi(page,state);
  await page.goto('/');
