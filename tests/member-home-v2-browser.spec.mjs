@@ -73,8 +73,8 @@ test('member sends a replacement link and sees the saved state',async({page})=>{
  const entries=page.locator('#entries');
  await expect(entries).toContainText('尼泊爾時間');
  await entries.locator('input[name=demo_url]').fill('https://youtu.be/test-replacement');
- await entries.getByRole('button',{name:'送出補件連結'}).click();
- await expect(entries).toContainText('新的影片連結已儲存');
+ await entries.getByRole('button',{name:'送出補正資料'}).click();
+ await expect(entries).toContainText('補正資料已儲存');
  await expect(entries.locator('input[name=demo_url]')).toHaveCount(0);
  expect(writes).toEqual([{application_id:entry.id,demo_url:'https://youtu.be/test-replacement'}]);
 });

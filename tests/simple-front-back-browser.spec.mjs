@@ -56,7 +56,7 @@ test('organizer can inspect the audition link and open a notified 48-hour correc
   await dialog.accept();
  });
  await entryCard.getByRole('button',{name:'開放 48 小時補件'}).click();
- await expect(entryCard).toContainText('等待選手補交影片');
+ await expect(entryCard).toContainText('等待選手補正資料');
  await expect(entryCard.getByRole('button',{name:'核准測試報名'})).toHaveCount(0);
  expect(requests).toEqual([{application_id:entry.id}]);
 });

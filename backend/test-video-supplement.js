@@ -36,15 +36,21 @@ export async function handleVideoSupplement(path,request,env,account,{json,deny,
   if(!result.meta?.changes)return deny('video_supplement_unavailable',409);
   return json({ok:true,deadline:now+duration,testOnly:true});
  }
- const url=typeof body.demo_url==='string'?body.demo_url.trim():'';
- if(!url||url.length>1000||!validPerformanceLink(url))return deny('invalid_demo_url',422);
+ const fields=['demo_url','stage_name','affiliation','song_title','original_artist','song_key'];
+ if(Object.keys(body).some(key=>key!=='application_id'&&!fields.includes(key)))return deny('update_fields_only',422);
+ const values=fields.map(key=>Object.hasOwn(body,key)?(typeof body[key]==='string'?body[key].trim():''):null);
+ if(values.every(value=>value===null)||values.some((value,i)=>value!==null&&(value.length<(i===1?2:1)||value.length>(i===0?1000:100))))
+  return deny('invalid_demo_url_or_fields',422);
+ if(values[0]!==null&&!validPerformanceLink(values[0]))return deny('invalid_demo_url',422);
  const [result]=await db.batch([
   db.prepare(`UPDATE ${table} SET submitted_at=? WHERE application_id=? AND submitted_at IS NULL
    AND requested_at<=? AND requested_at+${duration}>? AND EXISTS(SELECT 1 FROM e2e_applications p
    WHERE p.id=? AND p.account_id=? AND ${eligible})`).bind(now,id,now,now,id,account.id),
-  db.prepare('UPDATE e2e_applications SET demo_url=?,updated_at=? WHERE id=? AND account_id=? AND changes()=1')
-   .bind(url,now,id,account.id)
+  db.prepare(`UPDATE e2e_applications SET demo_url=COALESCE(?,demo_url),stage_name=COALESCE(?,stage_name),
+   affiliation=COALESCE(?,affiliation),song_title=COALESCE(?,song_title),original_artist=COALESCE(?,original_artist),
+   song_key=COALESCE(?,song_key),updated_at=? WHERE id=? AND account_id=? AND changes()=1`)
+   .bind(...values,now,id,account.id)
  ]);
  if(!result.meta?.changes)return deny('video_supplement_unavailable',409);
- return json({ok:true,application_id:id,demo_url:url,testOnly:true});
+ return json({ok:true,application_id:id,demo_url:values[0],testOnly:true});
 }

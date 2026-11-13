@@ -306,6 +306,10 @@ function memberCanEdit(a){
  return a.can_edit===true||a.can_edit===1||a.can_edit==='1'||
   (a.can_edit===undefined&&a.payment_status==='unpaid'&&a.status==='submitted');
 }
+function editLockMessage(a){
+ if(a.approval_state==='approved'&&a.phase==='demo'&&['submitted','under_review'].includes(a.status))return mt('editApprovedLock');
+ return mt('editLockedAfterReview');
+}
 function supplementDeadline(a){
  const lang=window.GHVLocale?.lang||'zh';
  const locale=lang==='zh'?'zh-TW':lang==='ne'?'ne-NP':'en-NP';
@@ -318,14 +322,21 @@ function drawMemberSupplement(box,a){
  box.append(node('p',mt({pending:'supplementPending',expired:'supplementExpired',submitted:'supplementSubmitted'}[state]),'helper-banner'));
  if(state!=='pending')return;
  box.append(node('p',supplementDeadline(a),'minor'));
- const form=node('form',undefined,'form-grid'),label=node('label',undefined,'field'),input=node('input');
- input.type='url';input.name='demo_url';input.maxLength=1000;input.required=true;
- label.append(node('span',mt('videoUrl')),input);
+ const form=node('form',undefined,'form-grid');
+ for(const [name,key] of [['demo_url','videoUrl'],['stage_name','stageName'],['affiliation','occupation'],['song_title','songTitle'],['original_artist','artist'],['song_key','songKey']]){
+  const label=node('label',undefined,'field'),input=node('input');
+  if(name==='demo_url')input.type='url';
+  input.name=name;input.maxLength=name==='demo_url'?1000:100;
+  if(a[name])input.placeholder=a[name];
+  label.append(node('span',mt(key)),input);form.append(label);
+ }
  const save=node('button',mt('supplementSubmit'),'btn btn-primary');save.type='submit';
- form.append(label,save);
+ form.append(save);
  form.oninput=()=>{form.dataset.editing='true';};
  form.onsubmit=e=>{e.preventDefault();run(async()=>{
-  const result=await api('submit-video-supplement',{application_id:a.id,demo_url:input.value.trim()});
+  const changes=Object.fromEntries(Object.entries(formValues(form)).map(([key,value])=>[key,value.trim()]).filter(([,value])=>value));
+  if(!Object.keys(changes).length){status(mt('supplementEnterChange'),true);return;}
+  const result=await api('submit-video-supplement',{application_id:a.id,...changes});
   if(result.application_id!==a.id||result.testOnly!==true)throw Error('readback_mismatch');
   await renderMember();status(mt('supplementSubmitted'));
  });};
@@ -378,7 +389,7 @@ function drawEntry(a){
   actions.append(pay);if(a.approval_state!=='approved'&&!a.video_supplement_state)actions.append(del);
  }
  box.append(actions);
- if(!memberCanEdit(a)&&!a.video_supplement_state)box.append(node('p',mt('editLockedAfterReview'),'minor'));
+ if(!memberCanEdit(a)&&!a.video_supplement_state)box.append(node('p',editLockMessage(a),'minor'));
  return box;
 }
 async function renderMember(){
@@ -448,16 +459,19 @@ async function renderMember(){
  $('step-checkout')?.classList.toggle('active',Boolean(paidEntry));
 }
 function showEdit(a){
- if(!memberCanEdit(a)){status(mt('editLockedAfterReview'),true);return;}
+ if(!memberCanEdit(a)){status(editLockMessage(a),true);return;}
  const holder=$('member-edit-panel');holder.replaceChildren();holder.hidden=false;
  const box=node('div',undefined,'member-edit-box');box.dataset.editing='true';
  const heading=node('h3',mt('editHeader'));heading.dataset.l='editHeader';
  const guidance=node('p',mt('editGuidance'),'minor');guidance.dataset.l='editGuidance';
  box.append(heading,guidance);
  const form=node('form',undefined,'form-grid');
+ const locationsEnabled=!$('entrant-location-detail').hidden;
  const fields=[
   ['stage_name','stageName'],['song_title','songTitle'],
   ['original_artist','artist'],['song_language','songLang'],['demo_url','videoUrl'],
+  ...(a.affiliation?[['affiliation','occupation']]:[]),...(a.song_key?[['song_key','songKey']]:[]),
+  ...(locationsEnabled?[['province','province'],['location_basis','basis'],['location_detail','locationDetail']]:[]),
   ...(profileEnabled?[['gender','profileGender'],['photo_url_1','profileMainPhoto'],['photo_url_2','profilePhoto2'],['photo_url_3','profilePhoto3']]:[])
  ];
  for(const [name,key] of fields){
@@ -467,12 +481,12 @@ function showEdit(a){
    input=node('select');
    const options=[['','profileGenderNone'],['male','profileMale'],['female','profileFemale'],['other','profileOther'],['prefer_not_say','profilePreferNot']];
    for(const [value,textKey] of options){const opt=node('option',mt(textKey));opt.value=value;input.append(opt);}
-  }else if(name==='song_language'){
-   input=$('song-language').cloneNode(true);input.removeAttribute('id');
+  }else if(['song_language','province','location_basis'].includes(name)){
+   input=$('application-form').elements[name].cloneNode(true);input.removeAttribute('id');
   }else{
    input=node('input');
    if(name==='demo_url'||name.startsWith('photo_url_'))input.type='url';
-   input.maxLength=name==='demo_url'?1000:name.startsWith('photo_url_')?600:100;
+   input.maxLength=name==='demo_url'?1000:name.startsWith('photo_url_')?600:name==='location_detail'?120:100;
   }
   input.name=name;input.value=a[name]||'';
   input.required=!['gender','photo_url_1','photo_url_2','photo_url_3'].includes(name);
@@ -497,8 +511,7 @@ function showEdit(a){
   await api('update-application',payload);
   const check=await api('applications');
   const saved=(check.applications||[]).find(row=>row.id===a.id);
-  const names=['stage_name','song_title','original_artist','song_language','demo_url',
-   ...(profileEnabled?['gender','photo_url_1','photo_url_2','photo_url_3']:[])];
+  const names=fields.map(([name])=>name);
   if(!saved||names.some(key=>{
    const entered=String(payload[key]??'').trim();
    // The server trims text and stores accepted photo URLs in their canonical form.
@@ -568,7 +581,7 @@ async function renderOrganizer(){
    stats.append(node('span',a.payment_status==='simulated_paid'?'模擬付款':'未付款','pill'));
    if(a.approval_state==='approved')stats.append(node('span','主辦已核准','pill pill-pass'));
    if(a.video_supplement_state){
-    const stateText={pending:'等待選手補交影片',expired:'影片補件已逾期',submitted:'已收到新影片，請開啟檢查'};
+    const stateText={pending:'等待選手補正資料',expired:'補正期限已過',submitted:'已收到補正資料，請重新檢查'};
     stats.append(node('p',stateText[a.video_supplement_state],'minor'));
     if(a.video_supplement_state==='pending')stats.append(node('small',supplementDeadline(a)));
    }
@@ -576,7 +589,7 @@ async function renderOrganizer(){
     const request=node('button','開放 48 小時補件','btn btn-soft');request.type='button';
     request.onclick=()=>{
      if(!confirm('請先聯絡選手。確認後開始計算 48 小時。網站不會代為發送通知。'))return;
-     run(async()=>{await api('request-video-supplement',{application_id:a.id});await renderOrganizer();status('已開放影片補件。');});
+     run(async()=>{await api('request-video-supplement',{application_id:a.id});await renderOrganizer();status('已開放補正。');});
     };
     stats.append(request);
    }

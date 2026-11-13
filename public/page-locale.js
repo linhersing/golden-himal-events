@@ -64,6 +64,12 @@ Object.assign(texts.ne,{
  supplementExpired:'भिडियो सच्याउने म्याद सकिएको छ।',supplementSubmitted:'नयाँ भिडियो लिङ्क सुरक्षित भएको छ।',
  supplementSubmit:'नयाँ लिङ्क बुझाउनुहोस्',supplementUnavailable:'सच्याउने म्याद सकिएको छ वा लिङ्क पहिले नै बुझाइएको छ।'
 });
+texts.en.editApprovedLock='The organizer has approved this entry. Contact the organizer if it needs a correction.';
+texts.zh.editApprovedLock='主辦已核准這筆報名。若資料需要更正，請聯絡主辦。';
+texts.ne.editApprovedLock='आयोजकले यो आवेदन स्वीकृत गरेको छ। सच्याउनुपरेमा आयोजकलाई सम्पर्क गर्नुहोस्।';
+Object.assign(texts.en,{supplementPending:'Correct the requested details or video before the deadline. You can submit once.',supplementSubmitted:'Your correction has been saved.',supplementExpired:'The correction deadline has passed.',supplementSubmit:'Submit correction',supplementEnterChange:'Fill in at least one item you need to correct.'});
+Object.assign(texts.zh,{supplementPending:'請在期限內補正主辦通知的資料或影片。每筆報名限補一次。',supplementSubmitted:'補正資料已儲存。',supplementExpired:'補正期限已過。',supplementSubmit:'送出補正資料',supplementEnterChange:'請至少填寫一項需要補正的資料。'});
+Object.assign(texts.ne,{supplementPending:'आयोजकले भनेको विवरण वा भिडियो म्यादभित्र एक पटक सच्याउनुहोस्।',supplementSubmitted:'सच्याइएको विवरण सुरक्षित भयो।',supplementExpired:'सच्याउने म्याद सकिएको छ।',supplementSubmit:'सच्याएको विवरण बुझाउनुहोस्',supplementEnterChange:'सच्याउनुपर्ने कम्तीमा एउटा विवरण भर्नुहोस्।'});
 const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;

@@ -64,6 +64,16 @@ test('the current rules allow all seven Nepal provinces and retain the actual lo
  }
  assert.equal((await call('applications','member',{...location,province:'outside-nepal'})).status,400);
  assert.equal((await call('mock-payment','member',{application_id})).status,200);
+ for(const [province,location_detail,song_key] of [['koshi','Dharan, Sunsari','D'],['madhesh','Janakpur, Dhanusha','E']]){
+  const update={application_id,...corrections,province,location_detail,location_basis:'study',affiliation:'TEST SCHOOL',song_key};
+  assert.equal((await call('update-application','member',update)).status,200);
+  const row=(await (await call('applications','member')).json()).applications.find(item=>item.id===application_id);
+  assert.equal(row.province,province);
+  assert.equal(row.location_detail,location_detail);
+  assert.equal(row.location_basis,'study');
+  assert.equal(row.affiliation,'TEST SCHOOL');
+  assert.equal(row.song_key,song_key);
+ }
  assert.equal((await call('approve-test-application','organizer',{application_id})).status,200);
  const [review]= (await (await call('reviewer-queue','reviewer')).json()).queue;
  assert.equal(review.id,application_id);
@@ -82,11 +92,13 @@ test('organizer records a notified video correction, and the member can replace 
  assert.equal(pending.can_edit,0);
  assert.equal((await call('approve-test-application','organizer',request)).status,409);
  assert.equal((await call('update-application','member',{...request,...corrections})).status,409);
- const replacement={...request,demo_url:'https://youtu.be/test-replacement'};
+ const replacement={...request,demo_url:'https://youtu.be/test-replacement',affiliation:'TEST CORRECTED SCHOOL',song_key:'D'};
  assert.equal((await call('submit-video-supplement','member',replacement)).status,200);
  assert.equal((await call('submit-video-supplement','member',replacement)).status,409);
  assert.equal((await call('request-video-supplement','organizer',request)).status,409);
  assert.equal(db.prepare('SELECT demo_url FROM e2e_applications WHERE id=?').get(application_id).demo_url,replacement.demo_url);
+ assert.equal(db.prepare('SELECT affiliation FROM e2e_applications WHERE id=?').get(application_id).affiliation,replacement.affiliation);
+ assert.equal(db.prepare('SELECT song_key FROM e2e_applications WHERE id=?').get(application_id).song_key,replacement.song_key);
  assert.equal((await call('approve-test-application','organizer',request)).status,200);
 });
 

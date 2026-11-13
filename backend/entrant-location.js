@@ -22,3 +22,9 @@ export const entrantLocationJoin=ready=>ready?' LEFT JOIN e2e_application_locati
 export function insertEntrantLocation(db,id,{province,detail}){
  return db.prepare('INSERT INTO e2e_application_locations(application_id,province,detail) VALUES(?,?,?)').bind(id,province,detail);
 }
+
+export function updateEntrantLocation(db,id,{province,detail}){
+ return db.prepare(`INSERT INTO e2e_application_locations(application_id,province,detail)
+  SELECT ?,?,? WHERE changes()=1 ON CONFLICT(application_id) DO UPDATE SET province=excluded.province,detail=excluded.detail`)
+  .bind(id,province,detail);
+}

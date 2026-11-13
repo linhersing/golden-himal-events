@@ -5,7 +5,7 @@ import {validPerformanceLink} from '../public/performance-link.js';
 import {handleV2Route} from './staging-v2-flow.js';
 import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
 import {approvalRequired,approvalSchemaReady,approvalColumn,approvalGuard,pendingGuard} from './test-application-approval.js';
-import {parseLocation,entrantLocationsReady,entrantLocationFields,entrantLocationJoin,insertEntrantLocation} from './entrant-location.js';
+import {parseLocation,entrantLocationsReady,entrantLocationFields,entrantLocationJoin,insertEntrantLocation,updateEntrantLocation} from './entrant-location.js';
 import {handleVideoSupplement,supplementColumns,supplementGuard,supplementJoin,videoSupplementsReady} from './test-video-supplement.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
@@ -263,7 +263,8 @@ async function updateApplication(request,env,a,supplements){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request,2500);if(!b)return deny('invalid_json');
  const profileFields=['gender','photo_url_1','photo_url_2','photo_url_3','profile_consent'];
- const allowed=['application_id','stage_name','song_title','original_artist','song_language','demo_url',...profileFields];
+ const locationFields=['province','location_detail','location_basis'];
+ const allowed=['application_id','stage_name','song_title','original_artist','song_language','demo_url','affiliation','song_key',...locationFields,...profileFields];
  if(Object.keys(b).some(k=>!allowed.includes(k)))return deny('update_fields_only',422);
  const id=String(b.application_id||'');
  const values=['stage_name','song_title','original_artist','demo_url'].map(k=>typeof b[k]==='string'?b[k].trim():'');
@@ -275,6 +276,15 @@ async function updateApplication(request,env,a,supplements){
  if(editingProfile&&!(await profileReady(env)))return deny('profile_not_enabled',503);
  const app=await selectApplication(env.DB,id,a.id);
  if(!app)return deny('application_not_found',404);
+ const affiliation=Object.hasOwn(b,'affiliation')?(typeof b.affiliation==='string'?b.affiliation.trim():''):null;
+ const songKey=Object.hasOwn(b,'song_key')?(typeof b.song_key==='string'?b.song_key.trim():''):null;
+ if([affiliation,songKey].some(value=>value!==null&&(!value||value.length>100)))return deny('invalid_demo_url_or_fields',422);
+ const editingLocation=locationFields.some(key=>Object.hasOwn(b,key));
+ const location=editingLocation?parseLocation(b):{legacyProvince:app.province};
+ if(location.error)return deny(location.error,location.status);
+ if(editingLocation&&!location.location)return deny('invalid_location_detail',422);
+ if(editingLocation&&!['residence','study','work'].includes(b.location_basis))return deny('invalid_location_basis',422);
+ if(editingLocation&&!await entrantLocationsReady(env.DB))return deny('location_storage_unavailable',503);
  const songLanguage=b.song_language===undefined?app.song_language:String(b.song_language).trim();
  if(!['Nepali','English','Hindi','Maithili','Bhojpuri','Tamang','Chinese','Other'].includes(songLanguage))return deny('invalid_song_language',422);
  if(!['unpaid','simulated_paid'].includes(app.payment_status)||!['submitted','under_review'].includes(app.status)||app.phase!=='demo')
@@ -282,15 +292,18 @@ async function updateApplication(request,env,a,supplements){
  const anyScores=await env.DB.prepare("SELECT EXISTS(SELECT 1 FROM e2e_judge_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_live_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_promotion_events WHERE application_id=?) AS n").bind(id,id,id).first();
  if(Number(anyScores?.n||0)>0)return deny('update_locked',409);
  const approval=approvalRequired(env),pendingProfile=pendingGuard(approval,'p')+supplementGuard(supplements,'p');
- const updateStmt=env.DB.prepare(`UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,song_language=?,demo_url=?,updated_at=? WHERE id=? AND account_id=? AND payment_status IN ('unpaid','simulated_paid') AND status IN ('submitted','under_review') AND phase='demo'
+ const updateStmt=env.DB.prepare(`UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,song_language=?,demo_url=?,affiliation=COALESCE(?,affiliation),song_key=COALESCE(?,song_key),province=COALESCE(?,province),location_basis=COALESCE(?,location_basis),updated_at=? WHERE id=? AND account_id=? AND payment_status IN ('unpaid','simulated_paid') AND status IN ('submitted','under_review') AND phase='demo'
   AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=e2e_applications.id)
   AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=e2e_applications.id)
   AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=e2e_applications.id)${pendingGuard(approval,'e2e_applications')}${supplementGuard(supplements,'e2e_applications')}`)
-  .bind(...values.slice(0,3),songLanguage,values[3],NOW(),id,a.id);
+  .bind(...values.slice(0,3),songLanguage,values[3],affiliation,songKey,editingLocation?location.legacyProvince:null,editingLocation?b.location_basis:null,NOW(),id,a.id);
  let affected=0;
  try {
-  if(editingProfile){
-   if(typeof env.DB.batch!=='function')return deny('profile_storage_unavailable',503);
+  if(editingProfile||editingLocation){
+   if(typeof env.DB.batch!=='function')return deny(editingLocation?'location_storage_unavailable':'profile_storage_unavailable',503);
+   const statements=[updateStmt];
+   if(editingLocation)statements.push(updateEntrantLocation(env.DB,id,location.location));
+   if(editingProfile){
    const profileStmt=parsed.profile?
     profileUpsert(env.DB,id,a.id,parsed.profile,NOW(),pendingProfile):
     env.DB.prepare(`DELETE FROM e2e_application_profiles WHERE application_id=? AND EXISTS(SELECT 1 FROM e2e_applications p
@@ -299,13 +312,15 @@ async function updateApplication(request,env,a,supplements){
     AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
     AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
     AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingProfile})`).bind(id,id,a.id);
-   const result=await env.DB.batch([updateStmt,profileStmt]);
+    statements.push(profileStmt);
+   }
+   const result=await env.DB.batch(statements);
    affected=Number(result?.[0]?.meta?.changes||0);
   }else{
    const result=await updateStmt.run();
    affected=Number(result?.meta?.changes||0);
   }
- }catch{return deny(editingProfile?'profile_database_error':'update_locked',editingProfile?503:409)}
+ }catch{return deny(editingLocation?'location_storage_unavailable':editingProfile?'profile_database_error':'update_locked',editingLocation||editingProfile?503:409)}
  if(!affected)return deny('update_locked',409);
  const result=await selectApplication(env.DB,id,a.id);
  return json({ok:true,application_id:result.id,stage_name:result.stage_name,song_title:result.song_title,original_artist:result.original_artist,song_language:result.song_language,demo_url:result.demo_url,testOnly:true});
