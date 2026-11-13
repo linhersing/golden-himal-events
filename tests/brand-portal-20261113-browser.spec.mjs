@@ -21,6 +21,18 @@ test('brand-first homepage has exactly three visible primary destinations and fo
   const image=page.locator('.portal-scene img');
   await expect(image).toBeVisible();
   expect(await image.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
+  await expect(page.locator('.portal-top-nav a')).toHaveCount(4);
+  await expect(page.locator('.portal-photo-card')).toHaveCount(3);
+  for(const pic of await page.locator('.portal-photo-card img').all()){
+   await pic.scrollIntoViewIfNeeded();
+   await expect.poll(()=>pic.evaluate(el=>el.complete&&el.naturalWidth>0),{timeout:10000}).toBeTruthy();
+  }
+  const geometry=await page.locator('.portal-choices').evaluate(el=>({
+   columns:getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length,
+   tiles:[...el.children].map(node=>({x:node.getBoundingClientRect().left,y:node.getBoundingClientRect().top}))
+  }));
+  expect(geometry.columns).toBe(width<=650?1:3);
+  expect(width<=650 ? geometry.tiles[1].y>geometry.tiles[0].y : geometry.tiles[1].y===geometry.tiles[0].y).toBeTruthy();
  }
 });
 
@@ -31,12 +43,12 @@ test('brand story balances venue photos with authentic narrative and quiet image
   await expect(page.locator('h1')).toContainText('金色晨光');
   await expect(page.locator('.name-piece')).toHaveCount(3);
   await expect(page.locator('.story-gallery .gallery-card')).toHaveCount(4);
-  await expect(page.locator('.gallery-disclaimer')).toContainText('數位重製');
+  await expect(page.locator('.gallery-disclaimer')).toContainText('現場實拍');
   await expect(page.locator('[data-p="journeyHeading"]')).toBeVisible();
   await expect(page.locator('.story-gallery figcaption [data-p="galleryEnhanced"]')).toHaveCount(0);
   await expect(page.locator('.story-more')).not.toHaveAttribute('open','');
   await page.locator('.story-more summary').click();
-  await expect(page.locator('.story-gallery-more .gallery-card')).toHaveCount(3);
+  await expect(page.locator('.story-gallery-more .gallery-card')).toHaveCount(2);
   await expect(page.locator('#location')).toContainText('尼泊爾奇旺');
   for(const im of await page.locator('.story-gallery img').all()){
    await im.scrollIntoViewIfNeeded();
