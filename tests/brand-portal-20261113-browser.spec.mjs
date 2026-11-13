@@ -23,6 +23,9 @@ test('brand-first homepage has exactly three visible primary destinations and fo
   expect(await image.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
   await expect(page.locator('.portal-top-nav a')).toHaveCount(4);
   await expect(page.locator('.portal-photo-card')).toHaveCount(3);
+  await expect(page.locator('#home-about')).toHaveAttribute('href','./golden-himal.html');
+  await expect(page.locator('.portal-photo-card img[src*="gh-real-fountain-20261113.webp"]')).toHaveCount(0);
+  await expect(page.locator('.portal-photo-card img[src*="gh-real-fountain-night-landscape"]')).toHaveCount(1);
   for(const pic of await page.locator('.portal-photo-card img').all()){
    await pic.scrollIntoViewIfNeeded();
    await expect.poll(()=>pic.evaluate(el=>el.complete&&el.naturalWidth>0),{timeout:10000}).toBeTruthy();
@@ -42,6 +45,8 @@ test('brand story balances venue photos with authentic narrative and quiet image
   await page.goto('/golden-himal.html');
   await expect(page.locator('h1')).toContainText('金色晨光');
   await expect(page.locator('.name-piece')).toHaveCount(3);
+  await expect(page.locator('.portal-top-nav a')).toHaveCount(4);
+  await expect(page.locator('.portal-top-nav [aria-current=page]')).toHaveAttribute('href','./golden-himal.html');
   await expect(page.locator('.story-gallery .gallery-card')).toHaveCount(4);
   await expect(page.locator('.gallery-disclaimer')).toContainText('現場實拍');
   await expect(page.locator('[data-p="journeyHeading"]')).toBeVisible();

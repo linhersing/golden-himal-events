@@ -318,3 +318,21 @@
 @media(prefers-reduced-motion:reduce){
  .brand-portal .portal-choice,.portal-top-nav a{transition:none}
 }
+
+
+/* 2026-11-13 | restrained site-photo finish. Keep actual architecture and on-site lighting;
+   CSS-only, reversible, not a reconstructed scene. Shared header on brand intro page. */
+.brand-portal .portal-stage .portal-scene img{
+ filter:saturate(.96) contrast(1.01) brightness(1.025);
+}
+.brand-portal .portal-photo-card img{
+ filter:saturate(.94) contrast(1.025) brightness(1.02);
+}
+.brand-portal .story-hero-image img,
+.brand-portal .story-gallery .gallery-card img,
+.brand-portal .story-gallery-more .gallery-card img{
+ filter:saturate(.96) contrast(1.015) brightness(1.02);
+}
+.brand-portal .portal-photo-card:nth-child(2) img{
+ object-position:center 41%;
+}

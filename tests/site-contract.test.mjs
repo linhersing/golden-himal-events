@@ -108,7 +108,7 @@ test('frontline rules appear with a concise homepage and expandable schedule',as
   read('public/voice.html'),read('public/news.html'),read('public/member.html'),read('public/page-locale.js')
  ]);
  assert.match(home,/Golden Himal Palace/);
- assert.match(home,/Synergy FM/);assert.match(home,/Kalika FM/);
+ assert.doesNotMatch(home,/Synergy FM|Kalika FM/);assert.match(home,/待正式確認後公告/);
  assert.match(home,/帶動尼泊爾音樂發展/);
  assert.equal((home.match(/class="choice(?: choice-main)?"/g)||[]).length,3);
  for(const field of ['scheduleJan','scheduleMar','scheduleApr','scheduleJun','scheduleSep']){
@@ -166,7 +166,7 @@ test('Golden Himal Palace story presents selective venue imagery and compact gro
  const [home,story,styles,language]=await Promise.all([
   read('index.html'),read('public/golden-himal.html'),read('public/brand-portal.css'),read('public/brand-portal.js')
  ]);
- const gallery=['gh-real-hall-hero-20261113.webp','gh-real-sky-lounge-20261113.webp','gh-real-fountain-20261113.webp','gh-real-guesthouse-20261113.webp','gh-real-chitwan-view-20261113.webp','gh-real-chandelier-detail-20261113.webp','gh-fountain-night-real-20261113.webp'];
+ const gallery=['gh-real-hall-hero-20261113.webp','gh-real-sky-lounge-20261113.webp','gh-real-fountain-night-landscape-20261113.webp','gh-real-guesthouse-20261113.webp','gh-real-chitwan-view-20261113.webp','gh-real-chandelier-detail-20261113.webp','gh-real-gateway-window-20261113.webp'];
  for(const file of gallery){
   assert.ok((home+story).includes(file),file);
  }
@@ -177,6 +177,9 @@ test('Golden Himal Palace story presents selective venue imagery and compact gro
  assert.doesNotMatch(story,/<small data-p="galleryEnhanced">/);
  assert.match(story,/現場實拍/);
  assert.doesNotMatch(home+story,/gh-gallery-(?:grand-hall|sky-lounge|fountain-day|guesthouse-night|mountain-view|lamaste-tower)-ai\\.webp/);
+ assert.doesNotMatch(home+story,/gh-real-fountain-20261113\\.webp/);
+ assert.match(story,/href="\.\/golden-himal\.html" aria-current="page"/);
+ assert.equal((story.match(/class="portal-top-nav"/g)||[]).length,1);
  assert.match(home,/class="portal-top-nav"/);
  assert.match(home,/class="portal-about wrap"/);
  assert.match(home,/class="portal-photo-grid"/);
@@ -191,7 +194,7 @@ test('Golden Himal Palace story presents selective venue imagery and compact gro
  assert.match(story,/data-p="palaceText"/);
  assert.match(story,/id="location"/);
  assert.match(home,/id="home-competition"/);
- for(const label of ['galleryHall','galleryLounge','galleryWater','galleryNight','galleryWaterNight','galleryView','galleryMore','imageDisclaimer']){
+ for(const label of ['galleryHall','galleryLounge','galleryWater','galleryNight','galleryGateway','galleryView','galleryMore','imageDisclaimer']){
   assert.match(language,new RegExp('"'+label+'"'));
  }
  assert.match(language,/ghv_ui_language_v1/);
