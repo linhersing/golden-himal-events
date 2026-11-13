@@ -2,6 +2,7 @@
 // test workspaces. This is deliberately distinct from self-issued practice role passes.
 // Cloudflare Access must authenticate the exact Worker request (ctx.access).
 // Do not add anonymous fallbacks or trust user-supplied email / role / headers.
+import {entrantLocationsReady,entrantLocationFields,entrantLocationJoin} from './entrant-location.js';
 const headers={
  'Cache-Control':'private, no-store, max-age=0',
  'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer',
@@ -162,12 +163,13 @@ async function rows(db,source,limit,offset){
    votes:count(r.votes),test_vouchers:count(r.test_vouchers),created_at:r.created_at}))};
  }
  const total=(await db.prepare('SELECT COUNT(*) AS n FROM e2e_applications').first())?.n||0;
- const rs=await db.prepare(`SELECT p.id,p.round_code,p.category,p.province,p.phase,p.status,p.payment_status,p.created_at,
+ const locations=await entrantLocationsReady(db);
+ const rs=await db.prepare(`SELECT p.id,p.round_code,p.category,${entrantLocationFields(locations,false)},p.phase,p.status,p.payment_status,p.created_at,
   (SELECT COUNT(*) FROM e2e_judge_scores s WHERE s.application_id=p.id) AS demo_scorecards,
   (SELECT ROUND(AVG(s.technique+s.interpretation),2) FROM e2e_judge_scores s WHERE s.application_id=p.id) AS demo_mean,
   (SELECT COUNT(*) FROM e2e_live_scores s WHERE s.application_id=p.id AND s.stage=p.phase) AS live_scorecards,
   (SELECT ROUND(AVG(s.technique+s.interpretation+s.stage_presence+s.appearance),2) FROM e2e_live_scores s WHERE s.application_id=p.id AND s.stage=p.phase) AS live_mean
-  FROM e2e_applications p ORDER BY p.created_at DESC,p.id DESC LIMIT ? OFFSET ?`).bind(limit,offset).all();
+  FROM e2e_applications p${entrantLocationJoin(locations)} ORDER BY p.created_at DESC,p.id DESC LIMIT ? OFFSET ?`).bind(limit,offset).all();
  return {total:count(total),items:(rs.results||[]).map(r=>({record_id:r.id,scope:'e2e',round_code:r.round_code,category:r.category,province:r.province,
   phase:r.phase,review_status:r.status,payment_status:r.payment_status,amount_npr:null,real_payment:false,
   scorecards:count(r.phase==='demo'?r.demo_scorecards:r.live_scorecards),

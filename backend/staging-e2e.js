@@ -5,6 +5,8 @@ import {validPerformanceLink} from '../public/performance-link.js';
 import {handleV2Route} from './staging-v2-flow.js';
 import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
 import {approvalRequired,approvalSchemaReady,approvalColumn,approvalGuard,pendingGuard} from './test-application-approval.js';
+import {parseLocation,entrantLocationsReady,entrantLocationFields,entrantLocationJoin,insertEntrantLocation,updateEntrantLocation} from './entrant-location.js';
+import {handleVideoSupplement,supplementColumns,supplementGuard,supplementJoin,videoSupplementsReady} from './test-video-supplement.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
  * No official entries, actual payments, or exposed R2 URLs.
@@ -192,25 +194,31 @@ async function logout(request,env,a){
  if(match)await env.DB.prepare('DELETE FROM e2e_sessions WHERE session_fingerprint=?').bind(await sign(env,'session:'+match[1])).run();
  return json({ok:true},200,{'Set-Cookie':cookie('',0)});
 }
-async function applications(a,env){
+async function applications(a,env,supplements){
  const approval=approvalRequired(env);
- const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,p.province,p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url,
+ const locations=await entrantLocationsReady(env.DB);
+ const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,${entrantLocationFields(locations)},p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url,
  p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,p.receipt_key IS NOT NULL AS has_receipt_file,
  p.phase,p.status,p.payment_status,p.created_at,p.updated_at,
  CASE WHEN p.phase='demo' AND p.status IN ('submitted','under_review') AND p.payment_status IN ('unpaid','simulated_paid')
  AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
  AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
- AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingGuard(approval,'p')}
- THEN 1 ELSE 0 END AS can_edit${approvalColumn(approval)}
- FROM e2e_applications p WHERE p.account_id=? ORDER BY p.created_at DESC`).bind(a.id).all();
- return json({ok:true,account:{id:a.id,role:a.role},applications:await attachProfiles(env,rows.results||[]),testOnly:true});
+ AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingGuard(approval,'p')}${supplementGuard(supplements,'p')}
+ THEN 1 ELSE 0 END AS can_edit${approvalColumn(approval)}${supplementColumns(supplements)}
+ FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)} WHERE p.account_id=? ORDER BY p.created_at DESC,p.round_code DESC`).bind(a.id).all();
+ const entries=rows.results||[];
+ const nextRound=entries.some(row=>row.round_code==='2027-01')&&
+  !entries.some(row=>row.round_code==='2027-04'||row.phase==='final')?'2027-04':null;
+ return json({ok:true,account:{id:a.id,role:a.role},applications:await attachProfiles(env,entries),next_audition_round:nextRound,testOnly:true});
 }
 async function submitApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request,4500);if(!b)return deny('invalid_json');
  if(!['2027-01','2027-04'].includes(b.round_code))return deny('invalid_audition_window');
  if(!['university','community'].includes(b.category))return deny('invalid_category');
- if(!['bagmati','gandaki'].includes(b.province))return deny('invalid_province');
+ const location=parseLocation(b);
+ if(location.error)return deny(location.error,location.status);
+ if(location.location&&!await entrantLocationsReady(env.DB))return deny('location_storage_unavailable',503);
  if(!['residence','study','work'].includes(b.location_basis))return deny('invalid_location_basis');
  // V2 only explicitly sets the 18+ cut-off for the community group.
  // This TEST checkbox is self-attestation, not proof of real eligibility.
@@ -235,11 +243,14 @@ async function submitApplication(request,env,a){
  const id=uuid(),now=NOW();
  try{
   const createApp=env.DB.prepare('INSERT INTO e2e_applications(id,account_id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,demo_url,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-   .bind(id,a.id,b.round_code,b.category,b.province,b.location_basis,...values.slice(1,2),values[0],...values.slice(2),url||null,now,now);
-  // D1 batch is atomic. A profile write failure must NOT leave a half-created entry.
-  if(profile){
-   if(typeof env.DB.batch!=='function')return deny('profile_storage_unavailable',503);
-   await env.DB.batch([createApp,profileInsert(env.DB,id,profile,now)]);
+   .bind(id,a.id,b.round_code,b.category,location.legacyProvince,b.location_basis,...values.slice(1,2),values[0],...values.slice(2),url||null,now,now);
+  // Save the actual province and optional profile in the same transaction as the entry.
+  if(profile||location.location){
+   if(typeof env.DB.batch!=='function')return deny(location.location?'location_storage_unavailable':'profile_storage_unavailable',503);
+   const statements=[createApp];
+   if(profile)statements.push(profileInsert(env.DB,id,profile,now));
+   if(location.location)statements.push(insertEntrantLocation(env.DB,id,location.location));
+   await env.DB.batch(statements);
   }else await createApp.run();
  }catch{return deny(profile?'profile_database_error':'duplicate_round_or_database_rejected',profile?503:409)}
  return json({ok:true,application_id:id,phase:'demo',status:'submitted',source:'cloudflare-d1-staging',testOnly:true,
@@ -248,11 +259,12 @@ async function submitApplication(request,env,a){
 // An invited member may correct an unscored, unpromoted TEST application (including simulated-paid).
 // Deletion stays limited to unpaid entries; neither operation affects real payment or grading.
 // These routes do not change the payment state and cannot update another account.
-async function updateApplication(request,env,a){
+async function updateApplication(request,env,a,supplements){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request,2500);if(!b)return deny('invalid_json');
  const profileFields=['gender','photo_url_1','photo_url_2','photo_url_3','profile_consent'];
- const allowed=['application_id','stage_name','song_title','original_artist','song_language','demo_url',...profileFields];
+ const locationFields=['province','location_detail','location_basis'];
+ const allowed=['application_id','stage_name','song_title','original_artist','song_language','demo_url','affiliation','song_key',...locationFields,...profileFields];
  if(Object.keys(b).some(k=>!allowed.includes(k)))return deny('update_fields_only',422);
  const id=String(b.application_id||'');
  const values=['stage_name','song_title','original_artist','demo_url'].map(k=>typeof b[k]==='string'?b[k].trim():'');
@@ -264,22 +276,34 @@ async function updateApplication(request,env,a){
  if(editingProfile&&!(await profileReady(env)))return deny('profile_not_enabled',503);
  const app=await selectApplication(env.DB,id,a.id);
  if(!app)return deny('application_not_found',404);
+ const affiliation=Object.hasOwn(b,'affiliation')?(typeof b.affiliation==='string'?b.affiliation.trim():''):null;
+ const songKey=Object.hasOwn(b,'song_key')?(typeof b.song_key==='string'?b.song_key.trim():''):null;
+ if([affiliation,songKey].some(value=>value!==null&&(!value||value.length>100)))return deny('invalid_demo_url_or_fields',422);
+ const editingLocation=locationFields.some(key=>Object.hasOwn(b,key));
+ const location=editingLocation?parseLocation(b):{legacyProvince:app.province};
+ if(location.error)return deny(location.error,location.status);
+ if(editingLocation&&!location.location)return deny('invalid_location_detail',422);
+ if(editingLocation&&!['residence','study','work'].includes(b.location_basis))return deny('invalid_location_basis',422);
+ if(editingLocation&&!await entrantLocationsReady(env.DB))return deny('location_storage_unavailable',503);
  const songLanguage=b.song_language===undefined?app.song_language:String(b.song_language).trim();
  if(!['Nepali','English','Hindi','Maithili','Bhojpuri','Tamang','Chinese','Other'].includes(songLanguage))return deny('invalid_song_language',422);
  if(!['unpaid','simulated_paid'].includes(app.payment_status)||!['submitted','under_review'].includes(app.status)||app.phase!=='demo')
    return deny('update_locked',409);
  const anyScores=await env.DB.prepare("SELECT EXISTS(SELECT 1 FROM e2e_judge_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_live_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_promotion_events WHERE application_id=?) AS n").bind(id,id,id).first();
  if(Number(anyScores?.n||0)>0)return deny('update_locked',409);
- const approval=approvalRequired(env),pendingProfile=pendingGuard(approval,'p');
- const updateStmt=env.DB.prepare(`UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,song_language=?,demo_url=?,updated_at=? WHERE id=? AND account_id=? AND payment_status IN ('unpaid','simulated_paid') AND status IN ('submitted','under_review') AND phase='demo'
+ const approval=approvalRequired(env),pendingProfile=pendingGuard(approval,'p')+supplementGuard(supplements,'p');
+ const updateStmt=env.DB.prepare(`UPDATE e2e_applications SET stage_name=?,song_title=?,original_artist=?,song_language=?,demo_url=?,affiliation=COALESCE(?,affiliation),song_key=COALESCE(?,song_key),province=COALESCE(?,province),location_basis=COALESCE(?,location_basis),updated_at=? WHERE id=? AND account_id=? AND payment_status IN ('unpaid','simulated_paid') AND status IN ('submitted','under_review') AND phase='demo'
   AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=e2e_applications.id)
   AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=e2e_applications.id)
-  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=e2e_applications.id)${pendingGuard(approval,'e2e_applications')}`)
-  .bind(...values.slice(0,3),songLanguage,values[3],NOW(),id,a.id);
+  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=e2e_applications.id)${pendingGuard(approval,'e2e_applications')}${supplementGuard(supplements,'e2e_applications')}`)
+  .bind(...values.slice(0,3),songLanguage,values[3],affiliation,songKey,editingLocation?location.legacyProvince:null,editingLocation?b.location_basis:null,NOW(),id,a.id);
  let affected=0;
  try {
-  if(editingProfile){
-   if(typeof env.DB.batch!=='function')return deny('profile_storage_unavailable',503);
+  if(editingProfile||editingLocation){
+   if(typeof env.DB.batch!=='function')return deny(editingLocation?'location_storage_unavailable':'profile_storage_unavailable',503);
+   const statements=[updateStmt];
+   if(editingLocation)statements.push(updateEntrantLocation(env.DB,id,location.location));
+   if(editingProfile){
    const profileStmt=parsed.profile?
     profileUpsert(env.DB,id,a.id,parsed.profile,NOW(),pendingProfile):
     env.DB.prepare(`DELETE FROM e2e_application_profiles WHERE application_id=? AND EXISTS(SELECT 1 FROM e2e_applications p
@@ -288,18 +312,20 @@ async function updateApplication(request,env,a){
     AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
     AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
     AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingProfile})`).bind(id,id,a.id);
-   const result=await env.DB.batch([updateStmt,profileStmt]);
+    statements.push(profileStmt);
+   }
+   const result=await env.DB.batch(statements);
    affected=Number(result?.[0]?.meta?.changes||0);
   }else{
    const result=await updateStmt.run();
    affected=Number(result?.meta?.changes||0);
   }
- }catch{return deny(editingProfile?'profile_database_error':'update_locked',editingProfile?503:409)}
+ }catch{return deny(editingLocation?'location_storage_unavailable':editingProfile?'profile_database_error':'update_locked',editingLocation||editingProfile?503:409)}
  if(!affected)return deny('update_locked',409);
  const result=await selectApplication(env.DB,id,a.id);
  return json({ok:true,application_id:result.id,stage_name:result.stage_name,song_title:result.song_title,original_artist:result.original_artist,song_language:result.song_language,demo_url:result.demo_url,testOnly:true});
 }
-async function deleteApplication(request,env,a){
+async function deleteApplication(request,env,a,supplements){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request);if(!b||Object.keys(b).some(k=>k!=='application_id'))
    return deny('invalid_json',422);
@@ -308,7 +334,7 @@ async function deleteApplication(request,env,a){
  if(!app)return deny('application_not_found',404);
  if(app.payment_status!=='unpaid'||app.status!=='submitted'||app.phase!=='demo'||app.media_key||app.eligibility_key||app.receipt_key)
    return deny('delete_locked',409);
- const changed=await env.DB.prepare(`DELETE FROM e2e_applications WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo' AND media_key IS NULL AND eligibility_key IS NULL AND receipt_key IS NULL${pendingGuard(approvalRequired(env),'e2e_applications')}`)
+ const changed=await env.DB.prepare(`DELETE FROM e2e_applications WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo' AND media_key IS NULL AND eligibility_key IS NULL AND receipt_key IS NULL${pendingGuard(approvalRequired(env),'e2e_applications')}${supplementGuard(supplements,'e2e_applications')}`)
   .bind(id,a.id).run();
  if(!changed.meta?.changes)return deny('delete_locked',409);
  return json({ok:true,deleted_application_id:id,testOnly:true});
@@ -445,14 +471,18 @@ export async function handleE2E(request,env){
   if(pathname==='/api/e2e/switch-role'&&isPost)return await switchRole(request,env,a);
   const approval=approvalRequired(env);
   if(approval&&!await approvalSchemaReady(env))return deny('test_approval_schema_unavailable',503);
+   const supplements=await videoSupplementsReady(env,approval);
+   if(supplements&&isPost&&['/api/e2e/request-video-supplement','/api/e2e/submit-video-supplement'].includes(pathname))
+    return await handleVideoSupplement(pathname,request,env,a,{json,deny,NOW,bodyJSON});
   if(!a.email&&['/api/e2e/finalists','/api/e2e/test-vote'].includes(pathname))return deny('not_on_test_allowlist',403);
-  const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval});
+   const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval,supplements});
   if(v2)return v2;
-  if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),testOnly:true,...(approval?{approval_enabled:true}:{})});
-  if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env);
+   if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),testOnly:true,
+    ...(a.role==='member'&&await entrantLocationsReady(env.DB)?{nepal_locations_enabled:true}:{}),...(approval?{approval_enabled:true}:{})});
+  if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env,supplements);
   if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
-   if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a);
-   if(pathname==='/api/e2e/delete-application'&&isPost)return await deleteApplication(request,env,a);
+    if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a,supplements);
+    if(pathname==='/api/e2e/delete-application'&&isPost)return await deleteApplication(request,env,a,supplements);
   if(pathname==='/api/e2e/mock-payment'&&isPost)return await mockPayment(request,env,a);
   if(pathname==='/api/e2e/demo-upload'&&isPost)return await mediaUpload(request,env,a);
   if(pathname==='/api/e2e/demo-download'&&!isPost)return await streamMedia(request,env,a);

@@ -112,6 +112,9 @@ function friendlyError(e){
  update_locked:mt('editLockedAfterReview'),
  delete_locked:'This entry cannot be deleted.',
  invalid_demo_url:'Enter a valid public video link.',
+ invalid_location_detail:mt('locationDetailHelp'),
+ location_storage_unavailable:mt('provincePending'),
+ video_supplement_unavailable:mt('supplementUnavailable'),
  annual_category_locked:'Your annual competition category is already selected.',
  community_age_confirmation_required:'Confirm the community eligibility statement.',
  university_student_confirmation_required:'Confirm current university enrollment.',
@@ -161,8 +164,21 @@ async function loadSession(){try{
  const granted=v.account.available_roles||[v.account.role];
  const target=staff?(granted.includes('organizer')?'organizer':granted.includes('reviewer')?'reviewer':null):'member';
  if(!target||!granted.includes(target)){account=null;authUI(false);staffTabs();return;}
- if((staff&&!['organizer','reviewer'].includes(v.account.role))||(!staff&&v.account.role!=='member'))v=await api('switch-role',{role:target});
- account=v.account;role=account.role;authUI(true);if(staff)staffTabs();else setupProfileFields(v.profile_enabled===true);await dashboard();
+ if((staff&&!['organizer','reviewer'].includes(v.account.role))||(!staff&&v.account.role!=='member')){
+  v=await api('switch-role',{role:target});
+  if(!staff)v=await api('me');
+ }
+ account=v.account;role=account.role;authUI(true);
+ if(staff)staffTabs();else{
+  setupProfileFields(v.profile_enabled===true);
+  const nationwide=v.nepal_locations_enabled===true,location=$('entrant-location-detail'),field=location.querySelector('input');
+  location.hidden=!nationwide;field.disabled=!nationwide;field.required=nationwide;
+  const note=$('province-note');note.dataset.l=nationwide?'provinceHelp':'provincePending';note.textContent=mt(note.dataset.l);
+  for(const option of $('application-form').elements.province.options){
+   option.disabled=!nationwide&&!['bagmati','gandaki'].includes(option.value);option.hidden=option.disabled;
+  }
+ }
+ await dashboard();
  }catch(e){account=null;authUI(false);if(staff)staffTabs();if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
 function setupAuth(){
 const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
@@ -290,6 +306,42 @@ function memberCanEdit(a){
  return a.can_edit===true||a.can_edit===1||a.can_edit==='1'||
   (a.can_edit===undefined&&a.payment_status==='unpaid'&&a.status==='submitted');
 }
+function editLockMessage(a){
+ if(a.approval_state==='approved'&&a.phase==='demo'&&['submitted','under_review'].includes(a.status))return mt('editApprovedLock');
+ return mt('editLockedAfterReview');
+}
+function supplementDeadline(a){
+ const lang=window.GHVLocale?.lang||'zh';
+ const locale=lang==='zh'?'zh-TW':lang==='ne'?'ne-NP':'en-NP';
+ return new Intl.DateTimeFormat(locale,{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Kathmandu'})
+  .format(new Date(a.video_supplement_deadline*1000))+' · '+(staff?'尼泊爾時間':mt('nepalTime'));
+}
+function drawMemberSupplement(box,a){
+ const state=a.video_supplement_state;
+ if(!state)return;
+ box.append(node('p',mt({pending:'supplementPending',expired:'supplementExpired',submitted:'supplementSubmitted'}[state]),'helper-banner'));
+ if(state!=='pending')return;
+ box.append(node('p',supplementDeadline(a),'minor'));
+ const form=node('form',undefined,'form-grid');
+ for(const [name,key] of [['demo_url','videoUrl'],['stage_name','stageName'],['affiliation','occupation'],['song_title','songTitle'],['original_artist','artist'],['song_key','songKey']]){
+  const label=node('label',undefined,'field'),input=node('input');
+  if(name==='demo_url')input.type='url';
+  input.name=name;input.maxLength=name==='demo_url'?1000:100;
+  if(a[name])input.placeholder=a[name];
+  label.append(node('span',mt(key)),input);form.append(label);
+ }
+ const save=node('button',mt('supplementSubmit'),'btn btn-primary');save.type='submit';
+ form.append(save);
+ form.oninput=()=>{form.dataset.editing='true';};
+ form.onsubmit=e=>{e.preventDefault();run(async()=>{
+  const changes=Object.fromEntries(Object.entries(formValues(form)).map(([key,value])=>[key,value.trim()]).filter(([,value])=>value));
+  if(!Object.keys(changes).length){status(mt('supplementEnterChange'),true);return;}
+  const result=await api('submit-video-supplement',{application_id:a.id,...changes});
+  if(result.application_id!==a.id||result.testOnly!==true)throw Error('readback_mismatch');
+  await renderMember();status(mt('supplementSubmitted'));
+ });};
+ box.append(form);
+}
 function drawEntry(a){
  const box=node('article',undefined,'entry member-entry');
  const title=node('div',undefined,'member-entry-main');
@@ -312,6 +364,7 @@ function drawEntry(a){
  box.append(meta);
  box.append(node('span',mt(a.payment_status==='simulated_paid'?'testPaid':'testPending'),'pill '+(a.payment_status==='simulated_paid'?'pill-pass':'pill-warn')));
  if(a.approval_state)box.append(node('p',mt(a.approval_state==='approved'?'approvalAccepted':'approvalPending'),'minor'));
+ drawMemberSupplement(box,a);
  const actions=node('div',undefined,'inline-actions member-entry-buttons');
  if(memberCanEdit(a)){
   const edit=node('button',mt('edit'),'btn btn-primary');edit.type='button';edit.onclick=()=>showEdit(a);actions.append(edit);
@@ -333,10 +386,10 @@ function drawEntry(a){
     await renderMember();status(mt(a.approval_state==='pending'?'paymentAwaitingApproval':'paymentDone'));
    });
   };
-  actions.append(pay);if(a.approval_state!=='approved')actions.append(del);
+  actions.append(pay);if(a.approval_state!=='approved'&&!a.video_supplement_state)actions.append(del);
  }
  box.append(actions);
- if(!memberCanEdit(a))box.append(node('p',mt('editLockedAfterReview'),'minor'));
+ if(!memberCanEdit(a)&&!a.video_supplement_state)box.append(node('p',editLockMessage(a),'minor'));
  return box;
 }
 async function renderMember(){
@@ -345,9 +398,26 @@ async function renderMember(){
  if(editSlot){editSlot.replaceChildren();editSlot.hidden=true;}
  const v=await api('applications'),rows=Array.isArray(v.applications)?v.applications:[];
  const hasEntries=rows.length>0,first=rows[0];
+ const secondAudition=hasEntries&&v.next_audition_round==='2027-04';
  const callout=$('new-application-callout'),form=$('application-details');
- if(callout)callout.hidden=hasEntries;
+ if(callout){
+  callout.hidden=hasEntries&&!secondAudition;
+  for(const [element,key] of [[$('new-application-title'),secondAudition?'secondAuditionTitle':'ready'],[$('start-application')?.querySelector('[data-l]'),secondAudition?'secondAuditionStart':'start']]){
+   if(element){element.dataset.l=key;element.textContent=mt(key);}
+  }
+  callout.querySelector('[data-l="startHelp"]').hidden=secondAudition;
+  $('second-audition-help').hidden=!secondAudition;
+ }
  if(form){form.hidden=hasEntries;if(hasEntries)form.open=false;}
+ const fields=$('application-form')?.elements;
+ if(fields){
+  for(const option of fields.round_code.options)option.disabled=secondAudition&&option.value!=='2027-04';
+  for(const option of fields.category.options)option.disabled=secondAudition&&option.value!==first.category;
+  if(secondAudition){
+   fields.round_code.value='2027-04';fields.category.value=first.category;
+   fields.category.dispatchEvent(new Event('change'));
+  }
+ }
  $('member-welcome').hidden=!hasEntries;
  $('member-entry-overview').hidden=!hasEntries;
  $('member-state-grid').hidden=!hasEntries;
@@ -389,16 +459,19 @@ async function renderMember(){
  $('step-checkout')?.classList.toggle('active',Boolean(paidEntry));
 }
 function showEdit(a){
- if(!memberCanEdit(a)){status(mt('editLockedAfterReview'),true);return;}
+ if(!memberCanEdit(a)){status(editLockMessage(a),true);return;}
  const holder=$('member-edit-panel');holder.replaceChildren();holder.hidden=false;
  const box=node('div',undefined,'member-edit-box');box.dataset.editing='true';
  const heading=node('h3',mt('editHeader'));heading.dataset.l='editHeader';
  const guidance=node('p',mt('editGuidance'),'minor');guidance.dataset.l='editGuidance';
  box.append(heading,guidance);
  const form=node('form',undefined,'form-grid');
+ const locationsEnabled=!$('entrant-location-detail').hidden;
  const fields=[
   ['stage_name','stageName'],['song_title','songTitle'],
   ['original_artist','artist'],['song_language','songLang'],['demo_url','videoUrl'],
+  ...(a.affiliation?[['affiliation','occupation']]:[]),...(a.song_key?[['song_key','songKey']]:[]),
+  ...(locationsEnabled?[['province','province'],['location_basis','basis'],['location_detail','locationDetail']]:[]),
   ...(profileEnabled?[['gender','profileGender'],['photo_url_1','profileMainPhoto'],['photo_url_2','profilePhoto2'],['photo_url_3','profilePhoto3']]:[])
  ];
  for(const [name,key] of fields){
@@ -408,12 +481,12 @@ function showEdit(a){
    input=node('select');
    const options=[['','profileGenderNone'],['male','profileMale'],['female','profileFemale'],['other','profileOther'],['prefer_not_say','profilePreferNot']];
    for(const [value,textKey] of options){const opt=node('option',mt(textKey));opt.value=value;input.append(opt);}
-  }else if(name==='song_language'){
-   input=$('song-language').cloneNode(true);input.removeAttribute('id');
+  }else if(['song_language','province','location_basis'].includes(name)){
+   input=$('application-form').elements[name].cloneNode(true);input.removeAttribute('id');
   }else{
    input=node('input');
    if(name==='demo_url'||name.startsWith('photo_url_'))input.type='url';
-   input.maxLength=name==='demo_url'?1000:name.startsWith('photo_url_')?600:100;
+   input.maxLength=name==='demo_url'?1000:name.startsWith('photo_url_')?600:name==='location_detail'?120:100;
   }
   input.name=name;input.value=a[name]||'';
   input.required=!['gender','photo_url_1','photo_url_2','photo_url_3'].includes(name);
@@ -438,8 +511,7 @@ function showEdit(a){
   await api('update-application',payload);
   const check=await api('applications');
   const saved=(check.applications||[]).find(row=>row.id===a.id);
-  const names=['stage_name','song_title','original_artist','song_language','demo_url',
-   ...(profileEnabled?['gender','photo_url_1','photo_url_2','photo_url_3']:[])];
+  const names=fields.map(([name])=>name);
   if(!saved||names.some(key=>{
    const entered=String(payload[key]??'').trim();
    // The server trims text and stores accepted photo URLs in their canonical form.
@@ -497,12 +569,31 @@ async function renderOrganizer(){
    info.append(node('strong',(a.stage_name||'選手')+' · '+(a.song_title||'未命名曲目')));
    info.append(node('p',a.round_code+' · '+(a.category==='university'?'大學組':'社會組')+' · '+(a.song_language||'語言未填'),'minor'));
    info.append(node('p','編號：'+a.id,'minor'));
+   if(a.province)info.append(node('p',[a.province,a.location_detail].filter(Boolean).join(' · '),'minor'));
+   const video=safeLink(a.demo_url);
+   if(video){
+    const link=node('a','開啟參賽影片','btn btn-soft');
+    link.href=video;link.target='_blank';link.rel='noopener noreferrer';info.append(link);
+   }
    const img=profileImage(a.photo_url_1);
    if(img)info.prepend(img);
    const stats=node('div',undefined,'roster-entry-side');
    stats.append(node('span',a.payment_status==='simulated_paid'?'模擬付款':'未付款','pill'));
    if(a.approval_state==='approved')stats.append(node('span','主辦已核准','pill pill-pass'));
-   if(a.approval_state==='pending'){
+   if(a.video_supplement_state){
+    const stateText={pending:'等待選手補正資料',expired:'補正期限已過',submitted:'已收到補正資料，請重新檢查'};
+    stats.append(node('p',stateText[a.video_supplement_state],'minor'));
+    if(a.video_supplement_state==='pending')stats.append(node('small',supplementDeadline(a)));
+   }
+   if(a.approval_state==='pending'&&a.video_supplement_available){
+    const request=node('button','開放 48 小時補件','btn btn-soft');request.type='button';
+    request.onclick=()=>{
+     if(!confirm('請先聯絡選手。確認後開始計算 48 小時。網站不會代為發送通知。'))return;
+     run(async()=>{await api('request-video-supplement',{application_id:a.id});await renderOrganizer();status('已開放補正。');});
+    };
+    stats.append(request);
+   }
+   if(a.approval_state==='pending'&&!['pending','expired'].includes(a.video_supplement_state)){
     stats.append(node('span','待主辦核准','pill pill-warn'));
     const approve=node('button','核准測試報名','btn btn-soft');approve.type='button';
     approve.onclick=()=>{
@@ -605,7 +696,7 @@ if(page==='member'){
  const application=$('application-form'),details=$('application-details'),start=$('start-application');
  const syncStart=()=>start?.setAttribute('aria-expanded',String(details.open));
  details.addEventListener('toggle',syncStart);
- start?.addEventListener('click',()=>{details.open=true;syncStart();details.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>application.querySelector('[name=stage_name]')?.focus({preventScroll:true}),180)});
+ start?.addEventListener('click',()=>{details.hidden=false;details.open=true;syncStart();details.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>application.querySelector('[name=stage_name]')?.focus({preventScroll:true}),180)});
  application.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  const v=formValues(application),data={...v,video_confirmed:application.querySelector('[name=video_confirmed]')?.checked===true,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
  const saved=await api('applications',data);application.reset();toggle();details.open=false;status('✓ '+mt('saved')+' '+mt('entryId')+': '+saved.application_id);await renderMember()})});

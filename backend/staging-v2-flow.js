@@ -1,8 +1,10 @@
 import {approvalColumn,approvalGuard,approveTestApplication} from './test-application-approval.js';
+import {entrantLocationsReady,entrantLocationFields,entrantLocationJoin} from './entrant-location.js';
+import {supplementColumns,supplementGuard,supplementJoin} from './test-video-supplement.js';
 
 // Alan V2 competition logic, STAGING ONLY. Called only after verified session,
 // same-origin checks and configured() gate in staging-e2e.js.
-export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval=false}){
+export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval=false,supplements=false}){
  const path=new URL(request.url).pathname,post=request.method==='POST';
  const db=env.DB;
  // Explicit closed rehearsal: link evidence is not identity or payment verification.
@@ -13,7 +15,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
  const approved=approvalGuard(approval,'p');
  if(path==='/api/e2e/approve-test-application'&&post&&approval){
   if(forbidden('organizer'))return forbidden('organizer');
-  return approveTestApplication(request,db,a,{json,deny,NOW,bodyJSON});
+  return approveTestApplication(request,db,a,{json,deny,NOW,bodyJSON},supplementGuard(supplements,'p',true));
  }
  if(path==='/api/e2e/reviewer-queue'&&!post){
   if(forbidden('reviewer'))return forbidden('reviewer');
@@ -54,14 +56,15 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
  }
  if(path==='/api/e2e/organizer-queue'&&!post){
   if(forbidden('organizer'))return forbidden('organizer');
-  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.demo_url,p.phase,p.status,p.payment_status,
+  const locations=await entrantLocationsReady(db);
+  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.demo_url,p.phase,p.status,p.payment_status,${entrantLocationFields(locations)},p.location_basis,
    p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,
    p.receipt_key IS NOT NULL AS has_receipt_file,
    (SELECT COUNT(*) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_judges,
    (SELECT ROUND(AVG(technique+interpretation),2) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_mean,
    (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_judges,
-   (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}
-   FROM e2e_applications p ORDER BY p.created_at ASC LIMIT 500`).all();
+   (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}${supplementColumns(supplements)}
+   FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)} ORDER BY p.created_at ASC LIMIT 500`).all();
   return json({ok:true,applications:await attachProfiles(env,r.results||[]),testOnly:true});
  }
  if(path==='/api/e2e/organizer-promote'&&post){
@@ -109,7 +112,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
   if(forbidden('organizer'))return forbidden('organizer');
   const rows=await db.prepare(`SELECT p.id,p.category,p.round_code,p.stage_name,
     (SELECT COUNT(*) FROM e2e_final_votes v WHERE v.application_id=p.id) AS votes,
-    (SELECT ROUND(AVG(l.technique+l.interpretation+l.stage_presence+l.appearance),4)
+    (SELECT AVG(l.technique+l.interpretation+l.stage_presence+l.appearance)
      FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage='final') AS judges_mean,
     (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage='final') AS judges_count
     FROM e2e_applications p WHERE p.phase='final' AND p.status NOT IN ('withdrawn','rejected')${approved}
@@ -120,7 +123,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
     const voteScore=max[x.category]?Number(x.votes)/max[x.category]*100:0;
     const judged=x.judges_mean===null?null:Number(x.judges_mean);
     const complete=Number(x.judges_count)>=3;
-    return {...x,vote_score:Number(voteScore.toFixed(4)),
+    return {...x,judges_mean:judged===null?null:Number(judged.toFixed(4)),vote_score:Number(voteScore.toFixed(4)),
      total_score:complete?Number((voteScore*.51+judged*.49).toFixed(2)):null,
      ready:complete,official:false};
    }),weights:{vote:51,judge:49},testOnly:true});

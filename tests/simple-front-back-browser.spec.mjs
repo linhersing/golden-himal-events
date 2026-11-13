@@ -33,6 +33,33 @@ test('staff page has organizer and judge within one URL, and no invented paid re
  await expect(page).toHaveURL(/backoffice\.html$/);
  await expect(page.locator('#back-dashboard')).toBeHidden();
 });
+test('organizer can inspect the audition link and open a notified 48-hour correction',async({page})=>{
+ const entry={id:'SYNTH-SUPPLEMENT',stage_name:'TEST Singer',song_title:'TEST Song',round_code:'2027-01',
+  category:'university',approval_state:'pending',demo_url:'https://youtu.be/test-video',video_supplement_available:1};
+ const requests=[];
+ await page.route('**/api/e2e/**',async route=>{
+  const key=new URL(route.request().url()).pathname.split('/').pop();
+  let result={ok:true};
+  if(key==='me')result={ok:true,account:{id:'SYNTH-ORGANIZER',role:'organizer',available_roles:['organizer']}};
+  if(key==='organizer-queue')result={ok:true,applications:[entry]};
+  if(key==='request-video-supplement'){
+   requests.push(route.request().postDataJSON());
+   Object.assign(entry,{video_supplement_available:0,video_supplement_state:'pending',video_supplement_deadline:1820000000});
+  }
+  await route.fulfill({status:200,json:result});
+ });
+ await page.goto('/backoffice.html');
+ const entryCard=page.locator('#admin-apps article');
+ await expect(entryCard.getByRole('link',{name:'開啟參賽影片'})).toHaveAttribute('href',entry.demo_url);
+ page.once('dialog',async dialog=>{
+  expect(dialog.message()).toContain('請先聯絡選手');
+  await dialog.accept();
+ });
+ await entryCard.getByRole('button',{name:'開放 48 小時補件'}).click();
+ await expect(entryCard).toContainText('等待選手補正資料');
+ await expect(entryCard.getByRole('button',{name:'核准測試報名'})).toHaveCount(0);
+ expect(requests).toEqual([{application_id:entry.id}]);
+});
 test('member can view own stored entry, edit and delete its unpaid data in guarded endpoints',async({page})=>{
  let entries=[{id:'SYNTH-123',stage_name:'TEST Singer',song_title:'TEST Song',original_artist:'TEST Artist',song_language:'Nepali',demo_url:'https://youtu.be/dQw4w9WgXcQ',category:'university',round_code:'2027-01',status:'submitted',payment_status:'unpaid',phase:'demo'}];
  const requests=[];
