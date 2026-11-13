@@ -7,7 +7,7 @@ test('member login is visibly a synthetic credential rehearsal, with personal ac
  const html=await read('../public/member-login.html');
  const js=await read('../public/member-login.js');
  const portal=await read('../public/member-portal.js');
- const main=await read('../index.html');
+ const main=await read('../public/voice.html');
  for(const id of ['login-form','login-username','login-password','register-persona','auth-view',
   'dashboard-view','summary-member','summary-status','summary-payment','entries-list','sign-out'])
   assert.match(html,new RegExp('id="'+id+'"'));
