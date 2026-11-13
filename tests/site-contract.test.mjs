@@ -166,7 +166,7 @@ test('Golden Himal Palace story presents selective venue imagery and compact gro
  const [home,story,styles,language]=await Promise.all([
   read('index.html'),read('public/golden-himal.html'),read('public/brand-portal.css'),read('public/brand-portal.js')
  ]);
- const gallery=['gh-gallery-grand-hall-ai.webp','gh-gallery-grand-hall-elevated-ai.webp','gh-gallery-sky-lounge-ai.webp','gh-gallery-lamaste-tower-ai.webp','gh-gallery-mountain-view-ai.webp','gh-fountain-day-natural-20261113.webp','gh-fountain-night-real-20261113.webp','gh-guesthouse-night-real-20261113.webp'];
+ const gallery=['gh-real-hall-hero-20261113.webp','gh-real-sky-lounge-20261113.webp','gh-real-fountain-20261113.webp','gh-real-guesthouse-20261113.webp','gh-real-chitwan-view-20261113.webp','gh-real-chandelier-detail-20261113.webp','gh-fountain-night-real-20261113.webp'];
  for(const file of gallery){
   assert.ok((home+story).includes(file),file);
  }
@@ -175,7 +175,13 @@ test('Golden Himal Palace story presents selective venue imagery and compact gro
  assert.match(story,/data-p="imageDisclaimer"/);
  assert.doesNotMatch(home+story,/AI 修飾形象影像/);
  assert.doesNotMatch(story,/<small data-p="galleryEnhanced">/);
- assert.match(story,/數位重製/);
+ assert.match(story,/現場實際拍攝/);
+ assert.doesNotMatch(home+story,/gh-gallery-(?:grand-hall|sky-lounge|fountain-day|guesthouse-night|mountain-view|lamaste-tower)-ai\\.webp/);
+ assert.match(home,/class="portal-top-nav"/);
+ assert.match(home,/class="portal-about wrap"/);
+ assert.match(home,/class="portal-photo-grid"/);
+ assert.match(home,/gh-real-hall-hero-20261113\\.webp/);
+ assert.match(styles,/\.portal-stage\\.portal-hero/);
  assert.match(story,/data-p="journeyHeading"/);
  assert.match(story,/data-p="journeyText"/);
  assert.match(story,/data-p="journeyNext"/);
@@ -185,7 +191,7 @@ test('Golden Himal Palace story presents selective venue imagery and compact gro
  assert.match(story,/data-p="palaceText"/);
  assert.match(story,/id="location"/);
  assert.match(home,/id="home-competition"/);
- for(const label of ['galleryHall','galleryLounge','galleryWater','galleryNight','galleryTower','galleryWaterNight','galleryView','galleryMore','imageDisclaimer']){
+ for(const label of ['galleryHall','galleryLounge','galleryWater','galleryNight','galleryWaterNight','galleryView','galleryMore','imageDisclaimer']){
   assert.match(language,new RegExp('"'+label+'"'));
  }
  assert.match(language,/ghv_ui_language_v1/);
