@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
-test('desktop homepage highlights the three real visitor actions',async({page})=>{
+test('desktop Voice home preserves the three singer actions',async({page})=>{
  await page.setViewportSize({width:1366,height:768});
- await page.goto('/');
+ await page.goto('/voice.html');
  const choices=page.locator('.front-actions a');
  await expect(choices).toHaveCount(3);
  await expect(choices.nth(0)).toContainText('我要報名');
@@ -15,7 +15,7 @@ test('desktop homepage highlights the three real visitor actions',async({page})=
  await expect(page.locator('#auth-view h2')).toContainText('Member');
 });
 test('English Nepali Chinese translations remain available without adding page clutter',async({page})=>{
- await page.goto('/');
+ await page.goto('/voice.html');
  await page.locator('[data-lang=ne]').click();
  await expect(page.locator('.choice-main')).toContainText('प्रतियोगितामा सहभागी');
  await expect(page.locator('html')).toHaveAttribute('lang','ne');
@@ -29,7 +29,7 @@ test('English Nepali Chinese translations remain available without adding page c
 test('mobile visitor can reach a separate registration page without overflow',async({page})=>{
  for(const width of [320,375,390]){
   await page.setViewportSize({width,height:812});
-  await page.goto('/');
+  await page.goto('/voice.html');
   await expect(page.locator('.locale [data-lang=en]')).toBeVisible();
   const dims=await page.evaluate(()=>({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
   expect(dims.scroll).toBeLessThanOrEqual(dims.client);
