@@ -43,7 +43,7 @@ test('brand story balances venue photos with authentic narrative and quiet image
   await expect(page.locator('h1')).toContainText('金色晨光');
   await expect(page.locator('.name-piece')).toHaveCount(3);
   await expect(page.locator('.story-gallery .gallery-card')).toHaveCount(4);
-  await expect(page.locator('.gallery-disclaimer')).toContainText('現場實際拍攝');
+  await expect(page.locator('.gallery-disclaimer')).toContainText('現場實拍');
   await expect(page.locator('[data-p="journeyHeading"]')).toBeVisible();
   await expect(page.locator('.story-gallery figcaption [data-p="galleryEnhanced"]')).toHaveCount(0);
   await expect(page.locator('.story-more')).not.toHaveAttribute('open','');
