@@ -162,18 +162,23 @@ test('singer video guidance has explicit quality, lighting, sound and accessible
  assert.match(backend,/video_self_recording_confirmation_required/);
 });
 
-test('Golden Himal Palace story uses optimized on-site-photo-based AI imagery, avoids phase boards and discloses enhancements',async()=>{
+test('Golden Himal Palace story presents selective venue imagery and compact grounded narrative with discrete clarification',async()=>{
  const [home,story,styles,language]=await Promise.all([
   read('index.html'),read('public/golden-himal.html'),read('public/brand-portal.css'),read('public/brand-portal.js')
  ]);
- const gallery=['grand-hall','grand-hall-elevated','sky-lounge','fountain-day','fountain-night','lamaste-tower','guesthouse-night','mountain-view'];
+ const gallery=['gh-gallery-grand-hall-ai.webp','gh-gallery-grand-hall-elevated-ai.webp','gh-gallery-sky-lounge-ai.webp','gh-gallery-lamaste-tower-ai.webp','gh-gallery-mountain-view-ai.webp','gh-fountain-day-natural-20261113.webp','gh-fountain-night-real-20261113.webp','gh-guesthouse-night-real-20261113.webp'];
  for(const file of gallery){
-  assert.match(home+story,new RegExp('gh-gallery-'+file+'-ai\\.webp'));
+  assert.ok((home+story).includes(file),file);
  }
  assert.doesNotMatch(story,/golden-himal-phase2-visualization|golden-himal-phase2-construction|<[^>]+>第一期|<[^>]+>第二期/);
  assert.doesNotMatch(home,/第一期建築實景/);
  assert.match(story,/data-p="imageDisclaimer"/);
- assert.match(story,/AI 修飾形象影像/);
+ assert.doesNotMatch(home+story,/AI 修飾形象影像/);
+ assert.doesNotMatch(story,/<small data-p="galleryEnhanced">/);
+ assert.match(story,/數位重製/);
+ assert.match(story,/data-p="journeyHeading"/);
+ assert.match(story,/data-p="journeyText"/);
+ assert.match(story,/data-p="journeyNext"/);
  assert.match(story,/class="story-more"/);
  assert.match(story,/data-p="goldenText"/);
  assert.match(story,/data-p="himalText"/);
