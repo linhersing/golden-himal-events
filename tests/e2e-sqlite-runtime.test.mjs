@@ -146,6 +146,10 @@ for (const mode of ['uploads','links']) test(`Alan V2 ${mode}: persisted auditio
   assert.equal(standings[0].judges_mean,80);
   assert.equal(standings[0].vote_score,100);
   assert.equal(standings[0].total_score,90.2); // 100 * 51% + 80 * 49%
+  db.prepare('DELETE FROM e2e_final_votes WHERE application_id=?').run(appId);
+  standings=(await (await handleE2E(get('/api/e2e/standings',org),env)).json()).standings;
+  assert.equal(standings[0].vote_score,0,'an entire group with zero votes receives zero voting points');
+  assert.equal(standings[0].total_score,39.2);
   // An authenticated member can erase their own D1 and R2 data; score/votes cascade.
   const erased=await handleE2E(req('/api/e2e/delete-my-data',{},member),env);assert.equal(erased.status,200);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_applications').get().n,0);

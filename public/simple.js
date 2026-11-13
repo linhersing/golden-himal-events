@@ -112,6 +112,8 @@ function friendlyError(e){
  update_locked:mt('editLockedAfterReview'),
  delete_locked:'This entry cannot be deleted.',
  invalid_demo_url:'Enter a valid public video link.',
+ invalid_location_detail:mt('locationDetailHelp'),
+ location_storage_unavailable:mt('provincePending'),
  annual_category_locked:'Your annual competition category is already selected.',
  community_age_confirmation_required:'Confirm the community eligibility statement.',
  university_student_confirmation_required:'Confirm current university enrollment.',
@@ -161,8 +163,21 @@ async function loadSession(){try{
  const granted=v.account.available_roles||[v.account.role];
  const target=staff?(granted.includes('organizer')?'organizer':granted.includes('reviewer')?'reviewer':null):'member';
  if(!target||!granted.includes(target)){account=null;authUI(false);staffTabs();return;}
- if((staff&&!['organizer','reviewer'].includes(v.account.role))||(!staff&&v.account.role!=='member'))v=await api('switch-role',{role:target});
- account=v.account;role=account.role;authUI(true);if(staff)staffTabs();else setupProfileFields(v.profile_enabled===true);await dashboard();
+ if((staff&&!['organizer','reviewer'].includes(v.account.role))||(!staff&&v.account.role!=='member')){
+  v=await api('switch-role',{role:target});
+  if(!staff)v=await api('me');
+ }
+ account=v.account;role=account.role;authUI(true);
+ if(staff)staffTabs();else{
+  setupProfileFields(v.profile_enabled===true);
+  const nationwide=v.nepal_locations_enabled===true,location=$('entrant-location-detail'),field=location.querySelector('input');
+  location.hidden=!nationwide;field.disabled=!nationwide;field.required=nationwide;
+  const note=$('province-note');note.dataset.l=nationwide?'provinceHelp':'provincePending';note.textContent=mt(note.dataset.l);
+  for(const option of $('application-form').elements.province.options){
+   option.disabled=!nationwide&&!['bagmati','gandaki'].includes(option.value);option.hidden=option.disabled;
+  }
+ }
+ await dashboard();
  }catch(e){account=null;authUI(false);if(staff)staffTabs();if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
 function setupAuth(){
 const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
@@ -497,6 +512,7 @@ async function renderOrganizer(){
    info.append(node('strong',(a.stage_name||'選手')+' · '+(a.song_title||'未命名曲目')));
    info.append(node('p',a.round_code+' · '+(a.category==='university'?'大學組':'社會組')+' · '+(a.song_language||'語言未填'),'minor'));
    info.append(node('p','編號：'+a.id,'minor'));
+   if(a.province)info.append(node('p',[a.province,a.location_detail].filter(Boolean).join(' · '),'minor'));
    const img=profileImage(a.photo_url_1);
    if(img)info.prepend(img);
    const stats=node('div',undefined,'roster-entry-side');

@@ -13,7 +13,7 @@ async function mockMemberApi(page,state){
   const url=new URL(route.request().url()),key=url.pathname.split('/').pop(),
    method=route.request().method();
   let result={ok:true},status=200;
-  if(key==='me')result={ok:true,account:{id:'SYNTH-MEMBER-ACCOUNT',role:'member',available_roles:['member']},profile_enabled:state.profileEnabled??false};
+  if(key==='me')result={ok:true,account:{id:'SYNTH-MEMBER-ACCOUNT',role:'member',available_roles:['member']},profile_enabled:state.profileEnabled??false,nepal_locations_enabled:state.locationsEnabled??false};
   else if(key==='applications'&&method==='GET')result={ok:true,applications:state.entries};
   else if(key==='update-application'&&method==='POST'){
    const payload=route.request().postDataJSON();
@@ -32,6 +32,19 @@ async function mockMemberApi(page,state){
  });
  return writes;
 }
+test('member form supports the seven provinces when the database capability is ready',async({page})=>{
+ await mockMemberApi(page,{entries:[],locationsEnabled:true});
+ await page.setViewportSize({width:375,height:820});
+ await page.goto('/member.html#register');
+ const field=page.locator('#application-form select[name=province]');
+ await expect(field.locator('option:not(:disabled)')).toHaveCount(7);
+ await field.selectOption('karnali');
+ await expect(field).toHaveValue('karnali');
+ const location=page.locator('#entrant-location-detail input');
+ await expect(location).toBeVisible();
+ await expect(location).toHaveJSProperty('required',true);
+});
+
 test('homepage keeps same URLs but switches to personal home after confirmed server session and saved application',async({page})=>{
  const state={entries:[{...entry}]};await mockMemberApi(page,state);
  await page.goto('/');

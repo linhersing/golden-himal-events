@@ -44,6 +44,31 @@ async function fixture(t,{enabled=true,migrated=true}={}){
  return {db,env,call};
 }
 
+test('the current rules allow all seven Nepal provinces and retain the actual location privately',async t=>{
+ const {db,call}=await fixture(t);
+ const legacy=await call('applications','member',entry);
+ assert.equal(legacy.status,201);
+ const location={...entry,round_code:'2027-04',province:'karnali',location_detail:'Birendranagar, Surkhet'};
+ const migration=new URL('../backend/migrations/1010_nepal_locations_STAGING_ONLY.sql',import.meta.url);
+ assert.equal((await call('applications','member',location)).status,503);
+ db.exec(await readFile(migration,'utf8'));
+ const created=await call('applications','member',location);
+ assert.equal(created.status,201);
+ const {application_id}=await created.json();
+ for(const [route,role] of [['applications','member'],['organizer-queue','organizer']]){
+  const data=await (await call(route,role)).json();
+  const row=data.applications.find(item=>item.id===application_id);
+  assert.equal(row.province,'karnali');assert.equal(row.location_detail,location.location_detail);
+  assert.equal(data.applications.find(item=>item.id!==application_id).province,'gandaki');
+ }
+ assert.equal((await call('applications','member',{...location,province:'outside-nepal'})).status,400);
+ assert.equal((await call('mock-payment','member',{application_id})).status,200);
+ assert.equal((await call('approve-test-application','organizer',{application_id})).status,200);
+ const [review]= (await (await call('reviewer-queue','reviewer')).json()).queue;
+ assert.equal(review.id,application_id);
+ assert.equal(Object.hasOwn(review,'location_detail'),false);
+});
+
 test('configured approval mode fails closed until the migration is available',async t=>{
  const {db,call}=await fixture(t,{migrated:false});
  const result=await call('applications','member',entry);

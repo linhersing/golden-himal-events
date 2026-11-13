@@ -5,6 +5,7 @@ import {validPerformanceLink} from '../public/performance-link.js';
 import {handleV2Route} from './staging-v2-flow.js';
 import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
 import {approvalRequired,approvalSchemaReady,approvalColumn,approvalGuard,pendingGuard} from './test-application-approval.js';
+import {parseLocation,entrantLocationsReady,entrantLocationFields,entrantLocationJoin,insertEntrantLocation} from './entrant-location.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
  * No official entries, actual payments, or exposed R2 URLs.
@@ -194,7 +195,8 @@ async function logout(request,env,a){
 }
 async function applications(a,env){
  const approval=approvalRequired(env);
- const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,p.province,p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url,
+ const locations=await entrantLocationsReady(env.DB);
+ const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,${entrantLocationFields(locations)},p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url,
  p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,p.receipt_key IS NOT NULL AS has_receipt_file,
  p.phase,p.status,p.payment_status,p.created_at,p.updated_at,
  CASE WHEN p.phase='demo' AND p.status IN ('submitted','under_review') AND p.payment_status IN ('unpaid','simulated_paid')
@@ -202,7 +204,7 @@ async function applications(a,env){
  AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingGuard(approval,'p')}
  THEN 1 ELSE 0 END AS can_edit${approvalColumn(approval)}
- FROM e2e_applications p WHERE p.account_id=? ORDER BY p.created_at DESC`).bind(a.id).all();
+ FROM e2e_applications p${entrantLocationJoin(locations)} WHERE p.account_id=? ORDER BY p.created_at DESC`).bind(a.id).all();
  return json({ok:true,account:{id:a.id,role:a.role},applications:await attachProfiles(env,rows.results||[]),testOnly:true});
 }
 async function submitApplication(request,env,a){
@@ -210,7 +212,9 @@ async function submitApplication(request,env,a){
  const b=await bodyJSON(request,4500);if(!b)return deny('invalid_json');
  if(!['2027-01','2027-04'].includes(b.round_code))return deny('invalid_audition_window');
  if(!['university','community'].includes(b.category))return deny('invalid_category');
- if(!['bagmati','gandaki'].includes(b.province))return deny('invalid_province');
+ const location=parseLocation(b);
+ if(location.error)return deny(location.error,location.status);
+ if(location.location&&!await entrantLocationsReady(env.DB))return deny('location_storage_unavailable',503);
  if(!['residence','study','work'].includes(b.location_basis))return deny('invalid_location_basis');
  // V2 only explicitly sets the 18+ cut-off for the community group.
  // This TEST checkbox is self-attestation, not proof of real eligibility.
@@ -235,11 +239,14 @@ async function submitApplication(request,env,a){
  const id=uuid(),now=NOW();
  try{
   const createApp=env.DB.prepare('INSERT INTO e2e_applications(id,account_id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,demo_url,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-   .bind(id,a.id,b.round_code,b.category,b.province,b.location_basis,...values.slice(1,2),values[0],...values.slice(2),url||null,now,now);
-  // D1 batch is atomic. A profile write failure must NOT leave a half-created entry.
-  if(profile){
-   if(typeof env.DB.batch!=='function')return deny('profile_storage_unavailable',503);
-   await env.DB.batch([createApp,profileInsert(env.DB,id,profile,now)]);
+   .bind(id,a.id,b.round_code,b.category,location.legacyProvince,b.location_basis,...values.slice(1,2),values[0],...values.slice(2),url||null,now,now);
+  // Save the actual province and optional profile in the same transaction as the entry.
+  if(profile||location.location){
+   if(typeof env.DB.batch!=='function')return deny(location.location?'location_storage_unavailable':'profile_storage_unavailable',503);
+   const statements=[createApp];
+   if(profile)statements.push(profileInsert(env.DB,id,profile,now));
+   if(location.location)statements.push(insertEntrantLocation(env.DB,id,location.location));
+   await env.DB.batch(statements);
   }else await createApp.run();
  }catch{return deny(profile?'profile_database_error':'duplicate_round_or_database_rejected',profile?503:409)}
  return json({ok:true,application_id:id,phase:'demo',status:'submitted',source:'cloudflare-d1-staging',testOnly:true,
@@ -448,7 +455,8 @@ export async function handleE2E(request,env){
   if(!a.email&&['/api/e2e/finalists','/api/e2e/test-vote'].includes(pathname))return deny('not_on_test_allowlist',403);
   const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval});
   if(v2)return v2;
-  if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),testOnly:true,...(approval?{approval_enabled:true}:{})});
+   if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),testOnly:true,
+    ...(a.role==='member'&&await entrantLocationsReady(env.DB)?{nepal_locations_enabled:true}:{}),...(approval?{approval_enabled:true}:{})});
   if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env);
   if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
    if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a);
