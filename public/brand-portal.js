@@ -45,7 +45,7 @@ const key='ghv_ui_language_v1',translations={
   "exploreVoice": "探索 Golden Himal Voice 2027",
   "galleryHall": "宴會廳的金色光影",
   "galleryLounge": "空中景觀餐廳",
-  "galleryWater": "金環噴泉與庭園",
+  "galleryWater": "金環噴泉夜景",
   "galleryNight": "夜間建築光影",
   "galleryTower": "特色塔樓",
   "galleryWaterNight": "夜色中的噴泉",
@@ -68,12 +68,13 @@ const key='ghv_ui_language_v1',translations={
   "traitNature": "奇旺自然景觀",
   "homePhotoLounge": "空中景觀空間",
   "homePhotoLoungeSub": "在自然光中相聚",
-  "homePhotoFountain": "金環水景廣場",
-  "homePhotoFountainSub": "戶外景觀與相遇",
+  "homePhotoFountain": "金環噴泉夜景",
+  "homePhotoFountainSub": "現場的光影與水景",
   "homePhotoArchitecture": "特色建築夜景",
   "homePhotoArchitectureSub": "夜色中的溫暖光影",
   "homeReadMore": "閱讀 Golden Himal 的完整故事",
-  "outlookText": "一片風景，也是一段故事的開始。"
+  "outlookText": "一片風景，也是一段故事的開始。",
+  "galleryGateway": "園區入口與窗景"
  },
  "en": {
   "portalEyebrow": "GOLDEN HIMAL PALACE · CHITWAN",
@@ -119,7 +120,7 @@ const key='ghv_ui_language_v1',translations={
   "exploreVoice": "Explore Golden Himal Voice 2027",
   "galleryHall": "Golden details of the hall",
   "galleryLounge": "Sky lounge and scenic café",
-  "galleryWater": "Golden ring fountain and gardens",
+  "galleryWater": "Ring fountain at night",
   "galleryNight": "Architecture after dark",
   "galleryTower": "Signature tower",
   "galleryWaterNight": "Fountain lights at night",
@@ -142,12 +143,13 @@ const key='ghv_ui_language_v1',translations={
   "traitNature": "Chitwan landscapes",
   "homePhotoLounge": "Scenic rooftop lounge",
   "homePhotoLoungeSub": "Gather in natural light",
-  "homePhotoFountain": "Golden ring fountain",
-  "homePhotoFountainSub": "Outdoor spaces and views",
+  "homePhotoFountain": "Fountain after dark",
+  "homePhotoFountainSub": "Real light and waterscape",
   "homePhotoArchitecture": "Architecture at night",
   "homePhotoArchitectureSub": "A warm evening glow",
   "homeReadMore": "Read the full Golden Himal story",
-  "outlookText": "Every landscape has a story to tell."
+  "outlookText": "Every landscape has a story to tell.",
+  "galleryGateway": "The entrance from above"
  },
  "ne": {
   "portalEyebrow": "GOLDEN HIMAL PALACE · CHITWAN",
@@ -193,7 +195,7 @@ const key='ghv_ui_language_v1',translations={
   "exploreVoice": "Golden Himal Voice २०२७ हेर्नुहोस्",
   "galleryHall": "भोज कक्षको सुनौलो दृश्य",
   "galleryLounge": "छतको मनोरम क्याफे",
-  "galleryWater": "सुनौलो रिङ फोहरा र बगैँचा",
+  "galleryWater": "रातको सुनौलो घेरा फोहरा",
   "galleryNight": "रातको भवन र उज्यालो",
   "galleryTower": "विशेष टावर",
   "galleryWaterNight": "रातिको फोहरा",
@@ -216,12 +218,13 @@ const key='ghv_ui_language_v1',translations={
   "traitNature": "चितवनको प्रकृति",
   "homePhotoLounge": "दृश्यावलोकन कक्ष",
   "homePhotoLoungeSub": "प्राकृतिक उज्यालोमा भेटघाट",
-  "homePhotoFountain": "सुनौलो घेरा फोहरा",
-  "homePhotoFountainSub": "बाहिरी दृश्य र अनुभव",
+  "homePhotoFountain": "रातको फोहरा",
+  "homePhotoFountainSub": "पानी र प्रकाशको दृश्य",
   "homePhotoArchitecture": "रातिको वास्तुकला",
   "homePhotoArchitectureSub": "न्यानो प्रकाश",
   "homeReadMore": "Golden Himal को पूरा कथा पढ्नुहोस्",
-  "outlookText": "हरेक दृश्यसँग आफ्नै कथा हुन्छ।"
+  "outlookText": "हरेक दृश्यसँग आफ्नै कथा हुन्छ।",
+  "galleryGateway": "झ्यालबाट प्रवेशद्वारको दृश्य"
  }
 };
 let lang='zh';try{const saved=localStorage.getItem(key);if(Object.prototype.hasOwnProperty.call(translations,saved))lang=saved}catch{}
