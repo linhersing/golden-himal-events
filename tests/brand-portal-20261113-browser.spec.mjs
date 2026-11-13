@@ -35,7 +35,7 @@ test('brand story shows real place and clearly labeled unbuilt concept, with wor
   await expect(page.locator('#location')).toContainText('尼泊爾奇旺');
   for(const im of await page.locator('.story-gallery img').all()){
    await im.scrollIntoViewIfNeeded();
-   expect(await im.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
+   await expect.poll(()=>im.evaluate(el=>el.complete&&el.naturalWidth>0),{timeout:10000}).toBeTruthy();
   }
   const dims=await page.evaluate(()=>({viewport:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
   expect(dims.scroll).toBeLessThanOrEqual(dims.viewport);
