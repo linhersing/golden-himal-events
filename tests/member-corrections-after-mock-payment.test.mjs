@@ -87,6 +87,8 @@ test('mock-paid member may correct owned song before judging, then scores lock a
   assert.equal(afterScore.status,409);
   assert.equal(db.prepare('SELECT song_title FROM e2e_applications WHERE id=?').get(id).song_title,'Edited Song');
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_judge_scores').get().n,1);
+  // Enable the April TEST window only for this stale-checkout regression.
+  env.STAGING_SECOND_AUDITION_ENABLED='true';
   const april=await handleE2E(request('applications',{...demo,round_code:'2027-04'},member),env);
   assert.equal(april.status,201);
   const aprilId=(await april.json()).application_id;
