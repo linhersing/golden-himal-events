@@ -169,3 +169,22 @@
  .story-more summary{width:100%;font-size:.86rem}
  .gallery-disclaimer{font-size:.73rem;line-height:1.7;margin-top:16px}
 }
+
+/* 2026-11-13: restrained photography + brief editorial story, no repeated image badges */
+.story-meaning{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:48px;align-items:start;margin-top:8px;margin-bottom:52px;padding:32px 36px;border:1px solid #ebdfcf;border-radius:22px;background:linear-gradient(125deg,#fdfaf5,#f7f0e7)}
+.story-meaning h2{font-family:Georgia,"Noto Serif TC","Noto Serif Devanagari",serif;font-size:clamp(1.5rem,2.8vw,2.2rem);line-height:1.35;color:#4e362d;margin:14px 0 0}
+.story-meaning-copy p{color:#725d50;font-size:.94rem;line-height:1.9;margin:0 0 14px}
+.story-meaning-copy p:last-child{margin-bottom:0}
+.story-gallery-curated .gallery-card figcaption,.story-gallery-more figcaption{min-height:54px;align-items:flex-start;justify-content:center}
+.story-gallery-curated .gallery-card img[src*="guesthouse-night-real"]{object-position:center 18%}
+.story-gallery-more .gallery-card img[src*="fountain-night-real"]{object-position:center 45%}
+.gallery-disclaimer{color:#918175;font-size:.72rem;max-width:800px}
+@media(max-width:760px){
+ .story-meaning{grid-template-columns:1fr;gap:13px;padding:26px 22px;margin-top:0;margin-bottom:40px}
+ .story-meaning h2{font-size:1.7rem}
+}
+@media(max-width:520px){
+ .story-meaning{padding:24px 20px;border-radius:18px}
+ .story-meaning h2{font-size:1.5rem}
+ .story-meaning-copy p{font-size:.88rem;line-height:1.8}
+}
