@@ -67,7 +67,7 @@ test('home retains English Nepali and Traditional Chinese switch',async()=>{
  for(const lang of ['en','ne','zh']){
   assert.match(html,new RegExp('data-lang="'+lang+'"'));
   assert.match(voice,new RegExp('data-lang="'+lang+'"'));
-  assert.ok(js.includes('"'+lang+'":{'));
+  assert.match(js,new RegExp('"'+lang+'"\\s*:\\s*\\{'));
   assert.ok(simple.includes(lang+':{'));
  }
 });
