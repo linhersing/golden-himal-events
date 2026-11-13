@@ -175,7 +175,7 @@ test('Golden Himal Palace story presents selective venue imagery and compact gro
  assert.match(story,/data-p="imageDisclaimer"/);
  assert.doesNotMatch(home+story,/AI 修飾形象影像/);
  assert.doesNotMatch(story,/<small data-p="galleryEnhanced">/);
- assert.match(story,/現場實際拍攝/);
+ assert.match(story,/現場實拍/);
  assert.doesNotMatch(home+story,/gh-gallery-(?:grand-hall|sky-lounge|fountain-day|guesthouse-night|mountain-view|lamaste-tower)-ai\\.webp/);
  assert.match(home,/class="portal-top-nav"/);
  assert.match(home,/class="portal-about wrap"/);
