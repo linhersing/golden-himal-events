@@ -263,3 +263,46 @@ body[data-page="member"] #password-pending-screen .password-pending-preview{marg
 .evidence-plan ul{margin:6px 0 4px;padding-left:24px}
 @media(max-width:830px){.front-copy{order:-1}.front-visual{order:0}.front-copy .mission-intro{text-align:center;margin-inline:auto}}
 @media(max-width:520px){.event-credits{font-size:.72rem;padding:8px 0}.event-credits p{gap:8px}.event-credits p>span:first-child{min-width:4.5em;font-size:.69rem}.mission-intro{font-size:.85rem;margin:12px auto 19px;gap:2px}.news-schedule li{grid-template-columns:1fr;gap:2px;padding:9px 10px}.test-site-banner.test-site-footer{padding:10px 0;margin-bottom:12px}}
+
+
+/* 2026-11-14 Frontline 2027 rules: concise award highlight and accessible news detail */
+.voice-prize-teaser{margin:5px 0 26px;padding:16px 18px 15px;border-radius:16px;border:1px solid #ddc9ac;background:linear-gradient(135deg,#fffbf3,#f5ebdb);box-shadow:0 7px 24px #4f382411;max-width:580px}
+.voice-prize-eyebrow{font-size:.76rem;font-weight:760;letter-spacing:.09em;color:#aa7b3e}
+.voice-prize-teaser h2{font-family:Georgia,"Noto Serif TC","Noto Serif Devanagari",serif;margin:5px 0 11px;font-size:1.22rem;line-height:1.48;color:#5c3c2f}
+.voice-prize-top{font-size:.91rem;line-height:1.65;color:#594a3f;margin:0 0 11px}
+.voice-prize-voucher{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#fffdf8;border-radius:10px;border:1px solid #e8d8bf;margin:0}
+.voice-prize-voucher strong{font:750 1.3rem/1.2 Georgia,serif;color:#8a5c2c;white-space:nowrap}
+.voice-prize-voucher span{font-size:.83rem;line-height:1.58;color:#6a5748}
+.voice-prize-note{font-size:.75rem;color:#887668;line-height:1.65;margin:10px 0 4px}
+.voice-prize-link{display:inline-flex;min-height:44px;align-items:center;font-size:.88rem;font-weight:750;color:#805426;text-decoration:underline;text-decoration-color:#ccab7b;text-underline-offset:4px}
+.voice-prize-link:focus-visible,.news-row summary:focus-visible{outline:3px solid #b18c54;outline-offset:3px}
+.prize-table{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}
+.prize-table>div{background:#fffcf6;border:1px solid #e3d5bd;border-radius:11px;padding:13px 10px;display:grid;gap:6px}
+.prize-table>div>span{font-weight:650;color:#655044;font-size:.84rem;line-height:1.5}
+.prize-table>div>strong{font:750 1.1rem/1.4 Georgia,serif;color:#8a5e2d}
+.prize-table>div>strong small{font-size:.72rem;font-weight:550;color:#806d5a}
+.voucher-notice{display:flex;align-items:flex-start;gap:14px;background:#f5eddf;border-radius:12px;border-left:3px solid #bb8a46;padding:14px 15px;line-height:1.75}
+.voucher-notice strong{font:750 1.32rem/1.55 Georgia,serif;white-space:nowrap;color:#835728}
+.voucher-notice span{font-size:.91rem;color:#57483e}
+.news-fineprint{font-size:.8rem;color:#8a7664;line-height:1.65}
+.formula-panel{background:#fffdf9;border:1px solid #e5d7c4;border-radius:12px;display:grid;gap:8px;padding:15px;margin:12px 0}
+.formula-panel>span{font-weight:700;font-size:.81rem;color:#96703b}
+.formula-panel>strong{font-size:1.02rem;color:#573b2e;line-height:1.65;overflow-wrap:anywhere}
+.formula-panel>small{font-size:.81rem;color:#84705e}
+@media(max-width:690px){
+ .voice-prize-teaser{max-width:none;padding:15px}
+ .voice-prize-teaser h2{font-size:1.15rem}
+ .voice-prize-top{font-size:.9rem}
+ .voice-prize-voucher{align-items:flex-start;flex-direction:column;gap:3px}
+ .voice-prize-voucher strong{font-size:1.24rem}
+ .voice-prize-voucher span{font-size:.88rem}
+ .prize-table{grid-template-columns:1fr}
+ .prize-table>div{display:flex;justify-content:space-between;gap:12px;align-items:center}
+ .voucher-notice{flex-direction:column;gap:5px}
+ .news-detail p{font-size:.93rem;line-height:1.82}
+ .formula-panel>strong{font-size:.98rem}
+}
+
+/* Keep prize information subordinate to the contest's three primary actions. */
+.front-hero+.voice-prize-teaser{max-width:1000px;width:calc(100% - 48px);margin:-8px auto 42px}
+@media(max-width:520px){.front-hero+.voice-prize-teaser{width:calc(100% - 32px);margin:0 auto 26px}}

@@ -108,7 +108,7 @@ test('latest news remains short expandable cards (synthetic UI screenshot)',asyn
  await page.setViewportSize({width:390,height:844});
  await page.goto('/news.html');
  await page.locator('[data-lang=en]').click();
- await expect(page.locator('.news-row')).toHaveCount(4);
+ await expect(page.locator('.news-row')).toHaveCount(8);
  // The annual schedule is the highest-priority announcement and opens by default.
  await expect(page.locator('.news-row').first()).toHaveAttribute('open','');
  await expect(page.getByText(/January 1–31/)).toBeVisible();
@@ -164,7 +164,7 @@ test('Chinese selected on homepage remains Chinese through singer and news; lang
  await expect(page.locator('h1')).toContainText('最新消息');
  await page.locator('[data-lang=en]').click();
  await expect(page.locator('h1')).toContainText('Latest updates');
- await expect(page.locator('.news-row')).toHaveCount(4);
+ await expect(page.locator('.news-row')).toHaveCount(8);
  await page.screenshot({path:'test-results/ghv-trilingual/01-desktop-english-editorial-news.png'});
 });
 test('signed-in returning member sees existing entry, no new application panel, and can edit in Chinese',async({page})=>{
@@ -198,7 +198,7 @@ test('mobile news and member pages retain full Chinese layout without horizontal
  await expect(page.locator('h1')).toContainText('歌手報名');
  await page.screenshot({path:'test-results/ghv-trilingual/03-mobile-member-login-zh.png'});
  await page.goto('/news.html');
- await expect(page.locator('.news-row')).toHaveCount(4);
+ await expect(page.locator('.news-row')).toHaveCount(8);
  await expect(page.locator('h1')).toContainText('最新消息');
  await page.screenshot({path:'test-results/ghv-trilingual/04-mobile-news-zh.png'});
  const dims=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth}));
