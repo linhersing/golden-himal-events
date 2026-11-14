@@ -735,6 +735,19 @@ if(page==='news'){
   });
  };
  window.addEventListener('hashchange',()=>openRuleFromHash(true));
+ // A second tap on the same hash must still reopen its disclosure.
+ document.querySelectorAll('.news-quick-grid>a, .award-followups a').forEach(link=>{
+  link.addEventListener('click',()=>{
+   const hash=link.getAttribute('href')||'';
+   const row=hash.startsWith('#')?document.getElementById(decodeURIComponent(hash.slice(1))):null;
+   if(!row||!row.matches('details.news-row'))return;
+   row.open=true;
+   requestAnimationFrame(()=>{
+    row.scrollIntoView({block:'start',behavior:'auto'});
+    row.querySelector('summary')?.focus({preventScroll:true});
+   });
+  });
+ });
  openRuleFromHash(false);
 }
 })();
