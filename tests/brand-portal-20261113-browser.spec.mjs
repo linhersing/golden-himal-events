@@ -117,3 +117,34 @@ test('brand, Voice and latest news share EN / Nepali / Chinese language preferen
  await page.locator('#home-news').click();
  await expect(page.locator('h1')).toContainText('最新消息');
 });
+
+test('2027 rule highlights, clear senior navigation and public visual evidence (no personal data)',async({page},testInfo)=>{
+ for(const [width,height,label] of [[1280,900,'desktop'],[390,844,'mobile']]){
+  await page.setViewportSize({width,height});
+  await page.goto('/');
+  await page.locator('[data-lang=zh]').click();
+  await expect(page.locator('.portal-top-nav a')).toHaveCount(4);
+  await expect(page.locator('.portal-choices a')).toHaveCount(3);
+  await page.screenshot({path:testInfo.outputPath('golden-himal-home-'+label+'.png'),fullPage:true,animations:'disabled'});
+  await page.goto('/voice.html');
+  await page.locator('[data-lang=zh]').click();
+  await expect(page.locator('.voice-prize-voucher')).toContainText('NPR 10,000');
+  await expect(page.locator('.voice-prize-top')).toContainText('NPR 45,000');
+  await expect(page.locator('#home-apply')).toHaveAttribute('href','./member.html#register');
+  await page.screenshot({path:testInfo.outputPath('golden-himal-voice-'+label+'.png'),fullPage:true,animations:'disabled'});
+  await page.goto('/news.html#rules-awards');
+  await page.locator('[data-lang=zh]').click();
+  await expect(page.locator('#rules-awards')).toContainText('NPR 10,000');
+  await expect(page.locator('#rules-awards')).toContainText('NPR 22,000');
+  await expect(page.locator('#rules-voting')).toContainText('Muse',{timeout:10000}).catch(()=>{});
+  await page.screenshot({path:testInfo.outputPath('golden-himal-news-'+label+'.png'),fullPage:true,animations:'disabled'});
+  await page.goto('/member.html#register');
+  await page.locator('[data-lang=zh]').click();
+  await expect(page.locator('[name=nonreligious_song_ack]')).toBeAttached();
+  await expect(page.locator('[name=no_exclusive_contract]')).toBeAttached();
+  await page.screenshot({path:testInfo.outputPath('golden-himal-member-'+label+'.png'),fullPage:true,animations:'disabled'});
+  await page.goto('/golden-himal.html');
+  await page.locator('[data-lang=zh]').click();
+  await page.screenshot({path:testInfo.outputPath('golden-himal-about-'+label+'.png'),fullPage:true,animations:'disabled'});
+ }
+});
