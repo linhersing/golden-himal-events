@@ -128,28 +128,29 @@ test('2027 rule highlights, clear senior navigation and public visual evidence (
   await page.screenshot({path:testInfo.outputPath('golden-himal-home-'+label+'.png'),fullPage:true,animations:'disabled'});
   await page.goto('/voice.html');
   await page.locator('[data-lang=zh]').click();
-  await expect(page.locator('.front-visual-wedding')).toBeVisible();
-  await expect(page.locator('.wedding-halo')).toBeVisible();
-  const halo=await page.locator('.wedding-halo').evaluate(el=>({
-   bg:getComputedStyle(el).backgroundImage,
-   ring:getComputedStyle(el,'::before').borderBottomWidth,
-   opacity:getComputedStyle(el).opacity
-  }));
-  expect(halo.bg).toContain('radial-gradient');
-  expect(parseFloat(halo.ring)).toBeGreaterThan(0);
-  expect(halo.opacity).not.toBe('0');
-
-  await expect(page.locator('.wedding-slogan')).toContainText('The Best Wedding');
-  await expect(page.locator('.wedding-slogan')).toContainText('at Golden Himal.');
-  await expect(page.locator('.wedding-nepali')).toContainText('विवाह');
-  const appearance=await page.locator('.front-visual-wedding').evaluate(el=>({
-   border:getComputedStyle(el).borderTopWidth,
-   shadow:getComputedStyle(el).boxShadow,
-   overflow:document.documentElement.scrollWidth>window.innerWidth
-  }));
+  const figure=page.locator('.front-visual-wedding-image');
+  const approvedImage=figure.locator('img');
+  await expect(figure).toBeVisible();
+  await expect(figure).toHaveAttribute('data-design-revision','approved-image-20261114');
+  await expect(approvedImage).toHaveAttribute('src','./images/voice-wedding-hero-approved-20261114.jpg');
+  await expect(approvedImage).toHaveAttribute('alt',/The Best Wedding at Golden Himal/);
+  await expect.poll(()=>approvedImage.evaluate(el=>el.complete&&el.naturalWidth===1080&&el.naturalHeight===625),{timeout:15000}).toBeTruthy();
+  await expect(page.locator('.wedding-halo, .wedding-slogan, .wedding-nepali')).toHaveCount(0);
+  const appearance=await figure.evaluate(el=>{
+    const art=el.querySelector('img');
+    const rect=art.getBoundingClientRect();
+    return {
+      border:getComputedStyle(el).borderTopWidth,
+      shadow:getComputedStyle(el).boxShadow,
+      overflow:document.documentElement.scrollWidth>window.innerWidth,
+      aspect:rect.width/rect.height,
+      naturalAspect:art.naturalWidth/art.naturalHeight
+    };
+  });
   expect(appearance.border).toBe('0px');
   expect(appearance.shadow).toBe('none');
   expect(appearance.overflow).toBeFalsy();
+  expect(Math.abs(appearance.aspect-appearance.naturalAspect)).toBeLessThan(.015);
   await expect(page.locator('.voice-prize-voucher')).toContainText('NPR 10,000');
   await expect(page.locator('.voice-prize-top')).toContainText('NPR 45,000');
   await expect(page.locator('#home-apply')).toHaveAttribute('href','./member.html#register');

@@ -7,8 +7,8 @@ const footerMarkers=['TEST MODE','class="test-site-banner test-site-footer wrap"
 const endpoints=[
   ['/',['id="home-about"','id="home-competition"','id="home-news"','href="./golden-himal.html"','href="./voice.html"','id="location"',...footerMarkers]],
   ['/golden-himal.html',['data-page="story"','story-name','story-gallery','imageDisclaimer','gh-real-hall-hero-20261113.webp',...footerMarkers]],
-  ['/voice.html',['data-page="home"','id="home-apply"','id="home-login"','front-visual-wedding','class="wedding-halo"','The Best Wedding','NPR 10,000',...footerMarkers]],
-  ['/simple.css',['.front-visual-wedding .wedding-halo::before','.front-visual-wedding .wedding-halo::after','border-top:10px solid rgba(255,253,247,.95)']],
+  ['/voice.html',['data-page="home"','id="home-apply"','id="home-login"','front-visual-wedding-image','approved-image-20261114','voice-wedding-hero-approved-20261114.jpg','NPR 10,000',...footerMarkers]],
+  ['/simple.css',['.front-visual.front-visual-wedding-image','.front-visual.front-visual-wedding-image > img']],
   ['/member.html',[...footerMarkers,'id="member-email-form"','id="member-code-form"','id="member-status"','simple.js']],
   ['/news.html',[...footerMarkers,'news-schedule','id="rules-awards"','id="rules-voting"']],
   ['/simple.js',['request-code','test_email_service_unavailable','verify-code']]
@@ -24,6 +24,13 @@ async function run() {
     for(const marker of markers)if(!body.includes(marker))throw Error(path+' missing current UI marker '+JSON.stringify(marker));
     console.log('PASS current member preview '+path);
   }
+  // Confirm the actual JPEG pixels are published, not only an HTML filename marker.
+  const artwork=await read('/images/voice-wedding-hero-approved-20261114.jpg');
+  const header=(artwork.headers.get('content-type')||'').toLowerCase();
+  if(!header.includes('image/jpeg'))throw Error('Approved artwork unexpected Content-Type: '+header);
+  const pixels=new Uint8Array(await artwork.arrayBuffer());
+  if(pixels.length<20000||pixels[0]!==0xff||pixels[1]!==0xd8)throw Error('Approved artwork missing or invalid JPEG payload');
+  console.log('PASS real approved wedding artwork: '+pixels.length+' bytes');
   const value=await (await read('/api/staging/e2e-readiness')).json();
   if(value.ok!==true||value.testOnly!==true)throw Error('Readiness returned malformed or unavailable status');
   // Only boolean capability names are reported; never print secret values, addresses, or tokens.
