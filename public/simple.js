@@ -18,6 +18,12 @@ Object.assign(translations.zh,{"contactHeading":"有問題需要聯絡我們？"
 Object.assign(translations.en,{"contactHeading":"Questions about the contest?","contactIntro":"For competition, entry or event questions, call the official Golden Himal Palace inquiry number.","contactCall":"Call now","contactNote":"Nepal mobile number; carrier charges may apply.","contactShortcut":"Questions? Contact us →"});
 Object.assign(translations.ne,{"contactHeading":"प्रतियोगिताबारे प्रश्न छ?","contactIntro":"प्रतियोगिता, सहभागी हुने नियम वा कार्यक्रमबारे प्रश्न भए Golden Himal Palace को आधिकारिक सम्पर्क नम्बरमा फोन गर्नुहोस्।","contactCall":"फोन गर्नुहोस्","contactNote":"यो नेपालको मोबाइल नम्बर हो; सेवा प्रदायकको शुल्क लाग्न सक्छ।","contactShortcut":"प्रश्न छ? सम्पर्क गर्नुहोस् →"});
 
+
+/* Audience copy: separate rules from updates; talent discovery is an aim, not a training/employment guarantee. */
+Object.assign(translations.zh,{"headline":"下一位歌唱新星，會是你嗎？","talentLead":"不只是一場比賽，更希望發掘有潛力的歌手與社群創作者，讓好聲音被更多人聽見。","news":"比賽規則","newsSub":"報名前必讀｜資格、影片與獎項","announcementsShortcut":"最新公告・入選與賽事通知 →"});
+Object.assign(translations.en,{"headline":"Could you be the next singing star?","talentLead":"More than a contest, Golden Himal Voice aims to discover promising singers and digital creators, giving talented voices a chance to be heard.","news":"Contest rules","newsSub":"Read before entering · Eligibility, video & prizes","announcementsShortcut":"Latest updates · Selections & event notices →"});
+Object.assign(translations.ne,{"headline":"अर्को उदीयमान गायक तपाईं नै हो?","talentLead":"यो केवल प्रतियोगिता होइन। नयाँ गायक र डिजिटल सिर्जनशील प्रतिभा पहिचान गरी उनीहरूको आवाज धेरैसम्म पुर्‍याउने हाम्रो उद्देश्य हो।","news":"प्रतियोगिता नियम","newsSub":"भाग लिनुअघि पढ्नुहोस् · योग्यता र पुरस्कार","announcementsShortcut":"नयाँ सूचना · छनोट र कार्यक्रम →"});
+
 if(page==='home'){
  let lang='zh',homeState='anonymous';
  try{const stored=localStorage.getItem('ghv_ui_language_v1');if(translations[stored])lang=stored}catch{}
@@ -63,7 +69,7 @@ if(page==='home'){
  })();
  return;
 }
-if(page==='news')return;
+if(page==='news'||page==='announcements')return;
 const node=(tag,txt,cls)=>{const x=document.createElement(tag);if(txt!==undefined&&txt!==null)x.textContent=String(txt);if(cls)x.className=cls;return x};
 const safeLink=(url)=>{try{const u=new URL(url);return u.protocol==='https:'?u.href:null}catch{return null}};
 const formValues=form=>Object.fromEntries(new FormData(form));
