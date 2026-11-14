@@ -246,8 +246,7 @@ Object.assign(translations.zh,{
  designTowerTitle:'和平塔・A 字型入口',
  designTowerDesc:'A 字型結構與鐘形入口的建築意象',
  designHallTitle:'金色宴會大廳',
- designHallDesc:'拱頂、吊燈與對稱柱廊的空間氛圍',
- conceptImageLabel:'設計示意 · 非現場實拍'
+ designHallDesc:'拱頂、吊燈與對稱柱廊的空間氛圍'
 });
 Object.assign(translations.en,{
  designViewsHeading:'Architectural design impressions',
@@ -257,8 +256,7 @@ Object.assign(translations.en,{
  designTowerTitle:'Peace Tower · A-frame entrance',
  designTowerDesc:'An A-shaped landmark entrance with a suspended bell',
  designHallTitle:'Golden Banquet Hall',
- designHallDesc:'A concept of golden vaulting, chandeliers and symmetrical columns',
- conceptImageLabel:'Concept illustration · Not an on-site photo'
+ designHallDesc:'A concept of golden vaulting, chandeliers and symmetrical columns'
 });
 Object.assign(translations.ne,{
  designViewsHeading:'वास्तुकलाको डिजाइन परिकल्पना',
@@ -268,8 +266,7 @@ Object.assign(translations.ne,{
  designTowerTitle:'शान्ति टावर · ए आकारको प्रवेशद्वार',
  designTowerDesc:'ए आकारको प्रवेश संरचना र झुन्डिएको घण्टीको परिकल्पना',
  designHallTitle:'सुनौलो भोज कक्ष',
- designHallDesc:'सुनौलो छत, झुमर र सममित स्तम्भहरूको अवधारणा',
- conceptImageLabel:'डिजाइन अवधारणा · वास्तविक फोटो होइन'
+ designHallDesc:'सुनौलो छत, झुमर र सममित स्तम्भहरूको अवधारणा'
 });
 let lang='zh';try{const saved=localStorage.getItem(key);if(Object.prototype.hasOwnProperty.call(translations,saved))lang=saved}catch{}
 function apply(){document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
