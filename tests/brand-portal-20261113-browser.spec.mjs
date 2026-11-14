@@ -213,3 +213,38 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
  await page.locator('.portal-top-nav a[href="./golden-himal.html"]').click();
  await expect(page).toHaveURL(/golden-himal\.html$/);
 });
+
+
+test('Golden Himal story CTA is visibly actionable on phones and desktop without changing its route',async({page})=>{
+ for(const width of [320,390,1280]){
+  await page.setViewportSize({width,height:820});
+  await page.goto('/');
+  const cta=page.locator('a.portal-more');
+  await expect(cta).toBeVisible();
+  await expect(cta).toHaveAttribute('href','./golden-himal.html');
+  await expect(cta).toContainText('閱讀 Golden Himal 的完整故事');
+  const metrics=await cta.evaluate(el=>{
+   const style=getComputedStyle(el),rect=el.getBoundingClientRect();
+   const icon=el.lastElementChild;
+   return {
+    background:style.backgroundColor,
+    foreground:style.color,
+    height:rect.height,
+    width:rect.width,
+    arrow:getComputedStyle(icon).backgroundColor
+   };
+  });
+  expect(metrics.background).toBe('rgb(102, 69, 54)');
+  expect(metrics.height).toBeGreaterThanOrEqual(60);
+  expect(metrics.arrow).not.toBe(metrics.background);
+  if(width<=650)expect(metrics.width).toBeGreaterThan(width-65);
+  await cta.click();
+  await expect(page).toHaveURL(/golden-himal\.html$/);
+ }
+ await page.goto('/');
+ await page.locator('[data-lang=en]').click();
+ await expect(page.locator('a.portal-more')).toBeVisible();
+ await page.locator('[data-lang=ne]').click();
+ await expect(page.locator('a.portal-more')).toBeVisible();
+ await expect(page.locator('a.portal-more')).toHaveAttribute('href','./golden-himal.html');
+});
