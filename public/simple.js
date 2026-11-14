@@ -722,4 +722,14 @@ if(page==='member'){
 }else if(page==='back'){
  setupAuth();staffTabs();document.querySelectorAll('[data-role-tab]').forEach(button=>button.addEventListener('click',()=>{const next=button.dataset.roleTab;if(next===role||!account)return;run(async()=>{const v=await api('switch-role',{role:next});account=v.account;role=account.role;staffTabs();await dashboard();status('已切換為'+(role==='organizer'?'主辦方':'評審')+'。')})}));loadSession();
 }
+// Deep links to a rules topic should open it, rather than show a closed summary.
+if(page==='news'){
+ const openRuleFromHash=()=>{
+  const id=decodeURIComponent(location.hash.slice(1));
+  const row=id?document.getElementById(id):null;
+  if(row&&row.matches('details.news-row'))row.open=true;
+ };
+ window.addEventListener('hashchange',openRuleFromHash);
+ openRuleFromHash();
+}
 })();
