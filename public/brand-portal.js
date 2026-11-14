@@ -283,6 +283,12 @@ Object.assign(translations.zh,{"contactHeading":"有問題需要聯絡我們？"
 Object.assign(translations.en,{"contactHeading":"Questions about the contest?","contactIntro":"For competition, entry or event questions, call the official Golden Himal Palace inquiry number.","contactCall":"Call now","contactNote":"Nepal mobile number; carrier charges may apply."});
 Object.assign(translations.ne,{"contactHeading":"प्रतियोगिताबारे प्रश्न छ?","contactIntro":"प्रतियोगिता, सहभागी हुने नियम वा कार्यक्रमबारे प्रश्न भए Golden Himal Palace को आधिकारिक सम्पर्क नम्बरमा फोन गर्नुहोस्।","contactCall":"फोन गर्नुहोस्","contactNote":"यो नेपालको मोबाइल नम्बर हो; सेवा प्रदायकको शुल्क लाग्न सक्छ।"});
 
+
+/* Audience copy: separate rules from updates; talent discovery is an aim, not a training/employment guarantee. */
+Object.assign(translations.zh,{"navNews":"比賽規則","newsLink":"比賽規則","newsLinkSub":"報名前必讀・資格與完整辦法","announcementsLink":"最新公告｜入選名單與賽事通知 →"});
+Object.assign(translations.en,{"navNews":"Contest Rules","newsLink":"Contest Rules","newsLinkSub":"Must read before entering · Full rules","announcementsLink":"Latest updates | Selection & event notices →"});
+Object.assign(translations.ne,{"navNews":"प्रतियोगिता नियम","newsLink":"प्रतियोगिता नियम","newsLinkSub":"भाग लिनुअघि अनिवार्य पढ्नुहोस्","announcementsLink":"नयाँ सूचना | छनोट र कार्यक्रमका खबर →"});
+
 let lang='zh';try{const saved=localStorage.getItem(key);if(Object.prototype.hasOwnProperty.call(translations,saved))lang=saved}catch{}
 function apply(){document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
  document.querySelectorAll('[data-p]').forEach(el=>{const value=translations[lang][el.dataset.p];if(value!==undefined)el.textContent=value});
