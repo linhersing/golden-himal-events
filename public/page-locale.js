@@ -81,6 +81,73 @@ Object.assign(texts.ne,{"news05kind":"०५ / पुरस्कार","news05
 Object.assign(texts.en,{nonreligiousSongAck:"I understand that songs should primarily be non-religious and are subject to organizer approval. *",stageRulesShort:"Live qualifier: 90 seconds with a song of your choice. Final: an assigned song, up to 4 minutes. Accompaniment must not contain recognizable original lead vocals. Bring-your-own musicians/dancers must be declared at least 14 days before the event."});
 Object.assign(texts.zh,{nonreligiousSongAck:"我了解參賽曲目以非宗教歌曲為主，並須經主辦單位確認。＊",stageRulesShort:"初賽：90 秒自選曲；決賽：指定曲、最多 4 分鐘。伴奏不可包含可辨識原唱主旋律人聲；自行安排樂手或舞者須於賽前至少 14 日提交名單與舞台需求。"});
 Object.assign(texts.ne,{nonreligiousSongAck:"मलाई थाहा छ कि प्रतियोगिताका गीतहरू मुख्यतः गैरधार्मिक हुनुपर्छ र आयोजकको स्वीकृति चाहिन्छ। *",stageRulesShort:"प्रत्यक्ष छनोटमा ९० सेकेन्ड आफूले छानेको गीत; फाइनलमा तोकिएको गीत बढीमा ४ मिनेट। संगतमा मूल गायकको चिन्न सकिने मुख्य स्वर हुनु हुँदैन। आफ्ना संगीतकार वा नर्तकबारे कार्यक्रमभन्दा १४ दिनअघि जानकारी दिनुपर्छ।"});
+
+/* 2026-11-14: plain-language contestant quick guide, rewards and FAQs.
+   Wording follows the frontline rules received on November 13; no new entitlements. */
+Object.assign(texts.en,{
+ guideTitle:'Contestant quick guide',
+ guideIntro:'Five things to check before entering. Open a topic for full details. This is rules information, not an active registration form.',
+ guideScheduleLabel:'Schedule',guideScheduleText:'Online auditions: January & April',
+ guideCategoryLabel:'Categories',guideCategoryText:'University / Community',
+ guideDemoLabel:'Demo video',guideDemoText:'60–90 seconds of your own singing',
+ guideFeeLabel:'Entry fee',guideFeeText:'NPR 500 per audition',
+ guidePrizeLabel:'Awards',guidePrizeText:'9 winners in each category',
+ awardOverviewTitle:'Separate awards for University and Community: 9 winners each, 18 total',
+ awardOverviewBody:'The amounts below are paid to each prize winner. The three second-prize winners do not split one prize; the categories are ranked separately.',
+ awardVoucherTitle:'Participation award · Dining voucher (not cash)',
+ awardFaqTitle:'Three questions contestants often ask',
+ awardFaq1Q:'Can I get the voucher without advancing?',
+ awardFaq1A:'Yes, if you officially pay the entry fee and pass the eligibility review. One voucher per person per year, not redeemable for cash. Voucher distribution is not yet open.',
+ awardFaq2Q:'Can I enter the April audition if I do not advance in January?',
+ awardFaq2A:'Yes. Submit a new entry and Demo, and pay NPR 500 again. April registration is not open yet.',
+ awardFaq3Q:'Is there another fee if I reach the qualifier or final?',
+ awardFaq3A:'No. The NPR 500 entry fee for each audition also covers its qualifier and the final if you advance.',
+ awardRulesSelection:'See selection and judging rules →',
+ awardRulesVoting:'See how final voting is scored →'
+});
+Object.assign(texts.zh,{
+ guideTitle:'參賽者快速指南',
+ guideIntro:'先看五個重點，再點選查看完整規則。以下是前線規則資訊，並非正式報名入口。',
+ guideScheduleLabel:'賽程',guideScheduleText:'1月與4月線上海選',
+ guideCategoryLabel:'參賽組別',guideCategoryText:'大學組／社會組',
+ guideDemoLabel:'海選影片',guideDemoText:'60–90秒本人連續演唱',
+ guideFeeLabel:'報名費',guideFeeText:'每次 NPR 500',
+ guidePrizeLabel:'獎項',guidePrizeText:'每組9名得獎者',
+ awardOverviewTitle:'大學組、社會組各自頒獎：每組9人，共18人',
+ awardOverviewBody:'下列金額是每位得獎者的獎金，不是同名次多人平分；兩組分開排名與頒獎。',
+ awardVoucherTitle:'參加獎｜餐飲折抵券（不是現金獎金）',
+ awardFaqTitle:'選手最常問的三個問題',
+ awardFaq1Q:'海選沒有晉級，也有餐券嗎？',
+ awardFaq1A:'正式完成報名繳費並通過資格審核者，不論晉級與否，當年度限領一張，不折現；目前尚未開放領取。',
+ awardFaq2Q:'第一次海選未晉級，可以報4月海選嗎？',
+ awardFaq2A:'可以，須重新提交報名資料與 Demo，並再繳 NPR 500；4月海選目前尚未開放報名。',
+ awardFaq3Q:'進入初賽或決賽，還要另繳報名費嗎？',
+ awardFaq3A:'不需要。每次 NPR 500 報名費已包含該次初賽及晉級後的決賽。',
+ awardRulesSelection:'查看晉級與評審規則 →',
+ awardRulesVoting:'查看決賽投票如何計分 →'
+});
+Object.assign(texts.ne,{
+ guideTitle:'प्रतियोगीका लागि छिटो मार्गदर्शन',
+ guideIntro:'दर्ताअघि जान्नुपर्ने पाँच मुख्य कुरा। पूरा नियम पढ्न विषय छान्नुहोस्। यो जानकारी मात्र हो; आधिकारिक दर्ता खुलेको छैन।',
+ guideScheduleLabel:'तालिका',guideScheduleText:'जनवरी र अप्रिलमा अनलाइन अडिसन',
+ guideCategoryLabel:'समूह',guideCategoryText:'विश्वविद्यालय / खुला समूह',
+ guideDemoLabel:'डेमो भिडियो',guideDemoText:'६०–९० सेकेन्ड आफ्नै निरन्तर गायन',
+ guideFeeLabel:'दर्ता शुल्क',guideFeeText:'प्रत्येक अडिसन NPR ५००',
+ guidePrizeLabel:'पुरस्कार',guidePrizeText:'प्रत्येक समूहमा ९ विजेता',
+ awardOverviewTitle:'विश्वविद्यालय र खुला समूहमा छुट्टाछुट्टै पुरस्कार: प्रत्येकमा ९, जम्मा १८ जना',
+ awardOverviewBody:'तलको पुरस्कार रकम प्रत्येक विजेताको लागि हो। एउटै स्थानका धेरै विजेताले रकम बाँड्नुपर्दैन; समूहअनुसार छुट्टै नतिजा हुन्छ।',
+ awardVoucherTitle:'सहभागिता पुरस्कार · भोजन छुट कुपन (नगद होइन)',
+ awardFaqTitle:'प्रतियोगीले प्रायः सोध्ने तीन प्रश्न',
+ awardFaq1Q:'अर्को चरणमा नपुगे पनि कुपन पाइन्छ?',
+ awardFaq1A:'आधिकारिक शुल्क तिरेर योग्यता स्वीकृत भएको भए पाइन्छ। प्रत्येक व्यक्तिलाई वर्षमा एउटा मात्र, नगदमा साट्न मिल्दैन। वितरण अझै खुलेको छैन।',
+ awardFaq2Q:'जनवरीमा छनोट नभए अप्रिलमा फेरि भाग लिन पाइन्छ?',
+ awardFaq2A:'पाइन्छ। नयाँ आवेदन र डेमो बुझाएर फेरि NPR ५०० तिर्नुपर्छ। अप्रिलको दर्ता अहिले खुलेको छैन।',
+ awardFaq3Q:'छनोट चरण वा फाइनलमा पुगेपछि थप शुल्क लाग्छ?',
+ awardFaq3A:'लाग्दैन। प्रत्येक अडिसनको NPR ५०० शुल्कमा त्यसको प्रत्यक्ष छनोट र फाइनलमा पुगेको सहभागिता समावेश छ।',
+ awardRulesSelection:'छनोट र मूल्याङ्कन नियम हेर्नुहोस् →',
+ awardRulesVoting:'फाइनल मतदानको अंक कसरी निकालिन्छ हेर्नुहोस् →'
+});
+
 const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
