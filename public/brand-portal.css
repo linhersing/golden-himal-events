@@ -615,3 +615,58 @@
 @media(prefers-reduced-motion:reduce){
  .brand-portal .portal-concept-media img{transition:none}
 }
+
+
+/* 2026-11-14 | Real-photo refinement requested for fountain, night facade and hall.
+   CSS-only tonal edits preserve the original real-world geometry and source files.
+   Images tagged as design concepts are kept separate from field photography. */
+.brand-portal .portal-photo-card{
+ aspect-ratio:1.44; /* match the actual 3:2-ish photographs instead of aggressive crops */
+}
+.brand-portal .portal-photo-card:nth-child(2) img,
+.brand-portal .story-gallery-curated .gallery-card img[src*="fountain-night"]{
+ object-position:50% 54%;
+ filter:saturate(.77) contrast(.94) brightness(.965);
+}
+.brand-portal .portal-photo-card:nth-child(3) img,
+.brand-portal .story-gallery-curated .gallery-card img[src*="guesthouse"]{
+ object-position:50% 25%;
+ filter:saturate(.86) contrast(.99) brightness(1.075);
+}
+.brand-portal .story-gallery-curated .gallery-card-wide img{
+ object-position:50% 18%;
+ filter:saturate(.88) contrast(1.025) brightness(1.025);
+}
+/* The approved golden concept is a design rendering, not a real photograph. */
+.brand-portal .portal-concept-card:first-child .portal-concept-media img{
+ filter:saturate(.82) contrast(.955) brightness(1.015);
+}
+.brand-portal .portal-concept-card:last-child .portal-concept-media img{
+ filter:saturate(.77) contrast(.955) brightness(1.025);
+}
+@media(max-width:650px){
+ .brand-portal .portal-photo-card{
+  height:auto;
+  aspect-ratio:1.4;
+  min-height:218px;
+  max-height:300px;
+ }
+ .brand-portal .portal-photo-card:nth-child(2) img{object-position:50% 49%}
+ .brand-portal .portal-photo-card:nth-child(3) img{object-position:50% 23%}
+ .brand-portal .story-gallery-curated .gallery-card-wide img{
+  height:240px;
+  object-position:50% 15%;
+ }
+ .brand-portal .story-gallery-curated .gallery-card img[src*="fountain-night"]{
+  object-position:50% 48%;
+ }
+ .brand-portal .story-gallery-curated .gallery-card img[src*="guesthouse"]{
+  object-position:50% 23%;
+ }
+ .brand-portal .portal-concept-media{aspect-ratio:4/3}
+ .brand-portal .portal-concept-media img{object-fit:cover;object-position:center center}
+}
+@media(min-width:651px) and (max-width:980px){
+ .brand-portal .portal-photo-card{aspect-ratio:1.3}
+ .brand-portal .story-gallery-curated .gallery-card-wide img{object-position:50% 18%}
+}
