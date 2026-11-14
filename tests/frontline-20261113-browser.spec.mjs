@@ -218,3 +218,44 @@ test('official Golden Himal Palace phone contact is readable in mobile and deskt
  await page.goto('/voice.html');
  await expect(page.locator('.ghv-contact-shortcut a[href="#contact"]')).toBeVisible();
 });
+
+
+test('2027 rules require reading and updates stay separate, without fictional selections',async({page})=>{
+ for(const width of [320,390,768,1280]){
+  await page.setViewportSize({width,height:850});
+  await page.goto('/news.html');
+  await page.locator('[data-lang=zh]').click();
+  await expect(page.locator('h1')).toContainText('比賽規則與報名須知');
+  await expect(page.locator('.contest-section-nav a[aria-current="page"]')).toContainText('比賽規則');
+  await expect(page.locator('.news-heading .page-intro')).toContainText('報名前請仔細閱讀');
+  await expect(page.locator('.news-row')).toHaveCount(8);
+  await page.locator('.contest-section-nav a[href="./announcements.html"]').click();
+  await expect(page).toHaveURL(/\/announcements\.html$/);
+  await expect(page.locator('h1')).toHaveText('最新公告');
+  await expect(page.locator('.contest-section-nav a[aria-current="page"]')).toHaveText('最新公告');
+  await expect(page.locator('.announcement-empty h2')).toContainText('尚未公布入選名單');
+  await expect(page.locator('.ghv-contact-call')).toHaveAttribute('href','tel:+9779801199996');
+  await page.locator('.announcement-rules-link').click();
+  await expect(page).toHaveURL(/\/news\.html$/);
+  await page.goto('/member.html');
+  await page.locator('[data-lang=zh]').click();
+  await expect(page.locator('.member-rules-prep')).toContainText('報名前請詳閱比賽規則');
+  await expect(page.locator('.member-rules-prep a')).toHaveAttribute('href','./news.html');
+  await page.goto('/voice.html');
+  await page.locator('[data-lang=zh]').click();
+  await expect(page.locator('h1')).toContainText('下一位歌唱新星');
+  await expect(page.locator('.voice-talent-lead')).toContainText('社群創作者');
+  await expect(page.locator('.front-actions .choice').last()).toContainText('比賽規則');
+  await expect(page.locator('a[data-t=announcementsShortcut]')).toHaveAttribute('href','./announcements.html');
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+ }
+ await page.goto('/announcements.html');
+ for(const lang of ['en','ne','zh']){
+  await page.locator('[data-lang="'+lang+'"]').click();
+  await expect(page.locator('h1')).toBeVisible();
+  await expect(page.locator('.announcement-empty h2')).toBeVisible();
+  await expect(page.locator('.contest-section-nav a')).toHaveCount(2);
+  await expect(page.locator('.announcement-rules-link')).toHaveAttribute('href','./news.html');
+ }
+});
