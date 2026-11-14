@@ -231,6 +231,7 @@ async function submitApplication(request,env,a){
  if(b.category==='community'&&b.adult_confirmed!==true)return deny('community_age_confirmation_required',422);
  if(b.category==='university'&&b.student_confirmed!==true)return deny('university_student_confirmation_required',422);
  if(b.no_exclusive_contract!==true)return deny('contract_declaration_required',422);
+ if(Object.hasOwn(b,'nonreligious_song_ack')&&b.nonreligious_song_ack!==true)return deny('song_policy_declaration_required',422);
  // A self-declared filming checklist is not automatic inspection of an external video.
  if(Object.hasOwn(b,'video_confirmed')&&b.video_confirmed!==true)return deny('video_self_recording_confirmation_required',422);
  const fields=['stage_name','affiliation','song_title','original_artist','song_language','song_key'];
