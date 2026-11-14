@@ -148,6 +148,81 @@ Object.assign(texts.ne,{
  awardRulesVoting:'फाइनल मतदानको अंक कसरी निकालिन्छ हेर्नुहोस् →'
 });
 
+
+/* Contestant-facing, mobile-first reading order for public rules. */
+Object.assign(texts.zh,{
+ newsKicker:'GOLDEN HIMAL VOICE · 2027',
+ newsTitle:'2027 歌唱比賽參賽指南',
+ newsIntro:'報名資格、海選時間、影片要求、費用與獎項，在這裡一次看清楚。',
+ noticeDisclaimer:'目前尚未開放正式報名及付款。',
+ guideTitle:'先看這5件事',
+ guideIntro:'點選任一項，直接查看對應的完整規則。',
+ guideCategoryLabel:'我可以參加嗎？',
+ guideCategoryText:'在學大學生／18歲以上非在學生',
+ guideDemoLabel:'需要準備什麼？',
+ guideDemoText:'本人連續演唱60–90秒影片',
+ guideScheduleLabel:'海選何時開始？',
+ guideScheduleText:'2027年1月與4月，兩次線上海選',
+ guideFeeLabel:'報名費是多少？',
+ guideFeeText:'每次海選 NPR 500，晉級不另收費',
+ guidePrizeLabel:'有哪些獎項？',
+ guidePrizeText:'每組9名得獎者，另有餐飲折抵券',
+ guideAction:'查看規則',
+ rulesSectionTitle:'完整比賽規則',
+ rulesSectionHint:'點選下方主題即可展開詳細說明。',
+ news04:'報名與費用',
+ news04lead:'每次 NPR 500；晉級不另收報名費',
+ news04kind:'04／報名費'
+});
+Object.assign(texts.en,{
+ newsKicker:'GOLDEN HIMAL VOICE · 2027',
+ newsTitle:'2027 Singing Contest Guide',
+ newsIntro:'Find eligibility, audition dates, video requirements, fees and awards in one place.',
+ noticeDisclaimer:'Official registration and payments are not yet open.',
+ guideTitle:'5 things you need to know',
+ guideIntro:'Select any topic to open its complete rules below.',
+ guideCategoryLabel:'Who can enter?',
+ guideCategoryText:'University students / non-students aged 18+',
+ guideDemoLabel:'What should I prepare?',
+ guideDemoText:'A continuous 60–90-second video of your singing',
+ guideScheduleLabel:'When are auditions?',
+ guideScheduleText:'Two online auditions in January and April 2027',
+ guideFeeLabel:'How much is the fee?',
+ guideFeeText:'NPR 500 per audition; no extra fee to advance',
+ guidePrizeLabel:'What are the awards?',
+ guidePrizeText:'9 winners per category, plus dining vouchers',
+ guideAction:'View rules',
+ rulesSectionTitle:'Full competition rules',
+ rulesSectionHint:'Select a section to open or close its details.',
+ news04:'Registration and entry fees',
+ news04lead:'NPR 500 per audition; no extra fee to advance',
+ news04kind:'04 / FEES'
+});
+Object.assign(texts.ne,{
+ newsKicker:'GOLDEN HIMAL VOICE · 2027',
+ newsTitle:'२०२७ गायन प्रतियोगिता: सहभागिता मार्गदर्शन',
+ newsIntro:'योग्यता, अडिसन मिति, भिडियो, शुल्क र पुरस्कारको मुख्य जानकारी यहीँ हेर्नुहोस्।',
+ noticeDisclaimer:'आधिकारिक दर्ता र वास्तविक भुक्तानी अझै खुलेको छैन।',
+ guideTitle:'जान्नुपर्ने ५ मुख्य कुरा',
+ guideIntro:'पूरा नियम पढ्न तलको कुनै पनि विषय छान्नुहोस्।',
+ guideCategoryLabel:'कसले भाग लिन सक्छ?',
+ guideCategoryText:'विश्वविद्यालयका विद्यार्थी / १८+ गैरविद्यार्थी',
+ guideDemoLabel:'के तयार गर्नुपर्छ?',
+ guideDemoText:'आफैँ गाएको लगातार ६०–९० सेकेन्डको भिडियो',
+ guideScheduleLabel:'अडिसन कहिले हुन्छ?',
+ guideScheduleText:'२०२७ जनवरी र अप्रिलमा दुई अनलाइन अडिसन',
+ guideFeeLabel:'दर्ता शुल्क कति छ?',
+ guideFeeText:'हरेक अडिसन NPR ५००; अर्को चरणमा थप शुल्क छैन',
+ guidePrizeLabel:'कस्ता पुरस्कार छन्?',
+ guidePrizeText:'हरेक समूहमा ९ विजेता र छुट्टै भोजन छुट कुपन',
+ guideAction:'नियम हेर्नुहोस्',
+ rulesSectionTitle:'प्रतियोगिताका पूरा नियम',
+ rulesSectionHint:'विवरण खोल्न वा बन्द गर्न विषय छान्नुहोस्।',
+ news04:'दर्ता र शुल्क',
+ news04lead:'प्रति अडिसन NPR ५००; अर्को चरणमा थप शुल्क छैन',
+ news04kind:'०४ / शुल्क'
+});
+
 const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
