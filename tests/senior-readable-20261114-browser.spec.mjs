@@ -36,7 +36,9 @@ test('age-inclusive public pages remain readable and reachable from 320px to des
   const portalFont=await page.locator('.portal-choice-copy small').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
   expect(portalFont,'Palace tile explanation at '+width).toBeGreaterThanOrEqual(15);
   await page.goto('/news.html');
-  const newsFont=await page.locator('.news-row[open] .news-detail p').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+  await page.locator('#rules-schedule summary').click();
+  await expect(page.locator('#rules-schedule')).toHaveAttribute('open','');
+  const newsFont=await page.locator('#rules-schedule .news-detail p').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
   expect(newsFont,'expanded contest rules at '+width).toBeGreaterThanOrEqual(16);
  }
 });

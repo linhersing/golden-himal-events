@@ -109,8 +109,10 @@ test('latest news remains short expandable cards (synthetic UI screenshot)',asyn
  await page.goto('/news.html');
  await page.locator('[data-lang=en]').click();
  await expect(page.locator('.news-row')).toHaveCount(8);
- // The annual schedule is the highest-priority announcement and opens by default.
- await expect(page.locator('.news-row').first()).toHaveAttribute('open','');
+ // Default overview is uncluttered; tapping the first topic reveals its full schedule.
+ await expect(page.locator('.news-row').first()).not.toHaveAttribute('open','');
+ await page.locator('#rules-schedule summary').click();
+ await expect(page.locator('#rules-schedule')).toHaveAttribute('open','');
  await expect(page.getByText(/January 1–31/)).toBeVisible();
  await page.screenshot({path:'test-results/ghv-singer-ux-20261104/04-mobile-news-accordion.png'});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
