@@ -19,7 +19,7 @@ test('frontline organizers and purpose appear in the second-layer Voice home',as
 test('frontline schedule stays readable with English, Nepali and Chinese; April link is not offered',async({page})=>{
  await page.setViewportSize({width:375,height:812});
  await page.goto('/news.html');
- await expect(page.locator('.news-row').first()).toHaveAttribute('open','');
+ await expect(page.locator('.news-row').first()).not.toHaveAttribute('open','');
  await expect(page.locator('.news-schedule li')).toHaveCount(5);
  await expect(page.locator('.news-schedule')).toContainText('2027年1月1日至1月31日');
  await expect(page.locator('.news-schedule')).toContainText('2027年4月1日至4月30日');
@@ -78,11 +78,11 @@ test('frontline awards and quick rules are clear, actionable and mobile-readable
  }
  await page.goto('/news.html#rules-awards');
  await page.locator('[data-lang=en]').click();
- await expect(page.locator('.news-quick-guide h2')).toHaveText('Contestant quick guide');
+ await expect(page.locator('.news-quick-guide h2')).toHaveText('Five things to know before entering');
  await expect(page.locator('#rules-awards .award-overview')).toContainText('18 total');
  await expect(page.locator('#rules-awards .voucher-heading')).toContainText('not cash');
  await page.locator('[data-lang=ne]').click();
- await expect(page.locator('.news-quick-guide h2')).toContainText('प्रतियोगीका लागि');
+ await expect(page.locator('.news-quick-guide h2')).toContainText('भाग लिनुअघि');
  await expect(page.locator('#rules-awards .award-faq-list')).toContainText('NPR ५००');
  await expect(page.locator('.news-quick-grid a[href="#rules-registration"]')).toHaveAttribute('href','#rules-registration');
 });
@@ -99,8 +99,8 @@ test('public contestant pages never expose internal frontline or draft-version t
  }
  await page.goto('/news.html#rules-awards');
  await page.locator('[data-lang=zh]').click();
- await expect(page.locator('.news-quick-guide')).toContainText('先看五個參賽重點');
- await expect(page.locator('.news-board-head')).toContainText('正式報名與收費尚未開放');
+ await expect(page.locator('.news-quick-guide')).toContainText('參賽前，先看這5件事');
+ await expect(page.locator('.news-registration-status')).toContainText('正式報名尚未開放');
  await expect(page.locator('#rules-awards')).toHaveAttribute('open','');
 });
 
@@ -119,4 +119,42 @@ test('public printable summary explains participation without exposing team-only
   expect(content).not.toMatch(/前線|V2|ALAN|王老師|技術驗收|D1|內部展示/i);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
  }
+});
+
+
+test('2027 rules use five full-width vertically scanned links, aligned down arrows and simple accordions',async({page})=>{
+ for(const width of [320,375,390,768,1280]){
+  await page.setViewportSize({width,height:820});
+  await page.goto('/news.html');
+  await page.locator('[data-lang=zh]').click();
+  await expect(page.locator('.news-registration-status')).toContainText('正式報名尚未開放');
+  await expect(page.locator('.news-quick-guide h2')).toHaveText('參賽前，先看這5件事');
+  const links=page.locator('.news-quick-grid>a');
+  await expect(links).toHaveCount(5);
+  await expect(page.locator('.news-quick-grid .news-quick-chevron')).toHaveText(['↓','↓','↓','↓','↓']);
+  await expect(page.locator('.news-board-heading')).toHaveText('完整參賽規則');
+  await expect(page.locator('.news-board .news-copy small')).toHaveCount(0);
+  await expect(page.locator('.news-board details[open]')).toHaveCount(0);
+  const pos=await links.evaluateAll(nodes=>nodes.map(el=>{
+   const row=el.getBoundingClientRect(),action=el.querySelector('.news-quick-action').getBoundingClientRect();
+   return {width:row.width,left:row.left,top:row.top,bottom:row.bottom,height:row.height,right:row.right,
+    arrowCenterY:action.top+action.height/2,rowCenterY:row.top+row.height/2,
+    actionRight:action.right};
+  }));
+  for(let i=0;i<pos.length;i++){
+   expect(pos[i].height).toBeGreaterThanOrEqual(73);
+   expect(Math.abs(pos[i].rowCenterY-pos[i].arrowCenterY)).toBeLessThan(3);
+   expect(Math.abs(pos[i].right-pos[0].right)).toBeLessThan(2);
+   expect(Math.abs(pos[i].actionRight-pos[0].actionRight)).toBeLessThan(2);
+   if(i>0)expect(pos[i].top).toBeGreaterThanOrEqual(pos[i-1].bottom+3);
+  }
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+  await links.nth(2).click();
+  await expect(page.locator('#rules-demo')).toHaveAttribute('open','');
+  await expect(page.locator('#rules-demo')).toContainText('60');
+ }
+ await page.goto('/news.html#rules-awards');
+ await expect(page.locator('#rules-awards')).toHaveAttribute('open','');
+ await expect(page.locator('#rules-schedule')).not.toHaveAttribute('open','');
 });
