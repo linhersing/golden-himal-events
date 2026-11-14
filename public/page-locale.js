@@ -198,6 +198,12 @@ Object.assign(texts.ne,{
  news04lead:'हरेक अडिसन NPR ५००; अर्को चरणमा थप शुल्क छैन'
 });
 
+
+/* Public Golden Himal Palace contact translations: approved number only. */
+Object.assign(texts.zh,{"contactHeading":"有問題需要聯絡我們？","contactIntro":"歌唱比賽、參賽規則或活動相關問題，可撥打 Golden Himal Palace 官方洽詢電話。","contactCall":"撥打電話","contactNote":"尼泊爾電話；通話費用依電信業者規定。","contactNav":"聯絡我們"});
+Object.assign(texts.en,{"contactHeading":"Questions about the contest?","contactIntro":"For competition, entry or event questions, call the official Golden Himal Palace inquiry number.","contactCall":"Call now","contactNote":"Nepal mobile number; carrier charges may apply.","contactNav":"Contact us"});
+Object.assign(texts.ne,{"contactHeading":"प्रतियोगिताबारे प्रश्न छ?","contactIntro":"प्रतियोगिता, सहभागी हुने नियम वा कार्यक्रमबारे प्रश्न भए Golden Himal Palace को आधिकारिक सम्पर्क नम्बरमा फोन गर्नुहोस्।","contactCall":"फोन गर्नुहोस्","contactNote":"यो नेपालको मोबाइल नम्बर हो; सेवा प्रदायकको शुल्क लाग्न सक्छ।","contactNav":"सम्पर्क"});
+
 const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
