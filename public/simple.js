@@ -722,12 +722,22 @@ if(page==='member'){
 }else if(page==='back'){
  setupAuth();staffTabs();document.querySelectorAll('[data-role-tab]').forEach(button=>button.addEventListener('click',()=>{const next=button.dataset.roleTab;if(next===role||!account)return;run(async()=>{const v=await api('switch-role',{role:next});account=v.account;role=account.role;staffTabs();await dashboard();status('已切換為'+(role==='organizer'?'主辦方':'評審')+'。')})}));loadSession();
 }
-// Deep links to a rules topic should open it, rather than show a closed summary.
+// The quick guide links to full rules, not just a visually ambiguous arrow.
+// Expand the selected topic, collapse previous topics, and bring its heading into view.
 if(page==='news'){
  const openRuleFromHash=()=>{
   const id=decodeURIComponent(location.hash.slice(1));
   const row=id?document.getElementById(id):null;
-  if(row&&row.matches('details.news-row'))row.open=true;
+  if(!row||!row.matches('details.news-row'))return;
+  document.querySelectorAll('details.news-row[open]').forEach(item=>{
+   if(item!==row)item.open=false;
+  });
+  row.open=true;
+  document.querySelectorAll('.news-quick-grid a[href^="#"]').forEach(link=>{
+   if(link.getAttribute('href')==='#'+id)link.setAttribute('aria-current','location');
+   else link.removeAttribute('aria-current');
+  });
+  requestAnimationFrame(()=>row.scrollIntoView({block:'start',behavior:'auto'}));
  };
  window.addEventListener('hashchange',openRuleFromHash);
  openRuleFromHash();
