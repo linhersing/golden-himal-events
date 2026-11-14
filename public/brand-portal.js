@@ -249,7 +249,7 @@ const key='ghv_ui_language_v1',translations={
 /* 2026-11-14 approved concept images: distinguish illustrations from documentary photographs. */
 Object.assign(translations.zh,{
  designViewsHeading:'建築設計意象',
- designViewsIntro:'以下三張為依據專案資料整理的設計示意圖，並非現場實拍或已完工照片。',
+ designViewsIntro:'以下兩張為依據專案資料整理的建築設計示意圖，並非現場實拍或已完工照片。',
  designFountainTitle:'愛之環・夜間噴泉廣場',
  designFountainDesc:'環形雕塑與水景光影的設計意象',
  designTowerTitle:'和平塔・A 字型入口',
@@ -259,7 +259,7 @@ Object.assign(translations.zh,{
 });
 Object.assign(translations.en,{
  designViewsHeading:'Architectural design impressions',
- designViewsIntro:'These three images illustrate design concepts based on project materials. They are not on-site photographs or proof of completed construction.',
+ designViewsIntro:'These two images illustrate design concepts based on project materials. They are not on-site photographs or proof of completed construction.',
  designFountainTitle:'Ring of Love · Night Fountain',
  designFountainDesc:'Circular sculpture and illuminated waterscape concept',
  designTowerTitle:'Peace Tower · A-frame entrance',
@@ -269,7 +269,7 @@ Object.assign(translations.en,{
 });
 Object.assign(translations.ne,{
  designViewsHeading:'वास्तुकलाको डिजाइन परिकल्पना',
- designViewsIntro:'यी तीन तस्बिर परियोजनाका सामग्रीमा आधारित डिजाइनका कल्पनात्मक चित्र हुन्। वास्तविक स्थलका फोटो वा निर्माण सम्पन्न भएको प्रमाण होइनन्।',
+ designViewsIntro:'यी दुई तस्बिर परियोजनाका सामग्रीमा आधारित डिजाइनका कल्पनात्मक चित्र हुन्। वास्तविक स्थलका फोटो वा निर्माण सम्पन्न भएको प्रमाण होइनन्।',
  designFountainTitle:'प्रेमको घेरा · रातिको फोहरा',
  designFountainDesc:'गोलाकार कलाकृति र प्रकाशयुक्त पानीको दृश्यको परिकल्पना',
  designTowerTitle:'शान्ति टावर · ए आकारको प्रवेशद्वार',

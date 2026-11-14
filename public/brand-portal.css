@@ -606,7 +606,7 @@
  filter:saturate(.90) contrast(.985) brightness(1.005);
  object-fit:cover;object-position:center center;
 }
-.brand-portal .portal-concept-card:first-child .portal-concept-media img{
+.brand-portal .portal-concept-media img[src*="approved-fountain-night-20261114.jpg"]{
  filter:saturate(.88) contrast(.97) brightness(.985);
 }
 .brand-portal .portal-concept-card:last-child .portal-concept-media img{
@@ -638,7 +638,7 @@
  filter:saturate(.88) contrast(1.025) brightness(1.025);
 }
 /* The approved golden concept is a design rendering, not a real photograph. */
-.brand-portal .portal-concept-card:first-child .portal-concept-media img{
+.brand-portal .portal-concept-media img[src*="approved-fountain-night-20261114.jpg"]{
  filter:saturate(.82) contrast(.955) brightness(1.015);
 }
 .brand-portal .portal-concept-card:last-child .portal-concept-media img{
@@ -1067,5 +1067,23 @@
  }
  .brand-portal .portal-story-entry-media img{
   object-position:center center;
+ }
+}
+
+
+/* 2026-11-14 | Avoid repeating the user-selected fountain artwork on the homepage.
+   Two distinct approved architectural concepts now form a quieter, two-column grid. */
+.brand-portal .portal-concepts-grid{
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:18px;
+}
+.brand-portal .portal-concepts-grid .portal-concept-card:last-child{
+ grid-column:auto;
+ max-width:none;
+}
+@media(max-width:650px){
+ .brand-portal .portal-concepts-grid{
+  grid-template-columns:1fr;
+  gap:13px;
  }
 }
