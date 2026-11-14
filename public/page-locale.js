@@ -85,13 +85,13 @@ Object.assign(texts.ne,{nonreligiousSongAck:"मलाई थाहा छ क�
 /* 2026-11-14: plain-language contestant quick guide, rewards and FAQs.
    Wording follows the frontline rules received on November 13; no new entitlements. */
 Object.assign(texts.en,{
- guideTitle:'Contestant quick guide',
- guideIntro:'Five things to know before entering. Select a topic for full details. Official registration is not yet open.',
- guideScheduleLabel:'Schedule',guideScheduleText:'Online auditions: January & April',
- guideCategoryLabel:'Categories',guideCategoryText:'University / Community',
- guideDemoLabel:'Demo video',guideDemoText:'60–90 seconds of your own singing',
- guideFeeLabel:'Entry fee',guideFeeText:'NPR 500 per audition',
- guidePrizeLabel:'Awards',guidePrizeText:'9 winners in each category',
+ guideTitle:'Five things to know before entering',
+ guideIntro:'Select any row to open the corresponding rule below.',
+ guideScheduleLabel:'When are auditions?',guideScheduleText:'January and April 2027',
+ guideCategoryLabel:'Who can enter?',guideCategoryText:'University / Community categories',
+ guideDemoLabel:'What video do I need?',guideDemoText:'Sing continuously for 60–90 seconds',
+ guideFeeLabel:'How much is the entry fee?',guideFeeText:'NPR 500 per audition',
+ guidePrizeLabel:'What can I win?',guidePrizeText:'9 prize winners in each category',
  awardOverviewTitle:'Separate awards for University and Community: 9 winners each, 18 total',
  awardOverviewBody:'The amounts below are paid to each prize winner. The three second-prize winners do not split one prize; the categories are ranked separately.',
  awardVoucherTitle:'Participation award · Dining voucher (not cash)',
@@ -106,13 +106,13 @@ Object.assign(texts.en,{
  awardRulesVoting:'See how final voting is scored →'
 });
 Object.assign(texts.zh,{
- guideTitle:'參賽者快速指南',
- guideIntro:'先看五個參賽重點，點選可查看相關規則；目前尚未開放正式報名。',
- guideScheduleLabel:'賽程',guideScheduleText:'1月與4月線上海選',
- guideCategoryLabel:'參賽組別',guideCategoryText:'大學組／社會組',
- guideDemoLabel:'海選影片',guideDemoText:'60–90秒本人連續演唱',
- guideFeeLabel:'報名費',guideFeeText:'每次 NPR 500',
- guidePrizeLabel:'獎項',guidePrizeText:'每組9名得獎者',
+ guideTitle:'參賽前，先看這5件事',
+ guideIntro:'點選任一項，就會展開下方對應的詳細規則。',
+ guideScheduleLabel:'什麼時候海選？',guideScheduleText:'2027年1月、4月',
+ guideCategoryLabel:'我可以參加哪一組？',guideCategoryText:'大學組／社會組',
+ guideDemoLabel:'影片要怎麼準備？',guideDemoText:'本人連續演唱60–90秒',
+ guideFeeLabel:'報名需要多少費用？',guideFeeText:'每次 NPR 500',
+ guidePrizeLabel:'有哪些獎項？',guidePrizeText:'每組9名得獎者',
  awardOverviewTitle:'大學組、社會組各自頒獎：每組9人，共18人',
  awardOverviewBody:'下列金額是每位得獎者的獎金，不是同名次多人平分；兩組分開排名與頒獎。',
  awardVoucherTitle:'參加獎｜餐飲折抵券（不是現金獎金）',
@@ -127,13 +127,13 @@ Object.assign(texts.zh,{
  awardRulesVoting:'查看決賽投票如何計分 →'
 });
 Object.assign(texts.ne,{
- guideTitle:'प्रतियोगीका लागि छिटो मार्गदर्शन',
- guideIntro:'दर्ताअघि जान्नुपर्ने पाँच मुख्य कुरा। पूरा नियम पढ्न विषय छान्नुहोस्। यो जानकारी मात्र हो; आधिकारिक दर्ता खुलेको छैन।',
- guideScheduleLabel:'तालिका',guideScheduleText:'जनवरी र अप्रिलमा अनलाइन अडिसन',
- guideCategoryLabel:'समूह',guideCategoryText:'विश्वविद्यालय / खुला समूह',
- guideDemoLabel:'डेमो भिडियो',guideDemoText:'६०–९० सेकेन्ड आफ्नै निरन्तर गायन',
- guideFeeLabel:'दर्ता शुल्क',guideFeeText:'प्रत्येक अडिसन NPR ५००',
- guidePrizeLabel:'पुरस्कार',guidePrizeText:'प्रत्येक समूहमा ९ विजेता',
+ guideTitle:'भाग लिनुअघि जान्नुपर्ने ५ कुरा',
+ guideIntro:'कुनै पनि पङ्क्ति छान्दा तल त्यसको विस्तृत नियम खुल्छ।',
+ guideScheduleLabel:'अडिसन कहिले हुन्छ?',guideScheduleText:'२०२७ जनवरी र अप्रिल',
+ guideCategoryLabel:'कुन समूहमा भाग लिने?',guideCategoryText:'विश्वविद्यालय / खुला समूह',
+ guideDemoLabel:'भिडियो कसरी तयार गर्ने?',guideDemoText:'६०–९० सेकेन्ड निरन्तर गायन',
+ guideFeeLabel:'दर्ता शुल्क कति हो?',guideFeeText:'प्रत्येक अडिसन NPR ५००',
+ guidePrizeLabel:'पुरस्कार के-के छन्?',guidePrizeText:'प्रत्येक समूहमा ९ विजेता',
  awardOverviewTitle:'विश्वविद्यालय र खुला समूहमा छुट्टाछुट्टै पुरस्कार: प्रत्येकमा ९, जम्मा १८ जना',
  awardOverviewBody:'तलको पुरस्कार रकम प्रत्येक विजेताको लागि हो। एउटै स्थानका धेरै विजेताले रकम बाँड्नुपर्दैन; समूहअनुसार छुट्टै नतिजा हुन्छ।',
  awardVoucherTitle:'सहभागिता पुरस्कार · भोजन छुट कुपन (नगद होइन)',
@@ -146,6 +146,32 @@ Object.assign(texts.ne,{
  awardFaq3A:'लाग्दैन। प्रत्येक अडिसनको NPR ५०० शुल्कमा त्यसको प्रत्यक्ष छनोट र फाइनलमा पुगेको सहभागिता समावेश छ।',
  awardRulesSelection:'छनोट र मूल्याङ्कन नियम हेर्नुहोस् →',
  awardRulesVoting:'फाइनल मतदानको अंक कसरी निकालिन्छ हेर्नुहोस् →'
+});
+
+// 2026-11-14: Participant-first news scannability and a single truthful registration-status message.
+Object.assign(texts.en,{
+ publicRegistrationStatus:'Official registration is not yet open',
+ publicRegistrationNote:'You can review the rules now; no real fee is collected.',
+ rulesDetailHeading:'Full competition rules',
+ rulesDetailHint:'Select a topic to expand its full details.',
+ guideAction:'View details',
+ newsIntro:'2027 singing competition: schedule, eligibility, prizes and rules'
+});
+Object.assign(texts.zh,{
+ publicRegistrationStatus:'正式報名尚未開放',
+ publicRegistrationNote:'現在可以先了解規則，不會收取正式報名費。',
+ rulesDetailHeading:'完整參賽規則',
+ rulesDetailHint:'點選下方任一主題，展開完整說明。',
+ guideAction:'看詳情',
+ newsIntro:'2027年歌唱比賽｜賽程、資格、獎項與規則'
+});
+Object.assign(texts.ne,{
+ publicRegistrationStatus:'आधिकारिक दर्ता अझै खुलेको छैन',
+ publicRegistrationNote:'अहिले नियम हेर्न सकिन्छ; वास्तविक शुल्क लिइँदैन।',
+ rulesDetailHeading:'प्रतियोगिताका विस्तृत नियम',
+ rulesDetailHint:'पूरा विवरण पढ्न तलको विषय छान्नुहोस्।',
+ guideAction:'विवरण हेर्नुहोस्',
+ newsIntro:'२०२७ गायन प्रतियोगिता: तालिका, योग्यता, पुरस्कार र नियम'
 });
 
 const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
