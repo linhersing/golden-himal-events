@@ -724,12 +724,17 @@ if(page==='member'){
 }
 // Deep links to a rules topic should open it, rather than show a closed summary.
 if(page==='news'){
- const openRuleFromHash=()=>{
+ const openRuleFromHash=(fromClick=false)=>{
   const id=decodeURIComponent(location.hash.slice(1));
   const row=id?document.getElementById(id):null;
-  if(row&&row.matches('details.news-row'))row.open=true;
+  if(!row||!row.matches('details.news-row'))return;
+  row.open=true;
+  requestAnimationFrame(()=>{
+   row.scrollIntoView({block:'start',behavior:'auto'});
+   if(fromClick)row.querySelector('summary')?.focus({preventScroll:true});
+  });
  };
- window.addEventListener('hashchange',openRuleFromHash);
- openRuleFromHash();
+ window.addEventListener('hashchange',()=>openRuleFromHash(true));
+ openRuleFromHash(false);
 }
 })();
