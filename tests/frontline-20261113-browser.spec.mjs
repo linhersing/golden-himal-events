@@ -103,3 +103,20 @@ test('public contestant pages never expose internal frontline or draft-version t
  await expect(page.locator('.news-board-head')).toContainText('正式報名與收費尚未開放');
  await expect(page.locator('#rules-awards')).toHaveAttribute('open','');
 });
+
+
+test('public printable summary explains participation without exposing team-only notes',async({page})=>{
+ for(const width of [375,1280]){
+  await page.setViewportSize({width,height:820});
+  await page.goto('/print-brief.html');
+  await expect(page.locator('h1')).toContainText('參賽資訊一頁看懂');
+  await expect(page.locator('.feature')).toHaveCount(4);
+  await expect(page.locator('.points')).toContainText('NPR 45,000');
+  await expect(page.locator('.points')).toContainText('NPR 10,000');
+  await expect(page.locator('.state')).toContainText('尚未開放正式報名');
+  await expect(page.locator('.toolbar a[href="./"]')).toBeVisible();
+  const content=await page.locator('body').innerText();
+  expect(content).not.toMatch(/前線|V2|ALAN|王老師|技術驗收|D1|內部展示/i);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+ }
+});
