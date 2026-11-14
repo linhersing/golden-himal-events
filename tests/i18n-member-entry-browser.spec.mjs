@@ -6,7 +6,7 @@ test('desktop Voice home preserves the three singer actions',async({page})=>{
  await expect(choices).toHaveCount(3);
  await expect(choices.nth(0)).toContainText('我要報名');
  await expect(choices.nth(1)).toContainText('會員登入');
- await expect(choices.nth(2)).toContainText('最新公告');
+ await expect(choices.nth(2)).toContainText('比賽規則');
  await expect(choices.nth(0)).toHaveAttribute('href','./member.html#register');
  await expect(choices.nth(1)).toHaveAttribute('href','./member.html#login');
  await expect(page.locator('.backoffice-link')).toHaveCount(0);

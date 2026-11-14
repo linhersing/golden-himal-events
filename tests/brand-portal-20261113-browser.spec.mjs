@@ -10,7 +10,7 @@ test('brand-first homepage has exactly three visible primary destinations and fo
   await expect(page.locator('#home-news')).toHaveAttribute('href','./news.html');
   await expect(page.locator('.portal-choice').first()).toContainText('認識 Golden Himal');
   await expect(page.locator('.portal-choice').nth(1)).toContainText('Golden Himal Voice');
-  await expect(page.locator('.portal-choice').last()).toContainText('最新公告');
+  await expect(page.locator('.portal-choice').last()).toContainText('比賽規則');
   await expect(page.locator('#home-apply')).toHaveCount(0);
   await expect(page.locator('#location')).toContainText('尼泊爾奇旺');
   await expect(page.locator('.portal-map')).toHaveAttribute('href',/27\.666389%2C84\.228333/);
@@ -113,9 +113,9 @@ test('brand, Voice and latest news share EN / Nepali / Chinese language preferen
  await expect(page.locator('html')).toHaveAttribute('lang','ne');
  await page.goto('/');
  await page.locator('[data-lang=zh]').click();
- await expect(page.locator('#home-news')).toContainText('最新公告');
+ await expect(page.locator('#home-news')).toContainText('比賽規則');
  await page.locator('#home-news').click();
- await expect(page.locator('h1')).toContainText('2027 歌唱比賽參賽指南');
+ await expect(page.locator('h1')).toContainText('2027 比賽規則與報名須知');
 });
 
 test('2027 rule highlights, clear senior navigation and public visual evidence (no personal data)',async({page},testInfo)=>{
