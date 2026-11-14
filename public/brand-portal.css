@@ -1047,3 +1047,25 @@
  .brand-portal .portal-story-entry-media img,
  .brand-portal .portal-story-entry-arrow{transition:none}
 }
+
+
+/* 2026-11-14 | User-selected Golden Himal Ring of Love fountain image.
+   Keep approved artwork colors and fit the scene into the full-card story entry. */
+.brand-portal .portal-story-entry-media{
+ min-height:300px;
+}
+.brand-portal .portal-story-entry-media img{
+ object-position:center center;
+ filter:none;
+}
+@media(max-width:650px){
+ .brand-portal .portal-story-entry-media{
+  height:auto;
+  min-height:0;
+  aspect-ratio:4/3;
+  flex:0 0 auto;
+ }
+ .brand-portal .portal-story-entry-media img{
+  object-position:center center;
+ }
+}
