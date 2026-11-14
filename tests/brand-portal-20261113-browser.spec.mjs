@@ -225,9 +225,18 @@ test('brand story editorial preview is a discoverable full-card link before the 
   await expect(page.locator('.portal-about-lead + a.portal-story-entry')).toHaveCount(1);
   await expect(page.locator('a.portal-more')).toHaveCount(0);
   await expect(entry).toHaveAttribute('href','./golden-himal.html');
-  await expect(entry).toHaveAttribute('aria-labelledby','portal-story-entry-title');
+  await expect(entry).toHaveAttribute('aria-labelledby','portal-story-entry-title portal-story-entry-action-label');
   await expect(entry.locator('h3')).toContainText('Golden Himal');
-  await expect(entry.locator('.portal-story-entry-action')).toContainText('閱讀 Golden Himal 的完整故事');
+  await expect(entry.locator('.portal-story-entry-action')).toContainText('點擊進入品牌故事專頁');
+  const action=entry.locator('.portal-story-entry-action');
+  const actionMetrics=await action.evaluate(el=>{
+   const style=getComputedStyle(el),rect=el.getBoundingClientRect();
+   return {background:style.backgroundColor,foreground:style.color,height:rect.height,width:rect.width};
+  });
+  expect(actionMetrics.background).toBe('rgb(92, 61, 49)');
+  expect(actionMetrics.foreground).toBe('rgb(255, 250, 242)');
+  expect(actionMetrics.height).toBeGreaterThanOrEqual(62);
+  await expect(entry.locator('#portal-story-entry-action-label')).toBeVisible();
   const photo=entry.locator('img');
   await expect(photo).toHaveAttribute('src','./images/approved-fountain-night-20261114.jpg');
   await expect(photo).toHaveAttribute('alt',/設計意象/);
@@ -250,8 +259,9 @@ test('brand story editorial preview is a discoverable full-card link before the 
  await page.goto('/');
  await page.locator('[data-lang=en]').click();
  await expect(page.locator('.portal-story-entry-title')).toContainText('golden morning light');
- await expect(page.locator('.portal-story-entry-action')).toContainText('Read the full Golden Himal story');
+ await expect(page.locator('.portal-story-entry-action')).toContainText('Open the Golden Himal story page');
  await page.locator('[data-lang=ne]').click();
  await expect(page.locator('.portal-story-entry-title')).toContainText('Golden Himal');
+ await expect(page.locator('.portal-story-entry-action')).toContainText('Golden Himal को कथा पृष्ठमा जानुहोस्');
  await expect(page.locator('a.portal-story-entry')).toHaveAttribute('href','./golden-himal.html');
 });
