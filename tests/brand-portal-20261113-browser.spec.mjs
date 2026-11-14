@@ -228,7 +228,7 @@ test('brand story editorial preview is a discoverable full-card link before the 
   await expect(entry.locator('h3')).toContainText('Golden Himal');
   await expect(entry.locator('.portal-story-entry-action')).toContainText('閱讀 Golden Himal 的完整故事');
   const photo=entry.locator('img');
-  await expect(photo).toHaveAttribute('src','./images/gh-real-gateway-window-20261113.webp');
+  await expect(photo).toHaveAttribute('src','./images/gh-real-guesthouse-20261113.webp');
   await entry.scrollIntoViewIfNeeded();
   await expect.poll(()=>photo.evaluate(el=>el.complete&&el.naturalWidth>0),{timeout:15000}).toBe(true);
   const dimensions=await entry.evaluate(el=>{
