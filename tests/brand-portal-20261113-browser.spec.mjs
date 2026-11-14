@@ -115,7 +115,7 @@ test('brand, Voice and latest news share EN / Nepali / Chinese language preferen
  await page.locator('[data-lang=zh]').click();
  await expect(page.locator('#home-news')).toContainText('最新公告');
  await page.locator('#home-news').click();
- await expect(page.locator('h1')).toContainText('最新消息');
+ await expect(page.locator('h1')).toContainText('2027 歌唱比賽參賽指南');
 });
 
 test('2027 rule highlights, clear senior navigation and public visual evidence (no personal data)',async({page},testInfo)=>{

@@ -174,6 +174,30 @@ Object.assign(texts.ne,{
  newsIntro:'२०२७ गायन प्रतियोगिता: तालिका, योग्यता, पुरस्कार र नियम'
 });
 
+
+/* Clear public headings; retain the 5-row layout from merged PR #133. */
+Object.assign(texts.zh,{
+ newsKicker:'GOLDEN HIMAL VOICE · 2027',
+ newsTitle:'2027 歌唱比賽參賽指南',
+ newsIntro:'報名資格、海選日期、影片要求、費用與獎項，一頁看懂。',
+ news04:'報名費與報名方式',
+ news04lead:'每次海選 NPR 500；晉級不另收費'
+});
+Object.assign(texts.en,{
+ newsKicker:'GOLDEN HIMAL VOICE · 2027',
+ newsTitle:'2027 Singing Contest Guide',
+ newsIntro:'Eligibility, audition dates, video requirements, fees and awards — all in one place.',
+ news04:'Entry fees and registration',
+ news04lead:'NPR 500 per audition; no extra advancement fee'
+});
+Object.assign(texts.ne,{
+ newsKicker:'GOLDEN HIMAL VOICE · 2027',
+ newsTitle:'२०२७ गायन प्रतियोगिता: सहभागिता मार्गदर्शन',
+ newsIntro:'योग्यता, अडिसन मिति, भिडियो, शुल्क र पुरस्कारको जानकारी एकै ठाउँमा।',
+ news04:'दर्ता र शुल्क',
+ news04lead:'हरेक अडिसन NPR ५००; अर्को चरणमा थप शुल्क छैन'
+});
+
 const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;

@@ -158,3 +158,28 @@ test('2027 rules use five full-width vertically scanned links, aligned down arro
  await expect(page.locator('#rules-awards')).toHaveAttribute('open','');
  await expect(page.locator('#rules-schedule')).not.toHaveAttribute('open','');
 });
+
+
+test('entrant guide title, fee section and readable action survive three-language switching',async({page})=>{
+ await page.setViewportSize({width:375,height:820});
+ await page.goto('/news.html');
+ for(const [locale,title,fee] of [
+  ['zh','2027 歌唱比賽參賽指南','報名費與報名方式'],
+  ['en','2027 Singing Contest Guide','Entry fees and registration'],
+  ['ne','२०२७ गायन प्रतियोगिता','दर्ता र शुल्क']
+ ]){
+  await page.locator('[data-lang='+locale+']').click();
+  await expect(page.locator('h1')).toContainText(title);
+  await expect(page.locator('#rules-registration summary [data-l=news04]')).toContainText(fee);
+  await expect(page.locator('.news-quick-action')).toHaveCount(5);
+  const accessible=await page.locator('.news-quick-grid>a').first().evaluate(el=>{
+   const parts=[...el.querySelectorAll('[aria-hidden=true]')].map(n=>n.className||'');
+   return {text:el.innerText,arrowHidden:parts.includes('news-quick-chevron')};
+  });
+  expect(accessible.text.length).toBeGreaterThan(10);
+  expect(accessible.arrowHidden).toBe(true);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+ }
+ await page.locator('.news-quick-grid a[href="#rules-registration"]').click();
+ await expect(page.locator('#rules-registration')).toHaveAttribute('open','');
+});
