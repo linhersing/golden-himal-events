@@ -99,8 +99,9 @@ test('public contestant pages never expose internal frontline or draft-version t
  }
  await page.goto('/news.html#rules-awards');
  await page.locator('[data-lang=zh]').click();
- await expect(page.locator('.news-quick-guide')).toContainText('先看五個參賽重點');
- await expect(page.locator('.news-board-head')).toContainText('正式報名與收費尚未開放');
+ await expect(page.locator('.news-quick-guide')).toContainText('先看這5件事');
+ await expect(page.locator('.news-entry-status')).toContainText('目前尚未開放正式報名及付款');
+ await expect(page.locator('.news-board-head')).toContainText('完整比賽規則');
  await expect(page.locator('#rules-awards')).toHaveAttribute('open','');
 });
 
@@ -118,5 +119,53 @@ test('public printable summary explains participation without exposing team-only
   const content=await page.locator('body').innerText();
   expect(content).not.toMatch(/前線|V2|ALAN|王老師|技術驗收|D1|內部展示/i);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+ }
+});
+
+
+test('news quick guide is five complete mobile reading rows with unambiguous destinations',async({page})=>{
+ for(const width of [320,375,390,430,768,1280]){
+  await page.setViewportSize({width,height:840});
+  await page.goto('/news.html');
+  await page.locator('[data-lang=zh]').click();
+  await expect(page.locator('h1')).toContainText('2027 歌唱比賽參賽指南');
+  await expect(page.locator('.news-entry-status')).toContainText('尚未開放正式報名及付款');
+  const links=page.locator('.news-quick-grid>a');
+  await expect(links).toHaveCount(5);
+  await expect(page.locator('.news-quick-grid .news-quick-number')).toHaveText(['01','02','03','04','05']);
+  await expect(page.locator('.news-quick-grid .news-quick-link')).toHaveText(['查看規則→','查看規則→','查看規則→','查看規則→','查看規則→']);
+  await expect(links.nth(0)).toHaveAttribute('href','#rules-eligibility');
+  await expect(links.nth(1)).toHaveAttribute('href','#rules-demo');
+  await expect(links.nth(2)).toHaveAttribute('href','#rules-schedule');
+  await expect(links.nth(3)).toHaveAttribute('href','#rules-registration');
+  await expect(links.nth(4)).toHaveAttribute('href','#rules-awards');
+  const sizes=await links.evaluateAll(nodes=>nodes.map(n=>{
+   const r=n.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}
+  }));
+  const firstX=sizes[0].x;
+  expect(sizes.every(x=>Math.abs(x.x-firstX)<=1)).toBe(true);
+  expect(sizes.every(x=>x.height>=72)).toBe(true);
+  for(let i=1;i<sizes.length;i++)expect(sizes[i].y).toBeGreaterThan(sizes[i-1].y+sizes[i-1].height-1);
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+  await links.nth(4).click();
+  await expect(page.locator('#rules-awards')).toHaveAttribute('open','');
+  await expect(page.locator('#rules-schedule')).not.toHaveAttribute('open','');
+  await expect(page.locator('.news-quick-grid>a[href="#rules-awards"]')).toHaveAttribute('aria-current','location');
+  await expect(page.locator('#rules-awards')).toBeInViewport();
+  await links.nth(0).click();
+  await expect(page.locator('#rules-eligibility')).toHaveAttribute('open','');
+  await expect(page.locator('#rules-awards')).not.toHaveAttribute('open','');
+  await expect(page.locator('.news-quick-grid>a[href="#rules-eligibility"]')).toHaveAttribute('aria-current','location');
+  await expect(page.locator('.news-plus').first()).toHaveCSS('transform','none');
+ }
+ for(const lang of ['en','ne']){
+  await page.goto('/news.html');
+  await page.locator('[data-lang='+lang+']').click();
+  await expect(page.locator('.news-quick-grid>a')).toHaveCount(5);
+  await expect(page.locator('.news-quick-grid .news-quick-link').first()).toBeVisible();
+  await expect(page.locator('.news-board-heading')).toBeVisible();
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
  }
 });
