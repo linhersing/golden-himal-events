@@ -192,16 +192,15 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
    await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth===1024&&el.naturalHeight===768),{timeout:15000}).toBe(true);
   }
   await expect(page.locator('.portal-concept-card')).toHaveCount(3);
-  await expect(page.locator('.portal-concept-card figcaption small')).toHaveText([
-   '設計示意 · 非現場實拍','設計示意 · 非現場實拍','設計示意 · 非現場實拍'
-  ]);
+  await expect(page.locator('.portal-concept-card figcaption small')).toHaveCount(0);
+  // Only the gallery-level note distinguishes proposed concepts; avoid per-card repetition.
   const top=page.locator('.portal-top-nav a').first();
   const affordance=await top.evaluate(el=>{
    const c=getComputedStyle(el);
    return {border:c.borderTopStyle,color:c.borderTopColor,background:c.backgroundImage,height:el.getBoundingClientRect().height};
   });
-  expect(affordance.border).toBe('solid');
-  expect(affordance.background).toContain('gradient');
+  expect(affordance.border).toBe('none');
+  expect(affordance.background).toBe('none');
   expect(affordance.height).toBeGreaterThanOrEqual(44);
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
@@ -209,7 +208,8 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
  await page.locator('[data-lang=en]').click();
  await expect(page.locator('.portal-concepts-disclaimer')).toContainText('not on-site photographs');
  await page.locator('[data-lang=ne]').click();
- await expect(page.locator('.portal-concept-card figcaption small').first()).toContainText('वास्तविक फोटो होइन');
+ await expect(page.locator('.portal-concept-card figcaption small')).toHaveCount(0);
+ await expect(page.locator('.portal-concepts-disclaimer')).toContainText('वास्तविक स्थलका फोटो');
  await page.locator('.portal-top-nav a[href="./golden-himal.html"]').click();
  await expect(page).toHaveURL(/golden-himal\.html$/);
 });
