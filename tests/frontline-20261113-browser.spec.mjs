@@ -164,8 +164,8 @@ test('entrant guide title, fee section and readable action survive three-languag
  await page.setViewportSize({width:375,height:820});
  await page.goto('/news.html');
  for(const [locale,title,fee] of [
-  ['zh','2027 歌唱比賽參賽指南','報名費與報名方式'],
-  ['en','2027 Singing Contest Guide','Entry fees and registration'],
+  ['zh','2027 比賽規則與報名須知','報名費與報名方式'],
+  ['en','2027 Competition Rules & Entry Guide','Entry fees and registration'],
   ['ne','२०२७ गायन प्रतियोगिता','दर्ता र शुल्क']
  ]){
   await page.locator('[data-lang='+locale+']').click();
