@@ -43,7 +43,7 @@ const key='ghv_ui_language_v1',translations={
   "closingHeading": "在這裡，遇見新的故事。",
   "closingText": "從婚宴與歡聚的空間，延伸到屬於青年歌聲的舞台。Golden Himal Voice 2027 邀請尼泊爾各地的歌唱愛好者一起參與。了解年度賽程與參賽方式，讓下一段故事從你的聲音開始；實體活動地點將另行公告。",
   "exploreVoice": "探索 Golden Himal Voice 2027",
-  "galleryHall": "宴會廳的金色光影",
+  "galleryHall": "金色宴會大廳",
   "galleryLounge": "空中景觀餐廳",
   "galleryWater": "金環噴泉夜景",
   "galleryNight": "夜間建築光影",
@@ -52,7 +52,7 @@ const key='ghv_ui_language_v1',translations={
   "galleryView": "奇旺的自然風景",
   "galleryMore": "查看更多場地與風景",
   "galleryEnhanced": "",
-  "imageDisclaimer": "本頁以現場實拍照片為主，僅作網頁所需的裁切、適度明暗整理及壓縮。部分空間仍在整理中，實際開放與活動安排以正式公告為準。",
+  "imageDisclaimer": "本頁包含現場實拍與依專案資料製作的品牌修飾視覺；修飾示意不代表已完成的現場樣貌。實際開放與活動安排以正式公告為準。",
   "journeyHeading": "從一束金色晨光，到值得相聚的地方。",
   "journeyText": "Golden Himal 的想像，從一個名字走進真實的奇旺風景。溫暖的象牙白與金色線條、挑高的宴會廳、可欣賞自然景觀的休憩空間，讓建築不只是一個背景，而成為人們相聚時的記憶。",
   "journeyNext": "這份期待也延伸到音樂。Golden Himal Voice 2027 希望讓來自尼泊爾各地的歌聲被更多人聽見，讓重要的相遇，從場地走向舞台。",
@@ -121,7 +121,7 @@ const key='ghv_ui_language_v1',translations={
   "closingHeading": "The next chapter starts here.",
   "closingText": "From weddings and gatherings to a stage for young voices, Golden Himal Voice 2027 welcomes singing enthusiasts from across Nepal. Explore the schedule and how to participate; physical event locations will be announced separately.",
   "exploreVoice": "Explore Golden Himal Voice 2027",
-  "galleryHall": "Golden details of the hall",
+  "galleryHall": "Golden Banquet Hall",
   "galleryLounge": "Sky lounge and scenic café",
   "galleryWater": "Ring fountain at night",
   "galleryNight": "Architecture after dark",
@@ -130,7 +130,7 @@ const key='ghv_ui_language_v1',translations={
   "galleryView": "Chitwan landscape",
   "galleryMore": "See more places and views",
   "galleryEnhanced": "",
-  "imageDisclaimer": "This page primarily shows actual on-site photographs with limited cropping, exposure correction and compression for the web. Some spaces are still being prepared; availability and events are subject to official announcements.",
+  "imageDisclaimer": "This page includes real on-site photographs and enhanced brand visuals based on project references. Illustrative images are not evidence of completed construction. Availability and events depend on official announcements.",
   "journeyHeading": "From a golden sunrise to a place for gathering.",
   "journeyText": "Golden Himal began with an image and grew into a place in Chitwan. Ivory-and-gold architectural details, a spacious banquet hall and scenic areas create a setting where moments can be shared and remembered.",
   "journeyNext": "That vision extends to music. Golden Himal Voice 2027 aims to give singers from across Nepal an opportunity to be heard, connecting memorable gatherings with the stage.",
@@ -199,7 +199,7 @@ const key='ghv_ui_language_v1',translations={
   "closingHeading": "नयाँ कथाको सुरुवात यहीँबाट।",
   "closingText": "विवाह र भेटघाटबाट युवा स्वरको मञ्चसम्म—Golden Himal Voice २०२७ ले नेपालभरका गायनप्रेमीलाई सहभागी हुन स्वागत गर्छ। तालिका र सहभागिता विवरण हेर्नुहोस्; प्रत्यक्ष कार्यक्रमको स्थान पछि आधिकारिक रूपमा घोषणा गरिनेछ।",
   "exploreVoice": "Golden Himal Voice २०२७ हेर्नुहोस्",
-  "galleryHall": "भोज कक्षको सुनौलो दृश्य",
+  "galleryHall": "सुनौलो भोज कक्ष",
   "galleryLounge": "छतको मनोरम क्याफे",
   "galleryWater": "रातको सुनौलो घेरा फोहरा",
   "galleryNight": "रातको भवन र उज्यालो",
@@ -208,7 +208,7 @@ const key='ghv_ui_language_v1',translations={
   "galleryView": "चितवनको प्राकृतिक दृश्य",
   "galleryMore": "थप दृश्यहरू हेर्नुहोस्",
   "galleryEnhanced": "",
-  "imageDisclaimer": "यस पृष्ठमा मुख्यतः वास्तविक स्थलमा खिचिएका तस्बिरहरू छन्। वेबका लागि काटछाँट, हल्का उज्यालो समायोजन र सङ्कुचन मात्र गरिएको छ। केही ठाउँ अझै तयारीमा छन्; उपलब्धता र कार्यक्रम आधिकारिक सूचनाअनुसार हुनेछ।",
+  "imageDisclaimer": "यस पृष्ठमा वास्तविक स्थल फोटो र परियोजनाका सन्दर्भमा आधारित परिमार्जित ब्रान्ड दृश्य छन्। यी दृश्यले निर्माण सम्पन्न भएको पुष्टि गर्दैनन्। उपलब्धता र कार्यक्रम आधिकारिक सूचनाअनुसार हुनेछन्।",
   "journeyHeading": "सुनौलो बिहानीदेखि भेटघाटको विशेष स्थलसम्म।",
   "journeyText": "Golden Himal को कल्पना हिमालको दृश्यबाट सुरु भएर चितवनको स्थलसम्म आइपुग्यो। सेतो र सुनौलो वास्तुकला, फराकिलो भोज कक्ष र मनोरम ठाउँहरूले सँगै बिताएका पलहरूलाई यादगार बनाउने वातावरण सिर्जना गर्छन्।",
   "journeyNext": "यो दृष्टि संगीतसम्म पनि फैलिएको छ। Golden Himal Voice २०२७ ले नेपालभरका गायनप्रेमीलाई आफ्नो स्वर सुनाउने अवसर दिने लक्ष्य राखेको छ।",
@@ -240,36 +240,39 @@ const key='ghv_ui_language_v1',translations={
 /* 2026-11-14 approved concept images: distinguish illustrations from documentary photographs. */
 Object.assign(translations.zh,{
  designViewsHeading:'建築設計意象',
- designViewsIntro:'以下三張為依據專案資料整理的設計示意圖，並非現場實拍或已完工照片。',
+ designViewsIntro:'從金色拱頂、建築入口與夜間水景，看見 Golden Himal 的空間想像。',
  designFountainTitle:'愛之環・夜間噴泉廣場',
  designFountainDesc:'環形雕塑與水景光影的設計意象',
  designTowerTitle:'和平塔・A 字型入口',
  designTowerDesc:'A 字型結構與鐘形入口的建築意象',
  designHallTitle:'金色宴會大廳',
  designHallDesc:'拱頂、吊燈與對稱柱廊的空間氛圍',
- conceptImageLabel:'設計示意 · 非現場實拍'
+ conceptImageLabel:'建築形象視覺',
+ visionDisclosure:'部分畫面為依現場與設計資料製作的 AI 視覺呈現，並非完工實景紀錄；場地現況請以實際照片與正式資訊為準。'
 });
 Object.assign(translations.en,{
  designViewsHeading:'Architectural design impressions',
- designViewsIntro:'These three images illustrate design concepts based on project materials. They are not on-site photographs or proof of completed construction.',
+ designViewsIntro:'Golden vaults, landmark entrances and illuminated waterscapes express the Golden Himal design vision.',
  designFountainTitle:'Ring of Love · Night Fountain',
  designFountainDesc:'Circular sculpture and illuminated waterscape concept',
  designTowerTitle:'Peace Tower · A-frame entrance',
  designTowerDesc:'An A-shaped landmark entrance with a suspended bell',
  designHallTitle:'Golden Banquet Hall',
  designHallDesc:'A concept of golden vaulting, chandeliers and symmetrical columns',
- conceptImageLabel:'Concept illustration · Not an on-site photo'
+ conceptImageLabel:'Architectural visuals',
+ visionDisclosure:'Some visuals are AI-created or enhanced interpretations based on on-site and design references, not records of completed construction. Please refer to actual site photos and official updates for current conditions.'
 });
 Object.assign(translations.ne,{
  designViewsHeading:'वास्तुकलाको डिजाइन परिकल्पना',
- designViewsIntro:'यी तीन तस्बिर परियोजनाका सामग्रीमा आधारित डिजाइनका कल्पनात्मक चित्र हुन्। वास्तविक स्थलका फोटो वा निर्माण सम्पन्न भएको प्रमाण होइनन्।',
+ designViewsIntro:'सुनौला छाना, विशेष प्रवेशद्वार र रातिको फोहराले Golden Himal को डिजाइन भावना देखाउँछन्।',
  designFountainTitle:'प्रेमको घेरा · रातिको फोहरा',
  designFountainDesc:'गोलाकार कलाकृति र प्रकाशयुक्त पानीको दृश्यको परिकल्पना',
  designTowerTitle:'शान्ति टावर · ए आकारको प्रवेशद्वार',
  designTowerDesc:'ए आकारको प्रवेश संरचना र झुन्डिएको घण्टीको परिकल्पना',
  designHallTitle:'सुनौलो भोज कक्ष',
  designHallDesc:'सुनौलो छत, झुमर र सममित स्तम्भहरूको अवधारणा',
- conceptImageLabel:'डिजाइन अवधारणा · वास्तविक फोटो होइन'
+ conceptImageLabel:'वास्तुकलाका दृश्य',
+ visionDisclosure:'केही दृश्यहरू स्थल तथा डिजाइन सन्दर्भबाट AI द्वारा बनाइएका वा परिमार्जित हुन्; निर्माण सम्पन्न भएको वास्तविक अभिलेख होइनन्। हालको अवस्था पुष्टि गर्न वास्तविक स्थल फोटो र आधिकारिक सूचना हेर्नुहोस्।'
 });
 let lang='zh';try{const saved=localStorage.getItem(key);if(Object.prototype.hasOwnProperty.call(translations,saved))lang=saved}catch{}
 function apply(){document.documentElement.lang=lang==='zh'?'zh-Hant':lang;

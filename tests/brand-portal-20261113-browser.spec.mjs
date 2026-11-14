@@ -180,21 +180,20 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   const imgs=page.locator('.portal-concept-card img');
   await expect(imgs).toHaveCount(3);
   await expect(page.locator('#design-views-heading')).toContainText('建築設計意象');
-  await expect(page.locator('.portal-concepts-disclaimer')).toContainText('並非現場實拍');
+  await expect(page.locator('.portal-concepts-disclaimer')).toContainText('空間想像');
   for(const [i,filename] of [
-   [0,'approved-fountain-night-20261114.jpg'],
-   [1,'approved-peace-tower-20261114.jpg'],
-   [2,'approved-grand-hall-20261114.jpg']
+   [0,'golden-fountain-artwork-20261114.png'],
+   [1,'golden-peace-tower-artwork-20261114.png'],
+   [2,'golden-hall-retouched-20261114.png']
   ]){
    const img=imgs.nth(i);
    await expect(img).toHaveAttribute('src','./images/'+filename);
    await img.scrollIntoViewIfNeeded();
-   await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth===1024&&el.naturalHeight===768),{timeout:15000}).toBe(true);
+   await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth===1448&&el.naturalHeight===1086),{timeout:15000}).toBe(true);
   }
   await expect(page.locator('.portal-concept-card')).toHaveCount(3);
-  await expect(page.locator('.portal-concept-card figcaption small')).toHaveText([
-   '設計示意 · 非現場實拍','設計示意 · 非現場實拍','設計示意 · 非現場實拍'
-  ]);
+  await expect(page.locator('.portal-concept-card figcaption small')).toHaveCount(0);
+  await expect(page.locator('.portal-visual-footnote')).toContainText('AI 視覺呈現');
   const top=page.locator('.portal-top-nav a').first();
   const affordance=await top.evaluate(el=>{
    const c=getComputedStyle(el);
@@ -207,9 +206,30 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   expect(overflow).toBeLessThanOrEqual(1);
  }
  await page.locator('[data-lang=en]').click();
- await expect(page.locator('.portal-concepts-disclaimer')).toContainText('not on-site photographs');
+ await expect(page.locator('.portal-concepts-disclaimer')).toContainText('design vision');
  await page.locator('[data-lang=ne]').click();
- await expect(page.locator('.portal-concept-card figcaption small').first()).toContainText('वास्तविक फोटो होइन');
+ await expect(page.locator('.portal-visual-footnote')).toContainText('AI');
  await page.locator('.portal-top-nav a[href="./golden-himal.html"]').click();
  await expect(page).toHaveURL(/golden-himal\.html$/);
+});
+
+test('approved hall correction and faithful real photo gallery crop across phone/desktop',async({page})=>{
+ for(const width of [320,390,768,1280]){
+  await page.setViewportSize({width,height:850});
+  await page.goto('/golden-himal.html');
+  const hero=page.locator('.story-hero-image img');
+  await expect(hero).toHaveAttribute('src','./images/golden-hall-retouched-20261114.png');
+  await hero.scrollIntoViewIfNeeded();
+  await expect.poll(()=>hero.evaluate(el=>el.complete&&el.naturalWidth===1448&&el.naturalHeight===1086),{timeout:20000}).toBe(true);
+  const shape=await hero.evaluate(el=>{
+   const bounds=el.getBoundingClientRect();
+   return {ratio:bounds.width/bounds.height,natural:el.naturalWidth/el.naturalHeight};
+  });
+  expect(Math.abs(shape.ratio-shape.natural)).toBeLessThan(.02);
+  await expect(page.locator('.story-gallery-curated .gallery-card-wide img')).toHaveAttribute('src','./images/gh-real-hall-hero-20261113.webp');
+  const galleryNotice=page.locator('.gallery-disclaimer');
+  await expect(galleryNotice).toContainText('現場實拍');
+  const gap=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+  expect(gap, 'horizontal overflow at '+width+'px').toBeLessThanOrEqual(1);
+ }
 });
