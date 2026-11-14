@@ -959,30 +959,40 @@
  color:#6d584b;
  margin:0 0 18px;
 }
+/* A strong, unmistakably actionable bar inside the full-card anchor.
+   The bar is not a nested button; the whole card remains one valid link. */
 .brand-portal .portal-story-entry-action{
  display:flex;
  align-items:center;
  justify-content:space-between;
- gap:18px;
+ gap:10px;
  width:100%;
- padding-top:13px;
- border-top:1px solid #dac8b1;
- color:#704827;
- font-size:.96rem;
- font-weight:760;
- line-height:1.4;
+ box-sizing:border-box;
+ min-height:62px;
+ margin-top:3px;
+ padding:10px 12px 10px 20px;
+ border:1px solid #5c3d31;
+ border-radius:12px;
+ background:#5c3d31;
+ box-shadow:0 6px 14px rgba(72,45,31,.16);
+ color:#fffaf2;
+ font-size:1rem;
+ font-weight:750;
+ line-height:1.45;
+ text-decoration:none;
+ transition:background-color .2s ease,box-shadow .2s ease;
 }
 .brand-portal .portal-story-entry-action strong{font-weight:760}
 .brand-portal .portal-story-entry-arrow{
  display:grid;
  place-items:center;
- flex:0 0 42px;
- width:42px;
- height:42px;
+ flex:0 0 38px;
+ width:38px;
+ height:38px;
  border-radius:50%;
- background:#6a4736;
- color:#fff9ed;
- font:600 1.3rem/1 Arial,sans-serif;
+ background:#f4e3c9;
+ color:#503627;
+ font:700 1.35rem/1 Arial,sans-serif;
  transition:background-color .2s ease,transform .2s ease;
 }
 @media(hover:hover){
@@ -994,8 +1004,12 @@
  .brand-portal .portal-story-entry:hover .portal-story-entry-media img{
   transform:scale(1.025);
  }
+ .brand-portal .portal-story-entry:hover .portal-story-entry-action{
+  background:#4b3029;
+  box-shadow:0 8px 19px rgba(72,45,31,.24);
+ }
  .brand-portal .portal-story-entry:hover .portal-story-entry-arrow{
-  background:#503629;
+  background:#fff0dc;
   transform:translateX(3px);
  }
 }
@@ -1032,14 +1046,16 @@
   margin-bottom:13px;
  }
  .brand-portal .portal-story-entry-action{
-  font-size:.89rem;
-  gap:10px;
-  padding-top:12px;
+  min-height:62px;
+  font-size:1rem;
+  gap:8px;
+  padding:11px 10px 11px 14px;
+  margin-top:4px;
  }
  .brand-portal .portal-story-entry-arrow{
-  width:42px;
-  height:42px;
-  flex-basis:42px;
+  width:38px;
+  height:38px;
+  flex-basis:38px;
  }
 }
 @media(prefers-reduced-motion:reduce){
