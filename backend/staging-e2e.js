@@ -33,6 +33,10 @@ function emailAllowed(email,env,role){
  return list.includes(email);
 }
 const ROLES=['member','reviewer','organizer'];
+// Opt-in TEST rollout: NEVER enable before the matching backoffice UI is deployed and tested.
+const staffHumanRequired=env=>env.STAGING_STAFF_TURNSTILE_REQUIRED==='true';
+const staffHumanAction='ghv_staff_login';
+const siteKeyReady=key=>typeof key==='string'&&/^0x[A-Za-z0-9_-]{16,}$/.test(key);
 function grantedRoles(email,env){return ROLES.filter(role=>emailAllowed(email,env,role))}
 async function emailForFingerprint(env,fingerprint,role){
  const list=emails(env,role==='organizer'?'STAGING_ORGANIZER_EMAILS':role==='reviewer'?'STAGING_REVIEWER_EMAILS':'STAGING_ALLOWED_EMAILS');
@@ -110,12 +114,23 @@ async function requestCode(request,env){
  if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i.test(email)||email.length>250)return deny('invalid_email');
  const invited=emailAllowed(email,env,role);
  const publicTest=!invited&&role==='member'&&await publicSignupReady(env);
+ const staffLogin=(role==='organizer'||role==='reviewer');
  if(!invited&&!publicTest)return deny('not_on_test_allowlist',403);
  if(publicTest&&!emailAddress(email))return deny('invalid_email');
  let source;
  if(publicTest){
   source=await humanSignupSource(request,env,b.turnstile_token);
   if(!source)return deny('human_check_required',403);
+ }
+ if(staffLogin&&staffHumanRequired(env)){
+  // Fail closed if the widget token, secret, hostname or staff-specific action is invalid.
+  // Frontend checks are not trusted; every staff OTP request must pass Siteverify.
+  if(!siteKeyReady(env.STAGING_TURNSTILE_SITE_KEY)||!siteKeyReady(env.STAGING_TURNSTILE_SECRET_KEY))
+   return deny('staff_human_check_unavailable',503);
+  const staffHumanProof=await humanSignupSource(request,env,b.turnstile_token,staffHumanAction);
+  if(!staffHumanProof)return deny('human_check_required',403);
+  // The public-signup send ledger belongs to public visitors only; staff retains
+  // its existing per-mailbox challenge limit and should not depend on its migration.
  }
  otpTrace(publicTest?'human_check_passed':'allowlist_passed');
  const fingerprint=await sign(env,'email:'+email);
@@ -183,6 +198,10 @@ async function switchRole(request,env,a){
  const b=await bodyJSON(request);
  if(!b||!ROLES.includes(b.role))return deny('invalid_role');
  if(!a.email||!emailAllowed(a.email,env,b.role))return deny('not_on_test_allowlist',403);
+ // Block member->staff switching around the required human check on staff OTP.
+ // A dual-role staff user can switch organizer/reviewer only after authenticating as staff.
+ if(staffHumanRequired(env)&&a.role==='member'&&(b.role==='organizer'||b.role==='reviewer'))
+  return deny('staff_reauthentication_required',403);
  const target=await roleAccount(env,a.email,b.role);
  if(!target)return deny('wrong_account_role',403);
  const token=await newSession(env,target);
@@ -455,6 +474,13 @@ export async function handleE2E(request,env){
  if(isPost&&!sameOrigin(request))return deny('origin_not_allowed',403);
  if(!['GET','POST'].includes(request.method))return deny('method_not_allowed',405);
  try{
+  if(pathname==='/api/e2e/staff-login-config'&&!isPost){
+   // The site key is public; only the server holds the Siteverify secret.
+   const required=staffHumanRequired(env);
+   return json(required?{ok:true,testOnly:true,required:true,
+    ...(siteKeyReady(env.STAGING_TURNSTILE_SITE_KEY)&&siteKeyReady(env.STAGING_TURNSTILE_SECRET_KEY)?{siteKey:env.STAGING_TURNSTILE_SITE_KEY}:{})}:
+    {ok:true,testOnly:true,required:false});
+  }
   if(pathname==='/api/e2e/signup-config'&&!isPost){
    const ready=await publicSignupReady(env);
    return json(ready?{ok:true,testOnly:true,mode:'public_test',siteKey:env.STAGING_TURNSTILE_SITE_KEY}:
