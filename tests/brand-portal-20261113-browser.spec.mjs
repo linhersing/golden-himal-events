@@ -128,6 +128,18 @@ test('2027 rule highlights, clear senior navigation and public visual evidence (
   await page.screenshot({path:testInfo.outputPath('golden-himal-home-'+label+'.png'),fullPage:true,animations:'disabled'});
   await page.goto('/voice.html');
   await page.locator('[data-lang=zh]').click();
+  await expect(page.locator('.front-visual-wedding')).toBeVisible();
+  await expect(page.locator('.wedding-slogan')).toContainText('The Best Wedding');
+  await expect(page.locator('.wedding-slogan')).toContainText('at Golden Himal.');
+  await expect(page.locator('.wedding-nepali')).toContainText('विवाह');
+  const appearance=await page.locator('.front-visual-wedding').evaluate(el=>({
+   border:getComputedStyle(el).borderTopWidth,
+   shadow:getComputedStyle(el).boxShadow,
+   overflow:document.documentElement.scrollWidth>window.innerWidth
+  }));
+  expect(appearance.border).toBe('0px');
+  expect(appearance.shadow).toBe('none');
+  expect(appearance.overflow).toBeFalsy();
   await expect(page.locator('.voice-prize-voucher')).toContainText('NPR 10,000');
   await expect(page.locator('.voice-prize-top')).toContainText('NPR 45,000');
   await expect(page.locator('#home-apply')).toHaveAttribute('href','./member.html#register');
