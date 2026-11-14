@@ -239,7 +239,7 @@ test('Golden Himal story CTA is visibly actionable on phones and desktop without
   expect(metrics.arrow).not.toBe(metrics.background);
   if(width<=650)expect(metrics.width).toBeGreaterThan(width-65);
   await cta.click();
-  await expect(page).toHaveURL(/golden-himal\\.html$/);
+  await expect(page).toHaveURL(/golden-himal\.html$/);
  }
  await page.goto('/');
  await page.locator('[data-lang=en]').click();
