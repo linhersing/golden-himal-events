@@ -331,3 +331,81 @@ body[data-page="member"] #password-pending-screen .password-pending-preview{marg
 @media(max-width:520px){
  .front-hero .front-visual.front-visual-wedding-image{max-width:100%}
 }
+
+/* 2026-11-14 · Age-inclusive readability layer for public Voice/News/Member pages.
+   Improve tap areas and small supporting text; preserve artwork, routes, forms and
+   original TEST/eligibility disclosures. This is NOT a second competing "senior mode". */
+body[data-page="home"] .choice{min-height:88px;padding:15px 17px}
+body[data-page="home"] .choice>span:nth-child(2){min-width:0}
+body[data-page="home"] .choice strong{font-size:1.28rem;line-height:1.38}
+body[data-page="home"] .choice small{
+ font-size:.97rem;line-height:1.5;opacity:1;color:#604b3d;overflow-wrap:anywhere
+}
+body[data-page="home"] .choice-main small{color:#fff5e9}
+body[data-page="home"] .mission-intro{font-size:1.04rem;line-height:1.76;color:#58493f}
+body[data-page="home"] .mission-intro strong{font-size:.94rem;color:#78522d}
+body[data-page="home"] .event-credits{font-size:.94rem;color:#59483c}
+body[data-page="home"] .event-credits p>span:first-child{font-size:.86rem;color:#71532e}
+body[data-page="home"] .overline{font-size:.86rem;color:#79572f}
+body[data-page="home"] .voice-prize-eyebrow{font-size:.9rem;color:#805a2e}
+body[data-page="home"] .voice-prize-teaser h2{font-size:1.34rem;line-height:1.45}
+body[data-page="home"] .voice-prize-top,
+body[data-page="home"] .voice-prize-voucher span{font-size:1.01rem;line-height:1.73;color:#55453a}
+body[data-page="home"] .voice-prize-note{font-size:.94rem;line-height:1.7;color:#5c4b40}
+body[data-page="home"] .voice-prize-link{font-size:1.02rem;min-height:52px}
+body[data-page="news"] .news-copy strong{font-size:1.18rem;line-height:1.45}
+body[data-page="news"] .news-copy small,
+body[data-page="news"] .news-copy>span{font-size:.93rem;letter-spacing:normal;color:#695445;line-height:1.5}
+body[data-page="news"] .news-detail p{font-size:1.01rem;line-height:1.83;color:#55453b}
+body[data-page="news"] .news-schedule li strong,
+body[data-page="news"] .news-schedule li span{font-size:1rem;line-height:1.6}
+body[data-page="news"] .news-fineprint{font-size:.94rem;line-height:1.7;color:#58493d}
+body[data-page="news"] .news-board-head p{font-size:.97rem;color:#59493e}
+body[data-page="news"] .prize-table>div>span,
+body[data-page="news"] .voucher-notice span{font-size:1rem;line-height:1.65}
+body[data-page="member"] label.field{font-size:1rem;line-height:1.55}
+body[data-page="member"] .field-hint,
+body[data-page="member"] .helper-banner,
+body[data-page="member"] label.check{font-size:.97rem;line-height:1.7;color:#534438}
+body[data-page="member"] .page-intro,
+body[data-page="member"] .form-lead,
+body[data-page="member"] .notice,
+body[data-page="member"] .feedback{font-size:1rem;line-height:1.7;color:#59483c}
+body[data-page="member"] .feedback.error{color:#8b2c27}
+body[data-page="member"] .feedback.success{color:#255631}
+body[data-page="member"] .steps span{font-size:.92rem;line-height:1.48;overflow-wrap:anywhere}
+body[data-page="member"] .btn{min-height:54px;font-size:1.04rem}
+body[data-page="member"] .application-panel>summary,
+body[data-page="member"] .announcement-accordion>summary{min-height:54px}
+body[data-page="home"] .locale button,
+body[data-page="news"] .locale button,
+body[data-page="member"] .locale button{min-width:44px;min-height:48px;font-size:.94rem}
+body[data-page="news"] .quick-nav a,
+body[data-page="member"] .quick-nav a{
+ display:inline-flex;align-items:center;min-height:48px;font-size:.94rem;line-height:1.5;
+ padding:9px 11px
+}
+body[data-page="home"] .test-site-banner.test-site-footer,
+body[data-page="home"] .test-site-banner.test-site-footer strong,
+body[data-page="home"] .test-site-banner.test-site-footer p,
+body[data-page="news"] .test-site-banner.test-site-footer,
+body[data-page="news"] .test-site-banner.test-site-footer strong,
+body[data-page="news"] .test-site-banner.test-site-footer p,
+body[data-page="member"] .test-site-banner.test-site-footer,
+body[data-page="member"] .test-site-banner.test-site-footer strong,
+body[data-page="member"] .test-site-banner.test-site-footer p{
+ font-size:.9rem;line-height:1.6;color:#625144
+}
+@media(max-width:520px){
+ body[data-page="home"] .masthead{flex-wrap:wrap;min-height:77px;padding-block:8px}
+ body[data-page="home"] .masthead .locale{margin-left:auto}
+ body[data-page="home"] .choice{min-height:90px}
+ body[data-page="home"] .choice strong{font-size:1.25rem}
+ body[data-page="home"] .choice small{font-size:.95rem}
+ body[data-page="home"] .mission-intro{font-size:1.01rem;line-height:1.72}
+ body[data-page="home"] .voice-prize-voucher span{font-size:.98rem}
+ body[data-page="news"] .news-row>summary{min-height:68px}
+ body[data-page="news"] .news-copy strong{font-size:1.13rem}
+ body[data-page="news"] .news-detail{padding-left:20px}
+ body[data-page="member"] .steps span{font-size:.86rem}
+}
