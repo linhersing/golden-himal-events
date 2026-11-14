@@ -201,3 +201,29 @@ test('Golden Himal Palace story presents selective venue imagery and compact gro
  assert.match(styles,/@media\(max-width:520px\)/);
  assert.doesNotMatch(story,/class="v2-rule-summary"|id="registration-form"/);
 });
+
+
+test('approved Golden Himal Palace public call line is reachable on all visitor pages',async()=>{
+ const files=['index.html','public/golden-himal.html','public/voice.html','public/news.html','public/member.html'];
+ for(const path of files){
+  const html=await read(path);
+  assert.equal((html.match(/id="contact"/g)||[]).length,1,path+' should have one contact destination');
+  assert.equal((html.match(/href="tel:\+9779801199996"/g)||[]).length,1,path+' must link only to the verified phone');
+  assert.match(html,/\+977 9801199996/,path+' must display the full Nepal international number');
+  assert.doesNotMatch(html,/mailto:\s*(?:fake|support@example|test@)/i,path+' must not advertise a fake support mailbox');
+ }
+ for(const file of ['public/page-locale.js','public/brand-portal.js','public/simple.js']){
+  const script=await read(file);
+  assert.match(script,/contactHeading/);
+  assert.match(script,/contactIntro/);
+  assert.match(script,/contactCall/);
+  assert.match(script,/contactNote/);
+ }
+ const news=await read('public/news.html'),member=await read('public/member.html');
+ assert.match(news,/href="#contact" data-l="contactNav"/);
+ assert.match(member,/href="#contact" data-l="contactNav"/);
+ assert.match(await read('public/voice.html'),/href="#contact" data-t="contactShortcut"/);
+ const css=await read('public/simple.css');
+ assert.match(css,/\.ghv-contact-call:focus-visible/);
+ assert.match(css,/@media\(max-width:690px\)/);
+});
