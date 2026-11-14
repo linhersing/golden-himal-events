@@ -166,11 +166,11 @@ test('Golden Himal Palace story presents selective venue imagery and compact gro
  const [home,story,styles,language]=await Promise.all([
   read('index.html'),read('public/golden-himal.html'),read('public/brand-portal.css'),read('public/brand-portal.js')
  ]);
- const gallery=['gh-real-hall-hero-20261113.webp','gh-real-sky-lounge-20261113.webp','gh-real-fountain-night-landscape-20261113.webp','gh-real-guesthouse-20261113.webp','gh-real-chitwan-view-20261113.webp','gh-real-chandelier-detail-20261113.webp','gh-real-gateway-window-20261113.webp'];
+ const gallery=['gh-real-hall-hero-20261113.webp','gh-real-sky-lounge-20261113.webp','gh-real-fountain-night-landscape-20261113.webp','gh-real-guesthouse-20261113.webp','gh-real-chitwan-view-20261113.webp','gh-real-gateway-window-20261113.webp'];
  for(const file of gallery){
   assert.ok((home+story).includes(file),file);
  }
- assert.doesNotMatch(story,/golden-himal-phase2-visualization|golden-himal-phase2-construction|<[^>]+>第一期|<[^>]+>第二期/);
+ assert.doesNotMatch(story,/gh-real-chandelier-detail-20261113\\.webp/); // Discard unflattering unfinished-lighting close-up from the public story\n assert.match(story,/gh-real-hall-hero-20261113\\.webp/); // Maintain an authentic hall image, not generated photography\n assert.doesNotMatch(story,/golden-himal-phase2-visualization|golden-himal-phase2-construction|<[^>]+>第一期|<[^>]+>第二期/);
  assert.doesNotMatch(home,/第一期建築實景/);
  assert.match(story,/data-p="imageDisclaimer"/);
  assert.doesNotMatch(home+story,/AI 修飾形象影像/);
