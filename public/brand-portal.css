@@ -598,3 +598,20 @@
  .brand-portal .portal-choice .portal-chevron,
  .brand-portal .portal-top-nav a{transition:none}
 }
+
+/* 2026-11-14 | Faithful visual moderation, not generative reconstruction.
+   Only modify rendered tone, preserving all approved image pixels and geometry.
+   The three concept artworks remain clearly labeled, never described as finished buildings. */
+.brand-portal .portal-concept-media img{
+ filter:saturate(.90) contrast(.985) brightness(1.005);
+ object-fit:cover;object-position:center center;
+}
+.brand-portal .portal-concept-card:first-child .portal-concept-media img{
+ filter:saturate(.88) contrast(.97) brightness(.985);
+}
+.brand-portal .portal-concept-card:last-child .portal-concept-media img{
+ filter:saturate(.87) contrast(.975) brightness(1.012);
+}
+@media(prefers-reduced-motion:reduce){
+ .brand-portal .portal-concept-media img{transition:none}
+}
