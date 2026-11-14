@@ -215,36 +215,41 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
 });
 
 
-test('Golden Himal story CTA is visibly actionable on phones and desktop without changing its route',async({page})=>{
- for(const width of [320,390,1280]){
+test('brand story editorial preview is a discoverable full-card link before the gallery',async({page})=>{
+ for(const width of [320,375,390,768,1280]){
   await page.setViewportSize({width,height:820});
   await page.goto('/');
-  const cta=page.locator('a.portal-more');
-  await expect(cta).toBeVisible();
-  await expect(cta).toHaveAttribute('href','./golden-himal.html');
-  await expect(cta).toContainText('閱讀 Golden Himal 的完整故事');
-  const metrics=await cta.evaluate(el=>{
-   const style=getComputedStyle(el),rect=el.getBoundingClientRect();
-   const icon=el.lastElementChild;
-   return {
-    background:style.backgroundColor,
-    foreground:style.color,
-    height:rect.height,
-    width:rect.width,
-    arrow:getComputedStyle(icon).backgroundColor
-   };
+  const entry=page.locator('a.portal-story-entry');
+  await expect(entry).toHaveCount(1);
+  await expect(page.locator('.portal-about-lead + a.portal-story-entry')).toHaveCount(1);
+  await expect(page.locator('a.portal-more')).toHaveCount(0);
+  await expect(entry).toHaveAttribute('href','./golden-himal.html');
+  await expect(entry).toHaveAttribute('aria-labelledby','portal-story-entry-title');
+  await expect(entry.locator('h3')).toContainText('Golden Himal');
+  await expect(entry.locator('.portal-story-entry-action')).toContainText('閱讀 Golden Himal 的完整故事');
+  const photo=entry.locator('img');
+  await expect(photo).toHaveAttribute('src','./images/gh-real-gateway-window-20261113.webp');
+  await entry.scrollIntoViewIfNeeded();
+  await expect.poll(()=>photo.evaluate(el=>el.complete&&el.naturalWidth>0),{timeout:15000}).toBe(true);
+  const dimensions=await entry.evaluate(el=>{
+   const r=el.getBoundingClientRect();
+   const image=el.querySelector('img').getBoundingClientRect();
+   return {width:r.width,height:r.height,imageHeight:image.height,cursor:getComputedStyle(el).cursor};
   });
-  expect(metrics.background).toBe('rgb(102, 69, 54)');
-  expect(metrics.height).toBeGreaterThanOrEqual(60);
-  expect(metrics.arrow).not.toBe(metrics.background);
-  if(width<=650)expect(metrics.width).toBeGreaterThan(width-65);
-  await cta.click();
+  expect(dimensions.cursor).toBe('pointer');
+  expect(dimensions.height).toBeGreaterThanOrEqual(230);
+  expect(dimensions.imageHeight).toBeGreaterThanOrEqual(170);
+  if(width<=650)expect(dimensions.width).toBeGreaterThan(width-50);
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+  await entry.locator('.portal-story-entry-media').click();
   await expect(page).toHaveURL(/golden-himal\.html$/);
  }
  await page.goto('/');
  await page.locator('[data-lang=en]').click();
- await expect(page.locator('a.portal-more')).toBeVisible();
+ await expect(page.locator('.portal-story-entry-title')).toContainText('golden morning light');
+ await expect(page.locator('.portal-story-entry-action')).toContainText('Read the full Golden Himal story');
  await page.locator('[data-lang=ne]').click();
- await expect(page.locator('a.portal-more')).toBeVisible();
- await expect(page.locator('a.portal-more')).toHaveAttribute('href','./golden-himal.html');
+ await expect(page.locator('.portal-story-entry-title')).toContainText('Golden Himal');
+ await expect(page.locator('a.portal-story-entry')).toHaveAttribute('href','./golden-himal.html');
 });
