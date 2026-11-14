@@ -227,3 +227,32 @@ test('approved Golden Himal Palace public call line is reachable on all visitor 
  assert.match(css,/\.ghv-contact-call:focus-visible/);
  assert.match(css,/@media\(max-width:690px\)/);
 });
+
+
+test('rules and updates have distinct destinations without changing existing contest URLs',async()=>{
+ const [home,voice,news,announcements,member,locale,brand,simple]=await Promise.all([
+  read('index.html'),read('public/voice.html'),read('public/news.html'),
+  read('public/announcements.html'),read('public/member.html'),read('public/page-locale.js'),
+  read('public/brand-portal.js'),read('public/simple.js')
+ ]);
+ assert.match(home,/id="home-news" class="portal-choice" href="\.\/news\.html"/);
+ assert.match(home,/href="\.\/announcements\.html" data-p="announcementsLink"/);
+ assert.match(voice,/href="\.\/announcements\.html" data-t="announcementsShortcut"/);
+ assert.match(voice,/data-t="talentLead"/);
+ assert.match(news,/href="\.\/announcements\.html" data-l="announcementsNav"/);
+ assert.match(news,/aria-current="page" data-l="rulesNav"/);
+ assert.match(announcements,/aria-current="page" data-l="announcementsNav"/);
+ assert.match(announcements,/href="\.\/news\.html" data-l="rulesNav"/);
+ assert.match(member,/href="\.\/news\.html" data-l="rulesReadAction"/);
+ assert.match(news,/id="rules-awards"/);
+ for(const url of ['./member.html#register','./member.html#login','./news.html']){
+  assert.ok(voice.includes('href="'+url+'"'),"existing primary route "+url);
+ }
+ assert.match(announcements,/href="tel:\+9779801199996"/);
+ assert.doesNotMatch(announcements,/winner-item|announced-winners|confirmed-results/);
+ for(const term of ['rulesNav','announcementsTitle','announcementsEmptyTitle','rulesRequiredHeading']){
+  assert.ok(locale.includes(term),"missing localized key "+term);
+ }
+ assert.match(brand,/announcementsLink/);
+ assert.match(simple,/page==='announcements'/);
+});
