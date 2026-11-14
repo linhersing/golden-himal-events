@@ -236,6 +236,41 @@ const key='ghv_ui_language_v1',translations={
   "galleryNext": "अर्को तस्बिर"
  }
 };
+
+/* 2026-11-14 approved concept images: distinguish illustrations from documentary photographs. */
+Object.assign(translations.zh,{
+ designViewsHeading:'建築設計意象',
+ designViewsIntro:'以下三張為依據專案資料整理的設計示意圖，並非現場實拍或已完工照片。',
+ designFountainTitle:'愛之環・夜間噴泉廣場',
+ designFountainDesc:'環形雕塑與水景光影的設計意象',
+ designTowerTitle:'和平塔・A 字型入口',
+ designTowerDesc:'A 字型結構與鐘形入口的建築意象',
+ designHallTitle:'金色宴會大廳',
+ designHallDesc:'拱頂、吊燈與對稱柱廊的空間氛圍',
+ conceptImageLabel:'設計示意 · 非現場實拍'
+});
+Object.assign(translations.en,{
+ designViewsHeading:'Architectural design impressions',
+ designViewsIntro:'These three images illustrate design concepts based on project materials. They are not on-site photographs or proof of completed construction.',
+ designFountainTitle:'Ring of Love · Night Fountain',
+ designFountainDesc:'Circular sculpture and illuminated waterscape concept',
+ designTowerTitle:'Peace Tower · A-frame entrance',
+ designTowerDesc:'An A-shaped landmark entrance with a suspended bell',
+ designHallTitle:'Golden Banquet Hall',
+ designHallDesc:'A concept of golden vaulting, chandeliers and symmetrical columns',
+ conceptImageLabel:'Concept illustration · Not an on-site photo'
+});
+Object.assign(translations.ne,{
+ designViewsHeading:'वास्तुकलाको डिजाइन परिकल्पना',
+ designViewsIntro:'यी तीन तस्बिर परियोजनाका सामग्रीमा आधारित डिजाइनका कल्पनात्मक चित्र हुन्। वास्तविक स्थलका फोटो वा निर्माण सम्पन्न भएको प्रमाण होइनन्।',
+ designFountainTitle:'प्रेमको घेरा · रातिको फोहरा',
+ designFountainDesc:'गोलाकार कलाकृति र प्रकाशयुक्त पानीको दृश्यको परिकल्पना',
+ designTowerTitle:'शान्ति टावर · ए आकारको प्रवेशद्वार',
+ designTowerDesc:'ए आकारको प्रवेश संरचना र झुन्डिएको घण्टीको परिकल्पना',
+ designHallTitle:'सुनौलो भोज कक्ष',
+ designHallDesc:'सुनौलो छत, झुमर र सममित स्तम्भहरूको अवधारणा',
+ conceptImageLabel:'डिजाइन अवधारणा · वास्तविक फोटो होइन'
+});
 let lang='zh';try{const saved=localStorage.getItem(key);if(Object.prototype.hasOwnProperty.call(translations,saved))lang=saved}catch{}
 function apply(){document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
  document.querySelectorAll('[data-p]').forEach(el=>{const value=translations[lang][el.dataset.p];if(value!==undefined)el.textContent=value});

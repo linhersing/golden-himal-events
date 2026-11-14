@@ -171,3 +171,45 @@ test('2027 rule highlights, clear senior navigation and public visual evidence (
   await page.screenshot({path:testInfo.outputPath('golden-himal-about-'+label+'.png'),fullPage:true,animations:'disabled'});
  }
 });
+
+test('approved supplemental concept gallery and elegant clickable navigation at mobile and desktop',async({page})=>{
+ for(const width of [320,390,768,1280]){
+  await page.setViewportSize({width,height:860});
+  await page.goto('/');
+  await page.locator('[data-lang=zh]').click();
+  const imgs=page.locator('.portal-concept-card img');
+  await expect(imgs).toHaveCount(3);
+  await expect(page.locator('#design-views-heading')).toContainText('建築設計意象');
+  await expect(page.locator('.portal-concepts-disclaimer')).toContainText('並非現場實拍');
+  for(const [i,filename] of [
+   [0,'approved-fountain-night-20261114.jpg'],
+   [1,'approved-peace-tower-20261114.jpg'],
+   [2,'approved-grand-hall-20261114.jpg']
+  ]){
+   const img=imgs.nth(i);
+   await expect(img).toHaveAttribute('src','./images/'+filename);
+   await img.scrollIntoViewIfNeeded();
+   await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth===1024&&el.naturalHeight===768),{timeout:15000}).toBe(true);
+  }
+  await expect(page.locator('.portal-concept-card')).toHaveCount(3);
+  await expect(page.locator('.portal-concept-card figcaption small')).toHaveText([
+   '設計示意 · 非現場實拍','設計示意 · 非現場實拍','設計示意 · 非現場實拍'
+  ]);
+  const top=page.locator('.portal-top-nav a').first();
+  const affordance=await top.evaluate(el=>{
+   const c=getComputedStyle(el);
+   return {border:c.borderTopStyle,color:c.borderTopColor,background:c.backgroundImage,height:el.getBoundingClientRect().height};
+  });
+  expect(affordance.border).toBe('solid');
+  expect(affordance.background).toContain('gradient');
+  expect(affordance.height).toBeGreaterThanOrEqual(44);
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+ }
+ await page.locator('[data-lang=en]').click();
+ await expect(page.locator('.portal-concepts-disclaimer')).toContainText('not on-site photographs');
+ await page.locator('[data-lang=ne]').click();
+ await expect(page.locator('.portal-concept-card figcaption small').first()).toContainText('वास्तविक फोटो होइन');
+ await page.locator('.portal-top-nav a[href="./golden-himal.html"]').click();
+ await expect(page).toHaveURL(/golden-himal\.html$/);
+});
