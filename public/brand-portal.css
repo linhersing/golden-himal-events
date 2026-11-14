@@ -885,3 +885,165 @@
 @media(prefers-reduced-motion:reduce){
  .brand-portal .portal-more{transition:none}
 }
+
+
+/* 2026-11-14 | Editorial story entry: the whole story preview is the link.
+   Replaces the low-discovery, below-the-gallery CTA while preserving its href. */
+.brand-portal .portal-about-lead{margin-bottom:25px}
+.brand-portal .portal-story-entry{
+ display:grid;
+ grid-template-columns:minmax(0, 0.42fr) minmax(0, 0.58fr);
+ width:100%;
+ min-height:238px;
+ margin:0 0 32px;
+ overflow:hidden;
+ position:relative;
+ border:1px solid #e2d0b7;
+ border-radius:18px;
+ background:#f9f4ec;
+ color:#3d3029;
+ box-shadow:0 10px 28px rgba(75,50,28,.07);
+ text-decoration:none;
+ cursor:pointer;
+ transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease;
+}
+.brand-portal .portal-story-entry-media{
+ position:relative;
+ display:block;
+ min-height:238px;
+ overflow:hidden;
+ background:#dfd2bf;
+}
+.brand-portal .portal-story-entry-media img{
+ display:block;
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+ object-fit:cover;
+ object-position:center 48%;
+ filter:saturate(.91) brightness(.97);
+ transition:transform .35s ease;
+}
+.brand-portal .portal-story-entry-content{
+ display:flex;
+ flex-direction:column;
+ align-items:flex-start;
+ justify-content:center;
+ gap:0;
+ min-width:0;
+ padding:22px clamp(22px,3.2vw,44px);
+}
+.brand-portal .portal-story-entry-eyebrow{
+ display:block;
+ font-size:.73rem;
+ letter-spacing:.14em;
+ font-weight:790;
+ color:#9b7346;
+ margin:0 0 10px;
+ line-height:1.5;
+}
+.brand-portal .portal-story-entry-title{
+ font-family:Georgia,"Noto Serif TC","Noto Serif Devanagari",serif;
+ display:block;
+ font-size:clamp(1.42rem,2.3vw,2rem);
+ font-weight:680;
+ line-height:1.4;
+ color:#50382d;
+ letter-spacing:0;
+ margin:0 0 11px;
+}
+.brand-portal .portal-story-entry-summary{
+ font-size:.95rem;
+ line-height:1.7;
+ color:#6d584b;
+ margin:0 0 18px;
+}
+.brand-portal .portal-story-entry-action{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:18px;
+ width:100%;
+ padding-top:13px;
+ border-top:1px solid #dac8b1;
+ color:#704827;
+ font-size:.96rem;
+ font-weight:760;
+ line-height:1.4;
+}
+.brand-portal .portal-story-entry-action strong{font-weight:760}
+.brand-portal .portal-story-entry-arrow{
+ display:grid;
+ place-items:center;
+ flex:0 0 42px;
+ width:42px;
+ height:42px;
+ border-radius:50%;
+ background:#6a4736;
+ color:#fff9ed;
+ font:600 1.3rem/1 Arial,sans-serif;
+ transition:background-color .2s ease,transform .2s ease;
+}
+@media(hover:hover){
+ .brand-portal .portal-story-entry:hover{
+  border-color:#b48d5c;
+  box-shadow:0 14px 35px rgba(75,50,28,.13);
+  transform:translateY(-2px);
+ }
+ .brand-portal .portal-story-entry:hover .portal-story-entry-media img{
+  transform:scale(1.025);
+ }
+ .brand-portal .portal-story-entry:hover .portal-story-entry-arrow{
+  background:#503629;
+  transform:translateX(3px);
+ }
+}
+.brand-portal .portal-story-entry:focus-visible{
+ outline:3px solid #a87535;
+ outline-offset:3px;
+}
+.brand-portal .portal-story-entry:active{transform:translateY(0)}
+@media(max-width:650px){
+ .brand-portal .portal-about-lead{margin-bottom:20px}
+ .brand-portal .portal-story-entry{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  margin-bottom:25px;
+  border-radius:15px;
+ }
+ .brand-portal .portal-story-entry-media{
+  width:100%;
+  min-height:174px;
+  height:174px;
+  flex:0 0 174px;
+ }
+ .brand-portal .portal-story-entry-media img{object-position:center 52%}
+ .brand-portal .portal-story-entry-content{padding:19px 19px 17px}
+ .brand-portal .portal-story-entry-eyebrow{font-size:.69rem;margin-bottom:8px}
+ .brand-portal .portal-story-entry-title{
+  font-size:clamp(1.35rem,5.5vw,1.6rem);
+  margin-bottom:8px;
+ }
+ .brand-portal .portal-story-entry-summary{
+  font-size:.88rem;
+  line-height:1.7;
+  margin-bottom:13px;
+ }
+ .brand-portal .portal-story-entry-action{
+  font-size:.89rem;
+  gap:10px;
+  padding-top:12px;
+ }
+ .brand-portal .portal-story-entry-arrow{
+  width:42px;
+  height:42px;
+  flex-basis:42px;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .brand-portal .portal-story-entry,
+ .brand-portal .portal-story-entry-media img,
+ .brand-portal .portal-story-entry-arrow{transition:none}
+}
