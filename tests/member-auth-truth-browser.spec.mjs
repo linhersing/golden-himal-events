@@ -155,13 +155,13 @@ test('Chinese selected on homepage remains Chinese through singer and news; lang
  await expect(page.locator('h1')).toContainText('गायक');
  await page.locator('a[href="./news.html"]').click();
  await expect(page.locator('html')).toHaveAttribute('lang','ne');
- await expect(page.locator('h1')).toContainText('नयाँ');
+ await expect(page.locator('h1')).toContainText('२०२७ गायन प्रतियोगिता');
  await page.locator('[data-lang=zh]').click();
- await expect(page.locator('h1')).toContainText('最新消息');
+ await expect(page.locator('h1')).toContainText('2027 歌唱比賽參賽指南');
  await expect(page.locator('.news-row').first().locator('summary strong[data-l=news01]')).toContainText('2027年度賽程');
  await page.reload();
  await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
- await expect(page.locator('h1')).toContainText('最新消息');
+ await expect(page.locator('h1')).toContainText('2027 歌唱比賽參賽指南');
  await page.locator('[data-lang=en]').click();
  await expect(page.locator('h1')).toContainText('Latest updates');
  await expect(page.locator('.news-row')).toHaveCount(8);
@@ -199,7 +199,7 @@ test('mobile news and member pages retain full Chinese layout without horizontal
  await page.screenshot({path:'test-results/ghv-trilingual/03-mobile-member-login-zh.png'});
  await page.goto('/news.html');
  await expect(page.locator('.news-row')).toHaveCount(8);
- await expect(page.locator('h1')).toContainText('最新消息');
+ await expect(page.locator('h1')).toContainText('2027 歌唱比賽參賽指南');
  await page.screenshot({path:'test-results/ghv-trilingual/04-mobile-news-zh.png'});
  const dims=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth}));
  expect(dims.scroll).toBeLessThanOrEqual(dims.client);
