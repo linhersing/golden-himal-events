@@ -865,3 +865,155 @@ body[data-page="news"] .news-row[id]{scroll-margin-top:18px}
  .ghv-contact-call{justify-content:flex-start}
  .ghv-contact-action{white-space:normal}
 }
+
+
+/* 2026-11-14 | Purpose-led talent discovery and separate rules / official notices.
+   One clear information architecture, not duplicate primary navigation. */
+.brand-portal .portal-announcements-rail{
+ margin-top:10px;
+ margin-bottom:9px;
+ text-align:right;
+}
+.brand-portal .portal-announcements-rail a{
+ display:inline-flex;
+ align-items:center;
+ padding:11px 2px;
+ min-height:44px;
+ color:#775333;
+ font-size:.94rem;
+ font-weight:730;
+ line-height:1.45;
+ text-decoration:underline;
+ text-underline-offset:4px;
+}
+.brand-portal .portal-announcements-rail a:hover{color:#4b3328}
+body[data-page="home"] .voice-talent-lead{
+ margin:0 0 15px;
+ max-width:555px;
+ color:#664c3b;
+ font-size:1.04rem;
+ line-height:1.7;
+ font-weight:530;
+}
+body[data-page="home"] .ghv-secondary-shortcuts{
+ display:flex;
+ flex-wrap:wrap;
+ gap:10px 19px;
+}
+body[data-page="news"] .contest-section-nav,
+body[data-page="announcements"] .contest-section-nav{
+ display:flex;
+ align-items:stretch;
+ gap:7px;
+ margin:14px 0 23px;
+ padding:5px;
+ border:1px solid #e5d7c8;
+ background:#f7f0e7;
+ border-radius:11px;
+}
+.contest-section-nav a{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ min-height:46px;
+ flex:1 1 0;
+ min-width:0;
+ padding:8px 10px;
+ border-radius:8px;
+ color:#775a44;
+ text-align:center;
+ font-weight:730;
+ font-size:.96rem;
+ line-height:1.5;
+ text-decoration:none;
+}
+.contest-section-nav a[aria-current="page"]{
+ background:#604434;
+ color:#fffaf1;
+ box-shadow:0 2px 7px rgba(70,46,31,.11);
+}
+.contest-section-nav a:focus-visible{outline:3px solid #aa814c;outline-offset:3px}
+body[data-page="news"] .news-heading .page-intro{max-width:710px}
+body[data-page="member"] .member-rules-prep{
+ display:flex;
+ flex-wrap:wrap;
+ align-items:center;
+ gap:3px 9px;
+ margin:15px 0 19px;
+ padding:15px 16px;
+ border-radius:10px;
+ border:1px solid #e0c9a8;
+ background:#f8f1e5;
+ font-size:.94rem;
+ line-height:1.65;
+ color:#675040;
+}
+.member-rules-prep strong{font-weight:770;color:#55392b}
+.member-rules-prep span{flex:1 1 100%}
+.member-rules-prep a{
+ display:inline-flex;
+ align-items:center;
+ min-height:43px;
+ color:#71471f;
+ font-weight:780;
+ text-decoration:underline;
+ text-underline-offset:3px;
+}
+body[data-page="announcements"] .announcement-heading .page-intro{
+ max-width:690px;
+ line-height:1.72;
+ color:#695548;
+}
+body[data-page="announcements"] .announcement-empty{
+ margin:24px 0 30px;
+ padding:30px 28px;
+ border:1px solid #e2d2bc;
+ border-radius:14px;
+ background:#fffbf5;
+}
+.announcement-empty-kicker{
+ color:#a58257;
+ text-transform:uppercase;
+ letter-spacing:.11em;
+ font-weight:760;
+ font-size:.74rem;
+}
+.announcement-empty h2{
+ margin:8px 0 10px;
+ font:700 clamp(1.18rem,3vw,1.53rem)/1.48 Georgia,"Noto Serif TC","Noto Serif Devanagari",serif;
+ color:#4b352a;
+}
+.announcement-empty p{
+ margin:0 0 16px;
+ color:#6e5849;
+ font-size:.97rem;
+ line-height:1.8;
+}
+.announcement-rules-link{
+ display:inline-flex;
+ align-items:center;
+ min-height:47px;
+ padding:10px 15px;
+ background:#644536;
+ color:#fffaf2;
+ border-radius:9px;
+ font-weight:760;
+ font-size:.95rem;
+ line-height:1.45;
+}
+.announcement-rules-link:hover{background:#51372c;color:#fff}
+.announcement-rules-link:focus-visible{outline:3px solid #b08853;outline-offset:4px}
+@media(max-width:650px){
+ .brand-portal .portal-announcements-rail{
+  text-align:left;
+  margin-bottom:8px;
+ }
+ body[data-page="home"] .voice-talent-lead{font-size:.97rem;line-height:1.65}
+ body[data-page="home"] .ghv-secondary-shortcuts{gap:3px 18px}
+ body[data-page="news"] .contest-section-nav,
+ body[data-page="announcements"] .contest-section-nav{margin:12px 0 20px}
+ .contest-section-nav a{font-size:.94rem;padding:10px 6px}
+ body[data-page="member"] .member-rules-prep{padding:13px 14px}
+ body[data-page="announcements"] .announcement-empty{padding:23px 18px}
+ .announcement-empty p{font-size:.93rem}
+}
