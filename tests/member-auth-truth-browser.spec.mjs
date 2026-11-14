@@ -157,7 +157,7 @@ test('Chinese selected on homepage remains Chinese through singer and news; lang
  await expect(page.locator('h1')).toContainText('गायक');
  await page.locator('.quick-nav a[href="./news.html"]').click();
  await expect(page.locator('html')).toHaveAttribute('lang','ne');
- await expect(page.locator('h1')).toContainText('२०२७ गायन प्रतियोगिता');
+ await expect(page.locator('h1')).toContainText('२०२७ प्रतियोगिता नियम तथा आवेदन मार्गदर्शन');
  await page.locator('[data-lang=zh]').click();
  await expect(page.locator('h1')).toContainText('2027 比賽規則與報名須知');
  await expect(page.locator('.news-row').first().locator('summary strong[data-l=news01]')).toContainText('2027年度賽程');
