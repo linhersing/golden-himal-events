@@ -163,7 +163,7 @@ test('Chinese selected on homepage remains Chinese through singer and news; lang
  await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
  await expect(page.locator('h1')).toContainText('2027 歌唱比賽參賽指南');
  await page.locator('[data-lang=en]').click();
- await expect(page.locator('h1')).toContainText('Latest updates');
+ await expect(page.locator('h1')).toContainText('2027 Singing Contest Guide');
  await expect(page.locator('.news-row')).toHaveCount(8);
  await page.screenshot({path:'test-results/ghv-trilingual/01-desktop-english-editorial-news.png'});
 });
