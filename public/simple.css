@@ -302,3 +302,7 @@ body[data-page="member"] #password-pending-screen .password-pending-preview{marg
  .news-detail p{font-size:.93rem;line-height:1.82}
  .formula-panel>strong{font-size:.98rem}
 }
+
+/* Keep prize information subordinate to the contest's three primary actions. */
+.front-hero+.voice-prize-teaser{max-width:1000px;width:calc(100% - 48px);margin:-8px auto 42px}
+@media(max-width:520px){.front-hero+.voice-prize-teaser{width:calc(100% - 32px);margin:0 auto 26px}}
