@@ -178,21 +178,22 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   await page.goto('/');
   await page.locator('[data-lang=zh]').click();
   const imgs=page.locator('.portal-concept-card img');
-  await expect(imgs).toHaveCount(3);
+  await expect(imgs).toHaveCount(2);
   await expect(page.locator('#design-views-heading')).toContainText('建築設計意象');
   await expect(page.locator('.portal-concepts-disclaimer')).toContainText('並非現場實拍');
   for(const [i,filename] of [
-   [0,'approved-fountain-night-20261114.jpg'],
-   [1,'approved-peace-tower-20261114.jpg'],
-   [2,'approved-grand-hall-20261114.jpg']
+   [0,'approved-peace-tower-20261114.jpg'],
+   [1,'approved-grand-hall-20261114.jpg']
   ]){
    const img=imgs.nth(i);
    await expect(img).toHaveAttribute('src','./images/'+filename);
    await img.scrollIntoViewIfNeeded();
    await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth===1024&&el.naturalHeight===768),{timeout:15000}).toBe(true);
   }
-  await expect(page.locator('.portal-concept-card')).toHaveCount(3);
+  await expect(page.locator('.portal-concept-card')).toHaveCount(2);
   await expect(page.locator('.portal-concept-card figcaption small')).toHaveCount(0);
+  // User-selected fountain appears once, in the full-card story entry.
+  await expect(page.locator('img[src="./images/approved-fountain-night-20261114.jpg"]')).toHaveCount(1);
   // Only the gallery-level note distinguishes proposed concepts; avoid per-card repetition.
   const top=page.locator('.portal-top-nav a').first();
   const affordance=await top.evaluate(el=>{
