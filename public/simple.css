@@ -308,90 +308,148 @@ body[data-page="member"] #password-pending-screen .password-pending-preview{marg
 @media(max-width:520px){.front-hero+.voice-prize-teaser{width:calc(100% - 32px);margin:0 auto 26px}}
 
 
-/* 2026-11-14 · Golden Himal Voice wedding declaration.
-   Approved composition: a slogan resting in the ivory/gold palette, not a framed print.
-   Keep the official original brand artwork; no generated architecture/photo replacement. */
+/* 2026-11-14 · Golden Himal Voice premium oval presentation.
+   Reference: approved 2nd phone image with sculpted ivory/champagne halo.
+   No framed poster, no artificial architecture, no scripts, no external fonts.
+   All effects are decorative CSS; screen-reader content stays real text. */
 .front-hero .front-visual.front-visual-wedding{
-  position:relative;isolation:isolate;overflow:hidden;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  width:100%;min-width:0;max-width:100%;
-  min-height:405px;margin:0;padding:28px 18px 24px;
-  background:
-    radial-gradient(ellipse 70% 52% at 50% 49%,rgba(255,253,249,.95) 0%,rgba(251,243,231,.94) 63%,transparent 100%),
-    radial-gradient(ellipse 72% 38% at 50% 78%,rgba(215,181,125,.20),transparent 90%);
-  border:0;box-shadow:none;border-radius:44% 44% 17% 17% / 30% 30% 16% 16%;
-  text-align:center;color:#694123;
+ position:relative;isolation:isolate;overflow:hidden;
+ display:flex;flex-direction:column;justify-content:center;align-items:center;
+ min-width:0;width:100%;max-width:100%;min-height:415px;
+ padding:40px 20px 35px;margin:0;
+ border:0;box-shadow:none;
+ border-radius:50% 50% 29% 29% / 36% 36% 22% 22%;
+ background:
+  radial-gradient(ellipse 70% 61% at 50% 43%,rgba(255,254,251,.96) 0%,rgba(255,252,244,.96) 54%,rgba(255,248,235,.38) 75%,transparent 96%),
+  radial-gradient(ellipse 73% 46% at 50% 92%,rgba(202,165,105,.15),transparent 96%);
+ text-align:center;color:#633d28;
 }
-.front-hero .front-visual-wedding::before,
-.front-hero .front-visual-wedding::after{
-  content:"";pointer-events:none;position:absolute;z-index:-1;opacity:.45;
-  border-radius:50%;filter:blur(10px);
+.front-visual-wedding .wedding-halo{
+ position:absolute;z-index:0;pointer-events:none;
+ inset:5% 0 4%;
+ border-radius:50%;
+ background:
+   radial-gradient(ellipse 81% 69% at 50% 42%,
+    rgba(255,255,251,.76) 0%,rgba(255,255,251,.45) 47%,
+    rgba(249,234,209,.62) 65%,rgba(231,202,166,.45) 73%,
+    rgba(252,244,228,.50) 80%,rgba(255,255,251,0) 91%),
+   radial-gradient(ellipse 85% 65% at 50% 97%,rgba(175,137,84,.27),transparent 73%);
+ box-shadow:
+    inset 0 16px 20px -18px rgba(150,110,62,.34),
+    inset 0 -12px 18px -15px rgba(153,112,69,.44),
+    0 14px 20px -18px rgba(143,96,47,.26);
+ transform:rotate(-1deg);
 }
-.front-hero .front-visual-wedding::before{
-  width:118%;height:65%;left:-9%;bottom:-38%;
-  background:radial-gradient(ellipse,rgba(206,163,98,.32),transparent 69%);
+.front-visual-wedding .wedding-halo::before{
+ content:"";position:absolute;inset:1.2% 1.7% 2.4%;border-radius:50%;
+ border:7px solid transparent;
+ border-top-color:rgba(255,255,252,.94);
+ border-right-color:rgba(239,215,177,.60);
+ border-bottom-color:rgba(235,205,162,.78);
+ border-left-color:rgba(254,244,224,.85);
+ box-shadow:
+   inset 0 13px 17px -18px rgba(134,86,48,.37),
+   inset 0 -12px 15px -15px rgba(149,104,61,.39),
+   0 5px 6px -6px rgba(147,104,60,.42),
+   0 0 13px rgba(255,253,244,.64);
+ transform:rotate(1deg);
 }
-.front-hero .front-visual-wedding::after{
-  width:100%;height:100%;inset:0;
-  background:linear-gradient(125deg,transparent 18%,rgba(238,213,174,.16) 50%,transparent 78%);
+.front-visual-wedding .wedding-halo::after{
+ content:"";position:absolute;z-index:1;
+ left:-6%;right:-6%;bottom:-10%;height:47%;
+ border-radius:50%;
+ border-top:10px solid rgba(255,253,247,.95);
+ border-bottom:9px solid rgba(224,193,151,.30);
+ box-shadow:0 -4px 13px rgba(255,255,252,.9),0 7px 17px -11px rgba(158,114,69,.4);
+ filter:blur(5px);
+ transform:rotate(-2deg);
 }
-.front-visual-wedding .wedding-ornament{position:absolute;top:2%;left:50%;transform:translateX(-50%);color:#b5925d;opacity:.62;font-size:1.2rem;line-height:1}
+.front-hero .front-visual.front-visual-wedding::before{
+ content:"";position:absolute;z-index:0;pointer-events:none;
+ inset:auto -10% -2%;height:50%;border-radius:50%;
+ background:
+   radial-gradient(ellipse 65% 56% at 50% 100%,rgba(185,141,78,.20),rgba(242,224,196,.12) 50%,transparent 84%);
+ filter:blur(12px);
+}
+.front-hero .front-visual.front-visual-wedding::after{
+ content:"";position:absolute;z-index:0;pointer-events:none;
+ inset:5% 2% auto;height:38%;border-radius:50%;
+ border-top:3px solid rgba(255,254,250,.96);
+ box-shadow:0 -6px 18px rgba(255,255,255,.70);
+ filter:blur(5px);
+}
+.front-visual-wedding .wedding-ornament{
+ position:relative;z-index:1;color:#b69b6b;
+ opacity:.75;font-size:1.15rem;line-height:1;
+ margin:0 0 10px;
+}
 .front-visual-wedding .wedding-slogan{
-  position:relative;z-index:1;font:650 clamp(2.1rem,3vw,3.1rem)/.99 Georgia,"Times New Roman",serif;
-  letter-spacing:-.038em;color:#663816;
-  margin:14px 0 12px;text-wrap:balance;
+ position:relative;z-index:1;
+ color:#673d22;font:650 clamp(2.05rem,3vw,3.05rem)/.99 Georgia,"Times New Roman",serif;
+ letter-spacing:-.034em;margin:0 0 13px;text-wrap:balance;
+ text-shadow:0 1px 0 rgba(255,255,253,.82);
 }
 .front-visual-wedding .wedding-slogan>span{display:block}
 .front-visual-wedding .wedding-nepali{
-  position:relative;z-index:1;margin:0 auto 8px;max-width:95%;
-  font:650 clamp(.95rem,1.4vw,1.15rem)/1.65 "Noto Serif Devanagari","Noto Sans Devanagari",serif;
-  color:#79502e;letter-spacing:0;text-wrap:balance;
+ position:relative;z-index:1;max-width:94%;
+ margin:0 0 8px;color:#79502e;
+ font:650 clamp(.93rem,1.35vw,1.14rem)/1.6 "Noto Serif Devanagari","Noto Sans Devanagari",serif;
+ text-wrap:balance;
 }
 .front-visual-wedding .wedding-rule{
-  color:#b58b4c;position:relative;z-index:1;
-  display:flex;align-items:center;gap:10px;
-  width:65%;margin:2px auto 0;font-size:1rem;line-height:1.25;
+ position:relative;z-index:1;display:flex;align-items:center;
+ gap:10px;width:64%;margin:0 0 5px;
+ color:#b5925a;font-size:.96rem;line-height:1.2;
 }
-.front-visual-wedding .wedding-rule::before,.front-visual-wedding .wedding-rule::after{
-  content:"";flex:1;height:1px;background:linear-gradient(to right,transparent,#cda975b3);
+.front-visual-wedding .wedding-rule::before,
+.front-visual-wedding .wedding-rule::after{
+ content:"";height:1px;flex:1;
+ background:linear-gradient(90deg,transparent,#c5a476a8);
 }
 .front-visual-wedding .wedding-rule::after{transform:scaleX(-1)}
 .front-hero .front-visual-wedding img.wedding-mark{
-  display:block;flex:none;position:relative;z-index:1;
-  width:min(67%,265px);height:125px;max-height:125px;
-  margin:0;object-fit:contain;object-position:center;
-  border:0;box-shadow:none;filter:none;
-  mix-blend-mode:multiply;
-  -webkit-mask-image:radial-gradient(ellipse 73% 75% at 50% 50%,#000 45%,rgba(0,0,0,.96) 69%,transparent 100%);
-  mask-image:radial-gradient(ellipse 73% 75% at 50% 50%,#000 45%,rgba(0,0,0,.96) 69%,transparent 100%);
+ position:relative;z-index:1;flex:none;display:block;
+ width:min(67%,252px);height:111px;max-height:111px;
+ margin:0;border:0;object-fit:contain;object-position:center;
+ filter:none;box-shadow:none;
+ mix-blend-mode:multiply;
+ -webkit-mask-image:radial-gradient(ellipse 69% 64% at 50% 50%,#000 42%,rgba(0,0,0,.96) 62%,transparent 96%);
+ mask-image:radial-gradient(ellipse 69% 64% at 50% 50%,#000 42%,rgba(0,0,0,.96) 62%,transparent 96%);
 }
 @media(max-width:830px){
  .front-hero .front-visual.front-visual-wedding{
-  order:0;min-height:325px;max-height:none;
-  max-width:510px;margin-inline:auto;padding:22px 10px;
-  border-radius:44% 44% 18% 18% / 27% 27% 14% 14%;
+  order:0;min-height:335px;max-height:none;max-width:520px;
+  width:100%;margin-inline:auto;padding:34px 12px 30px;
+  border-radius:50% 50% 29% 29% / 39% 39% 23% 23%;
  }
- .front-visual-wedding .wedding-slogan{font-size:clamp(1.95rem,6.5vw,2.6rem)}
- .front-visual-wedding .wedding-nepali{font-size:clamp(.91rem,2.5vw,1.03rem)}
- .front-hero .front-visual-wedding img.wedding-mark{width:min(68%,265px);height:110px;max-height:110px}
+ .front-visual-wedding .wedding-slogan{font-size:clamp(1.95rem,6.45vw,2.65rem)}
+ .front-visual-wedding .wedding-nepali{font-size:clamp(.91rem,2.6vw,1.08rem)}
+ .front-hero .front-visual-wedding img.wedding-mark{width:min(67%,242px);height:110px;max-height:110px}
 }
 @media(max-width:520px){
  .front-hero .front-visual.front-visual-wedding{
-  min-height:270px;max-height:none;margin:0 auto;
-  padding:18px 8px 15px;
+  min-height:268px;max-height:none;max-width:100%;
+  padding:25px 8px 22px;
  }
- .front-visual-wedding .wedding-ornament{top:1%;font-size:1rem}
+ .front-visual-wedding .wedding-halo{inset:3% 0 5%}
+ .front-visual-wedding .wedding-halo::before{border-width:5px}
+ .front-visual-wedding .wedding-halo::after{border-top-width:8px}
+ .front-visual-wedding .wedding-ornament{font-size:.9rem;margin-bottom:8px}
  .front-visual-wedding .wedding-slogan{
-  margin:9px 0 7px;font-size:clamp(1.83rem,8vw,2.3rem);line-height:1.03;
+  font-size:clamp(1.75rem,7.3vw,2.18rem);
+  line-height:1.02;margin-bottom:8px;
  }
- .front-visual-wedding .wedding-nepali{font-size:clamp(.86rem,3.5vw,1rem);line-height:1.45;margin-bottom:5px}
- .front-visual-wedding .wedding-rule{width:76%;font-size:.9rem}
+ .front-visual-wedding .wedding-nepali{
+  max-width:94%;font-size:clamp(.81rem,3.45vw,.99rem);
+  line-height:1.38;margin-bottom:5px;
+ }
+ .front-visual-wedding .wedding-rule{width:69%;margin-bottom:2px;font-size:.84rem}
  .front-hero .front-visual-wedding img.wedding-mark{
-  width:min(70%,235px);height:105px;max-height:105px;
+  width:min(65%,217px);height:94px;max-height:94px;
  }
 }
 @media(max-width:355px){
- .front-visual-wedding .wedding-slogan{font-size:1.7rem}
- .front-visual-wedding .wedding-nepali{font-size:.83rem}
- .front-hero .front-visual.front-visual-wedding{min-height:266px}
+ .front-hero .front-visual.front-visual-wedding{min-height:257px;padding:24px 6px}
+ .front-visual-wedding .wedding-slogan{font-size:1.64rem}
+ .front-visual-wedding .wedding-nepali{font-size:.8rem}
 }
