@@ -890,3 +890,10 @@ body[data-page="news"] .news-row[id]{scroll-margin-top:20px}
  body[data-page="news"] .news-plus:before,
  body[data-page="news"] .news-quick-grid>a{transition:none}
 }
+
+
+/* Anchored rule state remains evident after the page scroll. */
+body[data-page="news"] .news-quick-grid>a[aria-current="location"]{
+ border-color:#b08853;
+ background:#faf3e7;
+}
