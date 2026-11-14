@@ -6,10 +6,10 @@ const BASE='https://golden-himal-voice-preview.linhersing.workers.dev';
 const footerMarkers=['TEST MODE','class="test-site-banner test-site-footer wrap"'];
 const endpoints=[
   ['/',['id="home-about"','id="home-competition"','id="home-news"','href="./golden-himal.html"','href="./voice.html"','id="location"',...footerMarkers]],
-  ['/golden-himal.html',['data-page="story"','story-name','story-gallery','imageDisclaimer','gh-gallery-grand-hall-ai.webp',...footerMarkers]],
-  ['/voice.html',['data-page="home"','id="home-apply"','id="home-login"',...footerMarkers]],
+  ['/golden-himal.html',['data-page="story"','story-name','story-gallery','imageDisclaimer','gh-real-hall-hero-20261113.webp',...footerMarkers]],
+  ['/voice.html',['data-page="home"','id="home-apply"','id="home-login"','front-visual-wedding','The Best Wedding','NPR 10,000',...footerMarkers]],
   ['/member.html',[...footerMarkers,'id="member-email-form"','id="member-code-form"','id="member-status"','simple.js']],
-  ['/news.html',[...footerMarkers,'news-schedule']],
+  ['/news.html',[...footerMarkers,'news-schedule','id="rules-awards"','id="rules-voting"']],
   ['/simple.js',['request-code','test_email_service_unavailable','verify-code']]
 ];
 async function read(path) {
@@ -29,7 +29,7 @@ async function run() {
   const flags=Object.entries(value.resources||{}).map(([k,v])=>k+'='+Boolean(v)).join(', ');
   console.log('Read-only Email readiness: '+String(value.readiness)+'; '+flags);
   if(value.readiness!=='READY_FOR_INVITED_OTP_TEST')throw Error('Invited OTP readiness BLOCKED; inspect false boolean capability flags above');
-  console.log('PASS current member UI + read-only staging readiness. NOTE: No OTP was sent or delivered, and no login was verified.');
+  console.log('PASS same-version brand UI + read-only staging readiness. NOTE: No OTP was sent or delivered, no live score or official vote was executed, and no login was verified.');
 }
 let lastError;
 for(let attempt=1;attempt<=3;attempt++){
