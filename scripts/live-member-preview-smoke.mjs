@@ -7,7 +7,8 @@ const footerMarkers=['TEST MODE','class="test-site-banner test-site-footer wrap"
 const endpoints=[
   ['/',['id="home-about"','id="home-competition"','id="home-news"','href="./golden-himal.html"','href="./voice.html"','id="location"',...footerMarkers]],
   ['/golden-himal.html',['data-page="story"','story-name','story-gallery','imageDisclaimer','gh-real-hall-hero-20261113.webp',...footerMarkers]],
-  ['/voice.html',['data-page="home"','id="home-apply"','id="home-login"','front-visual-wedding','The Best Wedding','NPR 10,000',...footerMarkers]],
+  ['/voice.html',['data-page="home"','id="home-apply"','id="home-login"','front-visual-wedding','class="wedding-halo"','The Best Wedding','NPR 10,000',...footerMarkers]],
+  ['/simple.css',['.front-visual-wedding .wedding-halo::before','.front-visual-wedding .wedding-halo::after','border-top:10px solid rgba(255,253,247,.95)']],
   ['/member.html',[...footerMarkers,'id="member-email-form"','id="member-code-form"','id="member-status"','simple.js']],
   ['/news.html',[...footerMarkers,'news-schedule','id="rules-awards"','id="rules-voting"']],
   ['/simple.js',['request-code','test_email_service_unavailable','verify-code']]
