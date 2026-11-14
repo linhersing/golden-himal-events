@@ -1069,3 +1069,21 @@
   object-position:center center;
  }
 }
+
+
+/* 2026-11-14 | Avoid repeating the user-selected fountain artwork on the homepage.
+   Two distinct approved architectural concepts now form a quieter, two-column grid. */
+.brand-portal .portal-concepts-grid{
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:18px;
+}
+.brand-portal .portal-concepts-grid .portal-concept-card:last-child{
+ grid-column:auto;
+ max-width:none;
+}
+@media(max-width:650px){
+ .brand-portal .portal-concepts-grid{
+  grid-template-columns:1fr;
+  gap:13px;
+ }
+}
