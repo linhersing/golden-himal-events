@@ -752,3 +752,116 @@ body[data-page="news"] .news-row[id]{scroll-margin-top:18px}
  body[data-page="news"] .voucher-notice{padding:14px}
 }
 
+
+/* Golden Himal Palace verified public inquiry line, 2026-11-14.
+   Number approved for public consultation; no unconfirmed email address or web form. */
+.ghv-contact{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) minmax(220px,290px);
+ align-items:center;
+ gap:24px;
+ margin:34px auto 18px;
+ padding:24px 26px;
+ border:1px solid #dbc9af;
+ border-radius:17px;
+ background:linear-gradient(112deg,#fcf8f1 0%,#f4e8d9 100%);
+ box-shadow:0 5px 20px rgba(76,49,32,.04);
+ scroll-margin-top:20px;
+}
+.ghv-contact .ghv-contact-kicker{
+ margin:0 0 8px;
+ font-size:.72rem;
+ letter-spacing:.12em;
+ font-weight:790;
+ color:#997548;
+ line-height:1.4;
+}
+.ghv-contact h2{
+ margin:0 0 7px;
+ font:700 clamp(1.15rem,2.4vw,1.48rem)/1.4 Georgia,"Noto Serif TC","Noto Serif Devanagari",serif;
+ color:#49332b;
+}
+.ghv-contact .ghv-contact-copy>p:last-child{
+ margin:0;
+ max-width:560px;
+ font-size:.96rem;
+ line-height:1.7;
+ color:#675145;
+}
+.ghv-contact-details{
+ display:grid;
+ gap:7px;
+ min-width:0;
+}
+.ghv-contact-call{
+ display:flex;
+ flex-wrap:wrap;
+ align-items:center;
+ justify-content:space-between;
+ gap:5px 13px;
+ padding:12px 14px;
+ min-height:66px;
+ border:1px solid #684534;
+ border-radius:11px;
+ background:#634331;
+ color:#fffaf2;
+ text-decoration:none;
+ box-shadow:0 2px 8px rgba(64,45,32,.08);
+}
+.ghv-contact-call:hover,
+.ghv-contact-call:focus-visible{background:#775039}
+.ghv-contact-call:focus-visible{outline:3px solid #bb925f;outline-offset:4px}
+.ghv-contact-phone{
+ font-size:clamp(1.07rem,2vw,1.2rem);
+ letter-spacing:.012em;
+ font-weight:780;
+ line-height:1.4;
+ white-space:nowrap;
+ font-variant-numeric:tabular-nums;
+}
+.ghv-contact-action{
+ display:inline-flex;
+ align-items:center;
+ gap:4px;
+ font-size:.85rem;
+ font-weight:720;
+ line-height:1.4;
+ white-space:nowrap;
+}
+.ghv-contact-action::after{content:"↗";font-size:1.05rem}
+.ghv-contact-details small{
+ font-size:.78rem;
+ color:#776150;
+ line-height:1.55;
+}
+.ghv-contact-shortcut{margin:15px 0 0;font-size:.94rem;line-height:1.5}
+.ghv-contact-shortcut a{
+ display:inline-flex;
+ align-items:center;
+ min-height:44px;
+ padding:7px 2px;
+ color:#704c34;
+ font-weight:760;
+ text-decoration:underline;
+ text-underline-offset:4px;
+}
+.ghv-contact-shortcut a:hover{color:#513223}
+.brand-portal .ghv-contact-brand{margin-top:24px;margin-bottom:22px}
+@media(max-width:690px){
+ .ghv-contact{
+  grid-template-columns:minmax(0,1fr);
+  gap:16px;
+  padding:20px 17px;
+  margin:26px auto 17px;
+ }
+ .ghv-contact h2{font-size:1.23rem}
+ .ghv-contact .ghv-contact-copy>p:last-child{font-size:.92rem}
+ .ghv-contact-call{min-height:60px;padding:12px 14px}
+ .ghv-contact-phone{font-size:1.14rem}
+ .ghv-contact-action{font-size:.86rem}
+ .brand-portal .ghv-contact-brand{margin-top:20px}
+}
+@media(max-width:350px){
+ .ghv-contact-call{justify-content:flex-start}
+ .ghv-contact-action{white-space:normal}
+}

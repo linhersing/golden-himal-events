@@ -183,3 +183,38 @@ test('entrant guide title, fee section and readable action survive three-languag
  await page.locator('.news-quick-grid a[href="#rules-registration"]').click();
  await expect(page.locator('#rules-registration')).toHaveAttribute('open','');
 });
+
+
+test('official Golden Himal Palace phone contact is readable in mobile and desktop across five public pages',async({page})=>{
+ for(const width of [320,375,390,768,1280]){
+  await page.setViewportSize({width,height:840});
+  for(const pathname of ['/','/golden-himal.html','/voice.html','/news.html','/member.html']){
+   await page.goto(pathname);
+   const panel=page.locator('#contact');
+   await expect(panel).toHaveCount(1);
+   await expect(panel.locator('h2')).toBeVisible();
+   const call=panel.locator('a.ghv-contact-call');
+   await expect(call).toHaveAttribute('href','tel:+9779801199996');
+   await expect(call).toContainText('+977 9801199996');
+   const measures=await call.evaluate(n=>({height:n.getBoundingClientRect().height,width:n.getBoundingClientRect().width}));
+   expect(measures.height).toBeGreaterThanOrEqual(44);
+   expect(measures.width).toBeGreaterThan(180);
+   expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+   await page.locator('[data-lang=en]').click();
+   await expect(panel.locator('h2')).toContainText('Questions about the contest?');
+   await expect(call).toContainText('Call now');
+   await page.locator('[data-lang=ne]').click();
+   await expect(panel.locator('h2')).toContainText('प्रतियोगिताबारे');
+   await page.locator('[data-lang=zh]').click();
+   await expect(panel.locator('h2')).toContainText('有問題需要聯絡我們');
+  }
+ }
+ await page.goto('/news.html');
+ await page.locator('.quick-nav a[href="#contact"]').click();
+ await expect(page).toHaveURL(/#contact$/);
+ await expect(page.locator('#contact')).toBeInViewport();
+ await page.goto('/member.html');
+ await expect(page.locator('.quick-nav a[href="#contact"]')).toBeVisible();
+ await page.goto('/voice.html');
+ await expect(page.locator('.ghv-contact-shortcut a[href="#contact"]')).toBeVisible();
+});
