@@ -86,3 +86,20 @@ test('frontline awards and quick rules are clear, actionable and mobile-readable
  await expect(page.locator('#rules-awards .award-faq-list')).toContainText('NPR ५००');
  await expect(page.locator('.news-quick-grid a[href="#rules-registration"]')).toHaveAttribute('href','#rules-registration');
 });
+
+
+test('public contestant pages never expose internal frontline or draft-version terminology',async({page})=>{
+ for(const [path,label] of [['/news.html','news'],['/member.html','member'],['/voice.html','voice']]){
+  await page.goto(path);
+  for(const lang of ['en','zh','ne']){
+   await page.locator('[data-lang="'+lang+'"]').click();
+   const text=await page.locator('body').innerText();
+   expect(text,{message:label+'/'+lang+' must use contestant-facing language'}).not.toMatch(/前線|\bV2\b|frontline|November 13|11月13日|內部資料/i);
+  }
+ }
+ await page.goto('/news.html#rules-awards');
+ await page.locator('[data-lang=zh]').click();
+ await expect(page.locator('.news-quick-guide')).toContainText('先看五個參賽重點');
+ await expect(page.locator('.news-board-head')).toContainText('正式報名與收費尚未開放');
+ await expect(page.locator('#rules-awards')).toHaveAttribute('open','');
+});
