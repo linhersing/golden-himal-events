@@ -166,11 +166,13 @@ test('Golden Himal Palace story presents architecture without provenance chatter
  const [home,story,styles,language]=await Promise.all([
   read('index.html'),read('public/golden-himal.html'),read('public/brand-portal.css'),read('public/brand-portal.js')
  ]);
- const gallery=['gh-real-hall-hero-20261113.webp','gh-real-sky-lounge-20261113.webp','gh-real-fountain-night-landscape-20261113.webp','gh-real-guesthouse-20261113.webp','gh-real-chitwan-view-20261113.webp','gh-real-gateway-window-20261113.webp'];
+ const gallery=['gh-20261115-grand-hall-event.jpg','gh-20261115-grand-hall-interior.jpg','gh-20261115-buffet.jpg','gh-20261115-fountain-visitors.jpg','gh-20261115-hand-carved-door.jpg','gh-20261115-a-entrance-night.jpg','gh-20261115-fountain-night-visitors.jpg'];
  for(const file of gallery){
   assert.ok((home+story).includes(file),file);
  }
- assert.doesNotMatch(story,/gh-real-chandelier-detail-20261113\\.webp/); // Discard unflattering unfinished-lighting close-up from the public story\n assert.match(story,/gh-real-hall-hero-20261113\\.webp/); // Maintain an authentic hall image, not generated photography\n assert.doesNotMatch(story,/golden-himal-phase2-visualization|golden-himal-phase2-construction|<[^>]+>第一期|<[^>]+>第二期/);
+  assert.doesNotMatch(story,/gh-real-chandelier-detail-20261113\\.webp/);
+  assert.match(story,/gh-20261115-grand-hall-event\\.jpg/);
+  assert.doesNotMatch(story,/golden-himal-phase2-visualization|golden-himal-phase2-construction|<[^>]+>第一期|<[^>]+>第二期/);
  assert.doesNotMatch(home,/第一期建築實景/);
  assert.doesNotMatch(story,/class="gallery-disclaimer"/);
  assert.doesNotMatch(home+story,/AI 修飾形象影像/);
@@ -269,9 +271,34 @@ test('brand pages omit image provenance claims in all languages while retaining 
  assert.doesNotMatch(home+story+locale,banned);
  assert.doesNotMatch(locale,/imageDisclaimer|designViewsIntro/);
  assert.doesNotMatch(legacy,/Concept design · Not a venue photograph|品牌視覺示意 · 非場地實景照片|Hall photography pending|宴會廳照片待補/);
- assert.match(home,/approved-peace-tower-20261114\.jpg/);
- assert.match(home,/approved-grand-hall-20261114\.jpg/);
- assert.match(home,/approved-fountain-night-20261114\.jpg/);
+ assert.match(home,/gh-20261115-a-entrance-day\.jpg/);
+ assert.match(home,/gh-20261115-main-building-entrance\.jpg/);
+ assert.match(home,/gh-20261115-fountain-night\.jpg/);
  assert.match(legacy,/Do not enter real personal information/);
  assert.match(home,/正式比賽報名與真實付款尚未開放/);
+});
+
+
+test('new Golden Himal imagery is unique across public home and story, preserving all navigation',async()=>{
+ const [home,story]=await Promise.all([read('index.html'),read('public/golden-himal.html')]);
+ const refs=(home+'\n'+story).matchAll(/<img\b[^>]*\bsrc="\.\/images\/([^"]+)"/g);
+ const images=[...refs].map(x=>x[1]).filter(x=>x!=='brand-identity.png');
+ assert.equal(images.length,new Set(images).size,'Do not reuse the same photograph on homepage and brand story');
+ const required=[
+  'gh-20261115-grand-hall-event.jpg','gh-20261115-grand-hall-interior.jpg',
+  'gh-20261115-buffet.jpg','gh-20261115-fountain-visitors.jpg',
+  'gh-20261115-hand-carved-door.jpg','gh-20261115-a-entrance-night.jpg',
+  'gh-20261115-fountain-night-visitors.jpg','gh-20261115-fountain-night.jpg',
+  'gh-20261115-sky-lounge-red-seat.jpg','gh-20261115-fountain-day.jpg',
+  'gh-20261115-night-exterior.jpg','gh-20261115-a-entrance-day.jpg',
+  'gh-20261115-main-building-entrance.jpg'
+ ];
+ for(const img of required){
+  assert.ok(images.includes(img),'Missing approved photo '+img);
+  const file=await read('public/images/'+img);
+  assert.ok(file.length>100,'Missing file bytes for '+img);
+ }
+ assert.match(story,/data-p="galleryNight">木雕主入口/);
+ assert.match(home,/href="\.\/golden-himal\.html"/);
+ assert.match(home,/href="\.\/voice\.html"/);
 });
