@@ -52,7 +52,7 @@ test('brand-first homepage has exactly three visible primary destinations and fo
   }
   await expect(page.locator('#home-about')).toHaveAttribute('href','./golden-himal.html');
   await expect(page.locator('.portal-photo-card img[src*="gh-real-fountain-20261113.webp"]')).toHaveCount(0);
-  await expect(page.locator('.portal-photo-card img[src*="gh-real-fountain-night-landscape"]')).toHaveCount(1);
+  await expect(page.locator('.portal-photo-card img[src*="gh-20261115-fountain-day"]')).toHaveCount(1);
   for(const pic of await page.locator('.portal-photo-card img').all()){
    await pic.scrollIntoViewIfNeeded();
    await expect.poll(()=>pic.evaluate(el=>el.complete&&el.naturalWidth>0),{timeout:10000}).toBeTruthy();
@@ -182,18 +182,18 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   await expect(page.locator('#design-views-heading')).toContainText('建築與空間特色');
   await expect(page.locator('.portal-concepts-disclaimer')).toHaveCount(0);
   for(const [i,filename] of [
-   [0,'approved-peace-tower-20261114.jpg'],
-   [1,'approved-grand-hall-20261114.jpg']
+   [0,'gh-20261115-a-entrance-day.jpg'],
+   [1,'gh-20261115-main-building-entrance.jpg']
   ]){
    const img=imgs.nth(i);
    await expect(img).toHaveAttribute('src','./images/'+filename);
    await img.scrollIntoViewIfNeeded();
-   await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth===1024&&el.naturalHeight===768),{timeout:15000}).toBe(true);
+   await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth===1477&&el.naturalHeight===1108),{timeout:15000}).toBe(true);
   }
   await expect(page.locator('.portal-concept-card')).toHaveCount(2);
   await expect(page.locator('.portal-concept-card figcaption small')).toHaveCount(0);
   // User-selected fountain appears once, in the full-card story entry.
-  await expect(page.locator('img[src="./images/approved-fountain-night-20261114.jpg"]')).toHaveCount(1);
+  await expect(page.locator('img[src="./images/gh-20261115-fountain-night.jpg"]')).toHaveCount(1);
   // Architectural images use short descriptive captions; no extra provenance banners.
   const top=page.locator('.portal-top-nav a').first();
   const affordance=await top.evaluate(el=>{
@@ -238,7 +238,7 @@ test('brand story editorial preview is a discoverable full-card link before the 
   expect(actionMetrics.height).toBeGreaterThanOrEqual(62);
   await expect(entry.locator('#portal-story-entry-action-label')).toBeVisible();
   const photo=entry.locator('img');
-  await expect(photo).toHaveAttribute('src','./images/approved-fountain-night-20261114.jpg');
+  await expect(photo).toHaveAttribute('src','./images/gh-20261115-fountain-night.jpg');
   await expect(photo).toHaveAttribute('alt',/夜間噴泉/);
   await entry.scrollIntoViewIfNeeded();
   await expect.poll(()=>photo.evaluate(el=>el.complete&&el.naturalWidth>0),{timeout:15000}).toBe(true);
@@ -264,4 +264,21 @@ test('brand story editorial preview is a discoverable full-card link before the 
  await expect(page.locator('.portal-story-entry-title')).toContainText('Golden Himal');
  await expect(page.locator('.portal-story-entry-action')).toContainText('Golden Himal को कथा पृष्ठमा जानुहोस्');
  await expect(page.locator('a.portal-story-entry')).toHaveAttribute('href','./golden-himal.html');
+});
+
+
+test('wood-carved designer entrance is visible and each displayed venue image is unique',async({page})=>{
+ await page.goto('/golden-himal.html');
+ await expect(page.locator('.story-gallery img[src$="gh-20261115-hand-carved-door.jpg"]')).toHaveCount(1);
+ await expect(page.locator('.story-gallery [data-p="galleryNight"]')).toContainText('木雕主入口');
+ const group=page.locator('.story-hero-image img, .story-gallery img, .story-gallery-more img');
+ const srcs=await group.evaluateAll(nodes=>nodes.map(n=>n.getAttribute('src')));
+ expect(srcs.length).toBe(new Set(srcs).size);
+ for(const img of await page.locator('.story-gallery img').all()){
+   await img.scrollIntoViewIfNeeded();
+   await expect.poll(()=>img.evaluate(x=>x.complete && x.naturalWidth>0),{timeout:15000}).toBe(true);
+ }
+ await page.goto('/');
+ const homeSrc=await page.locator('.portal-stage img, .portal-story-entry img, .portal-photo-grid img, .portal-concepts-grid img, .portal-outlook img').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('src')));
+ expect(homeSrc.length).toBe(new Set(homeSrc).size);
 });

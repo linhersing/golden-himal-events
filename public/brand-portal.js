@@ -283,6 +283,12 @@ Object.assign(translations.zh,{"navNews":"比賽規則","newsLink":"比賽規則
 Object.assign(translations.en,{"navNews":"Contest Rules","newsLink":"Contest Rules","newsLinkSub":"Must read before entering · Full rules","announcementsLink":"Latest updates | Selection & event notices →"});
 Object.assign(translations.ne,{"navNews":"प्रतियोगिता नियम","newsLink":"प्रतियोगिता नियम","newsLinkSub":"भाग लिनुअघि अनिवार्य पढ्नुहोस्","announcementsLink":"नयाँ सूचना | छनोट र कार्यक्रमका खबर →"});
 
+
+/* Approved November 15 photo placements; labels describe the actual visual content. */
+Object.assign(translations.zh,{"homePhotoFountain":"金環噴泉日景","homePhotoFountainSub":"金色圓環與日間水景","designTowerDesc":"鮮明 A 字型輪廓與弧形入口","designHallTitle":"主建築入口","designHallDesc":"白金色立面與木質主門的細節","galleryHall":"金色宴會大廳","galleryLounge":"景觀餐廳自助餐","galleryWater":"愛之環噴泉廣場","galleryNight":"木雕主入口","galleryGateway":"A 字型入口夜景","galleryView":"夜間噴泉與相聚時光"});
+Object.assign(translations.en,{"homePhotoFountain":"Ring fountain by day","homePhotoFountainSub":"Golden rings and flowing water","designTowerDesc":"Distinctive A-frame façade and arched entrance","designHallTitle":"Main Building Entrance","designHallDesc":"White-and-gold façade with timber entry details","galleryHall":"Golden Banquet Hall","galleryLounge":"Scenic Buffet Area","galleryWater":"Ring of Love Fountain Plaza","galleryNight":"Carved Wood Entrance","galleryGateway":"A-frame Entrance at Night","galleryView":"Evening Fountain Gathering"});
+Object.assign(translations.ne,{"homePhotoFountain":"दिउँसोको सुनौलो फोहरा","homePhotoFountainSub":"सुनौला घेरा र पानीको दृश्य","designTowerDesc":"ए आकारको संरचना र घुमाउरो प्रवेशद्वार","designHallTitle":"मुख्य भवन प्रवेशद्वार","designHallDesc":"सेतो–सुनौलो बाहिरी भाग र काठको मुख्य ढोका","galleryHall":"सुनौलो भोज कक्ष","galleryLounge":"दृश्यसहितको बुफे कक्ष","galleryWater":"प्रेम घेराको फोहरा प्राङ्गण","galleryNight":"काठको नक्काशी गरिएको मूलद्वार","galleryGateway":"रातको ए आकारको प्रवेशद्वार","galleryView":"साँझको फोहरा र जमघट"});
+
 let lang='zh';try{const saved=localStorage.getItem(key);if(Object.prototype.hasOwnProperty.call(translations,saved))lang=saved}catch{}
 function apply(){document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
  document.querySelectorAll('[data-p]').forEach(el=>{const value=translations[lang][el.dataset.p];if(value!==undefined)el.textContent=value});
