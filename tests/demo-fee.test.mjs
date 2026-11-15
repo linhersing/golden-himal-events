@@ -24,7 +24,9 @@ test('rules page exposes interactive calculator only; does not claim real multi-
  for(const name of ['feeCalculatorTitle','feeCalculatorLabel','feeCalculatorNote']){
   assert.match(locale,new RegExp(name));
  }
- assert.doesNotMatch(script,/fetch\(|localStorage|sessionStorage|XMLHttpRequest|FormData|/api/|\bdocument\.cookie\b/);
+ for(const unsafe of ['fetch(','localStorage','sessionStorage','XMLHttpRequest','FormData','/api/','document.cookie']){
+  assert.equal(script.includes(unsafe),false,'fee estimator must not use '+unsafe);
+ }
 });
 test('fee calculator reacts to chosen quantity and language without backend communication',()=>{
  const events={};
