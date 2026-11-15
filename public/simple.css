@@ -1017,3 +1017,70 @@ body[data-page="announcements"] .announcement-empty{
  body[data-page="announcements"] .announcement-empty{padding:23px 18px}
  .announcement-empty p{font-size:.93rem}
 }
+
+/* 2026-11-15: non-payment, mobile-first Demo fee estimator in competition rules. */
+body[data-page="news"] .demo-fee-estimator{
+ margin:19px 0 21px;
+ padding:19px 20px;
+ background:#fffaf2;
+ border:1px solid #dfc9a8;
+ border-radius:15px;
+}
+body[data-page="news"] .demo-fee-estimator h4{
+ margin:0 0 9px;
+ font-weight:780;
+ font-size:1.08rem;
+ color:#523b2a;
+}
+body[data-page="news"] .demo-fee-estimator label{
+ display:block;
+ font-size:.95rem;
+ line-height:1.6;
+ font-weight:650;
+ color:#665040;
+}
+body[data-page="news"] .demo-fee-controls{
+ margin-top:12px;
+ display:grid;
+ grid-template-columns:minmax(90px,1fr) auto auto;
+ align-items:center;
+ gap:13px;
+}
+body[data-page="news"] .demo-fee-controls input[type="range"]{
+ display:block;
+ width:100%;
+ min-height:44px;
+ margin:0;
+ accent-color:#966531;
+ cursor:pointer;
+}
+body[data-page="news"] .demo-fee-controls output{
+ font-size:.95rem;
+ font-weight:750;
+ min-width:56px;
+ color:#5b4030;
+ white-space:nowrap;
+ text-align:center;
+}
+body[data-page="news"] .demo-fee-controls strong{
+ font-size:1.14rem;
+ font-variant-numeric:tabular-nums;
+ color:#624025;
+ white-space:nowrap;
+}
+body[data-page="news"] .demo-fee-estimator p{
+ margin:10px 0 0;
+ font-size:.87rem;
+ line-height:1.65;
+ color:#705c4b;
+}
+@media(max-width:540px){
+ body[data-page="news"] .demo-fee-estimator{padding:15px 14px}
+ body[data-page="news"] .demo-fee-controls{
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:5px 9px;
+ }
+ body[data-page="news"] .demo-fee-controls input[type="range"]{grid-column:1/-1}
+ body[data-page="news"] .demo-fee-controls output{text-align:left}
+ body[data-page="news"] .demo-fee-controls strong{text-align:right;font-size:1.2rem}
+}

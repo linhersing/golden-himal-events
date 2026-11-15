@@ -216,6 +216,24 @@ Object.assign(texts.zh,{guideFeeText:'每支 Demo NPR 500',news04lead:'每支 De
 Object.assign(texts.en,{guideFeeText:'NPR 500 per Demo',news04lead:'NPR 500 per Demo · max 10',feeTitle:'Demo-based fees and submission limit',feeBody:'The fee is NPR 500 for each submitted Demo, up to 10 Demos (maximum NPR 5,000). Multi-Demo submission and real payments are not yet available on this TEST site.',feeExamples:'1 Demo = NPR 500 · 5 Demos = NPR 2,500 · 10 Demos = NPR 5,000 (maximum)',awardFaq2A:'April registration is not open yet. Any new Demo would be charged NPR 500 each, subject to the organizer’s final written rules.',awardFaq3A:'Only the NPR 500 fee per Demo is confirmed; qualifier and final rule adjustments await written notice.',demoFeeBoundary:'Latest fee: NPR 500 per Demo, up to 10. This TEST form currently accepts one Demo link at a time; multi-Demo submission and real payment are not yet available.'});
 Object.assign(texts.ne,{guideFeeText:'प्रति डेमो NPR ५००',news04lead:'प्रति डेमो NPR ५०० · अधिकतम १०',feeTitle:'डेमो अनुसार शुल्क र सीमा',feeBody:'प्रत्येक डेमोको शुल्क NPR ५०० हो। अधिकतम १० डेमो (कुल NPR ५,०००) सम्म। परीक्षण साइटमा धेरै डेमो र वास्तविक भुक्तानी खुलेको छैन।',feeExamples:'१ डेमो = NPR ५०० · ५ डेमो = NPR २,५०० · १० डेमो = NPR ५,००० (अधिकतम)',awardFaq2A:'अप्रिलको दर्ता खुलेको छैन। नयाँ डेमोको शुल्क प्रति डेमो NPR ५०० हुनेछ; आयोजकको लिखित नियम लागू हुनेछ।',awardFaq3A:'हाल प्रत्येक डेमो NPR ५०० मात्र पुष्टि भएको छ। छनोट र फाइनलका नियमको लिखित सूचना बाँकी छ।',demoFeeBoundary:'नयाँ शुल्क: प्रत्येक डेमो NPR ५००, अधिकतम १०। यो परीक्षण फारममा अहिले एकपटकमा एक डेमो लिङ्क मात्र दिन सकिन्छ; धेरै डेमो र वास्तविक भुक्तानी खुलेको छैन।'});
 
+
+/* 2026-11-15: demo pricing preview (does not open real payment). */
+Object.assign(texts.zh,{
+ feeCalculatorTitle:'Demo 費用試算',
+ feeCalculatorLabel:'選擇 Demo 數量（1～10支）',
+ feeCalculatorNote:'僅為費用試算，尚未開放多支 Demo 送出或真實付款。'
+});
+Object.assign(texts.en,{
+ feeCalculatorTitle:'Demo fee estimator',
+ feeCalculatorLabel:'Select Demo quantity (1–10)',
+ feeCalculatorNote:'Estimate only. Multi-Demo submission and real payments are not yet available.'
+});
+Object.assign(texts.ne,{
+ feeCalculatorTitle:'डेमो शुल्क अनुमान',
+ feeCalculatorLabel:'डेमो सङ्ख्या छान्नुहोस् (१–१०)',
+ feeCalculatorNote:'यो रकमको अनुमान मात्र हो। धेरै डेमो पठाउने वा वास्तविक भुक्तानी गर्ने सुविधा खुलेको छैन।'
+});
+
 const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
