@@ -182,7 +182,7 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   await expect(page.locator('#design-views-heading')).toContainText('建築與空間特色');
   await expect(page.locator('.portal-concepts-disclaimer')).toHaveCount(0);
   for(const [i,filename] of [
-   [0,'gh-20261115-a-entrance-day-03.jpg'],
+   [0,'gh-20261115-a-entrance-night-10.jpg'],
    [1,'approved-grand-hall-20261114.jpg']
   ]){
    const img=imgs.nth(i);
