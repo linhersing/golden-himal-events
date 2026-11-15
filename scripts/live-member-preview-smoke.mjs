@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 // Read-only live check for current brand portal and invited member OTP preview.
 // GET only: does not request any codes, send emails, mutate D1, or reveal private data.
 const BASE='https://golden-himal-voice-preview.linhersing.workers.dev';
@@ -32,6 +33,24 @@ async function run() {
   const pixels=new Uint8Array(await artwork.arrayBuffer());
   if(pixels.length<20000||pixels[0]!==0xff||pixels[1]!==0xd8)throw Error('Approved artwork missing or invalid JPEG payload');
   console.log('PASS real approved wedding artwork: '+pixels.length+' bytes');
+  // This catches the exact failure where HTML labels the Peace Tower but the deployed image
+  // bytes are actually the unfinished banquet hall. Match reviewed source pixels, not alt text.
+  const reviewedImages=[
+    ['gh-reviewed-20261115-fountain-day.jpg','5d35f3a70dd47740bd1b7bfe01b0480e3eacd74a829dd5ea2c73c4bd708d64be'],
+    ['gh-reviewed-20261115-a-entrance-night.jpg','856b24de7268f739d9ad938f888c23595736d73fe761f7b17e6889572c9fe798'],
+    ['gh-reviewed-20261115-grand-hall-empty.jpg','03ddc40c35ded2244ce6495164a5bf9e02606c0493b96db7e77d8cb14276681b']
+  ];
+  for(const [file,expected] of reviewedImages){
+    const imageResponse=await read('/images/'+file);
+    if(!(imageResponse.headers.get('content-type')||'').toLowerCase().includes('image/jpeg'))
+      throw Error('Reviewed image wrong content type: '+file);
+    const actual=Buffer.from(await imageResponse.arrayBuffer());
+    if(actual.length<20000||actual[0]!==0xff||actual[1]!==0xd8)
+      throw Error('Reviewed image invalid JPEG: '+file);
+    const digest=createHash('sha256').update(actual).digest('hex');
+    if(digest!==expected)throw Error('Reviewed image bytes do not match approved user upload: '+file);
+    console.log('PASS approved actual image bytes: '+file+' '+actual.length+' bytes');
+  }
   const value=await (await read('/api/staging/e2e-readiness')).json();
   if(value.ok!==true||value.testOnly!==true)throw Error('Readiness returned malformed or unavailable status');
   // Only boolean capability names are reported; never print secret values, addresses, or tokens.
