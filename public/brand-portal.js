@@ -283,6 +283,23 @@ Object.assign(translations.zh,{"navNews":"比賽規則","newsLink":"比賽規則
 Object.assign(translations.en,{"navNews":"Contest Rules","newsLink":"Contest Rules","newsLinkSub":"Must read before entering · Full rules","announcementsLink":"Latest updates | Selection & event notices →"});
 Object.assign(translations.ne,{"navNews":"प्रतियोगिता नियम","newsLink":"प्रतियोगिता नियम","newsLinkSub":"भाग लिनुअघि अनिवार्य पढ्नुहोस्","announcementsLink":"नयाँ सूचना | छनोट र कार्यक्रमका खबर →"});
 
+/* 2026-11-15 approved onsite images: precise short captions in all three languages. */
+Object.assign(translations.zh,{
+ homePhotoLounge:"景觀餐飲空間",homePhotoLoungeSub:"臨窗自助餐檯",
+ galleryWater:"金環噴泉日景",galleryNight:"A 字型入口夜景",
+ galleryGateway:"木雕主門設計",galleryView:"相聚的空間"
+});
+Object.assign(translations.en,{
+ homePhotoLounge:"Scenic dining",homePhotoLoungeSub:"Buffet service by the windows",
+ galleryWater:"Ring fountain by day",galleryNight:"A-frame entrance at night",
+ galleryGateway:"Carved wooden entrance",galleryView:"Gathering spaces"
+});
+Object.assign(translations.ne,{
+ homePhotoLounge:"दृश्यसहितको भोजन कक्ष",homePhotoLoungeSub:"झ्यालछेउको बुफे",
+ galleryWater:"दिनको सुनौलो घेरा फोहरा",galleryNight:"रातको ए आकारको प्रवेशद्वार",
+ galleryGateway:"नक्काशीदार काठको मूलढोका",galleryView:"भेटघाटको स्थान"
+});
+
 let lang='zh';try{const saved=localStorage.getItem(key);if(Object.prototype.hasOwnProperty.call(translations,saved))lang=saved}catch{}
 function apply(){document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
  document.querySelectorAll('[data-p]').forEach(el=>{const value=translations[lang][el.dataset.p];if(value!==undefined)el.textContent=value});

@@ -166,11 +166,11 @@ test('Golden Himal Palace story presents architecture without provenance chatter
  const [home,story,styles,language]=await Promise.all([
   read('index.html'),read('public/golden-himal.html'),read('public/brand-portal.css'),read('public/brand-portal.js')
  ]);
- const gallery=['gh-real-hall-hero-20261113.webp','gh-real-sky-lounge-20261113.webp','gh-real-fountain-night-landscape-20261113.webp','gh-real-guesthouse-20261113.webp','gh-real-chitwan-view-20261113.webp','gh-real-gateway-window-20261113.webp'];
+ const gallery=["gh-20261115-building-night-01.jpg","gh-20261115-hall-activity-02.jpg","gh-20261115-a-entrance-day-03.jpg","gh-20261115-golden-dining-04.jpg","gh-20261115-buffet-05.jpg","gh-20261115-fountain-night-09.jpg","gh-20261115-a-entrance-night-10.jpg","gh-20261115-golden-gathering-11.jpg","gh-20261115-fountain-day-12.jpg","gh-20261115-building-front-13.jpg","gh-20261115-carved-door-14.jpg"];
  for(const file of gallery){
   assert.ok((home+story).includes(file),file);
  }
- assert.doesNotMatch(story,/gh-real-chandelier-detail-20261113\\.webp/); // Discard unflattering unfinished-lighting close-up from the public story\n assert.match(story,/gh-real-hall-hero-20261113\\.webp/); // Maintain an authentic hall image, not generated photography\n assert.doesNotMatch(story,/golden-himal-phase2-visualization|golden-himal-phase2-construction|<[^>]+>第一期|<[^>]+>第二期/);
+ assert.doesNotMatch(story,/gh-real-chandelier-detail-20261113\\.webp/); // Discard unflattering unfinished-lighting close-up from the public story\n assert.match(story,/gh-20261115-hall-activity-02\.jpg/); // Maintain an authentic hall image, not generated photography\n assert.doesNotMatch(story,/golden-himal-phase2-visualization|golden-himal-phase2-construction|<[^>]+>第一期|<[^>]+>第二期/);
  assert.doesNotMatch(home,/第一期建築實景/);
  assert.doesNotMatch(story,/class="gallery-disclaimer"/);
  assert.doesNotMatch(home+story,/AI 修飾形象影像/);
@@ -269,9 +269,30 @@ test('brand pages omit image provenance claims in all languages while retaining 
  assert.doesNotMatch(home+story+locale,banned);
  assert.doesNotMatch(locale,/imageDisclaimer|designViewsIntro/);
  assert.doesNotMatch(legacy,/Concept design · Not a venue photograph|品牌視覺示意 · 非場地實景照片|Hall photography pending|宴會廳照片待補/);
- assert.match(home,/approved-peace-tower-20261114\.jpg/);
+ assert.match(home,/gh-20261115-a-entrance-day-03\.jpg/);
  assert.match(home,/approved-grand-hall-20261114\.jpg/);
  assert.match(home,/approved-fountain-night-20261114\.jpg/);
  assert.match(legacy,/Do not enter real personal information/);
  assert.match(home,/正式比賽報名與真實付款尚未開放/);
+});
+
+
+test('new venue images exist and no gallery photograph repeats between homepage and story',async()=>{
+ const home=await read('index.html'),story=await read('public/golden-himal.html');
+ const imgs=html=>[...html.matchAll(/<img[^>]+src="\.\/images\/([^"]+)"/g)]
+   .map(m=>m[1]).filter(name=>name!=='brand-identity.png');
+ const a=imgs(home),b=imgs(story);
+ const combined=[...a,...b];
+ assert.equal(new Set(combined).size,combined.length,'each displayed photograph should be unique across home and story');
+ const required=["gh-20261115-building-night-01.jpg","gh-20261115-hall-activity-02.jpg","gh-20261115-a-entrance-day-03.jpg","gh-20261115-golden-dining-04.jpg","gh-20261115-buffet-05.jpg","gh-20261115-fountain-night-09.jpg","gh-20261115-a-entrance-night-10.jpg","gh-20261115-golden-gathering-11.jpg","gh-20261115-fountain-day-12.jpg","gh-20261115-building-front-13.jpg","gh-20261115-carved-door-14.jpg"];
+ for(const filename of required){
+  assert.ok(combined.includes(filename),`approved photo not used: ${filename}`);
+  const data=await readFile(new URL('../public/images/'+filename,import.meta.url));
+  assert.ok(data.length>20000,`photo must contain real image bytes: ${filename}`);
+  assert.equal(data[0],0xff,'JPEG magic bytes');
+  assert.equal(data[1],0xd8,'JPEG magic bytes');
+ }
+ assert.match(story,/data-p="galleryGateway">木雕主門設計/);
+ const oldLinks=html=>[...html.matchAll(/\bhref="([^"]+)"/g)].map(x=>x[1]);
+ assert.ok(oldLinks(story).includes('./voice.html'));
 });
