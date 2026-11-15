@@ -74,7 +74,7 @@ test('brand story balances venue photos with authentic narrative and quiet image
   await expect(page.locator('.name-piece')).toHaveCount(3);
   await expect(page.locator('.portal-top-nav a')).toHaveCount(4);
   await expect(page.locator('.portal-top-nav [aria-current=page]')).toHaveAttribute('href','./golden-himal.html');
-  await expect(page.locator('.story-gallery .gallery-card')).toHaveCount(4);
+  await expect(page.locator('.story-gallery .gallery-card')).toHaveCount(3);
   await expect(page.locator('.gallery-disclaimer')).toHaveCount(0);
   await expect(page.locator('[data-p="journeyHeading"]')).toBeVisible();
   await expect(page.locator('.story-gallery figcaption [data-p="galleryEnhanced"]')).toHaveCount(0);
@@ -178,21 +178,22 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   await page.goto('/');
   await page.locator('[data-lang=zh]').click();
   const imgs=page.locator('.portal-concept-card img');
-  await expect(imgs).toHaveCount(2);
+  await expect(imgs).toHaveCount(3);
   await expect(page.locator('#design-views-heading')).toContainText('建築與空間特色');
   await expect(page.locator('.portal-concepts-disclaimer')).toHaveCount(0);
   for(const [i,filename] of [
-   [0,'gh-reviewed-20261115-a-entrance-night.jpg'],
-   [1,'approved-grand-hall-20261114.jpg']
-  ]){
+    [0,'gh-reviewed-20261115-fountain-day.jpg'],
+    [1,'gh-reviewed-20261115-a-entrance-night.jpg'],
+    [2,'approved-grand-hall-20261114.jpg']
+   ]){
    const img=imgs.nth(i);
    await expect(img).toHaveAttribute('src','./images/'+filename);
    await img.scrollIntoViewIfNeeded();
-   await expect.poll(()=>img.evaluate((el,sz)=>el.complete&&el.naturalWidth===sz[0]&&el.naturalHeight===sz[1],i===0?[1448,1086]:[1024,768]),{timeout:15000}).toBe(true);
+   await expect.poll(()=>img.evaluate((el,sz)=>el.complete&&el.naturalWidth===sz[0]&&el.naturalHeight===sz[1],i===2?[1024,768]:[1448,1086]),{timeout:15000}).toBe(true);
   }
-  await expect(page.locator('.portal-concept-card')).toHaveCount(2);
+  await expect(page.locator('.portal-concept-card')).toHaveCount(3);
   await expect(page.locator('.portal-concept-card figcaption small')).toHaveCount(0);
-  // User-selected fountain appears once, in the full-card story entry.
+  // The night-fountain spotlight and the daytime-fountain feature are two distinct reviewed photos.
   await expect(page.locator('img[src="./images/approved-fountain-night-20261114.jpg"]')).toHaveCount(1);
   // Architectural images use short descriptive captions; no extra provenance banners.
   const top=page.locator('.portal-top-nav a').first();
