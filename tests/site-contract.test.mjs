@@ -166,11 +166,11 @@ test('Golden Himal Palace story presents architecture without provenance chatter
  const [home,story,styles,language]=await Promise.all([
   read('index.html'),read('public/golden-himal.html'),read('public/brand-portal.css'),read('public/brand-portal.js')
  ]);
- const gallery=["gh-20261115-building-night-01.jpg","approved-grand-hall-20261114.jpg","approved-peace-tower-20261114.jpg","gh-20261115-golden-dining-04.jpg","gh-20261115-buffet-05.jpg","gh-20261115-fountain-night-09.jpg","gh-20261115-a-entrance-night-10.jpg","gh-20261115-golden-gathering-11.jpg","gh-20261115-fountain-day-12.jpg","gh-20261115-carved-door-14.jpg"];
+ const gallery=["gh-reviewed-20261115-buffet.jpg","gh-reviewed-20261115-fountain-night.jpg","gh-reviewed-20261115-main-building-night.jpg","gh-reviewed-20261115-a-entrance-night.jpg","gh-reviewed-20261115-grand-hall-empty.jpg","gh-reviewed-20261115-golden-dining.jpg","gh-reviewed-20261115-fountain-day.jpg","gh-20261115-a-entrance-night-10.jpg","gh-20261115-golden-gathering-11.jpg","gh-20261115-carved-door-14.jpg"];
  for(const file of gallery){
   assert.ok((home+story).includes(file),file);
  }
- assert.doesNotMatch(story,/gh-real-chandelier-detail-20261113\\.webp/); // Discard unflattering unfinished-lighting close-up from the public story\n assert.match(story,/approved-grand-hall-20261114\.jpg/); // Use the user-approved, unobstructed grand hall image\n assert.doesNotMatch(story,/golden-himal-phase2-visualization|golden-himal-phase2-construction|<[^>]+>第一期|<[^>]+>第二期/);
+ assert.doesNotMatch(story,/gh-real-chandelier-detail-20261113\\.webp/); // Discard unflattering unfinished-lighting close-up from the public story\n assert.match(story,/gh-reviewed-20261115-grand-hall-empty\.jpg/); // Approved unoccupied hall\n assert.doesNotMatch(story,/golden-himal-phase2-visualization|golden-himal-phase2-construction|<[^>]+>第一期|<[^>]+>第二期/);
  assert.doesNotMatch(home,/第一期建築實景/);
  assert.doesNotMatch(story,/class="gallery-disclaimer"/);
  assert.doesNotMatch(home+story,/AI 修飾形象影像/);
@@ -269,7 +269,7 @@ test('brand pages omit image provenance claims in all languages while retaining 
  assert.doesNotMatch(home+story+locale,banned);
  assert.doesNotMatch(locale,/imageDisclaimer|designViewsIntro/);
  assert.doesNotMatch(legacy,/Concept design · Not a venue photograph|品牌視覺示意 · 非場地實景照片|Hall photography pending|宴會廳照片待補/);
- assert.match(home,/gh-20261115-a-entrance-night-10\.jpg/);
+ assert.match(home,/gh-reviewed-20261115-a-entrance-night\.jpg/);
  assert.match(home,/approved-grand-hall-20261114\.jpg/);
  assert.match(home,/approved-fountain-night-20261114\.jpg/);
  assert.match(legacy,/Do not enter real personal information/);
@@ -289,7 +289,7 @@ test('venue images honor latest photo exclusions, with no duplicate within a pag
  for(const banned of ['gh-20261115-building-front-13.jpg','gh-20261115-hall-activity-02.jpg','gh-20261115-a-entrance-day-03.jpg']){
   assert.ok(!combined.includes(banned),`rejected photo still visible: ${banned}`);
  }
- const required=["gh-20261115-building-night-01.jpg","approved-grand-hall-20261114.jpg","approved-peace-tower-20261114.jpg","gh-20261115-golden-dining-04.jpg","gh-20261115-buffet-05.jpg","gh-20261115-fountain-night-09.jpg","gh-20261115-a-entrance-night-10.jpg","gh-20261115-golden-gathering-11.jpg","gh-20261115-fountain-day-12.jpg","gh-20261115-carved-door-14.jpg"];
+ const required=["gh-reviewed-20261115-buffet.jpg","gh-reviewed-20261115-fountain-night.jpg","gh-reviewed-20261115-main-building-night.jpg","gh-reviewed-20261115-a-entrance-night.jpg","gh-reviewed-20261115-grand-hall-empty.jpg","gh-reviewed-20261115-golden-dining.jpg","gh-reviewed-20261115-fountain-day.jpg","gh-20261115-a-entrance-night-10.jpg","gh-20261115-golden-gathering-11.jpg","gh-20261115-carved-door-14.jpg"];
  for(const filename of required){
   assert.ok(combined.includes(filename),`approved photo not used: ${filename}`);
   const data=await readFile(new URL('../public/images/'+filename,import.meta.url));

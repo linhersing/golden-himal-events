@@ -5,8 +5,8 @@ const BASE='https://golden-himal-voice-preview.linhersing.workers.dev';
 // Verify each route exists without confusing this read-only smoke with real login acceptance.
 const footerMarkers=['TEST MODE','class="test-site-banner test-site-footer wrap"'];
 const endpoints=[
-  ['/',['id="home-about"','id="home-competition"','id="home-news"','href="./golden-himal.html"','href="./voice.html"','id="location"','gh-20261115-a-entrance-night-10.jpg',...footerMarkers]],
-  ['/golden-himal.html',['data-page="story"','story-name','story-gallery','approved-peace-tower-20261114.jpg','approved-grand-hall-20261114.jpg',...footerMarkers]],
+  ['/',['id="home-about"','id="home-competition"','id="home-news"','href="./golden-himal.html"','href="./voice.html"','id="location"','gh-reviewed-20261115-a-entrance-night.jpg',...footerMarkers]],
+  ['/golden-himal.html',['data-page="story"','story-name','story-gallery','approved-peace-tower-20261114.jpg','gh-reviewed-20261115-grand-hall-empty.jpg',...footerMarkers]],
   ['/voice.html',['data-page="home"','id="home-apply"','id="home-login"','front-visual-wedding-image','approved-image-20261114','voice-wedding-hero-approved-20261114.jpg','NPR 10,000',...footerMarkers]],
   ['/simple.css',['.front-visual.front-visual-wedding-image','.front-visual.front-visual-wedding-image > img']],
   ['/member.html',[...footerMarkers,'id="member-email-form"','id="member-code-form"','id="member-status"','simple.js']],

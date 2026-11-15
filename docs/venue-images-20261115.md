@@ -48,3 +48,6 @@ The selected banquet hall hero, story entry fountain and main architectural hall
 **圖片編排新準則**：同一頁內不重複照片；不同頁面得合理共用品質較高、已核可的品牌照片，禁止為湊足「每張都不同」而重新放入已被否決的照片。
 
 **部署邊界**：GitHub 原始碼更新與 Cloudflare Workers 預覽正式上線是兩項不同驗收；需以 Workers 實際頁面再次確認替換已生效，不得單憑 GitHub commit 宣稱 Workers 已部署。
+
+## 2026年11月15日二次圖片核可／最新採用版本
+七張使用者重傳且親自核可的 PNG 已依原比例轉成 JPEG，完整像素為1448×1086；分類版位：首頁 buffet、fountain-night、main-building-night、a-entrance-night；品牌故事 grand-hall-empty、golden-dining、fountain-day。各照片網站全站僅用一次；施工高處俯瞰圖歸入 Drive 備用相簿，不上品牌展示。原圖保留。所有連結、報名身分驗證及後端流程不改。Cloudflare Workers 上線需另外驗證。

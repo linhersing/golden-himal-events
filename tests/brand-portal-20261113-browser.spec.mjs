@@ -52,7 +52,7 @@ test('brand-first homepage has exactly three visible primary destinations and fo
   }
   await expect(page.locator('#home-about')).toHaveAttribute('href','./golden-himal.html');
   await expect(page.locator('.portal-photo-card img[src*="gh-real-fountain-20261113.webp"]')).toHaveCount(0);
-  await expect(page.locator('.portal-photo-card img[src*="gh-20261115-fountain-night-09"]')).toHaveCount(1);
+  await expect(page.locator('.portal-photo-card img[src*="gh-reviewed-20261115-fountain-night"]')).toHaveCount(1);
   for(const pic of await page.locator('.portal-photo-card img').all()){
    await pic.scrollIntoViewIfNeeded();
    await expect.poll(()=>pic.evaluate(el=>el.complete&&el.naturalWidth>0),{timeout:10000}).toBeTruthy();
@@ -182,13 +182,13 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   await expect(page.locator('#design-views-heading')).toContainText('建築與空間特色');
   await expect(page.locator('.portal-concepts-disclaimer')).toHaveCount(0);
   for(const [i,filename] of [
-   [0,'gh-20261115-a-entrance-night-10.jpg'],
+   [0,'gh-reviewed-20261115-a-entrance-night.jpg'],
    [1,'approved-grand-hall-20261114.jpg']
   ]){
    const img=imgs.nth(i);
    await expect(img).toHaveAttribute('src','./images/'+filename);
    await img.scrollIntoViewIfNeeded();
-   await expect.poll(()=>img.evaluate((el,sz)=>el.complete&&el.naturalWidth===sz[0]&&el.naturalHeight===sz[1],i===0?[1477,1108]:[1024,768]),{timeout:15000}).toBe(true);
+   await expect.poll(()=>img.evaluate((el,sz)=>el.complete&&el.naturalWidth===sz[0]&&el.naturalHeight===sz[1],i===0?[1448,1086]:[1024,768]),{timeout:15000}).toBe(true);
   }
   await expect(page.locator('.portal-concept-card')).toHaveCount(2);
   await expect(page.locator('.portal-concept-card figcaption small')).toHaveCount(0);
