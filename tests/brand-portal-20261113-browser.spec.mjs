@@ -75,7 +75,7 @@ test('brand story balances venue photos with authentic narrative and quiet image
   await expect(page.locator('.portal-top-nav a')).toHaveCount(4);
   await expect(page.locator('.portal-top-nav [aria-current=page]')).toHaveAttribute('href','./golden-himal.html');
   await expect(page.locator('.story-gallery .gallery-card')).toHaveCount(4);
-  await expect(page.locator('.gallery-disclaimer')).toContainText('現場實拍');
+  await expect(page.locator('.gallery-disclaimer')).toHaveCount(0);
   await expect(page.locator('[data-p="journeyHeading"]')).toBeVisible();
   await expect(page.locator('.story-gallery figcaption [data-p="galleryEnhanced"]')).toHaveCount(0);
   await expect(page.locator('.story-more')).not.toHaveAttribute('open','');
@@ -179,8 +179,8 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   await page.locator('[data-lang=zh]').click();
   const imgs=page.locator('.portal-concept-card img');
   await expect(imgs).toHaveCount(2);
-  await expect(page.locator('#design-views-heading')).toContainText('建築設計意象');
-  await expect(page.locator('.portal-concepts-disclaimer')).toContainText('並非現場實拍');
+  await expect(page.locator('#design-views-heading')).toContainText('建築與空間特色');
+  await expect(page.locator('.portal-concepts-disclaimer')).toHaveCount(0);
   for(const [i,filename] of [
    [0,'approved-peace-tower-20261114.jpg'],
    [1,'approved-grand-hall-20261114.jpg']
@@ -194,7 +194,7 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   await expect(page.locator('.portal-concept-card figcaption small')).toHaveCount(0);
   // User-selected fountain appears once, in the full-card story entry.
   await expect(page.locator('img[src="./images/approved-fountain-night-20261114.jpg"]')).toHaveCount(1);
-  // Only the gallery-level note distinguishes proposed concepts; avoid per-card repetition.
+  // Architectural images use short descriptive captions; no extra provenance banners.
   const top=page.locator('.portal-top-nav a').first();
   const affordance=await top.evaluate(el=>{
    const c=getComputedStyle(el);
@@ -207,10 +207,10 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   expect(overflow).toBeLessThanOrEqual(1);
  }
  await page.locator('[data-lang=en]').click();
- await expect(page.locator('.portal-concepts-disclaimer')).toContainText('not on-site photographs');
+ await expect(page.locator('#design-views-heading')).toContainText('Architecture & Spaces');
  await page.locator('[data-lang=ne]').click();
  await expect(page.locator('.portal-concept-card figcaption small')).toHaveCount(0);
- await expect(page.locator('.portal-concepts-disclaimer')).toContainText('वास्तविक स्थलका फोटो');
+ await expect(page.locator('#design-views-heading')).toContainText('वास्तुकला र स्थानहरू');
  await page.locator('.portal-top-nav a[href="./golden-himal.html"]').click();
  await expect(page).toHaveURL(/golden-himal\.html$/);
 });
@@ -239,7 +239,7 @@ test('brand story editorial preview is a discoverable full-card link before the 
   await expect(entry.locator('#portal-story-entry-action-label')).toBeVisible();
   const photo=entry.locator('img');
   await expect(photo).toHaveAttribute('src','./images/approved-fountain-night-20261114.jpg');
-  await expect(photo).toHaveAttribute('alt',/設計意象/);
+  await expect(photo).toHaveAttribute('alt',/夜間噴泉/);
   await entry.scrollIntoViewIfNeeded();
   await expect.poll(()=>photo.evaluate(el=>el.complete&&el.naturalWidth>0),{timeout:15000}).toBe(true);
   const dimensions=await entry.evaluate(el=>{
