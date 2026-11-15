@@ -52,7 +52,7 @@ test('brand-first homepage has exactly three visible primary destinations and fo
   }
   await expect(page.locator('#home-about')).toHaveAttribute('href','./golden-himal.html');
   await expect(page.locator('.portal-photo-card img[src*="gh-real-fountain-20261113.webp"]')).toHaveCount(0);
-  await expect(page.locator('.portal-photo-card img[src*="gh-real-fountain-night-landscape"]')).toHaveCount(1);
+  await expect(page.locator('.portal-photo-card img[src*="gh-20261115-fountain-night-09"]')).toHaveCount(1);
   for(const pic of await page.locator('.portal-photo-card img').all()){
    await pic.scrollIntoViewIfNeeded();
    await expect.poll(()=>pic.evaluate(el=>el.complete&&el.naturalWidth>0),{timeout:10000}).toBeTruthy();
@@ -182,13 +182,13 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   await expect(page.locator('#design-views-heading')).toContainText('建築與空間特色');
   await expect(page.locator('.portal-concepts-disclaimer')).toHaveCount(0);
   for(const [i,filename] of [
-   [0,'approved-peace-tower-20261114.jpg'],
+   [0,'gh-20261115-a-entrance-day-03.jpg'],
    [1,'approved-grand-hall-20261114.jpg']
   ]){
    const img=imgs.nth(i);
    await expect(img).toHaveAttribute('src','./images/'+filename);
    await img.scrollIntoViewIfNeeded();
-   await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth===1024&&el.naturalHeight===768),{timeout:15000}).toBe(true);
+   await expect.poll(()=>img.evaluate((el,sz)=>el.complete&&el.naturalWidth===sz[0]&&el.naturalHeight===sz[1],i===0?[1477,1108]:[1024,768]),{timeout:15000}).toBe(true);
   }
   await expect(page.locator('.portal-concept-card')).toHaveCount(2);
   await expect(page.locator('.portal-concept-card figcaption small')).toHaveCount(0);
@@ -264,4 +264,21 @@ test('brand story editorial preview is a discoverable full-card link before the 
  await expect(page.locator('.portal-story-entry-title')).toContainText('Golden Himal');
  await expect(page.locator('.portal-story-entry-action')).toContainText('Golden Himal को कथा पृष्ठमा जानुहोस्');
  await expect(page.locator('a.portal-story-entry')).toHaveAttribute('href','./golden-himal.html');
+});
+
+
+test('new wooden door and diversified photos remain usable on mobile',async({page})=>{
+ for(const width of [320,390,768,1280]){
+  await page.setViewportSize({width,height:800});
+  await page.goto('/golden-himal.html');
+  await page.locator('.story-more summary').click();
+  const door=page.locator('.story-gallery-more img[src$="gh-20261115-carved-door-14.jpg"]');
+  await expect(door).toBeVisible();
+  await expect(door).toHaveAttribute('alt',/木雕主門/);
+  await expect.poll(()=>door.evaluate(el=>el.complete&&el.naturalWidth>0)).toBe(true);
+  const images=await page.locator('.story-gallery img, .story-hero-image img').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('src')));
+  expect(new Set(images).size).toBe(images.length);
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+ }
 });
