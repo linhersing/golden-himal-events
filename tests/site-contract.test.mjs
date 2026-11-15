@@ -162,7 +162,7 @@ test('singer video guidance has explicit quality, lighting, sound and accessible
  assert.match(backend,/video_self_recording_confirmation_required/);
 });
 
-test('Golden Himal Palace story presents selective venue imagery and compact grounded narrative with discrete clarification',async()=>{
+test('Golden Himal Palace story presents architecture without provenance chatter',async()=>{
  const [home,story,styles,language]=await Promise.all([
   read('index.html'),read('public/golden-himal.html'),read('public/brand-portal.css'),read('public/brand-portal.js')
  ]);
@@ -172,10 +172,12 @@ test('Golden Himal Palace story presents selective venue imagery and compact gro
  }
  assert.doesNotMatch(story,/gh-real-chandelier-detail-20261113\\.webp/); // Discard unflattering unfinished-lighting close-up from the public story\n assert.match(story,/gh-real-hall-hero-20261113\\.webp/); // Maintain an authentic hall image, not generated photography\n assert.doesNotMatch(story,/golden-himal-phase2-visualization|golden-himal-phase2-construction|<[^>]+>第一期|<[^>]+>第二期/);
  assert.doesNotMatch(home,/第一期建築實景/);
- assert.match(story,/data-p="imageDisclaimer"/);
+ assert.doesNotMatch(story,/class="gallery-disclaimer"/);
  assert.doesNotMatch(home+story,/AI 修飾形象影像/);
  assert.doesNotMatch(story,/<small data-p="galleryEnhanced">/);
- assert.match(story,/現場實拍/);
+ assert.doesNotMatch(home,/class="portal-concepts-disclaimer"/);
+ assert.doesNotMatch(home+story,/設計示意|並非現場實拍|已完工照片|實際拍攝|實拍照片/);
+ assert.match(home,/data-p="designViewsHeading">建築與空間特色/);
  assert.doesNotMatch(home+story,/gh-gallery-(?:grand-hall|sky-lounge|fountain-day|guesthouse-night|mountain-view|lamaste-tower)-ai\\.webp/);
  assert.doesNotMatch(home+story,/gh-real-fountain-20261113\\.webp/);
  assert.match(story,/href="\.\/golden-himal\.html" aria-current="page"/);
@@ -194,7 +196,7 @@ test('Golden Himal Palace story presents selective venue imagery and compact gro
  assert.match(story,/data-p="palaceText"/);
  assert.match(story,/id="location"/);
  assert.match(home,/id="home-competition"/);
- for(const label of ['galleryHall','galleryLounge','galleryWater','galleryNight','galleryGateway','galleryView','galleryMore','imageDisclaimer']){
+ for(const label of ['galleryHall','galleryLounge','galleryWater','galleryNight','galleryGateway','galleryView','galleryMore']){
   assert.match(language,new RegExp('"'+label+'"'));
  }
  assert.match(language,/ghv_ui_language_v1/);
@@ -255,4 +257,21 @@ test('rules and updates have distinct destinations without changing existing con
  }
  assert.match(brand,/announcementsLink/);
  assert.match(simple,/page==='announcements'/);
+});
+
+
+test('brand pages omit image provenance claims in all languages while retaining safe TEST notice',async()=>{
+ const [home,story,locale,legacy]=await Promise.all([
+  read('index.html'),read('public/golden-himal.html'),
+  read('public/brand-portal.js'),read('src/scripts/main.js')
+ ]);
+ const banned=/以下兩張為依據|設計示意圖|非現場實拍|並非現場實拍|已完工照片|not on-site photographs|proof of completed construction|वास्तविक स्थलका फोटो|gallery-disclaimer|portal-concepts-disclaimer/;
+ assert.doesNotMatch(home+story+locale,banned);
+ assert.doesNotMatch(locale,/imageDisclaimer|designViewsIntro/);
+ assert.doesNotMatch(legacy,/Concept design · Not a venue photograph|品牌視覺示意 · 非場地實景照片|Hall photography pending|宴會廳照片待補/);
+ assert.match(home,/approved-peace-tower-20261114\.jpg/);
+ assert.match(home,/approved-grand-hall-20261114\.jpg/);
+ assert.match(home,/approved-fountain-night-20261114\.jpg/);
+ assert.match(legacy,/Do not enter real personal information/);
+ assert.match(home,/正式比賽報名與真實付款尚未開放/);
 });
