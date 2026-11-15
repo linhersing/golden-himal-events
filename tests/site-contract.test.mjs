@@ -270,6 +270,11 @@ test('brand pages omit image provenance claims in all languages while retaining 
  assert.doesNotMatch(locale,/imageDisclaimer|designViewsIntro/);
  assert.doesNotMatch(legacy,/Concept design · Not a venue photograph|品牌視覺示意 · 非場地實景照片|Hall photography pending|宴會廳照片待補/);
  assert.match(home,/gh-reviewed-20261115-a-entrance-night\.jpg/);
+ assert.match(home,/src="\.\/images\/gh-reviewed-20261115-fountain-day\.jpg"[^>]*alt="愛之環噴泉廣場日景/);
+ assert.match(home,/data-p="designFountainTitle">愛之環・噴泉廣場/);
+ assert.match(home,/data-p="designTowerTitle">和平塔・A 字型入口/);
+ assert.match(home,/data-p="designHallTitle">金色宴會大廳/);
+ assert.doesNotMatch(story,/gh-reviewed-20261115-fountain-day\.jpg/); // Same image must not appear twice across the site
  assert.match(home,/approved-grand-hall-20261114\.jpg/);
  assert.match(home,/approved-fountain-night-20261114\.jpg/);
  assert.match(legacy,/Do not enter real personal information/);

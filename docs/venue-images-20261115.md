@@ -51,3 +51,8 @@ The selected banquet hall hero, story entry fountain and main architectural hall
 
 ## 2026年11月15日二次圖片核可／最新採用版本
 七張使用者重傳且親自核可的 PNG 已依原比例轉成 JPEG，完整像素為1448×1086；分類版位：首頁 buffet、fountain-night、main-building-night、a-entrance-night；品牌故事 grand-hall-empty、golden-dining、fountain-day。各照片網站全站僅用一次；施工高處俯瞰圖歸入 Drive 備用相簿，不上品牌展示。原圖保留。所有連結、報名身分驗證及後端流程不改。Cloudflare Workers 上線需另外驗證。
+
+## 2026年11月15日 19:22再次回報｜建築與空間特色錯圖優先修正
+使用者明確指出 Cloudflare 首頁「和平塔・A 字型入口」實際顯示施工中大廳照片，旁邊又是金色宴會大廳，造成類型重複與標題錯配，要求立即換圖，並希望之後所有操作及先前討論都在 Google Drive 留歷史。
+修改 GitHub 首頁 index.html 的建築特色三欄：①「愛之環・噴泉廣場」採用使用者核可、無人施工場面的 gh-reviewed-20261115-fountain-day.jpg；②「和平塔・A 字型入口」採用 gh-reviewed-20261115-a-entrance-night.jpg；③「金色宴會大廳」沿用 approved-grand-hall-20261114.jpg。品牌故事頁撤下同一張白天噴泉，避免跨頁重複使用完全相同的照片（保留其它相簿）。保留所有原 URL 與原始資產；不修改報名登入或 D1。
+注意：Cloudflare Workers 的既有線上頁面與 GitHub 原始碼不同步，只有 GitHub Pages push 的部署流程，沒有已知的 Cloudflare Worker 自動部署動作。不得稱為 Worker 已更新；需 Cloudflare 實際部署權限驗收。
