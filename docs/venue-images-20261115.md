@@ -56,3 +56,23 @@ The selected banquet hall hero, story entry fountain and main architectural hall
 使用者明確指出 Cloudflare 首頁「和平塔・A 字型入口」實際顯示施工中大廳照片，旁邊又是金色宴會大廳，造成類型重複與標題錯配，要求立即換圖，並希望之後所有操作及先前討論都在 Google Drive 留歷史。
 修改 GitHub 首頁 index.html 的建築特色三欄：①「愛之環・噴泉廣場」採用使用者核可、無人施工場面的 gh-reviewed-20261115-fountain-day.jpg；②「和平塔・A 字型入口」採用 gh-reviewed-20261115-a-entrance-night.jpg；③「金色宴會大廳」沿用 approved-grand-hall-20261114.jpg。品牌故事頁撤下同一張白天噴泉，避免跨頁重複使用完全相同的照片（保留其它相簿）。保留所有原 URL 與原始資產；不修改報名登入或 D1。
 注意：Cloudflare Workers 的既有線上頁面與 GitHub 原始碼不同步，只有 GitHub Pages push 的部署流程，沒有已知的 Cloudflare Worker 自動部署動作。不得稱為 Worker 已更新；需 Cloudflare 實際部署權限驗收。
+
+
+## 2026年11月16日｜依使用者四張截圖重新校對圖片實際內容（覆蓋舊版檔名推測）
+
+此次檢查直接讀取 GitHub `public/images/` 的 JPEG 像素；發現多個 `gh-reviewed-20261115-*.jpg` 檔名**錯置**，不是原先假設的空間。若只依檔名設置 alt／文字會造成「噴水池圖顯示宴會廳」「入口圖顯示施工現場」。保留所有原始資產與既有 URL，此版僅修改頁面圖片引用、文字、三語標籤及相應測試。
+
+| 實際畫面 | GitHub 實際資產（雖然部分檔名不符內容） | 本次新展示位置 |
+| --- | --- | --- |
+| 大餐廳內觀：白金柱廊、水晶燈、由室內望向噴水池 | `gh-reviewed-20261115-fountain-day.jpg` | 首頁場地相簿第1張；標題「大餐廳內觀」 |
+| 金色拱頂、對稱柱廊的宴會大餐廳內觀 | `approved-grand-hall-20261114.jpg` | 首頁場地相簿第2張；標題「大餐廳・金色拱頂」 |
+| 金色環形雕塑與藍光噴水池廣場夜景 | `gh-reviewed-20261115-main-building-night.jpg` | 首頁場地相簿第3張；標題「信望愛噴水池廣場」 |
+| 白天金環噴水池及白色拱門 | `gh-reviewed-20261115-golden-dining.jpg` | 首頁建築景觀特色第1張；標題「信望愛・噴水池廣場」 |
+| 和平塔 A 字型入口夜間暖光（沒有車輛／施工材料） | `gh-reviewed-20261115-grand-hall-empty.jpg` | 首頁建築景觀特色第2張 |
+| 有紅椅與圓桌的拱頂餐飲空間 | `gh-reviewed-20261115-buffet.jpg` | 從首頁移至品牌故事的主相簿第1張 |
+| 金色保溫餐檯與窗外綠景的自助餐區 | `gh-reviewed-20261115-fountain-night.jpg` | 從首頁移至品牌故事的主相簿第2張 |
+| **施工材料、參觀人員、未整理的大餐廳** | `gh-reviewed-20261115-a-entrance-night.jpg` | **從公開首頁移除；不在品牌形象區引用** |
+
+首頁的建築景觀特色從三張調整為兩張，因為第三張宴會廳已移至同頁上方的餐廳內觀相簿，避免一頁重複相同照片。原有餐飲兩張移到品牌故事專頁展示，符合使用者分頁定位。品牌故事既有其他內容／路徑保留。中文／英文／尼泊爾文的照片標題已同步改正。原圖片不重新命名，避免影響既存引用；日後建議新建有內容校驗的對照表，不再依錯誤檔名猜照片。
+
+修改對照：首頁 `index.html`、故事頁 `public/golden-himal.html`、三語 `public/brand-portal.js`、既有網站及瀏覽器驗收測試。Cloudflare Workers 公開端仍須獨立部署／檢視，不能僅用 GitHub 合併推定已上線。
