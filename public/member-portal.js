@@ -236,8 +236,8 @@ function renderDossier(){
    rows:[...common,['Demo 初篩狀態',app?reviewNames[app.status]:'未報名'],['入場資格','尚未核發（TEST ONLY）']]},
   application:{title:'2027 歌唱嘉年華 · 報名資料',subtitle:'Demo 名稱和會員資料均為系統固定虛構測試內容。',
    rows:[...common,['Demo 測試檔',app?.demo||'未提交'],['實際檔案上傳','未啟用，沒有影片']]},
-  payment:{title:'NPR 500 · 模擬付款存根',subtitle:'非官方收據；Khalti / eSewa / 銀行均未連接，絕無實收。',
-   rows:[['假訂單編號',order?.id||'尚未開單'],['對應測試報名',app?.id||'尚未報名'],['報名費草案','NPR 500'],['付款狀態',testPayment],['支付商交易序號','不存在（純模擬）'],['可作稅務／入場憑證','不可']]},
+  payment:{title:'NPR '+(order?.amountNpr??FEE_NPR)+' · 模擬付款存根',subtitle:'非官方收據；Khalti / eSewa / 銀行均未連接，絕無實收。',
+   rows:[['假訂單編號',order?.id||'尚未開單'],['對應測試報名',app?.id||'尚未報名'],['單支 Demo 測試費用','NPR '+(order?.amountNpr??FEE_NPR)],['付款狀態',testPayment],['支付商交易序號','不存在（純模擬）'],['可作稅務／入場憑證','不可']]},
   profile:{title:'參賽者會員中心 · 測試檔案',subtitle:'沒有驗證身分、密碼登入或真人個資；只顯示固定測試人物。',
    rows:[['測試會員 ID',m.id],['固定測試代稱',m.alias],['虛構信箱',m.email],['模擬年齡',m.age+' 歲'],['組別',category],['登入驗證','MOCK ONLY / 未實作 OTP']]}
  };
