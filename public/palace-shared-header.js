@@ -15,7 +15,7 @@
    if(value)el.textContent=value;
   });
  };
- let initial='en';
+ let initial='zh';
  try{const saved=localStorage.getItem('ghv_ui_language_v1');if(labels[saved])initial=saved}catch{}
  apply(initial);
  document.querySelectorAll('.ghp-shared-locale [data-lang]').forEach(button=>{
