@@ -154,13 +154,13 @@ test('2027 rule highlights, clear senior navigation and public visual evidence (
   expect(appearance.overflow).toBeFalsy();
   expect(Math.abs(appearance.aspect-appearance.naturalAspect)).toBeLessThan(.015);
   await expect(page.locator('.voice-prize-voucher')).toContainText('NPR 10,000');
-  await expect(page.locator('.voice-prize-top')).toContainText('NPR 45,000');
+  await expect(page.locator('.voice-prize-top')).toContainText('NPR 50,000');
   await expect(page.locator('#home-apply')).toHaveAttribute('href','./member.html#register');
   await page.screenshot({path:testInfo.outputPath('golden-himal-voice-'+label+'.png'),fullPage:true,animations:'disabled'});
   await page.goto('/news.html#rules-awards');
   await page.locator('[data-lang=zh]').click();
   await expect(page.locator('#rules-awards')).toContainText('NPR 10,000');
-  await expect(page.locator('#rules-awards')).toContainText('NPR 22,000');
+  await expect(page.locator('#rules-awards')).toContainText('NPR 30,000');
   await expect(page.locator('#rules-voting')).toContainText('Muse',{timeout:10000}).catch(()=>{});
   await page.screenshot({path:testInfo.outputPath('golden-himal-news-'+label+'.png'),fullPage:true,animations:'disabled'});
   await page.goto('/member.html#register');
