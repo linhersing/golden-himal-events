@@ -351,6 +351,9 @@ async function mockPayment(request,env,a){
  const b=await bodyJSON(request);if(!b)return deny('invalid_json');
  const db=env.DB;
  const app=await selectApplication(db,b.application_id,a.id);if(!app)return deny('application_not_found',404);
+ // The 2027-01 online audition is FREE under the 2026-11-16 frontline rules.
+ // Reject simulated payment on the server (including legacy test entries) before any D1 write.
+ if(app.round_code==='2027-01')return deny('audition_is_free_no_payment',409);
  const paid={ok:true,status:'simulated_paid',amount_npr:500,testOnly:true,realCharge:false};
  if(app.payment_status==='simulated_paid')return json({...paid,already:true});
  if(app.status!=='submitted'||app.phase!=='demo')return deny('mock_payment_not_allowed',409);
