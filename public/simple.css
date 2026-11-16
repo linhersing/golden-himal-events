@@ -1084,3 +1084,31 @@ body[data-page="news"] .demo-fee-estimator p{
  body[data-page="news"] .demo-fee-controls output{text-align:left}
  body[data-page="news"] .demo-fee-controls strong{text-align:right;font-size:1.2rem}
 }
+
+/* 2026-11-16 | Official Golden Himal Palace brand recognition across public pages.
+   A cropped viewport reveals the existing original logo artwork instead of
+   shrinking its transparent square canvas; no URL or signup behavior changes. */
+a.gh-brand-lockup{display:inline-flex;align-items:center;gap:11px;min-width:0;max-width:100%;text-decoration:none}
+a.gh-brand-lockup .gh-brand-mark{position:relative;display:block;flex:0 0 96px;width:96px;height:65px;overflow:hidden}
+a.gh-brand-lockup .gh-brand-mark img{display:block;width:96px;height:96px;max-width:none;object-fit:contain;transform:translateY(-13px);filter:drop-shadow(0 1px 1px #38240b16)}
+a.gh-brand-lockup .gh-brand-type{min-width:0;display:flex;flex-direction:column;justify-content:center}
+a.gh-brand-lockup .gh-brand-type strong{display:block;color:#684525;font:700 1.16rem/1.25 Georgia,serif;letter-spacing:.055em;white-space:nowrap}
+a.gh-brand-lockup .gh-brand-type small{display:block;color:#9a7854;font-size:.59rem;line-height:1.5;letter-spacing:.1em;margin-top:2px}
+a.gh-brand-lockup .gh-brand-slogan{display:block;color:#714f30;font:600 .69rem/1.35 Georgia,serif;letter-spacing:0;margin-top:4px;max-width:220px}
+a.gh-brand-lockup:hover .gh-brand-type strong,a.gh-brand-lockup:focus-visible .gh-brand-type strong{color:#97693f}
+@media(max-width:650px){
+ a.gh-brand-lockup{gap:7px}
+ a.gh-brand-lockup .gh-brand-mark{flex-basis:70px;width:70px;height:48px}
+ a.gh-brand-lockup .gh-brand-mark img{width:70px;height:70px;transform:translateY(-10px)}
+ a.gh-brand-lockup .gh-brand-type strong{font-size:.93rem;letter-spacing:.018em}
+ a.gh-brand-lockup .gh-brand-type small{font-size:.51rem;letter-spacing:.015em}
+ a.gh-brand-lockup .gh-brand-slogan{font-size:.64rem;line-height:1.3;max-width:170px;margin-top:3px}
+}
+@media(max-width:370px){
+ a.gh-brand-lockup{gap:4px}
+ a.gh-brand-lockup .gh-brand-mark{flex-basis:57px;width:57px;height:42px}
+ a.gh-brand-lockup .gh-brand-mark img{width:57px;height:57px;transform:translateY(-8px)}
+ a.gh-brand-lockup .gh-brand-type strong{font-size:.84rem}
+ a.gh-brand-lockup .gh-brand-type small{font-size:.48rem}
+ a.gh-brand-lockup .gh-brand-slogan{font-size:.60rem;max-width:130px}
+}
