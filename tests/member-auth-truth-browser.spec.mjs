@@ -87,7 +87,7 @@ test('TEST payment state is displayed after explicit confirmation, never claimed
   const u=new URL(r.request().url()),p=u.pathname;
   let payload;
   if(p.endsWith('/me'))payload={ok:true,account:{id:'synthetic-member',role:'member'}};
-  else if(p.endsWith('/applications'))payload={ok:true,applications:[{id:'TEST-ENTRY-0001',stage_name:'TEST Singer',song_title:'Example Song',category:'university',round_code:'2027-01',status:paid?'under_review':'submitted',payment_status:paid?'simulated_paid':'unpaid',demo_url:'https://youtu.be/abcdef'}]};
+  else if(p.endsWith('/applications'))payload={ok:true,applications:[{id:'TEST-ENTRY-0001',stage_name:'TEST Singer',song_title:'Example Song',category:'university',round_code:'2027-04',status:paid?'under_review':'submitted',payment_status:paid?'simulated_paid':'unpaid',demo_url:'https://youtu.be/abcdef'}]};
   else if(p.endsWith('/mock-payment')){paid=true;payload={ok:true,status:'simulated_paid',testOnly:true,realCharge:false,amount_npr:500};}
   else payload={ok:false,error:'not_found'};
   await r.fulfill({status:payload.ok?200:404,contentType:'application/json',body:JSON.stringify(payload)});
