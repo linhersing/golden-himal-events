@@ -186,7 +186,7 @@ function setupFrontlineForm(enabled){
  next.hidden=!frontlineFormEnabled;next.disabled=!frontlineFormEnabled;
  legacy.hidden=frontlineFormEnabled;
  const notice=document.querySelector('[data-l="frontlineFormBoundary"]');
- if(notice)notice.textContent=mt(frontlineFormEnabled?'frontlineEnabledNotice':'frontlineFormBoundary');
+ if(notice){notice.dataset.l=frontlineFormEnabled?'frontlineEnabledNotice':'frontlineFormBoundary';notice.textContent=mt(notice.dataset.l);}
  if(frontlineFormEnabled){
   const sync=()=>{
    const basis=next.querySelector('[name=eligibility_basis]').value;
