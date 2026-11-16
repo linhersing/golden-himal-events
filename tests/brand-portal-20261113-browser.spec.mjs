@@ -193,8 +193,8 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   }
   await expect(page.locator('.portal-concept-card')).toHaveCount(3);
   await expect(page.locator('.portal-concept-card figcaption small')).toHaveCount(0);
-  // The night-fountain spotlight and the daytime-fountain feature are two distinct reviewed photos.
-  await expect(page.locator('img[src="./images/approved-fountain-night-20261114.jpg"]')).toHaveCount(1);
+  // The peace tower story-entry image and the daytime fountain feature are two distinct reviewed photos.
+  await expect(page.locator('img[src="./images/approved-peace-tower-20261114.jpg"]')).toHaveCount(1);
   // Architectural images use short descriptive captions; no extra provenance banners.
   const top=page.locator('.portal-top-nav a').first();
   const affordance=await top.evaluate(el=>{
@@ -239,8 +239,8 @@ test('brand story editorial preview is a discoverable full-card link before the 
   expect(actionMetrics.height).toBeGreaterThanOrEqual(62);
   await expect(entry.locator('#portal-story-entry-action-label')).toBeVisible();
   const photo=entry.locator('img');
-  await expect(photo).toHaveAttribute('src','./images/approved-fountain-night-20261114.jpg');
-  await expect(photo).toHaveAttribute('alt',/夜間噴泉/);
+  await expect(photo).toHaveAttribute('src','./images/approved-peace-tower-20261114.jpg');
+  await expect(photo).toHaveAttribute('alt',/和平塔/);
   await entry.scrollIntoViewIfNeeded();
   await expect.poll(()=>photo.evaluate(el=>el.complete&&el.naturalWidth>0),{timeout:15000}).toBe(true);
   const dimensions=await entry.evaluate(el=>{
