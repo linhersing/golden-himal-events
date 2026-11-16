@@ -24,6 +24,11 @@ Object.assign(translations.zh,{"headline":"下一位歌唱新星，會是你嗎�
 Object.assign(translations.en,{"headline":"Could you be the next singing star?","talentLead":"More than a contest, Golden Himal Voice aims to discover promising singers and digital creators, giving talented voices a chance to be heard.","news":"Contest rules","newsSub":"Read before entering · Eligibility, video & prizes","announcementsShortcut":"Latest updates · Selections & event notices →"});
 Object.assign(translations.ne,{"headline":"अर्को उदीयमान गायक तपाईं नै हो?","talentLead":"यो केवल प्रतियोगिता होइन। नयाँ गायक र डिजिटल सिर्जनशील प्रतिभा पहिचान गरी उनीहरूको आवाज धेरैसम्म पुर्‍याउने हाम्रो उद्देश्य हो।","news":"प्रतियोगिता नियम","newsSub":"भाग लिनुअघि पढ्नुहोस् · योग्यता र पुरस्कार","announcementsShortcut":"नयाँ सूचना · छनोट र कार्यक्रम →"});
 
+/* 2026-11-16: The confirmed fee is one video-link entry per account, NPR 300. */
+Object.assign(translations.zh,{entryFeeLabel:'報名費只要',entryFeeNote:'每個參賽帳號僅能提交 1 支演唱影片連結；每次報名 NPR 300。',entryFeeStatus:'TEST 測試階段｜尚未開放正式報名或收款。'});
+Object.assign(translations.en,{entryFeeLabel:'Entry fee — only',entryFeeNote:'One audition video link per entrant account. Entry fee: NPR 300 per registration.',entryFeeStatus:'TEST PREVIEW · Official registration and payments are not open.'});
+Object.assign(translations.ne,{entryFeeLabel:'दर्ता शुल्क मात्र',entryFeeNote:'प्रत्येक सहभागी खाताबाट एउटा मात्र गायन भिडियो लिंक बुझाउन सकिन्छ। प्रत्येक दर्ताको शुल्क NPR 300।',entryFeeStatus:'परीक्षण चरण · आधिकारिक दर्ता तथा भुक्तानी खुलेको छैन।'});
+
 if(page==='home'){
  let lang='zh',homeState='anonymous';
  try{const stored=localStorage.getItem('ghv_ui_language_v1');if(translations[stored])lang=stored}catch{}
