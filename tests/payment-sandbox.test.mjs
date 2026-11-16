@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {emptyPayments,ENTRY_FEE_NPR,newMockOrder,mockProviderEvent,mockPaymentSummary} from '../public/payment-lab-model.mjs';
 const reg=(id='GHV-TEST-0001',round='2027-03')=>({id,person:'T001',round});
-test('NPR 500 fixed from server design, one mock payment order per registration',()=>{
+test('NPR 300 fixed from server design, one mock payment order per registration',()=>{
  const s=emptyPayments();
- assert.equal(ENTRY_FEE_NPR,500);
+ assert.equal(ENTRY_FEE_NPR,300);
  const a=newMockOrder(s,reg());
- assert.equal(a.order.amount,500);
+ assert.equal(a.order.amount,300);
  assert.equal(a.order.currency,'NPR');
  assert.equal(a.order.state,'pending');
  assert.equal(newMockOrder(s,reg()).existing,true);
@@ -20,8 +20,8 @@ test('paid callback is idempotent, duplicate cannot double charge simulated NPR'
  assert.equal(mockProviderEvent(s,id,'succeeded').order.state,'paid');
  const second=mockProviderEvent(s,id,'succeeded');
  assert.equal(second.unchanged,true);
- assert.equal(mockPaymentSummary(s).grossNpr,500);
- assert.equal(mockPaymentSummary(s).netNpr,500);
+ assert.equal(mockPaymentSummary(s).grossNpr,300);
+ assert.equal(mockPaymentSummary(s).netNpr,300);
  assert.equal(s.events.filter(x=>x.type==='succeeded').length,1);
  assert.equal(mockProviderEvent(s,id,'failed').error,'invalid_payment_transition');
 });
@@ -31,11 +31,11 @@ test('failure retry, refund pending, refund approved and repeated refund notific
  assert.equal(mockProviderEvent(s,id,'retry').order.attempt,2);
  assert.equal(mockProviderEvent(s,id,'succeeded').order.state,'paid');
  assert.equal(mockProviderEvent(s,id,'refund_requested').order.state,'refund_pending');
- assert.equal(mockPaymentSummary(s).netNpr,500);
+ assert.equal(mockPaymentSummary(s).netNpr,300);
  assert.equal(mockProviderEvent(s,id,'refunded').order.state,'refunded');
  assert.equal(mockProviderEvent(s,id,'refunded').unchanged,true);
  assert.equal(mockPaymentSummary(s).netNpr,0);
- assert.equal(mockPaymentSummary(s).refundedNpr,500);
+ assert.equal(mockPaymentSummary(s).refundedNpr,300);
 });
 test('two rounds are charged independently, zero actual payment providers',()=>{
  const s=emptyPayments();
@@ -52,7 +52,7 @@ test('payment page is visibly TEST ONLY, has no actual bank post nor card fields
  const script=await readFile(new URL('../public/payment-lab.js',import.meta.url),'utf8');
  const homepage=await readFile(new URL('../public/test-lab.html',import.meta.url),'utf8');
  assert.match(html,/不扣真錢/);
- assert.match(html,/NPR 500/);
+ assert.match(html,/NPR 300/);
  assert.match(html,/不連銀行/);
  assert.match(homepage,/payment-lab.html/);
  assert.doesNotMatch(html,/<input[^>]*type=["']?(?:card|file|password)/i);
@@ -66,5 +66,5 @@ test('recycled registration ID with a different TEST person cannot inherit a pai
  const reused={id:reg().id,person:'T002',round:'2027-03'};
  assert.equal(newMockOrder(s,reused).error,'stale_payment_order_reset_required');
  assert.equal(s.orders.length,1);
- assert.equal(mockPaymentSummary(s).grossNpr,500);
+ assert.equal(mockPaymentSummary(s).grossNpr,300);
 });
