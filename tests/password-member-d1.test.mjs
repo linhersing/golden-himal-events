@@ -29,6 +29,7 @@ test('username-only TEST registration, account isolation, password recovery and 
  const db=makeDb();
  try{
   db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ db.exec(await readFile(new URL('../backend/migrations/1010_staging_fee_npr300_ONLY.sql',import.meta.url),'utf8'));
   db.exec(await readFile(new URL('../backend/migrations/1005_password_members_STAGING_ONLY.sql',import.meta.url),'utf8'));
   const env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_PASSWORD_SIGNUP_ENABLED:'true',
    STAGING_SUBMISSION_MODE:'links',STAGING_IDENTITY_SECRET:'S'.repeat(64),
@@ -81,6 +82,7 @@ test('username-only TEST registration, account isolation, password recovery and 
 test('username signup stays closed unless flag, Turnstile and isolated migration are ready',async()=>{
  const db=makeDb();try{
   db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ db.exec(await readFile(new URL('../backend/migrations/1010_staging_fee_npr300_ONLY.sql',import.meta.url),'utf8'));
   const env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_PASSWORD_SIGNUP_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',STAGING_IDENTITY_SECRET:'S'.repeat(64),STAGING_TURNSTILE_SITE_KEY:'0x'+'A'.repeat(30),STAGING_TURNSTILE_SECRET_KEY:'0x'+'B'.repeat(30)};
   assert.equal((await (await handleE2E(get('/api/e2e/password-config'),env)).json()).enabled,false);
   assert.equal((await handleE2E(req('/api/e2e/password-register',{username:'testname',password:'an appropriately long password'}),env)).status,503);
