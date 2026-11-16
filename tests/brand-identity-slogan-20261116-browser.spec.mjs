@@ -58,3 +58,43 @@ test('Palace bilingual slogan stays text-first without duplicate side logos',asy
   }
  }
 });
+
+test('Palace footer shows one prominent standalone logo below the three brand lines',async({page})=>{
+ for(const width of [320,390,768,1280]){
+  await page.setViewportSize({width,height:850});
+  for(const route of ['/','/golden-himal.html']){
+   await page.goto(route);
+   const footer=page.locator('.ghp-footer-brand');
+   const name=footer.locator('.ghp-footer-brand-copy strong');
+   const logo=footer.locator('img.ghp-footer-main-logo');
+   await expect(name).toHaveText('GOLDEN HIMAL PALACE');
+   await expect(footer.locator('p[lang=en]')).toHaveText(slogan);
+   await expect(footer.locator('p[lang=ne]')).toHaveText(nepali);
+   await expect(logo).toHaveCount(1);
+   await expect(logo).toHaveAttribute('src','./images/brand-identity.png');
+   await expect.poll(()=>logo.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
+   const copyBox=await footer.locator('.ghp-footer-brand-copy').boundingBox();
+   const logoBox=await logo.boundingBox();
+   expect(logoBox.y).toBeGreaterThan(copyBox.y+copyBox.height-1);
+   expect(logoBox.width).toBeGreaterThanOrEqual(width<=390?250:width<=768?300:390);
+   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+   expect(overflow,route+' at '+width+'px').toBeLessThanOrEqual(1);
+  }
+ }
+});
+
+test('About Golden Himal section keeps a larger official mark without adding new photographs',async({page})=>{
+ for(const width of [320,390,1280]){
+  await page.setViewportSize({width,height:850});
+  await page.goto('/');
+  const marker=page.locator('.portal-about-heading .portal-section-tag');
+  const style=await marker.evaluate(el=>{
+   const pseudo=getComputedStyle(el,'::before');
+   return {width:parseFloat(pseudo.width),background:pseudo.backgroundImage};
+  });
+  expect(style.width).toBeGreaterThanOrEqual(width<=650?105:140);
+  expect(style.background).toContain('brand-identity.png');
+  await expect(page.locator('.portal-scene img')).toHaveAttribute('src','./images/gh-real-hall-hero-20261113.webp');
+  await expect(page.locator('.ghp-brand-ribbon img, .ghp-brand-signature img')).toHaveCount(0);
+ }
+});
