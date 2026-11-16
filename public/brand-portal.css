@@ -1251,3 +1251,7 @@
  .ghp-footer-brand img{width:75px;height:75px}
  .ghp-footer-brand strong{font-size:.9rem}
 }
+
+/* CI regression 2026-11-16: keep the decorative ellipses inside the brand band.
+   Off-canvas pseudo-elements must never make the 320px layout horizontally scroll. */
+.brand-portal .ghp-brand-signature{overflow:hidden}
