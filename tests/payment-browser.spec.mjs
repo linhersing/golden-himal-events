@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-test('register test contestant then NPR 500 simulated payment and refund (no money or POST)',async({page},testInfo)=>{
+test('register test contestant then NPR 300 simulated payment and refund (no money or POST)',async({page},testInfo)=>{
  const writes=[];
  page.on('request',req=>{if(!['GET','HEAD'].includes(req.method()))writes.push(req.url())});
  await page.route('**/api/staging/**',r=>r.fulfill({status:503,contentType:'application/json',body:'{"ok":false}'}));
@@ -16,10 +16,10 @@ test('register test contestant then NPR 500 simulated payment and refund (no mon
  await expect(page.locator('#create-status')).toContainText('沒有重複建立');
  await expect(page.locator('#payment-stats')).toContainText('NPR 0');
  await page.getByRole('button',{name:'模擬付款成功'}).click();
- await expect(page.locator('#payment-stats')).toContainText('NPR 500');
+ await expect(page.locator('#payment-stats')).toContainText('NPR 300');
  await page.getByRole('button',{name:'重播成功通知'}).click();
  await expect(page.locator('#payment-message')).toContainText('重複通知已忽略');
- await page.screenshot({path:testInfo.outputPath('ghv-npr500-payment-test-desktop.png'),fullPage:true});
+ await page.screenshot({path:testInfo.outputPath('ghv-npr300-payment-test-desktop.png'),fullPage:true});
  await page.getByRole('button',{name:'申請模擬退款'}).click();
  await page.getByRole('button',{name:'模擬退款完成'}).click();
  await expect(page.locator('#payment-stats')).toContainText('模擬退款完成');
@@ -31,9 +31,9 @@ test('register test contestant then NPR 500 simulated payment and refund (no mon
 test('payment simulator mobile layout loads without page horizontal overflow',async({page},testInfo)=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/payment-lab.html');
- await expect(page.locator('h1')).toContainText('報名 NPR 500');
+ await expect(page.locator('h1')).toContainText('報名 NPR 300');
  await expect(page.locator('#create')).toBeDisabled();
- await page.screenshot({path:testInfo.outputPath('ghv-npr500-payment-test-mobile.png'),fullPage:true});
+ await page.screenshot({path:testInfo.outputPath('ghv-npr300-payment-test-mobile.png'),fullPage:true});
  const width=await page.evaluate(()=>({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
  expect(width.scroll).toBeLessThanOrEqual(width.client);
 });
