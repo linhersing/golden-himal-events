@@ -86,3 +86,27 @@ test('homepage remains the same approved header, without duplicate shared brand'
  await expect(page.locator('.ghp-shared-atmosphere')).toHaveCount(0);
  await expect(page.locator('.portal-top-nav a')).toHaveCount(4);
 });
+
+test('inner-page header is shorter and logo smaller than homepage at each viewport',async({page})=>{
+ for(const width of [320,375,390,650,768,980,981,1280,1640]){
+  await page.setViewportSize({width,height:900});
+  await page.goto('/');
+  const homeLogo=await page.locator('.ghp-home-logo img').boundingBox();
+  for(const route of visitorRoutes){
+   await page.goto(route.url);
+   const logo=await page.locator('.ghp-shared-logo img').boundingBox();
+   const band=await page.locator('.ghp-shared-atmosphere').boundingBox();
+   const main=await page.locator('main').first().boundingBox();
+   const maxLogo=width<=370?238:width<=650?255:width<=980?340:390;
+   const maxBand=width<=650?305:width<=980?370:330;
+   expect(logo.width,route.url+' logo width at '+width).toBeLessThanOrEqual(maxLogo+1);
+   expect(logo.width,route.url+' vs homepage at '+width).toBeLessThan(homeLogo.width);
+   expect(band.height,route.url+' compact header at '+width).toBeLessThan(maxBand);
+   expect(main.y,route.url+' content enters screen promptly at '+width).toBeLessThan(width<=650?460:width<=980?490:430);
+   const nav=await page.locator('.ghp-shared-nav').boundingBox();
+   expect(nav.y,route.url+' menu follows logo at '+width).toBeGreaterThanOrEqual(logo.y+logo.height-1);
+   expect(Math.abs(logo.x+logo.width/2-width/2)).toBeLessThanOrEqual(2);
+   expect(Math.abs(nav.x+nav.width/2-width/2)).toBeLessThanOrEqual(2);
+  }
+ }
+});
