@@ -183,3 +183,30 @@ test('homepage clean logo is the first branded visual, and mobile controls remai
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
  }
 });
+
+test('homepage header and wedding slogan share one understated venue-photo background at all viewports',async({page})=>{
+ for(const width of [320,375,390,414,768,1280,1640]){
+  await page.setViewportSize({width,height:850});
+  await page.goto('/');
+  const band=page.locator('.ghp-home-atmosphere');
+  await expect(band).toHaveCount(1);
+  await expect(band.locator('header.ghp-home-header .ghp-home-logo img')).toBeVisible();
+  await expect(band.locator('header .portal-top-nav a')).toHaveCount(4);
+  await expect(band.locator('.ghp-brand-ribbon-en')).toHaveText(slogan);
+  await expect(band.locator('.ghp-brand-ribbon-ne')).toHaveText(nepali);
+  const style=await band.evaluate(el=>{
+   const wash=getComputedStyle(el,'::before');
+   const text=getComputedStyle(el.querySelector('.ghp-brand-ribbon-en'));
+   return {image:wash.backgroundImage,background:getComputedStyle(el).backgroundColor,
+    color:text.color,filter:wash.filter};
+  });
+  expect(style.image).toContain('gh-real-hall-hero-20261113.webp');
+  expect(style.image).toContain('linear-gradient');
+  expect(style.background).not.toBe('rgba(0, 0, 0, 0)');
+  expect(style.color).toBe('rgb(102, 59, 34)');
+  const bounds=await band.boundingBox();
+  const hero=await page.locator('.portal-stage').boundingBox();
+  expect(bounds.y+bounds.height).toBeLessThanOrEqual(hero.y+2);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+ }
+});

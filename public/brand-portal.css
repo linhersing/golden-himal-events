@@ -1452,3 +1452,97 @@ body[data-page="portal"] .ghp-footer-logo-window img.ghp-footer-main-logo{
  body[data-page="portal"] .ghp-home-header .ghp-home-logo{width:min(278px,89vw)}
  body[data-page="portal"] .ghp-home-header .portal-top-nav{min-width:0}
 }
+
+/* 2026-11-16 | Unified champagne-gold photo atmosphere for the home identity.
+   Uses the APPROVED, already-loaded real Golden Himal banquet-hall photograph.
+   The photo is softened behind a high-opacity pale overlay, never above text.
+   Only the public homepage is affected; all navigation/auth/payment stay intact. */
+body[data-page="portal"] .ghp-home-atmosphere{
+ position:relative;
+ isolation:isolate;
+ overflow:hidden;
+ background:#f3e8d8;
+ box-shadow:inset 0 -1px 0 rgba(162,122,72,.24);
+}
+body[data-page="portal"] .ghp-home-atmosphere::before{
+ content:"";
+ position:absolute;
+ inset:0;
+ z-index:0;
+ pointer-events:none;
+ background-image:
+   linear-gradient(105deg,
+     rgba(252,249,243,.79) 0%,
+     rgba(251,244,233,.73) 41%,
+     rgba(247,238,224,.82) 100%),
+   url("./images/gh-real-hall-hero-20261113.webp");
+ background-position:center,center 38%;
+ background-size:cover,cover;
+ background-repeat:no-repeat;
+ filter:saturate(.72) contrast(.98);
+}
+body[data-page="portal"] .ghp-home-atmosphere::after{
+ content:"";
+ position:absolute;
+ inset:0;
+ z-index:0;
+ pointer-events:none;
+ background:
+   radial-gradient(ellipse at 50% 0%,rgba(255,255,255,.53) 0%,transparent 57%),
+   radial-gradient(ellipse at 90% 83%,rgba(190,137,67,.16),transparent 46%),
+   linear-gradient(180deg,rgba(254,250,243,.08),rgba(243,228,204,.13));
+}
+body[data-page="portal"] .ghp-home-atmosphere > .ghp-home-header,
+body[data-page="portal"] .ghp-home-atmosphere > .ghp-brand-ribbon{
+ position:relative;
+ z-index:1;
+}
+body[data-page="portal"] .ghp-home-atmosphere .ghp-home-header{
+ padding-top:12px;
+ padding-bottom:13px;
+}
+body[data-page="portal"] .ghp-home-atmosphere .ghp-home-logo img{
+ filter:drop-shadow(0 5px 10px rgba(90,54,21,.10));
+}
+body[data-page="portal"] .ghp-home-atmosphere > .ghp-brand-ribbon{
+ background:linear-gradient(90deg,
+   rgba(255,249,240,.77),
+   rgba(255,252,247,.81) 48%,
+   rgba(252,244,230,.77));
+ border-top:1px solid rgba(198,158,101,.27);
+ border-bottom:1px solid rgba(182,137,78,.27);
+ box-shadow:none;
+}
+body[data-page="portal"] .ghp-home-atmosphere .ghp-brand-ribbon-inner{
+ min-height:90px;
+}
+body[data-page="portal"] .ghp-home-atmosphere .ghp-brand-ribbon-en{
+ color:#663b22;
+ text-shadow:0 1px 0 rgba(255,255,255,.75);
+}
+body[data-page="portal"] .ghp-home-atmosphere .ghp-brand-ribbon-ne{
+ color:#734a2d;
+ text-shadow:0 1px 0 rgba(255,255,255,.70);
+}
+@media(max-width:650px){
+ body[data-page="portal"] .ghp-home-atmosphere::before{
+  background-image:
+    linear-gradient(180deg,
+      rgba(252,249,243,.83) 0%,
+      rgba(249,240,226,.79) 63%,
+      rgba(248,238,221,.84) 100%),
+    url("./images/gh-real-hall-hero-20261113.webp");
+  background-position:center,50% 36%;
+ }
+ body[data-page="portal"] .ghp-home-atmosphere .ghp-home-header{
+  padding-top:11px;
+  padding-bottom:12px;
+ }
+ body[data-page="portal"] .ghp-home-atmosphere .ghp-brand-ribbon-inner{
+  min-height:86px;
+  padding-block:11px;
+ }
+ body[data-page="portal"] .ghp-home-atmosphere > .ghp-brand-ribbon{
+  background:rgba(255,250,242,.78);
+ }
+}
