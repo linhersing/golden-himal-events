@@ -2,7 +2,7 @@
  * This is NOT user authentication, not a payment processor and not a real API.
  * No passwords, personal information, bank details, or video files are accepted.
  */
-export const FEE_NPR=500;
+export const FEE_NPR=300;
 export const ROUNDS=Object.freeze(['2027-03','2027-06','2027-09']);
 export const CATEGORY=Object.freeze(['university','community']);
 export const PERSONAS=Object.freeze(Array.from({length:20},(_,i)=>Object.freeze({
@@ -105,8 +105,8 @@ export function summary(s){
  const payment=s.orders.filter(o=>o.status==='paid'||o.status==='refund_pending');
  return {members:s.members.length,applications:s.applications.length,
   paidOrders:payment.length,pendingOrders:s.orders.filter(o=>['unpaid','failed'].includes(o.status)).length,
-  grossTestNpr:(payment.length+s.orders.filter(o=>o.status==='refunded').length)*FEE_NPR,
-  testNetNpr:payment.length*FEE_NPR,
+  grossTestNpr:s.orders.filter(o=>['paid','refund_pending','refunded'].includes(o.status)).reduce((sum,o)=>sum+o.amountNpr,0),
+  testNetNpr:payment.reduce((sum,o)=>sum+o.amountNpr,0),
   shortlist:s.applications.filter(a=>a.status==='shortlisted'||a.status==='finalist').length};
 }
 export function seed20(s){
@@ -148,13 +148,13 @@ export function safeParsePortal(raw){
    if(!member||!ROUNDS.includes(a.round)||a.category!==member.category||
     !['TEST-DEMO-60S','TEST-DEMO-90S'].includes(a.demo)||
     !['submitted','needs_info','shortlisted','rejected','finalist'].includes(a.status)||
-    appIds.has(a.id)||!/^APP-TEST-\d{4}$/.test(a.id)||a.feeRequiredNpr!==FEE_NPR)return blankPortal();
+    appIds.has(a.id)||!/^APP-TEST-\d{4}$/.test(a.id)||![FEE_NPR,500].includes(a.feeRequiredNpr))return blankPortal();
    appIds.add(a.id);
   }
   const orderIds=new Set(), orderedApps=new Set();
   for(const o of p.orders){
    if(!appIds.has(o.applicationId)||orderedApps.has(o.applicationId)||orderIds.has(o.id)||
-    !/^ORD-TEST-\d{4}$/.test(o.id)||o.amountNpr!==FEE_NPR||
+    !/^ORD-TEST-\d{4}$/.test(o.id)||![FEE_NPR,500].includes(o.amountNpr)||
     o.currency!=='NPR'||o.mode!=='FAKE_NO_BANK'||
     !['unpaid','paid','failed','refund_pending','refunded'].includes(o.status))return blankPortal();
    orderedApps.add(o.applicationId);orderIds.add(o.id);

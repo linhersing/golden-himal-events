@@ -13,7 +13,7 @@ const corrections={stage_name:'TEST SINGER',song_title:'Corrected TEST SONG',ori
 
 async function fixture(t,{enabled=true,migrated=true,supplements=false}={}){
  const db=new DatabaseSync(':memory:');t.after(()=>db.close());
- for(const file of ['1000_e2e_staging_acceptance_ONLY.sql',...(migrated?['1007_test_application_approval_STAGING_ONLY.sql']:[])]){
+ for(const file of ['1000_e2e_staging_acceptance_ONLY.sql','1010_staging_fee_npr300_ONLY.sql',...(migrated?['1007_test_application_approval_STAGING_ONLY.sql']:[])]){
   db.exec(await readFile(new URL('../backend/migrations/'+file,import.meta.url),'utf8'));
  }
  const secret='H'.repeat(64),fingerprint=value=>createHmac('sha256',secret).update(value).digest('hex');

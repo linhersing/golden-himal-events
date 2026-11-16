@@ -37,6 +37,7 @@ test('staging profile URL validation rejects unsafe/internal URLs and missing co
 test('two independent singers keep distinct D1 URLs, authenticated readers and authorized judge see correct records',async()=>{
  const db=new DatabaseSync(':memory:');
  db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ db.exec(await readFile(new URL('../backend/migrations/1010_staging_fee_npr300_ONLY.sql',import.meta.url),'utf8'));
  db.exec(await readFile(new URL('../backend/migrations/1003_entrant_profile_optin_STAGING_ONLY.sql',import.meta.url),'utf8'));
  const emails=[];
  const env={
@@ -108,6 +109,7 @@ test('two independent singers keep distinct D1 URLs, authenticated readers and a
 test('profile schema is fail-closed when not enabled; old entries can still be submitted',async()=>{
  const db=new DatabaseSync(':memory:');
  db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ db.exec(await readFile(new URL('../backend/migrations/1010_staging_fee_npr300_ONLY.sql',import.meta.url),'utf8'));
  const emails=[];
  const env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_PROFILE_URLS_ENABLED:'true',
   STAGING_SUBMISSION_MODE:'links',STAGING_IDENTITY_SECRET:'T'.repeat(64),

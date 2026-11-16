@@ -28,7 +28,7 @@ const payments={...rows,total:2,items:[
  {application_id:'GHV-TEST-000001',round_code:'2027-01',payment_status:'deferred',
  simulated_amount_npr:null,real_amount_npr:null,real_paid:false},
  {application_id:'GHV-TEST-000002',round_code:'2027-04',payment_status:'simulation_only',
- simulated_amount_npr:500,real_amount_npr:null,real_paid:false}
+ simulated_amount_npr:300,real_amount_npr:null,real_paid:false}
 ]};
 
 test('global sponsor dashboard hides numbers on unauthorized Access response',async({page})=>{
@@ -61,7 +61,7 @@ test('mobile and desktop organizer view shows total/score/payment categories wit
    await page.locator('#records').screenshot({path:'test-results/ghv-admin-records-mobile.png'});
    await page.locator('[data-tab="payments"]').click();
    await expect(page.locator('#records-title')).toContainText('付款狀態');
-   await expect(page.locator('#rows')).toContainText('模擬 NPR 500');
+   await expect(page.locator('#rows')).toContainText('模擬 NPR 300');
    await expect(page.locator('#rows')).toContainText('未接通金流');
    await page.locator('[data-tab="scores"]').click();
    await expect(page.locator('#rows')).toContainText('judge-1');

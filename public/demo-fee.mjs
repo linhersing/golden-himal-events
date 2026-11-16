@@ -1,6 +1,6 @@
-// 2026-11-15 approved rule: one Demo is NPR 500; at most 10 in the estimator.
+// 2026-11-16 superseding fee decision: one Demo is NPR 300; at most 10 in the estimator.
 // UI-only preview: no collection, upload, registration, identity, D1, or checkout.
-export const DEMO_FEE_NPR=500;
+export const DEMO_FEE_NPR=300;
 export const MAX_DEMOS=10;
 export function demoFeeQuote(count){
  const value=Number(count);

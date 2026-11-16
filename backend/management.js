@@ -214,7 +214,7 @@ async function payments(db,source,limit,offset){
    WHERE w.expires_at>? ORDER BY a.created_at DESC,a.id DESC LIMIT ? OFFSET ?`).bind(time,limit,offset).all();
   return {total:count(total?.n),items:(result.results||[]).map(x=>({
    ...x,mock_events:count(x.mock_events),real_paid:false,real_amount_npr:null,
-   simulated_amount_npr:x.payment_status==='simulation_only'?500:null
+   simulated_amount_npr:x.payment_status==='simulation_only'?300:null
   }))};
  }
  const total=await db.prepare('SELECT COUNT(*) AS n FROM e2e_applications').first();

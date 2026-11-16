@@ -10,7 +10,7 @@ const endpoints=[
   ['/golden-himal.html',['data-page="story"','story-name','story-gallery','approved-peace-tower-20261114.jpg','gh-reviewed-20261115-grand-hall-empty.jpg',...footerMarkers]],
   ['/voice.html',['data-page="home"','id="home-apply"','id="home-login"','front-visual-wedding-image','approved-image-20261114','voice-wedding-hero-approved-20261114.jpg','NPR 10,000',...footerMarkers]],
   ['/simple.css',['.front-visual.front-visual-wedding-image','.front-visual.front-visual-wedding-image > img']],
-  ['/demo-fee.mjs',['DEMO_FEE_NPR=500','MAX_DEMOS=10','demoFeeQuote']],
+  ['/demo-fee.mjs',['DEMO_FEE_NPR=300','MAX_DEMOS=10','demoFeeQuote']],
   ['/member.html',[...footerMarkers,'id="member-email-form"','id="member-code-form"','id="member-status"','simple.js']],
   ['/news.html',[...footerMarkers,'news-schedule','id="rules-awards"','id="rules-voting"','id="demo-fee-estimator"','src="./demo-fee.mjs"']],
   ['/simple.js',['request-code','test_email_service_unavailable','verify-code']]
