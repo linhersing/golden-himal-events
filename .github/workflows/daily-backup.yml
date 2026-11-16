@@ -1,91 +1,186 @@
-name: Daily Disaster Recovery Backup (18:00 Taipei)
-
+# Recovery backup safety:
+# - The existing ChatGPT automation already performs the daily 18:00 Drive backup.
+# - GitHub mode remains MANUAL until Drive OAuth is configured, verified, and
+#   a single schedule owner is chosen to avoid duplicate uploads.
+# - A successful 'verify' run is NOT proof of a Google Drive backup.
+name: Golden Himal Verified Backup (manual)
 on:
-  schedule:
-    # 10:00 UTC = 18:00 UTC+8 (台灣時間每日晚上 6 點)
-    - cron: '0 10 * * *'
+  pull_request:
+    paths:
+      - '.github/workflows/daily-backup.yml'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'verify = Git bundle test only; upload = authenticated Drive backup'
+        type: choice
+        required: true
+        default: verify
+        options:
+          - verify
+          - upload
+
+permissions:
+  contents: read
+concurrency:
+  group: golden-himal-verified-backup
+  cancel-in-progress: false
 
 jobs:
   backup:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
+    timeout-minutes: 30
+    env:
+      MODE: ${{ inputs.mode || 'verify' }}
+      GDRIVE_OAUTH_JSON: ${{ secrets.GDRIVE_OAUTH_JSON }}
+      GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
     steps:
       - name: Checkout full Git history
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Prepare backup workspace
+      - name: Check execution mode without exposing credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$MODE" != "verify" && "$MODE" != "upload" ]]; then
+            echo "::error::Unknown backup mode"
+            exit 1
+          fi
+          if [[ "$MODE" == "upload" ]]; then
+            if [[ -z "$GDRIVE_OAUTH_JSON" || -z "$GDRIVE_FOLDER_ID" ]]; then
+              echo "::error::Drive backup blocked: GDRIVE_OAUTH_JSON and GDRIVE_FOLDER_ID are both required. No backup uploaded."
+              exit 1
+            fi
+          fi
+          echo "Mode: $MODE"
+          if [[ "$MODE" == "verify" ]]; then
+            echo "::notice::VERIFY mode produces no Drive backup. The daily 18:00 backup is maintained by the existing ChatGPT automation."
+          fi
+
+      - name: Create and verify complete Git bundle
         id: meta
+        shell: bash
         run: |
+          set -euo pipefail
           TS=$(TZ='Asia/Taipei' date +'%Y%m%d-%H%M')
-          echo "timestamp=${TS}" >> "$GITHUB_OUTPUT"
-          mkdir -p backup_payload/git backup_payload/cloudflare backup_payload/resend
-
-      - name: Create full Git bundle
-        run: |
-          git fetch --all --tags
-          git bundle create "backup_payload/git/golden-himal-events-${{ steps.meta.outputs.timestamp }}.bundle" --all
+          mkdir -p backup_payload/git backup_payload/cloudflare
+          git fetch --all --tags --prune
+          git bundle create "backup_payload/git/golden-himal-events-$TS.bundle" --all
+          git bundle verify "backup_payload/git/golden-himal-events-$TS.bundle"
           git rev-parse HEAD > backup_payload/git/HEAD.txt
+          echo "stamp=$TS" >> "$GITHUB_OUTPUT"
+          echo "Verified Git history at $(git rev-parse --short HEAD)"
 
-      - name: Export Cloudflare D1 databases & non-secret metadata
-        if: ${{ secrets.CF_API_TOKEN != '' && secrets.CF_ACCOUNT_ID != '' }}
+      - name: Export both remote TEST D1 databases, only with explicitly authorized token
+        if: ${{ env.MODE == 'upload' && env.CF_ACCOUNT_ID != '' && env.CF_API_TOKEN != '' }}
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ env.CF_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ env.CF_API_TOKEN }}
+        shell: bash
         run: |
-          npx --yes wrangler@latest d1 export ghv-staging --remote --output="backup_payload/cloudflare/ghv-staging.sql"
-          npx --yes wrangler@latest d1 export golden-himal-voice-preview-e2e-db --remote --output="backup_payload/cloudflare/golden-himal-voice-preview-e2e-db.sql"
-          curl -sS -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts" \
-            -o backup_payload/cloudflare/workers-scripts-meta.json
+          set -euo pipefail
+          npx --yes wrangler@4 d1 export ghv-staging --remote --skip-confirmation --output="backup_payload/cloudflare/ghv-staging.sql"
+          npx --yes wrangler@4 d1 export golden-himal-voice-preview-e2e-db --remote --skip-confirmation --output="backup_payload/cloudflare/golden-himal-voice-preview-e2e-db.sql"
+          test -s backup_payload/cloudflare/ghv-staging.sql
+          test -s backup_payload/cloudflare/golden-himal-voice-preview-e2e-db.sql
+          echo "::notice::D1 test databases exported. These files may contain personal data; do NOT publish as a GitHub artifact."
 
-      - name: Export Resend domains & webhooks snapshot
-        if: ${{ secrets.RESEND_API_KEY != '' }}
-        env:
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      - name: Build explicit coverage manifest, archive and checksum
+        shell: bash
         run: |
-          curl -sS -H "Authorization: Bearer ${RESEND_API_KEY}" \
-            "https://api.resend.com/domains" \
-            -o backup_payload/resend/domains.json
-          curl -sS -H "Authorization: Bearer ${RESEND_API_KEY}" \
-            "https://api.resend.com/webhooks" \
-            -o backup_payload/resend/webhooks.json
+          set -euo pipefail
+          D1_STATUS=not_configured
+          if [[ -s backup_payload/cloudflare/ghv-staging.sql && -s backup_payload/cloudflare/golden-himal-voice-preview-e2e-db.sql ]]; then
+            D1_STATUS=exported
+          fi
+          python3 - "$D1_STATUS" <<'PY'
+          import json, os, sys
+          data = {
+              "source": os.environ["GITHUB_REPOSITORY"],
+              "commit": os.environ["GITHUB_SHA"],
+              "mode": os.environ["MODE"],
+              "git_history": "bundle_verified",
+              "cloudflare_d1_test": sys.argv[1],
+              "cloudflare_worker_live_code": "not_exported",
+              "cloudflare_r2_objects": "not_exported",
+              "resend_account_metadata": "not_exported",
+              "note": "Partial backups are not full disaster recovery. Real user data requires restricted Google Drive access.",
+          }
+          with open("backup_payload/coverage.json", "w") as f:
+              json.dump(data, f, indent=2)
+          PY
+          ARCHIVE="ghv-backup-${{ steps.meta.outputs.stamp }}.tar.gz"
+          tar -czf "$ARCHIVE" -C backup_payload .
+          sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
+          tar -tzf "$ARCHIVE" >/dev/null
+          echo "ARCHIVE_NAME=$ARCHIVE" >> "$GITHUB_ENV"
+          echo "D1_STATUS=$D1_STATUS" >> "$GITHUB_ENV"
+          if [[ "$D1_STATUS" == not_configured ]]; then
+            echo "::warning::Cloudflare D1 was not exported; this is a Git-only backup."
+          fi
 
-      - name: Compress & generate SHA-256 checksum
+      - name: Upload to owner-controlled Google Drive and verify remote checksum
+        if: ${{ env.MODE == 'upload' }}
+        shell: bash
         run: |
-          ARCHIVE="ghv-backup-${{ steps.meta.outputs.timestamp }}.tar.gz"
-          tar -czf "${ARCHIVE}" -C backup_payload .
-          sha256sum "${ARCHIVE}" > "${ARCHIVE}.sha256"
-          echo "ARCHIVE_NAME=${ARCHIVE}" >> "$GITHUB_ENV"
-
-      - name: Upload archive & checksum to Google Drive
-        if: ${{ secrets.GDRIVE_SA_JSON != '' }}
-        env:
-          GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
-          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID || '1Fw74rAAP8FIWRFggM842nBkIiAI_K8i1' }}
-        run: |
+          set -euo pipefail
           python3 -m pip install --quiet google-api-python-client google-auth
-          python3 - <<'EOF'
-          import json
-          import os
-          from google.oauth2 import service_account
+          python3 - <<'PY'
+          import hashlib, json, os
+          from google.oauth2.credentials import Credentials
+          from google.auth.transport.requests import Request
           from googleapiclient.discovery import build
           from googleapiclient.http import MediaFileUpload
 
-          sa_info = json.loads(os.environ["GDRIVE_SA_JSON"])
-          creds = service_account.Credentials.from_service_account_info(
-              sa_info, scopes=["https://www.googleapis.com/auth/drive.file"]
-          )
-          service = build("drive", "v3", credentials=creds)
+          info = json.loads(os.environ["GDRIVE_OAUTH_JSON"])
+          if info.get("type") != "authorized_user":
+              raise ValueError("GDRIVE_OAUTH_JSON must be user OAuth credentials. A service account cannot own files in personal My Drive.")
+          credentials = Credentials.from_authorized_user_info(info)
+          if not credentials.valid:
+              credentials.refresh(Request())
+          service = build("drive", "v3", credentials=credentials, cache_discovery=False)
           folder_id = os.environ["GDRIVE_FOLDER_ID"]
-          archive = os.environ["ARCHIVE_NAME"]
+          folder = service.files().get(fileId=folder_id, fields="id,name,mimeType,capabilities(canAddChildren)", supportsAllDrives=True).execute()
+          if folder.get("mimeType") != "application/vnd.google-apps.folder" or not folder.get("capabilities", {}).get("canAddChildren", False):
+              raise RuntimeError("Drive folder unavailable or not writable for the authorized account")
 
-          for fname, mime in [(archive, "application/gzip"), (f"{archive}.sha256", "text/plain")]:
-              media = MediaFileUpload(fname, mimetype=mime, resumable=True)
-              meta = {"name": fname, "parents": [folder_id]}
-              uploaded = service.files().create(body=meta, media_body=media, fields="id,name").execute()
-              print(f"Uploaded: {uploaded['name']} (ID: {uploaded['id']})")
-          EOF
+          archive = os.environ["ARCHIVE_NAME"]
+          for name, mime in [(archive, "application/gzip"), (archive + ".sha256", "text/plain")]:
+              with open(name,"rb") as handle:
+                  local_bytes = handle.read()
+              local_md5 = hashlib.md5(local_bytes).hexdigest()
+              media = MediaFileUpload(name, mimetype=mime, resumable=True)
+              remote = service.files().create(
+                  body={"name": name, "parents": [folder_id]}, media_body=media,
+                  fields="id,name,size,md5Checksum", supportsAllDrives=True,
+              ).execute()
+              check = service.files().get(
+                  fileId=remote["id"], fields="id,name,size,md5Checksum,parents",
+                  supportsAllDrives=True,
+              ).execute()
+              if (int(check.get("size", -1)) != len(local_bytes)
+                  or check.get("md5Checksum") != local_md5
+                  or folder_id not in check.get("parents", [])):
+                  raise RuntimeError("Drive upload verification failed for " + name)
+              print("Verified remote file:", check["name"], "size:", check["size"], "id:", check["id"])
+          PY
+
+      - name: Publish accurate execution summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '### Golden Himal recovery backup'
+            echo "Mode: $MODE"
+            echo "Target: GitHub `$GITHUB_REPOSITORY`"
+            echo "Cloudflare D1: ${D1_STATUS:-not_exported}"
+            echo 'Workers live version, R2 objects and Resend account metadata: not exported'
+            if [[ "$MODE" == "verify" ]]; then
+              echo '**VERIFY ONLY — no Google Drive backup was uploaded by this run.**'
+            else
+              echo 'Check the upload verification step for a verified Google Drive archive. An unsuccessful workflow must not be reported as a successful backup.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
