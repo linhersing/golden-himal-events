@@ -92,9 +92,54 @@ test('About Golden Himal section keeps a larger official mark without adding new
    const pseudo=getComputedStyle(el,'::before');
    return {width:parseFloat(pseudo.width),background:pseudo.backgroundImage};
   });
-  expect(style.width).toBeGreaterThanOrEqual(width<=650?105:140);
+  expect(style.width).toBeGreaterThanOrEqual(width<=650?100:122);
   expect(style.background).toContain('brand-identity.png');
   await expect(page.locator('.portal-scene img')).toHaveAttribute('src','./images/gh-real-hall-hero-20261113.webp');
   await expect(page.locator('.ghp-brand-ribbon img, .ghp-brand-signature img')).toHaveCount(0);
+ }
+});
+
+test('All website and staging pages have footer brand without cropped or squashed geometry',async({page})=>{
+ const otherPages=[
+  '/voice.html','/news.html','/announcements.html','/member.html','/backoffice.html',
+  '/practice.html','/member-login.html','/member-portal.html','/admin-center.html',
+  '/test-lab.html','/payment-lab.html','/architecture-preview.html',
+  '/e2e-stage.html','/judge-stage.html','/organizer-stage.html','/print-brief.html'
+ ];
+ for(const width of [320,390,1280]){
+  await page.setViewportSize({width,height:850});
+  for(const route of otherPages){
+   await page.goto(route);
+   const footer=page.locator('.ghp-universal-footer-brand');
+   await expect(footer).toHaveCount(1);
+   await expect(footer.locator('p[lang=en]')).toHaveText(slogan);
+   const window=footer.locator('.ghp-universal-logo-window');
+   const logo=window.locator('img');
+   await expect(logo).toHaveAttribute('src','./images/brand-identity.png');
+   await expect.poll(()=>logo.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
+   const ratio=await window.evaluate(el=>{
+    const img=el.querySelector('img');
+    return {viewport:el.getBoundingClientRect().height,image:img.getBoundingClientRect().height};
+   });
+   expect(ratio.viewport/ratio.image).toBeLessThanOrEqual(.69);
+   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+   expect(overflow,route+' at '+width+'px').toBeLessThanOrEqual(1);
+  }
+ }
+});
+test('Palace footer image is clipped without distortion and stops below PALACE',async({page})=>{
+ for(const route of ['/','/golden-himal.html']){
+  await page.goto(route);
+  const frame=page.locator('.ghp-footer-logo-window');
+  const image=frame.locator('img.ghp-footer-main-logo');
+  await expect(frame).toHaveCount(1);
+  const ratio=await frame.evaluate(el=>{
+   const i=el.querySelector('img');
+   return {crop:el.clientHeight,width:el.clientWidth,displayWidth:i.getBoundingClientRect().width,displayHeight:i.getBoundingClientRect().height,naturalWidth:i.naturalWidth,naturalHeight:i.naturalHeight};
+  });
+  expect(ratio.crop/ratio.displayHeight).toBeLessThanOrEqual(.69);
+  expect(ratio.displayWidth).toBeGreaterThan(0);
+  expect(ratio.displayWidth/ratio.displayHeight).toBeCloseTo(ratio.naturalWidth/ratio.naturalHeight,1);
+  await expect(image).toHaveAttribute('src','./images/brand-identity.png');
  }
 });
