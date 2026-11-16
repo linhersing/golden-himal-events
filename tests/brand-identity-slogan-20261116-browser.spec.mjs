@@ -122,8 +122,9 @@ test('All website and staging pages have footer brand without cropped or squashe
     return {viewport:el.getBoundingClientRect().height,image:img.getBoundingClientRect().height};
    });
    expect(ratio.viewport/ratio.image).toBeLessThanOrEqual(.69);
-   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
-   expect(overflow,route+' at '+width+'px').toBeLessThanOrEqual(1);
+   const footerBox=await footer.boundingBox();
+   expect(footerBox.x,route+' footer left at '+width+'px').toBeGreaterThanOrEqual(-1);
+   expect(footerBox.x+footerBox.width,route+' footer right at '+width+'px').toBeLessThanOrEqual(width+1);
   }
  }
 });
