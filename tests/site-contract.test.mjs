@@ -180,8 +180,8 @@ test('Golden Himal Palace story presents architecture without provenance chatter
  assert.match(home,/data-p="designViewsHeading">建築與空間特色/);
  assert.doesNotMatch(home+story,/gh-gallery-(?:grand-hall|sky-lounge|fountain-day|guesthouse-night|mountain-view|lamaste-tower)-ai\\.webp/);
  assert.doesNotMatch(home+story,/gh-real-fountain-20261113\\.webp/);
- assert.match(story,/href="\.\/golden-himal\.html" aria-current="page"/);
- assert.equal((story.match(/class="portal-top-nav"/g)||[]).length,1);
+ assert.match(story,/href="\.\/golden-himal\.html" data-ghp-nav="about" aria-current="page"/);
+ assert.equal((story.match(/class="portal-top-nav ghp-shared-nav"/g)||[]).length,1);
  assert.match(home,/class="portal-top-nav"/);
  assert.match(home,/class="portal-about wrap"/);
  assert.match(home,/class="portal-photo-grid"/);
