@@ -19,14 +19,14 @@ test('underage synthetic member is rejected before enrollment',()=>{
  assert.match(signUpMock(s,'T020').error,/未滿18歲/);
  assert.equal(s.members.length,0);
 });
-test('pay 500 per application, cannot pay twice or shortlist before payment',()=>{
+test('pay 300 per application, cannot pay twice or shortlist before payment',()=>{
  const s=blankPortal();
  const m=signUpMock(s,'T001').member;
  const app=applyMock(s,m.id,'2027-03','TEST-DEMO-60S').application;
  assert.equal(app.category,'university');
  assert.equal(reviewMock(s,app.id,'shortlisted').error.includes('付款'),true);
  const p=getOrCreateOrder(s,app.id);
- assert.equal(p.order.amountNpr,500);
+ assert.equal(p.order.amountNpr,300);
  assert.equal(getOrCreateOrder(s,app.id).existing,true);
  assert.equal(s.orders.length,1);
  assert.equal(simulatePayment(s,p.order.id,'success').order.status,'paid');
@@ -64,10 +64,10 @@ test('failed payment requires simulated retry before success, refund zeroes net'
  assert.ok(simulatePayment(s,o.id,'success').error);
  assert.equal(simulatePayment(s,o.id,'retry').order.status,'unpaid');
  simulatePayment(s,o.id,'success');simulatePayment(s,o.id,'request_refund');
- assert.equal(summary(s).testNetNpr,500);
+ assert.equal(summary(s).testNetNpr,300);
  simulatePayment(s,o.id,'refund_complete');
  assert.equal(summary(s).testNetNpr,0);
- assert.equal(summary(s).grossTestNpr,500);
+ assert.equal(summary(s).grossTestNpr,300);
  assert.equal(simulatePayment(s,o.id,'refund_complete').duplicate,true);
 });
 test('20 synthetic cases intentionally include one 17-year-old rejection',()=>{
@@ -79,7 +79,7 @@ test('20 synthetic cases intentionally include one 17-year-old rejection',()=>{
  assert.equal(s.orders.length,19);
  assert.equal(summary(s).paidOrders,7);
  assert.equal(summary(s).shortlist,7);
- assert.equal(summary(s).testNetNpr,3500);
+ assert.equal(summary(s).testNetNpr,2100);
  assert.ok(s.members.every(x=>x.email.endsWith('@example.invalid')));
 });
 test('local storage parser rejects tampered fake payment, real address, invalid workflow',()=>{
