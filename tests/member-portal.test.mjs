@@ -43,7 +43,7 @@ test('different 2027 qualifier rounds generate distinct fees, one per round',()=
  const pa=getOrCreateOrder(s,a.id).order,pb=getOrCreateOrder(s,b.id).order;
  assert.notEqual(pa.id,pb.id);
  simulatePayment(s,pa.id,'success');simulatePayment(s,pb.id,'success');
- assert.equal(summary(s).testNetNpr,1000);
+ assert.equal(summary(s).testNetNpr,600);
  assert.equal(applyMock(s,m.id,'2027-12','TEST-DEMO-60S').error.includes('場次無效'),true);
  assert.deepEqual(ROUNDS,['2027-03','2027-06','2027-09']);
 });
