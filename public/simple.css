@@ -1125,3 +1125,33 @@ body[data-page="home"] .voice-entry-fee small{display:block;margin-top:4px;color
  body[data-page="home"] .voice-entry-fee-heading strong{font-size:2rem}
  body[data-page="home"] .voice-entry-fee p{font-size:.95rem}
 }
+
+/* 2026-11-16: a restrained site-wide Palace identity near the bottom of Voice pages.
+   Keep the original square source undistorted and mask non-PALACE lower lines. */
+.ghp-universal-footer-brand{
+  box-sizing:border-box;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  gap:10px;width:min(1140px,calc(100% - 34px));
+  max-width:100%;margin:35px auto 13px;padding:24px 14px;
+  border-top:1px solid #e8d9bf;
+}
+.ghp-universal-footer-brand p[lang=en]{
+  margin:0;color:#765031;
+  font:700 clamp(1.08rem,2.2vw,1.48rem)/1.45 Georgia,"Noto Serif",serif;
+}
+.ghp-universal-logo-window{
+  display:block;position:relative;overflow:hidden;
+  flex:0 1 auto;
+  width:min(325px,100%);
+  aspect-ratio:1.5;
+}
+.ghp-universal-logo-window img{
+  display:block;width:100%;height:auto;max-width:none;
+  object-fit:contain;object-position:top;
+  margin:0;transform:none;
+}
+@media(max-width:520px){
+  .ghp-universal-footer-brand{margin:24px auto 10px;padding:17px 8px}
+  .ghp-universal-logo-window{width:min(280px,100%)}
+  .ghp-universal-footer-brand p[lang=en]{font-size:clamp(.98rem,4.1vw,1.15rem)}
+}
