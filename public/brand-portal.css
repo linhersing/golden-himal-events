@@ -1635,3 +1635,51 @@ body[data-page="portal"] .portal-stage .portal-copy{
   padding-top:28px;
  }
 }
+
+/* 2026-11-16 | Center the Palace homepage logo and whole navigation group
+   horizontally in desktop, tablet and mobile viewports. Only alignment changes:
+   retain existing logo, menu labels, links, language controls and vertical flow. */
+body[data-page="portal"] .portal-header.ghp-home-header{
+ grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+}
+body[data-page="portal"] .ghp-home-header .ghp-home-logo{
+ justify-self:center;
+ margin-inline:auto;
+}
+body[data-page="portal"] .ghp-home-header .portal-top-nav{
+ grid-column:2;
+ justify-self:center;
+ margin-inline:auto;
+}
+body[data-page="portal"] .ghp-home-header .locale{
+ grid-column:3;
+ justify-self:end;
+}
+@media(max-width:900px){
+ body[data-page="portal"] .portal-header.ghp-home-header{
+  grid-template-columns:minmax(0,1fr);
+ }
+ body[data-page="portal"] .ghp-home-header .ghp-home-logo{
+  grid-column:1;
+  grid-row:1;
+  justify-self:center;
+  margin-inline:auto;
+ }
+ body[data-page="portal"] .ghp-home-header .portal-top-nav{
+  grid-column:1;
+  grid-row:2;
+  justify-self:center;
+  margin-inline:auto;
+ }
+ body[data-page="portal"] .ghp-home-header .locale{
+  grid-column:1;
+  grid-row:3;
+  justify-self:end;
+ }
+}
+@media(max-width:650px){
+ body[data-page="portal"] .ghp-home-header .portal-top-nav{
+  width:100%;
+  max-width:100%;
+ }
+}
