@@ -113,7 +113,7 @@ test('latest news remains short expandable cards (synthetic UI screenshot)',asyn
  await expect(page.locator('.news-row').first()).not.toHaveAttribute('open','');
  await page.locator('#rules-schedule summary').click();
  await expect(page.locator('#rules-schedule')).toHaveAttribute('open','');
- await expect(page.getByText(/Jan(?:uary)? 1–31/)).toBeVisible();
+ await expect(page.locator('#rules-schedule [data-l="scheduleJanDate"]')).toBeVisible();
  await page.screenshot({path:'test-results/ghv-singer-ux-20261104/04-mobile-news-accordion.png'});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });
@@ -265,7 +265,7 @@ test('main member page sends a fresh Turnstile token and verifies the same mailb
  await page.goto('/member.html#register');
  await page.locator('[data-lang=en]').click();
  await expect(page.locator('#signup-mode')).toContainText('Self-service test signup is open');
- await expect(page.getByText(/no real payment/i).first()).toBeVisible();
+ await expect(page.locator('[data-l="memberFeeBoundaryVisible"]')).toBeVisible();
   await page.locator('#member-email-form [name=email]').fill('singer@example.invalid');
  await expect(page.locator('#member-email-form button[type=submit]')).toBeDisabled();
  await expect(page.locator('#signup-human-status')).toContainText('Complete the human verification');
