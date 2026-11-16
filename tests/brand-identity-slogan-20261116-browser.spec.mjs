@@ -41,3 +41,20 @@ test('brand story repeats the exact campaign line while preserving the story nav
  await expect(page.locator('.gh-story-slogan')).toHaveText(slogan);
  await expect(page.locator('.portal-top-nav a[aria-current="page"]')).toHaveAttribute('href','./golden-himal.html');
 });
+
+test('Palace bilingual slogan stays text-first without duplicate side logos',async({page})=>{
+ for(const width of [320,390,1280]){
+  await page.setViewportSize({width,height:850});
+  for(const route of ['/','/golden-himal.html']){
+   await page.goto(route);
+   await expect(page.locator('.ghp-brand-ribbon-en')).toHaveText(slogan);
+   await expect(page.locator('.ghp-brand-ribbon-ne')).toHaveText(nepali);
+   await expect(page.locator('.ghp-signature-en')).toHaveText(slogan);
+   await expect(page.locator('.ghp-signature-ne')).toHaveText(nepali);
+   await expect(page.locator('.ghp-brand-ribbon img, .ghp-brand-signature img')).toHaveCount(0);
+   await expect(page.locator('header .gh-brand-mark img')).toBeVisible();
+   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+   expect(overflow,route+' at '+width+'px').toBeLessThanOrEqual(1);
+  }
+ }
+});
