@@ -22,7 +22,7 @@
 <div class="hero-actions"><button class="primary" type="button" id="start">開始模擬註冊</button><a class="back" href="./payment-lab.html">既有金流沙盒</a></div>
 </div>
 <div class="member-hero-side">
- <span>MEMBER EXPERIENCE</span><strong>5 STEPS</strong><div class="hero-steps"><small>01</small> 會員建立<div class="step-line"></div><small>02</small> Demo 報名<div class="step-line"></div><small>03</small> NPR 500 測試付款<div class="step-line"></div><small>04</small> 初篩審核<div class="step-line"></div><small>05</small> 查詢進度</div>
+ <span>MEMBER EXPERIENCE</span><strong>5 STEPS</strong><div class="hero-steps"><small>01</small> 會員建立<div class="step-line"></div><small>02</small> Demo 報名<div class="step-line"></div><small>03</small> NPR 300 測試付款<div class="step-line"></div><small>04</small> 初篩審核<div class="step-line"></div><small>05</small> 查詢進度</div>
 </div></section>
 <section class="status-banner">
  <div><span class="dot"></span><strong>獨立瀏覽器沙盒</strong><small>所有資料只存在這台裝置，非真正 D1 帳號</small></div>
@@ -56,16 +56,16 @@
  <label>報名場次<select id="round"><option value="2027-03">2027年3月初賽</option><option value="2027-06">2027年6月初賽</option><option value="2027-09">2027年9月初賽</option></select></label>
  <label>模擬 Demo 內容<select id="demo"><option value="TEST-DEMO-60S">TEST-DEMO-60S｜60秒（假資料）</option><option value="TEST-DEMO-90S">TEST-DEMO-90S｜90秒（假資料）</option></select></label>
  </div>
- <div class="bill"><small>當次報名費（暫定草案）</small><strong>NPR 500</strong><small>報名建立後才開立假訂單，完成模擬付款後方可在後台通過審核。</small></div>
+ <div class="bill"><small>單支 Demo 測試費用（目前僅一支）</small><strong>NPR 300</strong><small>報名建立後才開立假訂單，完成模擬付款後方可在後台通過審核。</small></div>
  <div class="actions"><button type="button" id="apply" class="primary">建立 TEST 報名申請</button><span id="apply-status" role="status" aria-live="polite"></span></div>
  <div class="process"><div><b>1</b> 建會員</div><span>→</span><div><b>2</b> 提 Demo</div><span>→</span><div><b>3</b> 付款</div><span>→</span><div><b>4</b> 進度</div></div>
 </section>
 <section id="panel-checkout" class="panel member-panel" role="tabpanel" aria-labelledby="tab-checkout" hidden>
- <div class="panel-heading"><div><span class="eyebrow">TEST CHECKOUT</span><h2>NPR 500 報名費結帳</h2></div><span class="pill">完全不扣款</span></div>
+ <div class="panel-heading"><div><span class="eyebrow">TEST CHECKOUT</span><h2>NPR 300 報名費結帳</h2></div><span class="pill">完全不扣款</span></div>
  <p class="lead">選擇會員的其中一筆報名，建立一個不可重複的假付款訂單。所有「成功／失敗」按鈕只模擬支付商狀態，不是真正匯款或銀行回呼。</p>
  <label>選擇此會員報名<select id="pay-app"></select></label>
  <div id="checkout-card" class="checkout-card"></div>
- <div class="actions"><button type="button" id="order" class="primary">建立 NPR 500 TEST 訂單</button>
+ <div class="actions"><button type="button" id="order" class="primary">建立 NPR 300 TEST 訂單</button>
  <button type="button" id="pay-success" class="subtle">模擬付款成功</button><button type="button" id="pay-fail" class="subtle">模擬付款失敗</button><button type="button" id="pay-retry" class="subtle">模擬重新付款</button></div>
  <p id="payment-feedback" role="status" aria-live="polite" class="hint">沒有銀行連線。正式付款必須由後端向收單商驗證交易，而不是相信此畫面。</p><p class="dashboard-shortcut"><a href="./member-login.html">👤 View My Account / 查看我的個人會員首頁 →</a></p>
 </section>
