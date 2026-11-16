@@ -97,7 +97,7 @@ test('inner-page header is shorter and logo smaller than homepage at each viewpo
    const logo=await page.locator('.ghp-shared-logo img').boundingBox();
    const band=await page.locator('.ghp-shared-atmosphere').boundingBox();
    const main=await page.locator('main').first().boundingBox();
-   const maxLogo=width<=370?238:width<=650?255:width<=980?340:390;
+   const maxLogo=width<=370?128:width<=650?135:width<=980?170:195;
    const maxBand=width<=650?305:width<=980?370:330;
    expect(logo.width,route.url+' logo width at '+width).toBeLessThanOrEqual(maxLogo+1);
    expect(logo.width,route.url+' vs homepage at '+width).toBeLessThan(homeLogo.width);
@@ -108,5 +108,46 @@ test('inner-page header is shorter and logo smaller than homepage at each viewpo
    expect(Math.abs(logo.x+logo.width/2-width/2)).toBeLessThanOrEqual(2);
    expect(Math.abs(nav.x+nav.width/2-width/2)).toBeLessThanOrEqual(2);
   }
+ }
+});
+
+test('story slogan is part of a single gradient, not a bordered third strip',async({page})=>{
+ for(const width of [320,375,390,650,768,981,1280,1640]){
+  await page.setViewportSize({width,height:900});
+  await page.goto('/golden-himal.html');
+  const results=await page.evaluate(()=>{
+   const atmosphere=document.querySelector('.ghp-shared-atmosphere');
+   const slogan=atmosphere?.querySelector('.ghp-brand-ribbon');
+   const main=document.querySelector('main');
+   if(!atmosphere||!slogan||!main)return null;
+   const style=getComputedStyle(slogan);
+   const imagery=getComputedStyle(atmosphere,'::before').backgroundImage;
+   const bg=getComputedStyle(atmosphere).backgroundColor;
+   return {
+    sloganText:slogan.textContent,
+    borders:[style.borderTopWidth,style.borderBottomWidth],
+    bg:style.backgroundImage,
+    fill:style.backgroundColor,
+    shadow:style.boxShadow,
+    pageBg:getComputedStyle(document.body).backgroundColor,
+    atmosphereBg:bg,
+    imagery,
+    height:atmosphere.getBoundingClientRect().height,
+    mainTop:main.getBoundingClientRect().top,
+    atmosphereBottom:atmosphere.getBoundingClientRect().bottom
+   };
+  });
+  expect(results).not.toBeNull();
+  expect(results.sloganText).toContain('The Best Wedding at Golden Himal.');
+  expect(results.sloganText).toContain('सबैभन्दा राम्रो विवाह समारोह');
+  expect(results.borders).toEqual(['0px','0px']);
+  expect(results.bg).toBe('none');
+  expect(results.fill).toBe('rgba(0, 0, 0, 0)');
+  expect(results.shadow).toBe('none');
+  expect(results.imagery).toContain('linear-gradient');
+  expect(results.imagery).toContain('gh-real-hall-hero-20261113.webp');
+  expect(results.atmosphereBg).toBe(results.pageBg);
+  expect(Math.abs(results.mainTop-results.atmosphereBottom)).toBeLessThanOrEqual(1);
+  expect(results.height).toBeLessThan(width<=650?310:width<=980?310:270);
  }
 });
