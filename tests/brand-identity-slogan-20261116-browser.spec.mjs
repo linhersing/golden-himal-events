@@ -219,3 +219,20 @@ test('homepage logo and hero form one smooth visual without a separate ribbon or
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
  }
 });
+
+test('Palace logo and four-link navigation are horizontally centered on mobile and desktop',async({page})=>{
+ for(const width of [320,375,390,414,650,768,900,901,974,1280]){
+  await page.setViewportSize({width,height:850});
+  await page.goto('/');
+  const logo=await page.locator('.ghp-home-logo').boundingBox();
+  const nav=await page.locator('.ghp-home-header .portal-top-nav').boundingBox();
+  const locale=await page.locator('.ghp-home-header .locale').boundingBox();
+  for(const [label,rect] of [['logo',logo],['navigation',nav]]){
+   expect(rect,label+' exists at '+width+'px').not.toBeNull();
+   expect(Math.abs(rect.x+rect.width/2-width/2),label+' centered at '+width+'px').toBeLessThanOrEqual(2);
+  }
+  const sameRow=nav.y<locale.y+locale.height && locale.y<nav.y+nav.height;
+  if(sameRow) expect(nav.x+nav.width, 'navigation does not overlap locale at '+width+'px').toBeLessThanOrEqual(locale.x+1);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),'no horizontal overflow at '+width+'px').toBeLessThanOrEqual(1);
+ }
+});
