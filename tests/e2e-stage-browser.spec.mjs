@@ -180,6 +180,7 @@ test('minimal staff entrance requests a code for organizer, never a member',asyn
  await page.route('**/api/e2e/**',async route=>{
   const path=new URL(route.request().url()).pathname;
   if(path.endsWith('/me'))return route.fulfill({status:401,json:{ok:false,error:'login_required'}});
+  if(path.endsWith('/staff-login-config'))return route.fulfill({status:200,json:{ok:true,required:false,testOnly:true}});
   if(path.endsWith('/request-code')){requested=route.request().postDataJSON();return route.fulfill({status:200,json:{ok:true,challenge_id:'fixture'}})}
   return route.fulfill({status:401,json:{ok:false,error:'not_found'}});
  });

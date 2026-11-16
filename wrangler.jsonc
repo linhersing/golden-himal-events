@@ -11,7 +11,9 @@
       "/api/staging/*",
       "/api/e2e/*",
       "/member",
-      "/member.html"
+      "/member.html",
+      "/backoffice",
+      "/backoffice.html"
     ]
   },
   "d1_databases": [
