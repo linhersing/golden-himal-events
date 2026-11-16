@@ -19,7 +19,7 @@ test('fictional member creates account, returns to login and sees individual ent
  await page.goto('/member-login.html');
  await expect(page.locator('#dashboard-view')).toBeVisible();
  await expect(page.locator('#summary-status')).toContainText('Under review');
- await expect(page.locator('#summary-payment')).toContainText('Mock paid NPR 500');
+ await expect(page.locator('#summary-payment')).toContainText('Mock paid NPR 300');
  await expect(page.locator('#entries-list')).toContainText('APP-TEST-0001');
  await expect(page.locator('#entries-list')).toContainText('TEST-DEMO-60S');
  await page.screenshot({path:testInfo.outputPath('personal-dashboard-desktop.png'),fullPage:true});
