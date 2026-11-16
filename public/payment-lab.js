@@ -18,7 +18,7 @@ try{
  const x=JSON.parse(localStorage.getItem(PAYMENT_KEY)||'null');
  if(x&&x.version===1&&Number.isSafeInteger(x.sequence)&&x.sequence>=1&&x.sequence<1000&&
     Array.isArray(x.orders)&&x.orders.length<=18&&Array.isArray(x.events)&&x.events.length<=120&&
-    x.orders.every(o=>o?.mode==='TEST_ONLY'&&o.amount===ENTRY_FEE_NPR&&o.currency==='NPR'&&
+    x.orders.every(o=>o?.mode==='TEST_ONLY'&&[ENTRY_FEE_NPR,500].includes(o.amount)&&o.currency==='NPR'&&
       /^GHV-TEST-[0-9]{4,}$/.test(o.registrationId)&&/^PAY-TEST-[0-9]{4,}$/.test(o.id)&&
       Object.hasOwn(statusLabels,o.state)))
   payments=x;
