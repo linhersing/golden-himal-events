@@ -1,0 +1,139 @@
+/* 2026-11-16: shared public-page Palace header. Exact brand identity and venue
+   atmosphere of the approved homepage, without touching login/backoffice systems. */
+.ghp-shared-atmosphere{
+ position:relative;isolation:isolate;overflow:hidden;
+ background:#f7eddf;
+}
+.ghp-shared-atmosphere::before{
+ content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+ background-image:
+  linear-gradient(180deg,
+   rgba(252,249,243,.75) 0%,
+   rgba(250,244,235,.74) 46%,
+   rgba(247,237,223,.86) 79%,
+   rgba(247,237,223,.98) 100%),
+  url("./images/gh-real-hall-hero-20261113.webp");
+ background-position:center,center 38%;
+ background-size:cover,cover;
+ background-repeat:no-repeat;
+ filter:saturate(.72) contrast(.98);
+}
+.ghp-shared-atmosphere::after{
+ content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+ background:
+  radial-gradient(ellipse at 50% 3%,rgba(255,255,255,.45),transparent 57%),
+  linear-gradient(180deg,transparent 66%,rgba(247,237,223,.24) 100%);
+}
+.ghp-shared-atmosphere .ghp-shared-header.masthead{
+ position:relative;z-index:1;box-sizing:border-box;
+ display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+ align-items:center;column-gap:16px;row-gap:2px;
+ width:min(1240px,calc(100% - 56px));max-width:100%;
+ margin-inline:auto;min-height:0;padding:12px 0 clamp(17px,2.4vw,29px);
+ border:0;background:transparent;
+}
+.ghp-shared-header .ghp-shared-logo{
+ grid-column:1/-1;grid-row:1;justify-self:center;display:block;
+ width:min(490px,100%);max-width:100%;margin:0 auto 3px;
+ line-height:0;text-decoration:none;border-radius:8px;
+}
+.ghp-shared-header .ghp-shared-logo img{
+ display:block;width:100%;height:auto;max-width:100%;object-fit:contain;
+ filter:drop-shadow(0 5px 10px rgba(90,54,21,.10));
+}
+.ghp-shared-header .ghp-shared-nav.portal-top-nav{
+ grid-column:2;grid-row:2;justify-self:center;
+ display:flex;align-items:stretch;justify-content:center;
+ flex-wrap:nowrap;gap:clamp(1px,.5vw,5px);
+ width:max-content;max-width:100%;min-height:54px;
+ margin-inline:auto;padding:5px;box-sizing:border-box;
+ border:1px solid rgba(184,141,83,.16);border-radius:13px;
+ background:rgba(255,251,244,.78);
+ box-shadow:0 9px 28px rgba(89,61,32,.055);
+ white-space:nowrap;
+}
+.ghp-shared-header .ghp-shared-nav.portal-top-nav a{
+ position:relative;display:inline-flex;flex:0 0 auto;
+ align-items:center;justify-content:center;min-height:44px;
+ padding:0 clamp(12px,1.8vw,20px);box-sizing:border-box;
+ border:0;border-radius:8px;background:transparent;box-shadow:none;
+ color:#6c625a;font-size:14px;font-weight:500;line-height:1.35;
+ letter-spacing:.025em;white-space:nowrap;text-align:center;
+ text-decoration:none;transform:none;
+ transition:color .18s ease,background-color .18s ease;
+}
+.ghp-shared-header .ghp-shared-nav.portal-top-nav a[aria-current="page"]{
+ color:#392f29;font-weight:700;background:transparent;
+}
+.ghp-shared-header .ghp-shared-nav.portal-top-nav a[aria-current="page"]::after{
+ content:"";position:absolute;left:50%;bottom:4px;display:block;
+ width:24px;height:2px;border-radius:2px;background:#a97735;
+ transform:translateX(-50%);
+}
+.ghp-shared-header .ghp-shared-nav.portal-top-nav a:focus-visible,
+.ghp-shared-header .ghp-shared-logo:focus-visible{
+ outline:2px solid #a97735;outline-offset:3px;
+}
+.ghp-shared-header .locale.ghp-shared-locale{
+ grid-column:3;grid-row:2;justify-self:end;margin:0;
+ background:rgba(245,234,214,.77);
+ box-shadow:0 8px 22px rgba(89,61,32,.035);
+}
+.ghp-secondary-links.top-utilities{
+ box-sizing:border-box;display:flex;justify-content:flex-end;align-items:center;
+ width:min(1240px,calc(100% - 56px));max-width:100%;
+ margin:0 auto;padding:9px 0 0;gap:8px;
+}
+.ghp-secondary-links .quick-nav{display:flex;flex-wrap:wrap;justify-content:flex-end}
+@media(hover:hover){
+ .ghp-shared-header .ghp-shared-nav.portal-top-nav a:hover{
+  color:#392f29;background:#f6f1e9;border:0;box-shadow:none;transform:none;
+ }
+}
+@media(max-width:980px){
+ .ghp-shared-atmosphere .ghp-shared-header.masthead{
+  grid-template-columns:minmax(0,1fr);row-gap:8px;
+ }
+ .ghp-shared-header .ghp-shared-logo{
+  grid-column:1;grid-row:1;justify-self:center;margin-inline:auto;
+ }
+ .ghp-shared-header .ghp-shared-nav.portal-top-nav{
+  grid-column:1;grid-row:2;justify-self:center;margin-inline:auto;
+ }
+ .ghp-shared-header .locale.ghp-shared-locale{
+  grid-column:1;grid-row:3;justify-self:end;
+ }
+}
+@media(max-width:650px){
+ .ghp-shared-atmosphere::before{
+  background-image:
+   linear-gradient(180deg,
+    rgba(253,250,245,.81) 0%,
+    rgba(250,243,233,.79) 52%,
+    rgba(247,237,223,.98) 100%),
+   url("./images/gh-real-hall-hero-20261113.webp");
+ }
+ .ghp-shared-atmosphere .ghp-shared-header.masthead{
+  width:calc(100% - 34px);max-width:100%;padding:11px 0 18px;
+ }
+ .ghp-shared-header .ghp-shared-logo{width:min(308px,87vw)}
+ .ghp-shared-header .ghp-shared-nav.portal-top-nav{
+  width:100%;max-width:100%;min-height:48px;padding:4px;gap:0;
+  border-radius:11px;
+ }
+ .ghp-shared-header .ghp-shared-nav.portal-top-nav a{
+  flex:1 1 0;min-width:0;min-height:44px;
+  padding:4px 2px;font-size:clamp(11px,3.3vw,13px);
+  font-weight:500;letter-spacing:0;line-height:1.28;
+  white-space:normal;overflow-wrap:anywhere;
+ }
+ .ghp-shared-header .ghp-shared-nav.portal-top-nav a[aria-current="page"]::after{width:20px}
+ .ghp-secondary-links.top-utilities{width:calc(100% - 34px)}
+ .ghp-secondary-links .quick-nav{justify-content:center}
+}
+@media(max-width:370px){
+ .ghp-shared-header .ghp-shared-logo{width:min(278px,89vw)}
+}
+@media(prefers-reduced-motion:reduce){
+ .ghp-shared-header .ghp-shared-nav.portal-top-nav a{transition:none}
+}
