@@ -276,7 +276,7 @@ test('brand pages omit image provenance claims in all languages while retaining 
  assert.match(home,/data-p="designHallTitle">金色宴會大廳/);
  assert.doesNotMatch(story,/gh-reviewed-20261115-fountain-day\.jpg/); // Same image must not appear twice across the site
  assert.match(home,/approved-grand-hall-20261114\.jpg/);
- assert.match(home,/approved-fountain-night-20261114\.jpg/);
+ assert.match(home,/approved-peace-tower-20261114\.jpg/);
  assert.match(legacy,/Do not enter real personal information/);
  assert.match(home,/正式比賽報名與真實付款尚未開放/);
 });
