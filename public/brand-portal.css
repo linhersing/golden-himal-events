@@ -621,7 +621,7 @@
    CSS-only tonal edits preserve the original real-world geometry and source files.
    Images tagged as design concepts are kept separate from field photography. */
 .brand-portal .portal-photo-card{
- aspect-ratio:1.44; /* match the actual 3:2-ish photographs instead of aggressive crops */
+ aspect-ratio:1.5; /* match the actual 3:2-ish photographs instead of aggressive crops */
 }
 .brand-portal .portal-photo-card:nth-child(2) img,
 .brand-portal .story-gallery-curated .gallery-card img[src*="fountain-night"]{
@@ -1349,7 +1349,7 @@
 .brand-portal .portal-about-heading .portal-section-tag::before,
 .brand-portal .portal-concepts-head .portal-section-tag::before,
 .brand-portal .story-section-intro .portal-section-tag::before{
-  width:126px;height:89px;
+  width:126px;height:84px;
   background-size:126px auto;background-position:center top;
   background-repeat:no-repeat;
   margin-bottom:11px;
@@ -1359,6 +1359,6 @@
   .brand-portal .portal-about-heading .portal-section-tag::before,
   .brand-portal .portal-concepts-head .portal-section-tag::before,
   .brand-portal .story-section-intro .portal-section-tag::before{
-    width:104px;height:73px;background-size:104px auto;
+    width:104px;height:69px;background-size:104px auto;
   }
 }
