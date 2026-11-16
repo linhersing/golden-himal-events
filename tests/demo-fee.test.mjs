@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {DEMO_FEE_NPR,MAX_DEMOS,demoFeeQuote,mountDemoFeeEstimator} from '../public/demo-fee.mjs';
 
-test('frontline Demo fee uses exact 500 NPR x 1..10 (no rounding or hidden fees)',()=>{
- assert.equal(DEMO_FEE_NPR,500);
+test('frontline Demo fee uses exact 300 NPR x 1..10 (no rounding or hidden fees)',()=>{
+ assert.equal(DEMO_FEE_NPR,300);
  assert.equal(MAX_DEMOS,10);
- assert.deepEqual(demoFeeQuote(1),{count:1,unitFeeNpr:500,totalNpr:500});
- assert.deepEqual(demoFeeQuote(5),{count:5,unitFeeNpr:500,totalNpr:2500});
- assert.deepEqual(demoFeeQuote(10),{count:10,unitFeeNpr:500,totalNpr:5000});
+ assert.deepEqual(demoFeeQuote(1),{count:1,unitFeeNpr:300,totalNpr:300});
+ assert.deepEqual(demoFeeQuote(5),{count:5,unitFeeNpr:300,totalNpr:1500});
+ assert.deepEqual(demoFeeQuote(10),{count:10,unitFeeNpr:300,totalNpr:3000});
  for(const count of [0,-1,11,2.5,'2.5','',null,undefined,Infinity,NaN]){
   assert.throws(()=>demoFeeQuote(count),RangeError);
  }
@@ -35,8 +35,8 @@ test('fee calculator reacts to chosen quantity and language without backend comm
  const doc={getElementById(name){return {'demo-fee-count':slider,'demo-fee-total':total,'demo-fee-count-output':counter}[name]}};
  const win={GHVLocale:{lang:'zh'},addEventListener(name,fn){events[name]=fn}};
  assert.equal(mountDemoFeeEstimator(doc,win),true);
- assert.equal(total.textContent,'NPR 2,500');
+ assert.equal(total.textContent,'NPR 2,300');
  assert.equal(counter.textContent,'5 支');
- slider.value='10';events.input();assert.equal(total.textContent,'NPR 5,000');
+ slider.value='10';events.input();assert.equal(total.textContent,'NPR 3,000');
  win.GHVLocale.lang='en';events['ghv:languagechange']();assert.equal(counter.textContent,'10 Demos');
 });
