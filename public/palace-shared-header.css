@@ -29,12 +29,12 @@
  display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
  align-items:center;column-gap:16px;row-gap:0;
  width:min(1240px,calc(100% - 56px));max-width:100%;
- margin-inline:auto;min-height:0;padding:6px 0 clamp(10px,1.3vw,16px);
+ margin-inline:auto;min-height:0;padding:3px 0 clamp(6px,.7vw,10px);
  border:0;background:transparent;
 }
 .ghp-shared-header .ghp-shared-logo{
  grid-column:1/-1;grid-row:1;justify-self:center;display:block;
- width:min(390px,100%);max-width:100%;margin:0 auto 1px;
+ width:min(195px,100%);max-width:100%;margin:0 auto 0;
  line-height:0;text-decoration:none;border-radius:8px;
 }
 .ghp-shared-header .ghp-shared-logo img{
@@ -92,11 +92,11 @@
 }
 @media(max-width:980px){
  .ghp-shared-atmosphere .ghp-shared-header.masthead{
-  grid-template-columns:minmax(0,1fr);row-gap:3px;
+  grid-template-columns:minmax(0,1fr);row-gap:2px;
  }
  .ghp-shared-header .ghp-shared-logo{
   grid-column:1;grid-row:1;justify-self:center;margin-inline:auto;
-  width:min(340px,84vw);
+  width:min(170px,84vw);
  }
  .ghp-shared-header .ghp-shared-nav.portal-top-nav{
   grid-column:1;grid-row:2;justify-self:center;margin-inline:auto;
@@ -115,9 +115,9 @@
    url("./images/gh-real-hall-hero-20261113.webp");
  }
  .ghp-shared-atmosphere .ghp-shared-header.masthead{
-  width:calc(100% - 34px);max-width:100%;padding:7px 0 9px;
+  width:calc(100% - 34px);max-width:100%;padding:4px 0 7px;
  }
- .ghp-shared-header .ghp-shared-logo{width:min(255px,84vw)}
+ .ghp-shared-header .ghp-shared-logo{width:min(135px,84vw)}
  .ghp-shared-header .ghp-shared-nav.portal-top-nav{
   width:100%;max-width:100%;min-height:48px;padding:4px;gap:0;
   border-radius:11px;
@@ -133,23 +133,56 @@
  .ghp-secondary-links .quick-nav{justify-content:center}
 }
 @media(max-width:370px){
- .ghp-shared-header .ghp-shared-logo{width:min(238px,84vw)}
+ .ghp-shared-header .ghp-shared-logo{width:min(128px,84vw)}
 }
 @media(prefers-reduced-motion:reduce){
  .ghp-shared-header .ghp-shared-nav.portal-top-nav a{transition:none}
 }
 
-/* 2026-11-16: Story page retains the wedding slogan, but the secondary band is
-   compact so its main narrative and photographs enter the first screen sooner. */
-body[data-page="story"].brand-portal .ghp-brand-ribbon-inner{
- min-height:72px;padding-block:7px;
+/* 2026-11-16 | Compact subpage identity and seamless, unboxed story slogan.
+   The main homepage uses a separate stylesheet and is intentionally untouched.
+   The story ribbon now lives INSIDE the same photographic header atmosphere;
+   a soft final color fade meets the ivory page background without seams. */
+body[data-page="story"].brand-portal .ghp-shared-atmosphere{
+ background:#fbf8f3;
 }
-body[data-page="story"].brand-portal .ghp-brand-ribbon-en{
- font-size:clamp(1.12rem,1.8vw,1.55rem);
+body[data-page="story"].brand-portal .ghp-shared-atmosphere::before{
+ background-image:
+  linear-gradient(180deg,
+   rgba(252,249,243,.76) 0%,
+   rgba(251,247,241,.80) 42%,
+   rgba(251,248,243,.94) 82%,
+   #fbf8f3 100%),
+  url("./images/gh-real-hall-hero-20261113.webp");
 }
-body[data-page="story"].brand-portal .ghp-brand-ribbon-ne{
- font-size:clamp(.82rem,1.05vw,1rem);margin-top:3px!important;
+body[data-page="story"].brand-portal .ghp-shared-atmosphere::after{
+ background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(251,248,243,0) 46%,#fbf8f3 100%);
+}
+body[data-page="story"].brand-portal .ghp-shared-atmosphere .ghp-brand-ribbon{
+ position:relative;z-index:1;
+ border:0;border-block:0;outline:0;
+ margin:0;padding:0;background:transparent;box-shadow:none;
+}
+body[data-page="story"].brand-portal .ghp-shared-atmosphere .ghp-brand-ribbon-inner{
+ min-height:0;padding:2px 0 19px;margin-inline:auto;
+}
+body[data-page="story"].brand-portal .ghp-shared-atmosphere .ghp-brand-ribbon-en{
+ font-size:clamp(1.05rem,1.35vw,1.28rem);
+ line-height:1.35;color:#6b3c22;
+}
+body[data-page="story"].brand-portal .ghp-shared-atmosphere .ghp-brand-ribbon-ne{
+ margin-top:2px!important;
+ font-size:clamp(.84rem,.9vw,.96rem);
+ line-height:1.5;color:#826144;
 }
 @media(max-width:650px){
- body[data-page="story"].brand-portal .ghp-brand-ribbon-inner{min-height:68px;padding-block:5px}
+ body[data-page="story"].brand-portal .ghp-shared-atmosphere .ghp-brand-ribbon-inner{
+  min-height:0;padding:3px 8px 16px;
+ }
+ body[data-page="story"].brand-portal .ghp-shared-atmosphere .ghp-brand-ribbon-en{
+  font-size:clamp(.98rem,3.8vw,1.16rem);
+ }
+ body[data-page="story"].brand-portal .ghp-shared-atmosphere .ghp-brand-ribbon-ne{
+  font-size:clamp(.78rem,3vw,.93rem);
+ }
 }
