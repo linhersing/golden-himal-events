@@ -35,7 +35,7 @@ test('fee calculator reacts to chosen quantity and language without backend comm
  const doc={getElementById(name){return {'demo-fee-count':slider,'demo-fee-total':total,'demo-fee-count-output':counter}[name]}};
  const win={GHVLocale:{lang:'zh'},addEventListener(name,fn){events[name]=fn}};
  assert.equal(mountDemoFeeEstimator(doc,win),true);
- assert.equal(total.textContent,'NPR 2,300');
+ assert.equal(total.textContent,'NPR 1,500');
  assert.equal(counter.textContent,'5 支');
  slider.value='10';events.input();assert.equal(total.textContent,'NPR 3,000');
  win.GHVLocale.lang='en';events['ghv:languagechange']();assert.equal(counter.textContent,'10 Demos');
