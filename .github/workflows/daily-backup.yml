@@ -1,91 +1,42 @@
-name: Daily Disaster Recovery Backup (18:00 Taipei)
+# Independent Git integrity check only. Daily 18:00 Drive backups are handled
+# by the existing ChatGPT automation; do not schedule a duplicate uploader.
+name: Golden Himal Git Backup Integrity Check (manual)
 
 on:
-  schedule:
-    # 10:00 UTC = 18:00 UTC+8 (台灣時間每日晚上 6 點)
-    - cron: '0 10 * * *'
   workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/daily-backup.yml'
+
+permissions:
+  contents: read
 
 jobs:
-  backup:
+  verify-git-backup:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
+    timeout-minutes: 10
     steps:
-      - name: Checkout full Git history
+      - name: Checkout full repository history
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Prepare backup workspace
-        id: meta
+      - name: Create and verify complete Git bundle
+        shell: bash
         run: |
-          TS=$(TZ='Asia/Taipei' date +'%Y%m%d-%H%M')
-          echo "timestamp=${TS}" >> "$GITHUB_OUTPUT"
-          mkdir -p backup_payload/git backup_payload/cloudflare backup_payload/resend
-
-      - name: Create full Git bundle
-        run: |
-          git fetch --all --tags
-          git bundle create "backup_payload/git/golden-himal-events-${{ steps.meta.outputs.timestamp }}.bundle" --all
-          git rev-parse HEAD > backup_payload/git/HEAD.txt
-
-      - name: Export Cloudflare D1 databases & non-secret metadata
-        if: ${{ secrets.CF_API_TOKEN != '' && secrets.CF_ACCOUNT_ID != '' }}
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: |
-          npx --yes wrangler@latest d1 export ghv-staging --remote --output="backup_payload/cloudflare/ghv-staging.sql"
-          npx --yes wrangler@latest d1 export golden-himal-voice-preview-e2e-db --remote --output="backup_payload/cloudflare/golden-himal-voice-preview-e2e-db.sql"
-          curl -sS -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts" \
-            -o backup_payload/cloudflare/workers-scripts-meta.json
-
-      - name: Export Resend domains & webhooks snapshot
-        if: ${{ secrets.RESEND_API_KEY != '' }}
-        env:
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-        run: |
-          curl -sS -H "Authorization: Bearer ${RESEND_API_KEY}" \
-            "https://api.resend.com/domains" \
-            -o backup_payload/resend/domains.json
-          curl -sS -H "Authorization: Bearer ${RESEND_API_KEY}" \
-            "https://api.resend.com/webhooks" \
-            -o backup_payload/resend/webhooks.json
-
-      - name: Compress & generate SHA-256 checksum
-        run: |
-          ARCHIVE="ghv-backup-${{ steps.meta.outputs.timestamp }}.tar.gz"
-          tar -czf "${ARCHIVE}" -C backup_payload .
-          sha256sum "${ARCHIVE}" > "${ARCHIVE}.sha256"
-          echo "ARCHIVE_NAME=${ARCHIVE}" >> "$GITHUB_ENV"
-
-      - name: Upload archive & checksum to Google Drive
-        if: ${{ secrets.GDRIVE_SA_JSON != '' }}
-        env:
-          GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
-          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID || '1Fw74rAAP8FIWRFggM842nBkIiAI_K8i1' }}
-        run: |
-          python3 -m pip install --quiet google-api-python-client google-auth
-          python3 - <<'EOF'
-          import json
-          import os
-          from google.oauth2 import service_account
-          from googleapiclient.discovery import build
-          from googleapiclient.http import MediaFileUpload
-
-          sa_info = json.loads(os.environ["GDRIVE_SA_JSON"])
-          creds = service_account.Credentials.from_service_account_info(
-              sa_info, scopes=["https://www.googleapis.com/auth/drive.file"]
-          )
-          service = build("drive", "v3", credentials=creds)
-          folder_id = os.environ["GDRIVE_FOLDER_ID"]
-          archive = os.environ["ARCHIVE_NAME"]
-
-          for fname, mime in [(archive, "application/gzip"), (f"{archive}.sha256", "text/plain")]:
-              media = MediaFileUpload(fname, mimetype=mime, resumable=True)
-              meta = {"name": fname, "parents": [folder_id]}
-              uploaded = service.files().create(body=meta, media_body=media, fields="id,name").execute()
-              print(f"Uploaded: {uploaded['name']} (ID: {uploaded['id']})")
-          EOF
+          set -euo pipefail
+          mkdir -p backup-check
+          git bundle create backup-check/golden-himal-events.bundle --all
+          git bundle verify backup-check/golden-himal-events.bundle
+          test -s backup-check/golden-himal-events.bundle
+          sha256sum backup-check/golden-himal-events.bundle > backup-check/golden-himal-events.bundle.sha256
+          sha256sum -c backup-check/golden-himal-events.bundle.sha256
+          {
+            echo '### Golden Himal Git recovery integrity check'
+            echo 'Git bundle: **created and verified** (temporary runner only).'
+            echo 'SHA-256 checksum: **verified**.'
+            echo 'Google Drive backup: **not uploaded by this workflow**.'
+            echo 'Cloudflare D1, R2, deployed Worker and Resend: **not exported**.'
+            echo 'Daily 18:00 Drive backup remains owned by the existing ChatGPT automation.'
+          } >> "$GITHUB_STEP_SUMMARY"
