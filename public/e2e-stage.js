@@ -23,8 +23,8 @@ en:{
  reviewIntro:'Invite-only judges. Demo = technique 60 / expression 40; live qualifier and final = 40 / 30 / 20 / 10. Each stage scores separately.',
  notLive:'This is a closed technical rehearsal. No real payment, eligibility check, official vote or award is performed.',
  signedIn:'Verified test session',saved:'Stored in Cloudflare D1',none:'No test entries yet',reviewNone:'No eligible review submissions.',
- application:'Application ID',phase:'Competition stage',status:'Review status',payment:'Payment',mockPay:'Simulate NPR 500 test payment',
- testPaid:'SIMULATED NPR 500 · no real transfer',
+ application:'Application ID',phase:'Competition stage',status:'Review status',payment:'Payment',mockPay:'Simulate NPR 300 test payment',
+ testPaid:'SIMULATED NPR 300 · no real transfer',
 
  download:'Download private TEST demo',
 
@@ -37,7 +37,7 @@ en:{
  voteTest:'Submit one TEST vote',noFinalists:'No test finalists are ready yet.',noOrganizer:'No test applications yet.',
  sendSuccess:'Email requested. Check your TEST inbox.',done:'Verified. Test account data is stored on Cloudflare D1.',
  failed:'Operation failed: ',restart:'Cloudflare setup incomplete: D1 migration, Email binding, allowlist and secrets are required.',
- newEntry:'D1 TEST entry saved.',paymentDone:'NPR 500 mock payment logged in D1; no money charged.',
+ newEntry:'D1 TEST entry saved.',paymentDone:'NPR 300 mock payment logged in D1; no money charged.',
  deleted:'TEST account erased.',reviewerOnly:'This login is for invited judges only.',memberOnly:'Participant-only page.',organizerOnly:'Organizer invitation required.',
  confirmDelete:'Erase all this test account data? This cannot be undone.',user:'TEST ACCOUNT',contestRules:'V2 rehearsal terms',
  noFunds:'TEST ONLY: never upload real IDs, receipts, or remit any money.'
@@ -61,8 +61,8 @@ ne:{
  reviewTitle:'प्रत्येक चरणको निर्णायक स्कोर',reviewIntro:'निमन्त्रित निर्णायक मात्र। भिडियो ६०/४०, प्रत्यक्ष छनोट र फाइनल ४०/३०/२०/१०।',
  notLive:'परीक्षण मात्र। आधिकारिक दर्ता, भुक्तानी, मतदान वा पुरस्कार होइन।',
  signedIn:'परीक्षण सत्र प्रमाणित',saved:'Cloudflare D1 मा सुरक्षित',none:'आवेदन छैन',reviewNone:'स्कोरका लागि आवेदन छैन',
- application:'आवेदन',phase:'चरण',status:'स्थिति',payment:'भुक्तानी',mockPay:'NPR 500 नमुना भुक्तानी',
- testPaid:'नमुना NPR 500 · वास्तविक रकम होइन',
+ application:'आवेदन',phase:'चरण',status:'स्थिति',payment:'भुक्तानी',mockPay:'NPR 300 नमुना भुक्तानी',
+ testPaid:'नमुना NPR 300 · वास्तविक रकम होइन',
 
  download:'निजी परीक्षण भिडियो लिनुहोस्',
 
@@ -75,7 +75,7 @@ ne:{
  voteTest:'परीक्षण मत दिनुहोस्',noFinalists:'फाइनलिस्ट छैनन्',noOrganizer:'परीक्षण आवेदन छैन',
  sendSuccess:'इमेल कोड मागियो।',done:'प्रमाणित भयो। डाटा D1 मा सुरक्षित रहन्छ।',
  failed:'त्रुटि: ',restart:'Cloudflare D1/Email/गोप्य सेटिङ अझै पूरा भएको छैन।',
- newEntry:'D1 मा आवेदन राखियो।',paymentDone:'NPR 500 नमुना घटना D1 मा राखियो।',
+ newEntry:'D1 मा आवेदन राखियो।',paymentDone:'NPR 300 नमुना घटना D1 मा राखियो।',
  deleted:'परीक्षण खाता मेटियो।',reviewerOnly:'निमन्त्रित निर्णायक मात्र',memberOnly:'सहभागी मात्र',organizerOnly:'आयोजक निमन्त्रणा आवश्यक',
  confirmDelete:'सबै परीक्षण डाटा हटाउने?',user:'परीक्षण खाता',contestRules:'V2 परीक्षण',noFunds:'वास्तविक कागजात वा पैसा नदिनुहोस्।'
 },
@@ -99,8 +99,8 @@ zh:{
  reviewIntro:'評審須獲邀請。海選 Demo 使用技巧60分＋詮釋40分；實體初賽、年度決賽使用技巧40＋詮釋30＋台風20＋儀態10；不同階段成績不累計。',
  notLive:'本頁為封閉功能驗收。資料若成功寫入 D1 仍不是正式報名、資格認定、付款、官網正式投票或獎金。',
  signedIn:'測試信箱已驗證',saved:'已儲存至 Cloudflare D1',none:'尚無測試報名',reviewNone:'目前沒有符合測試審核條件的作品',
- application:'報名編號',phase:'賽事階段',status:'審核狀態',payment:'付款狀態',mockPay:'模擬支付 NPR 500',
- testPaid:'NPR 500 已模擬（沒有銀行交易）',
+ application:'報名編號',phase:'賽事階段',status:'審核狀態',payment:'付款狀態',mockPay:'模擬支付 NPR 300',
+ testPaid:'NPR 300 已模擬（沒有銀行交易）',
 
  download:'下載我的測試演唱影片',
 
@@ -113,7 +113,7 @@ zh:{
  voteTest:'投下測試票',noFinalists:'目前沒有測試決賽者，須完成海選及初賽評分後人工晉級。',noOrganizer:'目前沒有D1測試報名',
  sendSuccess:'已要求寄送驗證碼，請檢查測試信箱。',done:'驗證完成，資料由 D1 儲存。',
  failed:'操作失敗：',restart:'Cloudflare 尚未設定完整：需先建立 D1 資料表、Email 寄件、白名單及密鑰。',
- newEntry:'測試報名已寫入 D1。',paymentDone:'NPR 500 模擬付款已寫入 D1，沒有實際扣款。',
+ newEntry:'測試報名已寫入 D1。',paymentDone:'NPR 300 模擬付款已寫入 D1，沒有實際扣款。',
  deleted:'測試會員已刪除。',reviewerOnly:'只限受邀評審登入',memberOnly:'此頁只限參賽測試會員',organizerOnly:'需要受邀管理員權限',
  confirmDelete:'確定刪除所有測試會員資料？無法復原。',user:'測試會員',contestRules:'V2 模擬章程',noFunds:'不要在這裡上傳真實證件或匯款。'
 }};
