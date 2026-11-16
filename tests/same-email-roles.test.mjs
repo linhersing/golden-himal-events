@@ -8,6 +8,7 @@ const post=(path,body,cookie)=>new Request(host+'/api/e2e/'+path,{method:'POST',
 const get=(path,cookie)=>new Request(host+'/api/e2e/'+path,{headers:{Cookie:cookie}});
 async function fixture(){
  const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ db.exec(await readFile(new URL('../backend/migrations/1010_staging_fee_npr300_ONLY.sql',import.meta.url),'utf8'));
  const inbox=[],env={STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'T'.repeat(64),STAGING_FROM_EMAIL:'test@example.invalid',STAGING_ALLOWED_EMAILS:'owner@example.invalid,member@example.invalid',STAGING_ORGANIZER_EMAILS:'owner@example.invalid',STAGING_REVIEWER_EMAILS:'owner@example.invalid,judge@example.invalid',EMAIL:{async send(m){inbox.push(m)}},DB:{prepare(sql){let args=[];return {bind(...v){args=v;return this},first(){return db.prepare(sql).get(...args)||null},all(){return {results:db.prepare(sql).all(...args)}},run(){return {meta:{changes:db.prepare(sql).run(...args).changes}}}}}}};
  env.DB.batch=statements=>{
   db.exec('BEGIN');
