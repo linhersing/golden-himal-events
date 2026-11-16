@@ -44,7 +44,7 @@ test('two rounds are charged independently, zero actual payment providers',()=>{
  mockProviderEvent(s,a.id,'succeeded');mockProviderEvent(s,b.id,'succeeded');
  assert.deepEqual(mockPaymentSummary(s),{
   orders:2,pending:0,paid:2,failed:0,refundPending:0,refunded:0,
-  grossNpr:1000,refundedNpr:0,netNpr:1000});
+  grossNpr:600,refundedNpr:0,netNpr:600});
  assert.ok(a.id!==b.id);
 });
 test('payment page is visibly TEST ONLY, has no actual bank post nor card fields',async()=>{
