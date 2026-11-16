@@ -283,21 +283,38 @@ Object.assign(translations.zh,{"navNews":"比賽規則","newsLink":"比賽規則
 Object.assign(translations.en,{"navNews":"Contest Rules","newsLink":"Contest Rules","newsLinkSub":"Must read before entering · Full rules","announcementsLink":"Latest updates | Selection & event notices →"});
 Object.assign(translations.ne,{"navNews":"प्रतियोगिता नियम","newsLink":"प्रतियोगिता नियम","newsLinkSub":"भाग लिनुअघि अनिवार्य पढ्नुहोस्","announcementsLink":"नयाँ सूचना | छनोट र कार्यक्रमका खबर →"});
 
-/* 2026-11-15 approved onsite images: precise short captions in all three languages. */
+/* 2026-11-16 | Image-verified venue labels: source filenames do not reliably describe contents.
+   Home: two clean banquet hall interiors + night fountain. Story: dining room and buffet.
+   Architecture section: actual daytime fountain and A-frame entrance; no construction photo. */
 Object.assign(translations.zh,{
- homePhotoLounge:"景觀餐飲空間",homePhotoLoungeSub:"臨窗自助餐檯",
- galleryWater:"金環噴泉日景",galleryNight:"A 字型入口夜景",
- galleryGateway:"木雕主門設計",galleryView:"相聚的空間"
+ homePhotoLounge:"大餐廳內觀",homePhotoLoungeSub:"白金柱廊與水晶吊燈",
+ homePhotoFountain:"大餐廳・金色拱頂",homePhotoFountainSub:"對稱廳景與挑高空間",
+ homePhotoArchitecture:"信望愛噴水池廣場",homePhotoArchitectureSub:"金環造型與夜間水景",
+ galleryHall:"金色拱頂餐飲空間",galleryLounge:"景觀自助餐區",
+ galleryWater:"信望愛噴水池廣場日景",galleryNight:"A 字型入口夜景",
+ galleryGateway:"木雕主門設計",galleryView:"相聚的空間",
+ designFountainTitle:"信望愛・噴水池廣場",designFountainDesc:"金色環形雕塑與日間噴泉",
+ designTowerTitle:"和平塔・A 字型入口",designTowerDesc:"夜間暖光下的弧形入口"
 });
 Object.assign(translations.en,{
- homePhotoLounge:"Scenic dining",homePhotoLoungeSub:"Buffet service by the windows",
- galleryWater:"Ring fountain by day",galleryNight:"A-frame entrance at night",
- galleryGateway:"Carved wooden entrance",galleryView:"Gathering spaces"
+ homePhotoLounge:"Grand banquet hall interior",homePhotoLoungeSub:"Ivory-and-gold columns and chandeliers",
+ homePhotoFountain:"Banquet hall · Golden vault",homePhotoFountainSub:"Symmetrical interior and soaring ceiling",
+ homePhotoArchitecture:"Faith, Hope & Love Fountain Plaza",homePhotoArchitectureSub:"Golden rings and illuminated water",
+ galleryHall:"Golden-roof dining room",galleryLounge:"Scenic buffet area",
+ galleryWater:"Fountain plaza by day",galleryNight:"A-frame entrance at night",
+ galleryGateway:"Carved wooden entrance",galleryView:"Gathering spaces",
+ designFountainTitle:"Faith, Hope & Love Fountain Plaza",designFountainDesc:"Golden rings and fountains in daylight",
+ designTowerTitle:"Peace Tower · A-frame entrance",designTowerDesc:"Arched entry in warm evening light"
 });
 Object.assign(translations.ne,{
- homePhotoLounge:"दृश्यसहितको भोजन कक्ष",homePhotoLoungeSub:"झ्यालछेउको बुफे",
- galleryWater:"दिनको सुनौलो घेरा फोहरा",galleryNight:"रातको ए आकारको प्रवेशद्वार",
- galleryGateway:"नक्काशीदार काठको मूलढोका",galleryView:"भेटघाटको स्थान"
+ homePhotoLounge:"मुख्य भोज कक्षको भित्री दृश्य",homePhotoLoungeSub:"सेता-सुनौला स्तम्भ र झुमर",
+ homePhotoFountain:"भोज कक्ष · सुनौलो छत",homePhotoFountainSub:"सममित कक्ष र अग्लो छत",
+ homePhotoArchitecture:"विश्वास, आशा र प्रेम फोहरा चोक",homePhotoArchitectureSub:"सुनौला घेरा र रातको पानीको दृश्य",
+ galleryHall:"सुनौलो छाना भएको भोजन कक्ष",galleryLounge:"दृश्यसहितको बुफे क्षेत्र",
+ galleryWater:"दिनको फोहरा चोक",galleryNight:"रातको ए आकारको प्रवेशद्वार",
+ galleryGateway:"नक्काशीदार काठको मूलढोका",galleryView:"भेटघाटको स्थान",
+ designFountainTitle:"विश्वास, आशा र प्रेम फोहरा चोक",designFountainDesc:"दिनको उज्यालोमा सुनौला घेरा र फोहरा",
+ designTowerTitle:"शान्ति टावर · ए आकारको प्रवेशद्वार",designTowerDesc:"न्यानो रातको उज्यालोमा गोलाकार प्रवेश"
 });
 
 let lang='zh';try{const saved=localStorage.getItem(key);if(Object.prototype.hasOwnProperty.call(translations,saved))lang=saved}catch{}

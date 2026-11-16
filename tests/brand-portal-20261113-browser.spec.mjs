@@ -52,7 +52,9 @@ test('brand-first homepage has exactly three visible primary destinations and fo
   }
   await expect(page.locator('#home-about')).toHaveAttribute('href','./golden-himal.html');
   await expect(page.locator('.portal-photo-card img[src*="gh-real-fountain-20261113.webp"]')).toHaveCount(0);
-  await expect(page.locator('.portal-photo-card img[src*="gh-reviewed-20261115-fountain-night"]')).toHaveCount(1);
+  await expect(page.locator('.portal-photo-card img[src*="gh-reviewed-20261115-fountain-night"]')).toHaveCount(0);
+  await expect(page.locator('.portal-photo-card img[src*="gh-reviewed-20261115-fountain-day.jpg"]')).toHaveCount(1);
+  await expect(page.locator('.portal-photo-card img[src*="approved-grand-hall-20261114.jpg"]')).toHaveCount(1);
   for(const pic of await page.locator('.portal-photo-card img').all()){
    await pic.scrollIntoViewIfNeeded();
    await expect.poll(()=>pic.evaluate(el=>el.complete&&el.naturalWidth>0),{timeout:10000}).toBeTruthy();
@@ -178,20 +180,19 @@ test('approved supplemental concept gallery and elegant clickable navigation at 
   await page.goto('/');
   await page.locator('[data-lang=zh]').click();
   const imgs=page.locator('.portal-concept-card img');
-  await expect(imgs).toHaveCount(3);
+  await expect(imgs).toHaveCount(2);
   await expect(page.locator('#design-views-heading')).toContainText('建築與空間特色');
   await expect(page.locator('.portal-concepts-disclaimer')).toHaveCount(0);
   for(const [i,filename] of [
-    [0,'gh-reviewed-20261115-fountain-day.jpg'],
-    [1,'gh-reviewed-20261115-a-entrance-night.jpg'],
-    [2,'approved-grand-hall-20261114.jpg']
+    [0,'gh-reviewed-20261115-golden-dining.jpg'],
+    [1,'gh-reviewed-20261115-grand-hall-empty.jpg']
    ]){
    const img=imgs.nth(i);
    await expect(img).toHaveAttribute('src','./images/'+filename);
    await img.scrollIntoViewIfNeeded();
-   await expect.poll(()=>img.evaluate((el,sz)=>el.complete&&el.naturalWidth===sz[0]&&el.naturalHeight===sz[1],i===2?[1024,768]:[1448,1086]),{timeout:15000}).toBe(true);
+   await expect.poll(()=>img.evaluate((el,sz)=>el.complete&&el.naturalWidth===sz[0]&&el.naturalHeight===sz[1],[1448,1086]),{timeout:15000}).toBe(true);
   }
-  await expect(page.locator('.portal-concept-card')).toHaveCount(3);
+  await expect(page.locator('.portal-concept-card')).toHaveCount(2);
   await expect(page.locator('.portal-concept-card figcaption small')).toHaveCount(0);
   // The peace tower story-entry image and the daytime fountain feature are two distinct reviewed photos.
   await expect(page.locator('img[src="./images/approved-peace-tower-20261114.jpg"]')).toHaveCount(1);
