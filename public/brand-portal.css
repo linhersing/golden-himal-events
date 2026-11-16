@@ -1255,3 +1255,77 @@
 /* CI regression 2026-11-16: keep the decorative ellipses inside the brand band.
    Off-canvas pseudo-elements must never make the 320px layout horizontally scroll. */
 .brand-portal .ghp-brand-signature{overflow:hidden}
+
+/* 2026-11-16: user-requested footer hierarchy — text first, large official
+   logo centered below the English/Nepali slogans. No extra logo in slogan strips. */
+.brand-portal .ghp-footer-brand{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  padding-block:32px 38px;
+  text-align:center;
+}
+.brand-portal .ghp-footer-brand .ghp-footer-brand-copy{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-width:0;
+  width:100%;
+}
+.brand-portal .ghp-footer-brand strong{
+  display:block;
+  font-size:clamp(1.6rem,2.5vw,2.24rem);
+  line-height:1.3;
+  letter-spacing:.045em;
+}
+.brand-portal .ghp-footer-brand p[lang=en]{
+  font-size:clamp(1.04rem,1.58vw,1.32rem);
+  margin-top:8px;
+}
+.brand-portal .ghp-footer-brand p[lang=ne]{
+  font-size:clamp(.91rem,1.25vw,1.09rem);
+  margin-top:5px;
+}
+.brand-portal .ghp-footer-brand img.ghp-footer-main-logo{
+  flex:0 1 auto;
+  display:block;
+  width:min(420px,100%);
+  height:auto;
+  max-width:100%;
+  margin:2px auto 0;
+  object-fit:contain;
+}
+/* The original 58px downscaled full lockup was too small to identify.
+   Show the existing official PNG substantially larger at every section label. */
+.brand-portal .portal-about-heading .portal-section-tag::before,
+.brand-portal .portal-concepts-head .portal-section-tag::before,
+.brand-portal .story-section-intro .portal-section-tag::before{
+  width:144px;
+  height:100px;
+  background-size:144px 144px;
+  background-position:center top;
+  margin:0 0 12px;
+}
+@media(max-width:650px){
+  .brand-portal .ghp-footer-brand{padding-block:26px 30px;gap:12px}
+  .brand-portal .ghp-footer-brand strong{
+    font-size:clamp(1.28rem,5vw,1.68rem);
+    letter-spacing:.02em;
+  }
+  .brand-portal .ghp-footer-brand p[lang=en]{font-size:clamp(.96rem,3.6vw,1.13rem)}
+  .brand-portal .ghp-footer-brand p[lang=ne]{font-size:clamp(.82rem,3.2vw,1rem)}
+  .brand-portal .ghp-footer-brand img.ghp-footer-main-logo{
+    width:min(320px,100%);
+    height:auto;
+  }
+  .brand-portal .portal-about-heading .portal-section-tag::before,
+  .brand-portal .portal-concepts-head .portal-section-tag::before,
+  .brand-portal .story-section-intro .portal-section-tag::before{
+    width:112px;
+    height:80px;
+    background-size:112px 112px;
+    margin-bottom:10px;
+  }
+}
