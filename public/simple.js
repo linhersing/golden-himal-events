@@ -386,7 +386,7 @@ function drawEntry(a){
   meta.append(field);
  }
  box.append(meta);
- box.append(node('span',mt(a.payment_status==='simulated_paid'?'testPaid':'testPending'),'pill '+(a.payment_status==='simulated_paid'?'pill-pass':'pill-warn')));
+ box.append(node('span',a.round_code==='2027-01'&&a.payment_status!=='simulated_paid'?'FREE · NPR 0 · 海選免費':mt(a.payment_status==='simulated_paid'?'testPaid':'testPending'),'pill '+(a.round_code==='2027-01'||a.payment_status==='simulated_paid'?'pill-pass':'pill-warn')));
  if(a.approval_state)box.append(node('p',mt(a.approval_state==='approved'?'approvalAccepted':'approvalPending'),'minor'));
  drawMemberSupplement(box,a);
  const actions=node('div',undefined,'inline-actions member-entry-buttons');
@@ -410,7 +410,10 @@ function drawEntry(a){
     await renderMember();status(mt(a.approval_state==='pending'?'paymentAwaitingApproval':'paymentDone'));
    });
   };
-  actions.append(pay);if(a.approval_state!=='approved'&&!a.video_supplement_state)actions.append(del);
+  // January 2027 audition is free: no simulated checkout should appear for this round.
+  if(a.round_code!=='2027-01')actions.append(pay);
+  else box.append(node('p','Free January audition / जनवरी अडिसन निःशुल्क / 1月海選免費；不需付款。','minor'));
+  if(a.approval_state!=='approved'&&!a.video_supplement_state)actions.append(del);
  }
  box.append(actions);
  if(!memberCanEdit(a)&&!a.video_supplement_state)box.append(node('p',editLockMessage(a),'minor'));
@@ -464,7 +467,7 @@ async function renderMember(){
   avatar.append(profileImage(first.photo_url_1)||node('span','✦'));
   $('member-state-data').textContent=mt('dataSaved');
   const paid=first.payment_status==='simulated_paid';
-  $('member-state-payment').textContent=mt(paid?'statusSimulatedPaid':'testPending');
+  $('member-state-payment').textContent=first.round_code==='2027-01'&&!paid?'FREE · NPR 0 · 海選免費':mt(paid?'statusSimulatedPaid':'testPending');
   $('member-quick-edit').hidden=!memberCanEdit(first);
   $('member-quick-edit').onclick=()=>showEdit(first);
   const editReason=$('member-edit-lock-reason');
