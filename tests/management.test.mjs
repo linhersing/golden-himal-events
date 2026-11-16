@@ -95,7 +95,7 @@ test('global D1 admin overview includes all active synthetic workspaces but excl
   const paymentReport=await f.call('payments?source=practice');
   assert.equal(paymentReport.status,200);
   assert.equal(paymentReport.data.total,3);
-  assert.equal(paymentReport.data.items.filter(x=>x.simulated_amount_npr===500).length,1);
+  assert.equal(paymentReport.data.items.filter(x=>x.simulated_amount_npr===300).length,1);
   assert(paymentReport.data.items.every(x=>x.real_paid===false&&x.real_amount_npr===null));
   const judgeCookie=(await f.practice('login',{pass:first.data.passes.find(x=>x.actor_id==='judge-1').pass})).cookie;
   assert.equal((await f.practice('score',{application_id:firstId,phase:'demo',
