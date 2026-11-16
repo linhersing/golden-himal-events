@@ -21,6 +21,7 @@ const get=(path,cookie)=>new Request(host+path,{headers:cookie?{Cookie:cookie}:{
 for (const mode of ['uploads','links']) test(`Alan V2 ${mode}: persisted audition -> mock fee -> 3 judges -> live -> final -> vote`,async()=>{
  const db=new DatabaseSync(':memory:');
  db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ db.exec(await readFile(new URL('../backend/migrations/1010_staging_fee_npr300_ONLY.sql',import.meta.url),'utf8'));
  const inbox=[],r2=new Map(),env={
   STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:mode,STAGING_IDENTITY_SECRET:'G'.repeat(64),
   STAGING_ALLOWED_EMAILS:'singer@test.invalid,voter@test.invalid',
@@ -166,6 +167,7 @@ for (const mode of ['uploads','links']) test(`Alan V2 ${mode}: persisted auditio
 });
 test('expired and over-attempted emailed codes are rejected',async()=>{
  const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ db.exec(await readFile(new URL('../backend/migrations/1010_staging_fee_npr300_ONLY.sql',import.meta.url),'utf8'));
  let sent;const env={STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'B'.repeat(64),
  STAGING_ALLOWED_EMAILS:'member@test.invalid',STAGING_FROM_EMAIL:'tester@test.invalid',
  DB:adapter(db),EMAIL:{async send(x){sent=x}}};
@@ -181,6 +183,7 @@ test('expired and over-attempted emailed codes are rejected',async()=>{
 
 test('one Gmail inbox can exercise separate invited test roles and concurrent OTP requests stay distinct',async()=>{
  const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ db.exec(await readFile(new URL('../backend/migrations/1010_staging_fee_npr300_ONLY.sql',import.meta.url),'utf8'));
  const inbox=[],env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'Z'.repeat(64),
   STAGING_FROM_EMAIL:'sender@test.invalid',STAGING_ALLOWED_EMAILS:'qa+ghv-member@gmail.com',
   STAGING_REVIEWER_EMAILS:'qa+ghv-judge1@gmail.com,qa+ghv-judge2@gmail.com,qa+ghv-judge3@gmail.com',
@@ -214,6 +217,7 @@ test('one Gmail inbox can exercise separate invited test roles and concurrent OT
 
 test('email send failure never claims sent or leaves a usable failed challenge',async()=>{
  const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ db.exec(await readFile(new URL('../backend/migrations/1010_staging_fee_npr300_ONLY.sql',import.meta.url),'utf8'));
  let failedCode;const env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'F'.repeat(64),STAGING_FROM_EMAIL:'test@example.invalid',
   STAGING_ALLOWED_EMAILS:'member@test.invalid',EMAIL:{async send(m){failedCode=m.text.match(/\b\d{6}\b/)[0];throw Error('private provider message')}}};
  try{
@@ -227,6 +231,7 @@ test('email send failure never claims sent or leaves a usable failed challenge',
 
 test('the actual OTP route can use Mailgun without an EMAIL binding and keeps codes out of API responses',async t=>{
  const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ db.exec(await readFile(new URL('../backend/migrations/1010_staging_fee_npr300_ONLY.sql',import.meta.url),'utf8'));
  let mailText; t.mock.method(globalThis,'fetch',async(url,init)=>{
   assert.equal(url,'https://api.mailgun.net/v3/sandboxabc123.mailgun.org/messages');
   mailText=init.body.get('text');return Response.json({id:'unit-message-id',message:'Queued. Thank you.'});
@@ -247,6 +252,7 @@ test('public TEST signup requires a verified sender and Turnstile, and keeps sin
  const db=new DatabaseSync(':memory:');
  t.after(()=>db.close());
  db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
+ db.exec(await readFile(new URL('../backend/migrations/1010_staging_fee_npr300_ONLY.sql',import.meta.url),'utf8'));
  const inbox=[],tokens=new Set(),hostname=new URL(host).hostname;
  const env={
   DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
