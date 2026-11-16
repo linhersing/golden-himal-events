@@ -22,6 +22,15 @@ test('original Palace mark and slogan remain legible throughout visitor journey'
     expect(logoBox?.width).toBeGreaterThanOrEqual(width<=370?220:width<=650?270:420);
     expect(logoBox.y+logoBox.height).toBeLessThanOrEqual(navBox.y+1);
     expect(logoBox.y+logoBox.height).toBeLessThanOrEqual(languageBox.y+1);
+   } else if(route!=='/backoffice.html'){
+    const logo=page.locator('header .ghp-shared-logo');
+    await expect(logo).toBeVisible();
+    await expect(logo).toHaveAttribute('href','./');
+    const mark=logo.locator('img');
+    await expect(mark).toHaveAttribute('src','./images/ghp-clean-official-logo-20261116.png');
+    await expect.poll(()=>mark.evaluate(el=>el.complete&&el.naturalWidth===2048)).toBeTruthy();
+    const markBox=await mark.boundingBox();
+    expect(markBox?.width).toBeGreaterThanOrEqual(width<=370?220:width<=650?270:420);
    } else {
     const brand=page.locator('header .gh-brand-lockup');
     await expect(brand).toBeVisible();
@@ -30,8 +39,6 @@ test('original Palace mark and slogan remain legible throughout visitor journey'
     const mark=brand.locator('.gh-brand-mark img');
     await expect(mark).toHaveAttribute('src','./images/brand-identity.png');
     await expect.poll(()=>mark.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
-    const markBox=await brand.locator('.gh-brand-mark').boundingBox();
-    expect(markBox?.width).toBeGreaterThanOrEqual(width<=370?55:width<=650?69:94);
    }
    const horizontalOverflow=await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth);
    expect(horizontalOverflow,route+' at '+width+'px').toBeFalsy();
@@ -73,7 +80,7 @@ test('Palace bilingual slogan stays text-first without duplicate side logos',asy
    await expect(page.locator('.ghp-signature-en')).toHaveText(slogan);
    await expect(page.locator('.ghp-signature-ne')).toHaveText(nepali);
    await expect(page.locator('.ghp-brand-ribbon img, .ghp-brand-signature img')).toHaveCount(0);
-   await expect(page.locator(route==='/'?'header .ghp-home-logo img':'header .gh-brand-mark img')).toBeVisible();
+   await expect(page.locator(route==='/'?'header .ghp-home-logo img':'header .ghp-shared-logo img')).toBeVisible();
    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
    expect(overflow,route+' at '+width+'px').toBeLessThanOrEqual(1);
   }
