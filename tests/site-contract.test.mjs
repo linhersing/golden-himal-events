@@ -58,7 +58,7 @@ test('member and staff share server-issued identity but never fake official paym
 test('social preview metadata remains neutral and noindex until go live',async()=>{
  const html=await read('index.html');
  assert.match(html,/property="og:title"/);assert.match(html,/property="og:image"/);
- assert.match(html,/golden-himal-voice-preview\.linhersing\.workers\.dev\/images\/brand-identity\.png/);
+ assert.match(html,/golden-himal-voice-preview\.linhersing\.workers\.dev\/images\/ghp-clean-official-logo-20261116\.png/);
  assert.match(html,/noindex,nofollow,noarchive/);
  assert.doesNotMatch(html,/\b(?:CMA|Chinese Mission Alliance|wanjun|cma-mission\.com)\b/i);
 });
@@ -285,7 +285,7 @@ test('brand pages omit image provenance claims in all languages while retaining 
 test('venue images honor latest photo exclusions, with no duplicate within a page',async()=>{
  const home=await read('index.html'),story=await read('public/golden-himal.html');
  const imgs=html=>[...html.matchAll(/<img[^>]+src="\.\/images\/([^"]+)"/g)]
-   .map(m=>m[1]).filter(name=>name!=='brand-identity.png');
+   .map(m=>m[1]).filter(name=>!['brand-identity.png','ghp-clean-official-logo-20261116.png'].includes(name));
  const a=imgs(home),b=imgs(story);
  const combined=[...a,...b];
  assert.equal(new Set(a).size,a.length,'homepage photos must not repeat within homepage');
@@ -305,4 +305,17 @@ test('venue images honor latest photo exclusions, with no duplicate within a pag
  assert.match(story,/data-p="galleryGateway">木雕主門設計/);
  const oldLinks=html=>[...html.matchAll(/\bhref="([^"]+)"/g)].map(x=>x[1]);
  assert.ok(oldLinks(story).includes('./voice.html'));
+});
+
+test('owner-provided clean Palace logo is original PNG and home navigation URLs survive redesign',async()=>{
+ const html=await read('index.html');
+ const logo=await readFile(new URL('../public/images/ghp-clean-official-logo-20261116.png',import.meta.url));
+ assert.equal(logo.length,1148806,'must retain the owner-supplied 1,148,806-byte original PNG');
+ assert.deepEqual([...logo.subarray(0,8)],[137,80,78,71,13,10,26,10]);
+ assert.match(html,/class="ghp-home-logo"/);
+ assert.match(html,/width="2048" height="1082"/);
+ assert.doesNotMatch(html,/class="brand gh-brand-lockup"/);
+ for(const href of ['./','./golden-himal.html','./voice.html','./news.html','./backoffice.html']){
+  assert.ok(html.includes('href="'+href+'"'),'preserve original link: '+href);
+ }
 });
