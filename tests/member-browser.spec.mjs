@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-test('member account → application → NPR 500 paid mock → admin review → member progress',async({page},testInfo)=>{
+test('member account → application → NPR 300 paid mock → admin review → member progress',async({page},testInfo)=>{
  const writes=[];
  page.on('request',req=>{if(!['GET','HEAD'].includes(req.method()))writes.push(req.url())});
  await page.goto('/member-portal.html');

@@ -1112,3 +1112,16 @@ a.gh-brand-lockup:hover .gh-brand-type strong,a.gh-brand-lockup:focus-visible .g
  a.gh-brand-lockup .gh-brand-type small{font-size:.48rem}
  a.gh-brand-lockup .gh-brand-slogan{font-size:.60rem;max-width:130px}
 }
+
+/* 2026-11-16 | Visible NPR 300 entry fee: compact, responsive, no new assets. */
+body[data-page="home"] .voice-entry-fee{margin:18px 0 20px;padding:17px 21px;border:1px solid #dfc99e;border-radius:18px;background:linear-gradient(125deg,#fffaf0 0%,#f7ebd4 100%);box-shadow:0 5px 18px rgba(87,51,21,.06);color:#5f4329}
+body[data-page="home"] .voice-entry-fee-heading{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px}
+body[data-page="home"] .voice-entry-fee-heading span{font-size:1rem;font-weight:800}
+body[data-page="home"] .voice-entry-fee-heading strong{font-size:clamp(1.8rem,4vw,2.3rem);letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:#8f5222;line-height:1.2}
+body[data-page="home"] .voice-entry-fee p{margin:8px 0 5px;font-size:1rem;line-height:1.65;font-weight:650}
+body[data-page="home"] .voice-entry-fee small{display:block;margin-top:4px;color:#795e46;font-size:.85rem;line-height:1.6}
+@media(max-width:540px){
+ body[data-page="home"] .voice-entry-fee{margin:14px 0 17px;padding:14px 15px;border-radius:14px}
+ body[data-page="home"] .voice-entry-fee-heading strong{font-size:2rem}
+ body[data-page="home"] .voice-entry-fee p{font-size:.95rem}
+}

@@ -1,11 +1,11 @@
-// 2026-11-15 approved rule: one Demo is NPR 500; at most 10 in the estimator.
+// 2026-11-16 confirmed: one video link per account, NPR 300 per entry; no public multi-Demo estimator.
 // UI-only preview: no collection, upload, registration, identity, D1, or checkout.
-export const DEMO_FEE_NPR=500;
-export const MAX_DEMOS=10;
+export const DEMO_FEE_NPR=300;
+export const MAX_DEMOS=1;
 export function demoFeeQuote(count){
  const value=Number(count);
  if(!Number.isInteger(value)||value<1||value>MAX_DEMOS){
-  throw new RangeError('demo_count_must_be_1_to_10');
+  throw new RangeError('demo_count_must_be_1');
  }
  return Object.freeze({count:value,unitFeeNpr:DEMO_FEE_NPR,totalNpr:value*DEMO_FEE_NPR});
 }

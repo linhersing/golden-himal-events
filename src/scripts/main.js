@@ -214,13 +214,13 @@ Object.assign(translations.en,{
   seasonDisclaimer:"V2 REHEARSAL ONLY · Not official registration. Trial payments do not move any money.",
   fieldCategory:"Category (test)",chooseCategory:"Choose category",universityCategory:"University",communityCategory:"Community",
   fieldRound:"Online audition window (test)",chooseRound:"Select audition window",
-  paymentTitle:"NPR 500 per audition · simulation only",paymentBody:"Organizer approval and receipt checking are not active on this sample homepage. Use the separate D1 acceptance page for a controlled end-to-end test.",
+  paymentTitle:"NPR 300 per audition · simulation only",paymentBody:"Organizer approval and receipt checking are not active on this sample homepage. Use the separate D1 acceptance page for a controlled end-to-end test.",
   paymentWarning:"Do not send any real funds or documents using this preview.",
   reviewCategory:"Category",reviewRound:"Online audition",
   v2TesterTitle:"V2 · Connected Cloudflare acceptance test",
   v2TesterNote:"Invited fictional accounts only. After Cloudflare email, D1 and R2 are configured, these paths support persistent testing; they are not official registration.",
   v2TesterMember:"Participant test ↗",v2TesterJudge:"Invited reviewer test ↗",v2TesterAdmin:"Organizer test ↗",
-  v2PrizeHeading:"Alan V2 · staging program",v2PrizeText:"Bagmati and Gandaki provinces · University / Community · NPR 500 per online audition · 60–90s Demo · September final: 32 singers · website votes 51% + jury 49% · total proposed cash awards NPR 332,000.",
+  v2PrizeHeading:"Alan V2 · staging program",v2PrizeText:"Bagmati and Gandaki provinces · University / Community · NPR 300 per online audition · 60–90s Demo · September final: 32 singers · website votes 51% + jury 49% · total proposed cash awards NPR 332,000.",
   v2VoucherNote:"V2 proposes one annual NPR 10,000 dining voucher for eligible fee-verified entrants; this simulation does not issue a spendable voucher."
 });
 Object.assign(translations.ne,{
@@ -231,13 +231,13 @@ Object.assign(translations.ne,{
   seasonDisclaimer:"V2 परीक्षण मात्र · आधिकारिक दर्ता होइन। नमुना भुक्तानीमा पैसा कट्दैन।",
   fieldCategory:"समूह (परीक्षण)",chooseCategory:"समूह छान्नुहोस्",universityCategory:"विश्वविद्यालय",communityCategory:"सामान्य",
   fieldRound:"अनलाइन छनोट (परीक्षण)",chooseRound:"चरण छान्नुहोस्",
-  paymentTitle:"प्रति छनोट NPR 500 · परीक्षण मात्र",paymentBody:"यो नमुना पृष्ठले भुक्तानी वा प्रमाणपत्र स्वीकार गर्दैन। वास्तविक D1 परीक्षणका लागि छुट्टै पृष्ठ प्रयोग गर्नुहोस्।",
+  paymentTitle:"प्रति छनोट NPR 300 · परीक्षण मात्र",paymentBody:"यो नमुना पृष्ठले भुक्तानी वा प्रमाणपत्र स्वीकार गर्दैन। वास्तविक D1 परीक्षणका लागि छुट्टै पृष्ठ प्रयोग गर्नुहोस्।",
   paymentWarning:"यो पूर्वावलोकन प्रयोग गरी वास्तविक पैसा वा कागजात नपठाउनुहोस्।",
   reviewCategory:"समूह",reviewRound:"अनलाइन छनोट",
   v2TesterTitle:"V2 · Cloudflare परीक्षण वातावरण",
   v2TesterNote:"आमन्त्रित काल्पनिक खाताका लागि मात्र। Cloudflare सेवाहरू तयार भएपछि परीक्षण डाटा D1 मा रहन्छ, यो आधिकारिक दर्ता होइन।",
   v2TesterMember:"सहभागी परीक्षण ↗",v2TesterJudge:"निर्णायक परीक्षण ↗",v2TesterAdmin:"आयोजक परीक्षण ↗",
-  v2PrizeHeading:"Alan V2 · परीक्षण नियम",v2PrizeText:"बागमती / गण्डकी · विश्वविद्यालय / सामाजिक · अनलाइन चरण NPR 500 · ६०–९० सेकेन्ड Demo · सेप्टेम्बरमा ३२ फाइनलिस्ट · वेबसाइट मत ५१% + निर्णायक ४९% · प्रस्तावित पुरस्कार NPR 332,000।",
+  v2PrizeHeading:"Alan V2 · परीक्षण नियम",v2PrizeText:"बागमती / गण्डकी · विश्वविद्यालय / सामाजिक · अनलाइन चरण NPR 300 · ६०–९० सेकेन्ड Demo · सेप्टेम्बरमा ३२ फाइनलिस्ट · वेबसाइट मत ५१% + निर्णायक ४९% · प्रस्तावित पुरस्कार NPR 332,000।",
   v2VoucherNote:"योग्यता र भुक्तानी जाँचपछि वार्षिक एक NPR 10,000 भोजन भौचर प्रस्ताव गरिएको छ; यो परीक्षणले वास्तविक भौचर दिँदैन।"
 });
 Object.assign(translations.zh,{
@@ -248,13 +248,13 @@ Object.assign(translations.zh,{
   seasonDisclaimer:"僅供 V2 驗收模擬 · 不提供正式報名與實際繳費。",
   fieldCategory:"組別（測試）",chooseCategory:"選擇組別",universityCategory:"大學組",communityCategory:"社會組",
   fieldRound:"線上海選（測試）",chooseRound:"選擇海選窗口",
-  paymentTitle:"每次 NPR 500 · 僅模擬付款",paymentBody:"首頁為視覺示範，並不收取付款憑證。真正的 D1 端到端測試請使用獨立的 Cloudflare 驗收入口。",
+  paymentTitle:"每次 NPR 300 · 僅模擬付款",paymentBody:"首頁為視覺示範，並不收取付款憑證。真正的 D1 端到端測試請使用獨立的 Cloudflare 驗收入口。",
   paymentWarning:"切勿在預覽網站實際匯款或上傳真實證件。",
   reviewCategory:"組別",reviewRound:"線上海選",
   v2TesterTitle:"V2 · Cloudflare 真資料庫驗收",
   v2TesterNote:"僅供受邀測試帳號使用。Cloudflare 寄信、D1 及 R2 配置完成後可持久保存測試資料；此入口不是正式報名。",
   v2TesterMember:"參賽者驗收入口 ↗",v2TesterJudge:"受邀評審驗收 ↗",v2TesterAdmin:"賽事管理員驗收 ↗",
-  v2PrizeHeading:"Alan V2 · 比賽規章模擬",v2PrizeText:"巴格馬蒂省／甘達基省 · 大學組／社會組 · 每次海選報名費 NPR 500 · 60至90秒 Demo · 9月32強決賽 · 官網票51%＋評審49% · 擬定總現金獎金 NPR 332,000。",
+  v2PrizeHeading:"Alan V2 · 比賽規章模擬",v2PrizeText:"巴格馬蒂省／甘達基省 · 大學組／社會組 · 每次海選報名費 NPR 300 · 60至90秒 Demo · 9月32強決賽 · 官網票51%＋評審49% · 擬定總現金獎金 NPR 332,000。",
   v2VoucherNote:"V2提出符合繳費與資格審核者，每年可領一次 NPR 10,000 餐飲折抵券；此測試不發出可兌換餐券，也不收取任何款項。"
 });
 
