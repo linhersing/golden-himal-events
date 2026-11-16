@@ -351,15 +351,15 @@ async function mockPayment(request,env,a){
  const b=await bodyJSON(request);if(!b)return deny('invalid_json');
  const db=env.DB;
  const app=await selectApplication(db,b.application_id,a.id);if(!app)return deny('application_not_found',404);
- const paid={ok:true,status:'simulated_paid',amount_npr:500,testOnly:true,realCharge:false};
+ const paid={ok:true,status:'simulated_paid',amount_npr:300,testOnly:true,realCharge:false};
  if(app.payment_status==='simulated_paid')return json({...paid,already:true});
  if(app.status!=='submitted'||app.phase!=='demo')return deny('mock_payment_not_allowed',409);
  const payable="id=? AND account_id=? AND phase='demo' AND status='submitted' AND payment_status='unpaid'";
  const now=NOW();
  // Commit the event and application state together, with the owner rechecked inside both writes.
  const [,changed]=await db.batch([
-  db.prepare(`INSERT INTO e2e_payment_events(id,application_id,event_type,created_at)
-   SELECT ?,id,'SIMULATED_PAYMENT',? FROM e2e_applications WHERE ${payable}
+  db.prepare(`INSERT INTO e2e_payment_events(id,application_id,event_type,amount_paisa,created_at)
+   SELECT ?,id,'SIMULATED_PAYMENT',30000,? FROM e2e_applications WHERE ${payable}
    ON CONFLICT(application_id) DO NOTHING`).bind(uuid(),now,app.id,a.id),
   db.prepare(`UPDATE e2e_applications SET payment_status='simulated_paid',status='under_review',updated_at=?
    WHERE ${payable}`).bind(now,app.id,a.id)
