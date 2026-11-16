@@ -1,0 +1,27 @@
+/* Golden Himal Palace: official logo identity on standalone preview/test pages.
+   Preserve natural image proportions; crop small lower multilingual/contact lines. */
+.ghp-universal-footer-brand{
+ box-sizing:border-box;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;text-align:center;gap:10px;
+ width:min(1140px,calc(100% - 34px));max-width:100%;
+ margin:28px auto 16px;padding:24px 14px;
+ border-top:1px solid #e8d9bf;
+ color:#765031;background:transparent;
+}
+.ghp-universal-footer-brand p[lang=en]{
+ margin:0;color:#765031;font:700 clamp(1.03rem,2.2vw,1.38rem)/1.45 Georgia,serif;
+}
+.ghp-universal-logo-window{
+ position:relative;display:block;overflow:hidden;
+ width:min(325px,100%);max-width:100%;aspect-ratio:1.5;flex:0 1 auto;
+}
+.ghp-universal-logo-window img{
+ display:block;width:100%;height:auto;max-width:none;
+ margin:0;object-fit:contain;object-position:top;transform:none;
+}
+@media(max-width:520px){
+ .ghp-universal-footer-brand{margin:22px auto 12px;padding:17px 8px}
+ .ghp-universal-logo-window{width:min(280px,100%)}
+ .ghp-universal-footer-brand p[lang=en]{font-size:clamp(.96rem,4vw,1.13rem)}
+}
+@media print{.ghp-universal-footer-brand{display:none!important}}
