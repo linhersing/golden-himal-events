@@ -108,7 +108,7 @@ test('frontline rules appear with a concise homepage and expandable schedule',as
   read('public/voice.html'),read('public/news.html'),read('public/member.html'),read('public/page-locale.js')
  ]);
  assert.match(home,/Golden Himal Palace/);
- assert.doesNotMatch(home,/Synergy FM|Kalika FM/);assert.match(home,/待正式確認後公告/);
+ assert.match(home,/Synergy FM.*Kalika FM/);assert.doesNotMatch(home,/待正式確認後公告/);
  assert.match(home,/帶動尼泊爾音樂發展/);
  assert.equal((home.match(/class="choice(?: choice-main)?"/g)||[]).length,3);
  for(const field of ['scheduleJan','scheduleMar','scheduleApr','scheduleJun','scheduleSep']){
