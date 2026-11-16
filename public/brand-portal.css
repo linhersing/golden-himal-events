@@ -1362,3 +1362,93 @@
     width:104px;height:69px;background-size:104px auto;
   }
 }
+
+/* 2026-11-16 | Owner-approved clean Palace mark as the HOME page's first visual.
+   This is the exact uploaded identity artwork, not generated typography.
+   Keep the existing navigation, translations, staff entry and all URLs intact. */
+body[data-page="portal"] .portal-header.ghp-home-header{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) auto;
+ align-items:center;
+ column-gap:20px;
+ row-gap:2px;
+ min-height:0;
+ padding-block:12px 15px;
+}
+body[data-page="portal"] .ghp-home-header .ghp-home-logo{
+ grid-column:1/-1;
+ grid-row:1;
+ justify-self:center;
+ display:block;
+ width:min(490px,100%);
+ line-height:0;
+ margin:0 auto 3px;
+ border-radius:8px;
+}
+body[data-page="portal"] .ghp-home-header .ghp-home-logo img{
+ display:block;
+ width:100%;
+ height:auto;
+ max-width:100%;
+ object-fit:contain;
+}
+body[data-page="portal"] .ghp-home-header .portal-top-nav{
+ grid-column:1;
+ grid-row:2;
+ width:max-content;
+ max-width:100%;
+ justify-self:start;
+ border-top:0;
+ min-height:54px;
+}
+body[data-page="portal"] .ghp-home-header .locale{
+ grid-column:2;
+ grid-row:2;
+ justify-self:end;
+ margin:0;
+}
+body[data-page="portal"] .ghp-footer-logo-window{
+ width:min(440px,100%);
+ aspect-ratio:2048/1082;
+ overflow:visible;
+}
+body[data-page="portal"] .ghp-footer-logo-window img.ghp-footer-main-logo{
+ width:100%;
+ height:auto;
+ max-width:100%;
+ object-fit:contain;
+ transform:none;
+}
+/* Mobile gets the logo before menu and language controls, left-aligned and legible.
+   Avoid a tiny mark beside the navigation as in the previous header. */
+@media(max-width:650px){
+ body[data-page="portal"] .portal-header.ghp-home-header{
+  grid-template-columns:minmax(0,1fr);
+  row-gap:8px;
+  padding-block:9px 14px;
+ }
+ body[data-page="portal"] .ghp-home-header .ghp-home-logo{
+  grid-column:1;
+  grid-row:1;
+  justify-self:start;
+  margin:0;
+  width:min(308px,87vw);
+ }
+ body[data-page="portal"] .ghp-home-header .portal-top-nav{
+  grid-column:1;
+  grid-row:2;
+  width:100%;
+  justify-self:stretch;
+  min-height:48px;
+ }
+ body[data-page="portal"] .ghp-home-header .locale{
+  grid-column:1;
+  grid-row:3;
+  justify-self:end;
+ }
+ body[data-page="portal"] .ghp-footer-logo-window{width:min(320px,100%)}
+}
+@media(max-width:370px){
+ body[data-page="portal"] .ghp-home-header .ghp-home-logo{width:min(278px,89vw)}
+ body[data-page="portal"] .ghp-home-header .portal-top-nav{min-width:0}
+}

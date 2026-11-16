@@ -9,15 +9,30 @@ test('original Palace mark and slogan remain legible throughout visitor journey'
   await page.setViewportSize({width,height:850});
   for(const route of publicPages){
    await page.goto(route);
-   const brand=page.locator('header .gh-brand-lockup');
-   await expect(brand).toBeVisible();
-   await expect(brand.locator('.gh-brand-slogan')).toHaveText(slogan);
-   await expect(brand).toHaveAttribute('href','./');
-   const mark=brand.locator('.gh-brand-mark img');
-   await expect(mark).toHaveAttribute('src','./images/brand-identity.png');
-   await expect.poll(()=>mark.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
-   const markBox=await brand.locator('.gh-brand-mark').boundingBox();
-   expect(markBox?.width).toBeGreaterThanOrEqual(width<=370?55:width<=650?69:94);
+   if(route==='/'){
+    const heroLogo=page.locator('header .ghp-home-logo');
+    await expect(heroLogo).toBeVisible();
+    await expect(heroLogo).toHaveAttribute('href','./');
+    const mark=heroLogo.locator('img');
+    await expect(mark).toHaveAttribute('src','./images/ghp-clean-official-logo-20261116.png');
+    await expect.poll(()=>mark.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
+    const logoBox=await mark.boundingBox();
+    const navBox=await page.locator('header .portal-top-nav').boundingBox();
+    const languageBox=await page.locator('header .locale').boundingBox();
+    expect(logoBox?.width).toBeGreaterThanOrEqual(width<=370?220:width<=650?270:420);
+    expect(logoBox.y+logoBox.height).toBeLessThanOrEqual(navBox.y+1);
+    expect(logoBox.y+logoBox.height).toBeLessThanOrEqual(languageBox.y+1);
+   } else {
+    const brand=page.locator('header .gh-brand-lockup');
+    await expect(brand).toBeVisible();
+    await expect(brand.locator('.gh-brand-slogan')).toHaveText(slogan);
+    await expect(brand).toHaveAttribute('href','./');
+    const mark=brand.locator('.gh-brand-mark img');
+    await expect(mark).toHaveAttribute('src','./images/brand-identity.png');
+    await expect.poll(()=>mark.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
+    const markBox=await brand.locator('.gh-brand-mark').boundingBox();
+    expect(markBox?.width).toBeGreaterThanOrEqual(width<=370?55:width<=650?69:94);
+   }
    const horizontalOverflow=await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth);
    expect(horizontalOverflow,route+' at '+width+'px').toBeFalsy();
   }
@@ -52,7 +67,7 @@ test('Palace bilingual slogan stays text-first without duplicate side logos',asy
    await expect(page.locator('.ghp-signature-en')).toHaveText(slogan);
    await expect(page.locator('.ghp-signature-ne')).toHaveText(nepali);
    await expect(page.locator('.ghp-brand-ribbon img, .ghp-brand-signature img')).toHaveCount(0);
-   await expect(page.locator('header .gh-brand-mark img')).toBeVisible();
+   await expect(page.locator(route==='/'?'header .ghp-home-logo img':'header .gh-brand-mark img')).toBeVisible();
    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
    expect(overflow,route+' at '+width+'px').toBeLessThanOrEqual(1);
   }
@@ -71,7 +86,7 @@ test('Palace footer shows one prominent standalone logo below the three brand li
    await expect(footer.locator('p[lang=en]')).toHaveText(slogan);
    await expect(footer.locator('p[lang=ne]')).toHaveText(nepali);
    await expect(logo).toHaveCount(1);
-   await expect(logo).toHaveAttribute('src','./images/brand-identity.png');
+   await expect(logo).toHaveAttribute('src',route==='/'?'./images/ghp-clean-official-logo-20261116.png':'./images/brand-identity.png');
    await expect.poll(()=>logo.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
    const copyBox=await footer.locator('.ghp-footer-brand-copy').boundingBox();
    const logoBox=await logo.boundingBox();
@@ -138,9 +153,33 @@ test('Palace footer image is clipped without distortion and stops below PALACE',
    const i=el.querySelector('img');
    return {crop:el.clientHeight,width:el.clientWidth,displayWidth:i.getBoundingClientRect().width,displayHeight:i.getBoundingClientRect().height,naturalWidth:i.naturalWidth,naturalHeight:i.naturalHeight};
   });
-  expect(ratio.crop/ratio.displayHeight).toBeLessThanOrEqual(.69);
+  if(route==='/'){
+   expect(ratio.crop/ratio.displayHeight).toBeCloseTo(1,1);
+   await expect(image).toHaveAttribute('src','./images/ghp-clean-official-logo-20261116.png');
+  }else{
+   expect(ratio.crop/ratio.displayHeight).toBeLessThanOrEqual(.69);
+   await expect(image).toHaveAttribute('src','./images/brand-identity.png');
+  }
   expect(ratio.displayWidth).toBeGreaterThan(0);
   expect(ratio.displayWidth/ratio.displayHeight).toBeCloseTo(ratio.naturalWidth/ratio.naturalHeight,1);
-  await expect(image).toHaveAttribute('src','./images/brand-identity.png');
+ }
+});
+
+test('homepage clean logo is the first branded visual, and mobile controls remain reachable',async({page})=>{
+ for(const width of [320,375,390,414,768,1280]){
+  await page.setViewportSize({width,height:850});
+  await page.goto('/');
+  const image=page.locator('.ghp-home-logo img');
+  await expect(image).toHaveAttribute('alt',/Golden Himal Palace/);
+  await expect(image).toHaveAttribute('src','./images/ghp-clean-official-logo-20261116.png');
+  await expect.poll(()=>image.evaluate(el=>el.complete && el.naturalWidth===2048 && el.naturalHeight===1082)).toBeTruthy();
+  await expect(page.locator('.ghp-home-header .gh-brand-lockup')).toHaveCount(0);
+  await expect(page.locator('.ghp-home-header .portal-top-nav a')).toHaveCount(4);
+  await expect(page.locator('.ghp-home-header .locale button')).toHaveCount(3);
+  const bounds=await image.boundingBox();
+  expect(bounds.x).toBeGreaterThanOrEqual(-1);
+  expect(bounds.x+bounds.width).toBeLessThanOrEqual(width+1);
+  await expect(page.locator('footer a[href="./backoffice.html"]')).toHaveCount(1);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
  }
 });
