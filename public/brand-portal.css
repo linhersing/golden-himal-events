@@ -1329,3 +1329,36 @@
     margin-bottom:10px;
   }
 }
+
+/* 2026-11-16 | Preserve the official mark's natural ratio.
+   Crop the original square logo's lower multilingual/contact lines at the
+   container boundary, after the GOLDEN HIMAL PALACE lettering. */
+.brand-portal .ghp-footer-logo-window{
+  display:block;position:relative;overflow:hidden;
+  width:min(410px,100%);
+  aspect-ratio:1.44;
+  flex:none;margin:0 auto;
+}
+.brand-portal .ghp-footer-logo-window img.ghp-footer-main-logo{
+  display:block;width:100%;height:auto;max-width:none;
+  object-fit:contain;object-position:top;
+  margin:0;transform:none;
+}
+/* The ABOUT/OUR NAME/other decorative marks must not be stretched.
+   A slightly smaller crop keeps all of PALACE while concealing tiny lines. */
+.brand-portal .portal-about-heading .portal-section-tag::before,
+.brand-portal .portal-concepts-head .portal-section-tag::before,
+.brand-portal .story-section-intro .portal-section-tag::before{
+  width:126px;height:89px;
+  background-size:126px auto;background-position:center top;
+  background-repeat:no-repeat;
+  margin-bottom:11px;
+}
+@media(max-width:650px){
+  .brand-portal .ghp-footer-logo-window{width:min(312px,100%)}
+  .brand-portal .portal-about-heading .portal-section-tag::before,
+  .brand-portal .portal-concepts-head .portal-section-tag::before,
+  .brand-portal .story-section-intro .portal-section-tag::before{
+    width:104px;height:73px;background-size:104px auto;
+  }
+}
