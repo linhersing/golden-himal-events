@@ -6,13 +6,14 @@ const BASE='https://golden-himal-voice-preview.linhersing.workers.dev';
 // Verify each route exists without confusing this read-only smoke with real login acceptance.
 const footerMarkers=['TEST MODE','class="test-site-banner test-site-footer wrap"'];
 const endpoints=[
-  ['/',['id="home-about"','id="home-competition"','id="home-news"','href="./golden-himal.html"','href="./voice.html"','id="location"','gh-reviewed-20261115-a-entrance-night.jpg','gh-reviewed-20261115-fountain-day.jpg','data-p="designFountainTitle"','data-p="designTowerTitle"','data-p="designHallTitle"',...footerMarkers]],
-  ['/golden-himal.html',['data-page="story"','story-name','story-gallery','approved-peace-tower-20261114.jpg','gh-reviewed-20261115-grand-hall-empty.jpg',...footerMarkers]],
-  ['/voice.html',['data-page="home"','id="home-apply"','id="home-login"','front-visual-wedding-image','approved-image-20261114','voice-wedding-hero-approved-20261114.jpg','NPR 10,000',...footerMarkers]],
-  ['/simple.css',['.front-visual.front-visual-wedding-image','.front-visual.front-visual-wedding-image > img']],
+  ['/',['id="home-about"','id="home-competition"','id="home-news"','href="./golden-himal.html"','href="./voice.html"','id="location"','class="brand gh-brand-lockup"','portal-tagline-official','portal-tagline-nepali','The Best Wedding at Golden Himal.','सबैभन्दा राम्रो विवाह समारोह गोल्डेन हिमालमा।','gh-reviewed-20261115-a-entrance-night.jpg','gh-reviewed-20261115-fountain-day.jpg','data-p="designFountainTitle"','data-p="designTowerTitle"','data-p="designHallTitle"',...footerMarkers]],
+  ['/golden-himal.html',['data-page="story"','gh-brand-lockup','gh-story-slogan','The Best Wedding at Golden Himal.','story-name','story-gallery','approved-peace-tower-20261114.jpg','gh-reviewed-20261115-grand-hall-empty.jpg',...footerMarkers]],
+  ['/voice.html',['data-page="home"','gh-brand-lockup','gh-brand-slogan','id="home-apply"','id="home-login"','front-visual-wedding-image','approved-image-20261114','voice-wedding-hero-approved-20261114.jpg','NPR 10,000',...footerMarkers]],
+  ['/simple.css',['gh-brand-lockup','.front-visual.front-visual-wedding-image','.front-visual.front-visual-wedding-image > img']],
   ['/demo-fee.mjs',['DEMO_FEE_NPR=500','MAX_DEMOS=10','demoFeeQuote']],
-  ['/member.html',[...footerMarkers,'id="member-email-form"','id="member-code-form"','id="member-status"','simple.js']],
-  ['/news.html',[...footerMarkers,'news-schedule','id="rules-awards"','id="rules-voting"','id="demo-fee-estimator"','src="./demo-fee.mjs"']],
+  ['/member.html',['gh-brand-lockup',...footerMarkers,'id="member-email-form"','id="member-code-form"','id="member-status"','simple.js']],
+  ['/news.html',['gh-brand-lockup',...footerMarkers,'news-schedule','id="rules-awards"','id="rules-voting"','id="demo-fee-estimator"','src="./demo-fee.mjs"']],
+  ['/brand-portal.css',['portal-tagline-official','gh-brand-lockup']],
   ['/simple.js',['request-code','test_email_service_unavailable','verify-code']]
 ];
 async function read(path) {
