@@ -6,6 +6,7 @@ import {handleV2Route} from './staging-v2-flow.js';
 import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
 import {approvalRequired,approvalSchemaReady,approvalColumn,approvalGuard,pendingGuard} from './test-application-approval.js';
 import {parseLocation,entrantLocationsReady,entrantLocationFields,entrantLocationJoin,insertEntrantLocation,updateEntrantLocation} from './entrant-location.js';
+import {parseFrontline2027,frontline2027Ready,insertFrontline2027,frontlineSelect,frontlineJoin} from './frontline-2027.js';
 import {handleVideoSupplement,supplementColumns,supplementGuard,supplementJoin,videoSupplementsReady} from './test-video-supplement.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
@@ -197,7 +198,8 @@ async function logout(request,env,a){
 async function applications(a,env,supplements){
  const approval=approvalRequired(env);
  const locations=await entrantLocationsReady(env.DB);
- const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,${entrantLocationFields(locations)},p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url,
+ const frontlineReady=await frontline2027Ready(env.DB);
+ const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,${entrantLocationFields(locations)},p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url${frontlineSelect(frontlineReady)},
  p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,p.receipt_key IS NOT NULL AS has_receipt_file,
  p.phase,p.status,p.payment_status,p.created_at,p.updated_at,
  CASE WHEN p.phase='demo' AND p.status IN ('submitted','under_review') AND p.payment_status IN ('unpaid','simulated_paid')
@@ -205,7 +207,7 @@ async function applications(a,env,supplements){
  AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingGuard(approval,'p')}${supplementGuard(supplements,'p')}
  THEN 1 ELSE 0 END AS can_edit${approvalColumn(approval)}${supplementColumns(supplements)}
- FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)} WHERE p.account_id=? ORDER BY p.created_at DESC,p.round_code DESC`).bind(a.id).all();
+ FROM e2e_applications p${entrantLocationJoin(locations)}${frontlineJoin(frontlineReady)}${supplementJoin(supplements)} WHERE p.account_id=? ORDER BY p.created_at DESC,p.round_code DESC`).bind(a.id).all();
  const entries=rows.results||[];
  // April is a separately released TEST window, never auto-opened simply because January was saved.
  const nextRound=env.STAGING_SECOND_AUDITION_ENABLED==='true'&&entries.some(row=>row.round_code==='2027-01')&&
@@ -222,6 +224,9 @@ async function submitApplication(request,env,a){
   if(!january)return deny('january_entry_required',409);
  }
  if(!['university','community'].includes(b.category))return deny('invalid_category');
+ const frontline=parseFrontline2027(b);
+ if(frontline.error)return deny(frontline.error,frontline.status);
+ if(frontline.entry&&!await frontline2027Ready(env.DB))return deny('frontline_2027_registration_unavailable',503);
  const location=parseLocation(b);
  if(location.error)return deny(location.error,location.status);
  if(location.location&&!await entrantLocationsReady(env.DB))return deny('location_storage_unavailable',503);
@@ -252,15 +257,17 @@ async function submitApplication(request,env,a){
   const createApp=env.DB.prepare('INSERT INTO e2e_applications(id,account_id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,demo_url,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
    .bind(id,a.id,b.round_code,b.category,location.legacyProvince,b.location_basis,...values.slice(1,2),values[0],...values.slice(2),url||null,now,now);
   // Save the actual province and optional profile in the same transaction as the entry.
-  if(profile||location.location){
-   if(typeof env.DB.batch!=='function')return deny(location.location?'location_storage_unavailable':'profile_storage_unavailable',503);
+  if(profile||location.location||frontline.entry){
+   if(typeof env.DB.batch!=='function')return deny('frontline_transaction_unavailable',503);
    const statements=[createApp];
    if(profile)statements.push(profileInsert(env.DB,id,profile,now));
    if(location.location)statements.push(insertEntrantLocation(env.DB,id,location.location));
+   if(frontline.entry)statements.push(insertFrontline2027(env.DB,id,frontline.entry,now));
    await env.DB.batch(statements);
   }else await createApp.run();
- }catch{return deny(profile?'profile_database_error':'duplicate_round_or_database_rejected',profile?503:409)}
+ }catch{return deny(frontline.entry?'frontline_database_error':profile?'profile_database_error':'duplicate_round_or_database_rejected',frontline.entry||profile?503:409)}
  return json({ok:true,application_id:id,phase:'demo',status:'submitted',source:'cloudflare-d1-staging',testOnly:true,
+  ...(frontline.entry?{frontline_2027:true,competition_region:frontline.entry.competition_region}:{}),
   ...(approvalRequired(env)?{approval_state:'pending'}:{})},201);
 }
 // An invited member may correct an unscored, unpromoted TEST application (including simulated-paid).
@@ -487,7 +494,9 @@ export async function handleE2E(request,env){
    const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval,supplements});
   if(v2)return v2;
    if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),testOnly:true,
-    ...(a.role==='member'&&await entrantLocationsReady(env.DB)?{nepal_locations_enabled:true}:{}),...(approval?{approval_enabled:true}:{})});
+    ...(a.role==='member'&&await entrantLocationsReady(env.DB)?{nepal_locations_enabled:true}:{}),
+    ...(a.role==='member'&&env.STAGING_FRONTLINE_2027_ENABLED==='true'&&await entrantLocationsReady(env.DB)&&await frontline2027Ready(env.DB)?{frontline_form_enabled:true}:{}),
+    ...(approval?{approval_enabled:true}:{})});
   if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env,supplements);
   if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
     if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a,supplements);

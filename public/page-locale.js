@@ -219,6 +219,31 @@ Object.assign(texts.ne,{"guideScheduleText":"जनवरी छनोट · अ
 Object.assign(texts.zh,{memberFeeBoundaryVisible:"目前是測試網站。2027年1月海選免費，正式報名尚未開放，這裡不會進行真實扣款。"});
 Object.assign(texts.en,{memberFeeBoundaryVisible:"TEST mode. January 2027 audition is free. Official registration is not open. No real payment is collected."});
 Object.assign(texts.ne,{memberFeeBoundaryVisible:"यो परीक्षण वेबसाइट हो। जनवरी २०२७ को प्रारम्भिक छनोट निःशुल्क छ। आधिकारिक दर्ता खुला छैन र वास्तविक रकम लिइँदैन।"});
+/* Wave 2: schema-gated 2027 single competition group with separate A/B venue region. */
+Object.assign(texts.en,{
+ frontlineHeading:'2027 unified competition · region & eligibility (TEST)',
+ frontlineScope:'One competition group. Choose A: Lumbini or B: Bagmati for in-person contests; this is separate from where you live.',
+ frontlineArea:'Competition region *',frontlineA:'Area A · Lumbini',frontlineB:'Area B · Bagmati',
+ frontlineBasis:'Education eligibility *',frontlineStudent:'Currently enrolled in college/university',frontlineGraduate:'College/university graduate',
+ frontlineOneGroup:'Single competition group',
+ frontlineEnabledNotice:'New 2027 TEST fields: one competition group with A/B region and student/graduate eligibility. Only ONE Demo link is currently saved in TEST; the five-link feature and official registration are NOT open. No payment.'
+});
+Object.assign(texts.zh,{
+ frontlineHeading:'2027單一競賽組別｜參賽區域與資格（測試）',
+ frontlineScope:'只有一個競賽組別。選A區Lumbini或B區Bagmati作為實體參賽地區；此欄與居住省份分開。',
+ frontlineArea:'選擇參賽地區 *',frontlineA:'A區 · Lumbini',frontlineB:'B區 · Bagmati',
+ frontlineBasis:'學歷資格 *',frontlineStudent:'目前就讀大專院校以上',frontlineGraduate:'大專院校以上已畢業',
+ frontlineOneGroup:'單一競賽組別',
+ frontlineEnabledNotice:'新版2027測試欄位已開啟：單一競賽組別、A/B地區及在學／畢業資格。此時仍只可儲存1支Demo，5支功能及正式報名尚未開通，不收取費用。'
+});
+Object.assign(texts.ne,{
+ frontlineHeading:'२०२७ एउटै प्रतियोगिता समूह · क्षेत्र र योग्यता (परीक्षण)',
+ frontlineScope:'प्रतियोगिता समूह एउटै हो। प्रत्यक्ष कार्यक्रमका लागि A लुम्बिनी वा B बागमती छान्नुहोस्; यो बसोबास गर्ने प्रदेशभन्दा फरक हो।',
+ frontlineArea:'प्रतियोगिता क्षेत्र *',frontlineA:'क्षेत्र A · लुम्बिनी',frontlineB:'क्षेत्र B · बागमती',
+ frontlineBasis:'शैक्षिक योग्यता *',frontlineStudent:'हाल कलेज/विश्वविद्यालयमा अध्ययनरत',frontlineGraduate:'कलेज/विश्वविद्यालय उत्तीर्ण',
+ frontlineOneGroup:'एउटै प्रतियोगिता समूह',
+ frontlineEnabledNotice:'नयाँ २०२७ परीक्षण फाराम: एउटै समूह, A/B क्षेत्र, विद्यार्थी वा स्नातक योग्यता। अहिले एक डेमो लिङ्क मात्र सुरक्षित हुन्छ; पाँच लिङ्क र आधिकारिक दर्ता खुलेका छैनन्। पैसा लाग्दैन।'
+});
 const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;

@@ -80,7 +80,7 @@ const safeLink=(url)=>{try{const u=new URL(url);return u.protocol==='https:'?u.h
 const formValues=form=>Object.fromEntries(new FormData(form));
 const mt=k=>window.GHVLocale?.t(k)||k;
 const staff=page==='back',prefix=staff?'back':'member';
-let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false;
+let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,frontlineFormEnabled=false;
 const statusBox=$(prefix+'-status');
 function permittedPhoto(url){const href=safeLink(url);if(!href)return null;try{const x=new URL(href);if(x.username||x.password||(x.port&&x.port!=='443')||x.hostname==='localhost'||x.hostname.endsWith('.local')||x.hostname.endsWith('.internal'))return null;return href}catch{return null}}
 function profileImage(url,large=false){
@@ -178,6 +178,24 @@ function authUI(signedIn){
  }
 }
 function authForms(email){$(prefix+'-email-form').hidden=!email;$(prefix+'-code-form').hidden=email}
+function setupFrontlineForm(enabled){
+ if(page!=='member')return;
+ const next=$('frontline-test-fields'),legacy=$('legacy-category-field'),form=$('application-form');
+ if(!next||!legacy||!form)return;
+ frontlineFormEnabled=enabled===true;
+ next.hidden=!frontlineFormEnabled;next.disabled=!frontlineFormEnabled;
+ legacy.hidden=frontlineFormEnabled;
+ const notice=document.querySelector('[data-l="frontlineFormBoundary"]');
+ if(notice){notice.dataset.l=frontlineFormEnabled?'frontlineEnabledNotice':'frontlineFormBoundary';notice.textContent=mt(notice.dataset.l);}
+ if(frontlineFormEnabled){
+  const sync=()=>{
+   const basis=next.querySelector('[name=eligibility_basis]').value;
+   form.elements.category.value=basis==='enrolled'?'university':'community';
+   form.elements.category.dispatchEvent(new Event('change'));
+  };
+  next.querySelector('[name=eligibility_basis]').onchange=sync;sync();
+ }
+}
 function staffTabs(){
  const roles=account?.available_roles||[account?.role];
  document.querySelector('.role-tabs')?.toggleAttribute('hidden',!account);
@@ -195,6 +213,7 @@ async function loadSession(){try{
  account=v.account;role=account.role;authUI(true);
  if(staff)staffTabs();else{
   setupProfileFields(v.profile_enabled===true);
+  setupFrontlineForm(v.frontline_form_enabled===true);
   const nationwide=v.nepal_locations_enabled===true,location=$('entrant-location-detail'),field=location.querySelector('input');
   location.hidden=!nationwide;field.disabled=!nationwide;field.required=nationwide;
   const note=$('province-note');note.dataset.l=nationwide?'provinceHelp':'provincePending';note.textContent=mt(note.dataset.l);
@@ -378,7 +397,7 @@ function drawEntry(a){
  const meta=node('div',undefined,'member-entry-meta');
  for(const item of [
   [mt('entryId'),a.id],
-  [mt('categoryLabel'),mt(a.category==='university'?'university':'community')],
+  [mt('categoryLabel'),a.competition_region?mt('frontlineOneGroup')+' · '+a.competition_region:mt(a.category==='university'?'university':'community')],
   [mt('windowLabel'),a.round_code]
  ]){
   const field=node('div',undefined,'member-entry-field');
@@ -462,7 +481,7 @@ async function renderMember(){
  if(!hasEntries)holder.append(node('p',mt('noEntries'),'minor'));
  if(hasEntries){
   $('member-welcome-name').textContent=first.stage_name||mt('unnamedEntry');
-  $('member-welcome-meta').textContent=mt(first.category==='university'?'university':'community')+' · '+first.round_code;
+  $('member-welcome-meta').textContent=(first.competition_region?mt('frontlineOneGroup')+' · '+first.competition_region:mt(first.category==='university'?'university':'community'))+' · '+first.round_code;
   const avatar=$('member-hero-avatar');avatar.replaceChildren();
   avatar.append(profileImage(first.photo_url_1)||node('span','✦'));
   $('member-state-data').textContent=mt('dataSaved');
@@ -733,7 +752,7 @@ if(page==='member'){
  details.addEventListener('toggle',syncStart);
  start?.addEventListener('click',()=>{details.hidden=false;details.open=true;syncStart();details.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>application.querySelector('[name=stage_name]')?.focus({preventScroll:true}),180)});
  application.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
- const v=formValues(application),data={...v,video_confirmed:application.querySelector('[name=video_confirmed]')?.checked===true,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,nonreligious_song_ack:application.querySelector('[name=nonreligious_song_ack]')?.checked===true,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
+ const v=formValues(application),data={...v,frontline_2027:frontlineFormEnabled,video_confirmed:application.querySelector('[name=video_confirmed]')?.checked===true,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,nonreligious_song_ack:application.querySelector('[name=nonreligious_song_ack]')?.checked===true,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
  const saved=await api('applications',data);application.reset();toggle();details.open=false;status('✓ '+mt('saved')+' '+mt('entryId')+': '+saved.application_id);await renderMember()})});
  const toggle=()=>{const community=$('category').value==='community';const adult=application.querySelector('[name=adult_confirmed]'),student=application.querySelector('[name=student_confirmed]');$('community-statement').hidden=!community;$('university-statement').hidden=community;adult.required=community;student.required=!community;if(community)student.checked=false;else adult.checked=false;};
  $('category').addEventListener('change',toggle);toggle();
