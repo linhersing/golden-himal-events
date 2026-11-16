@@ -66,7 +66,7 @@ test('frontline awards and quick rules are clear, actionable and mobile-readable
   await expect(award.locator('.voucher-heading')).toContainText('不是現金獎金');
   await expect(award.locator('.voucher-notice')).toContainText('NPR 10,000');
   await expect(award.locator('.award-faq-list>div')).toHaveCount(3);
-  await expect(award.locator('.award-faq-list')).toContainText('NPR 500');
+  await expect(award.locator('.award-faq-list')).toContainText('NPR 300');
   await expect(award.locator('.news-fineprint')).toContainText('尚未開放');
   await expect(page.locator('.news-quick-grid a[href="#rules-awards"]')).toHaveCount(1);
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
@@ -83,7 +83,7 @@ test('frontline awards and quick rules are clear, actionable and mobile-readable
  await expect(page.locator('#rules-awards .voucher-heading')).toContainText('not cash');
  await page.locator('[data-lang=ne]').click();
  await expect(page.locator('.news-quick-guide h2')).toContainText('भाग लिनुअघि');
- await expect(page.locator('#rules-awards .award-faq-list')).toContainText('NPR ५००');
+ await expect(page.locator('#rules-awards .award-faq-list')).toContainText('NPR ३००');
  await expect(page.locator('.news-quick-grid a[href="#rules-registration"]')).toHaveAttribute('href','#rules-registration');
 });
 
