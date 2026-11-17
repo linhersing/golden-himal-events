@@ -68,7 +68,7 @@ export async function handleCorrectionRoute(request,env,account,{json,deny,bodyJ
   try{
    if(typeof db.batch!=='function')return deny('correction_transaction_unavailable',503);
    const mutations=[
-    db.prepare('UPDATE '+TABLE+' SET state=?,reviewed_at=?,reviewed_by=? WHERE id=? AND state=\'pending\'')
+    db.prepare('UPDATE '+TABLE+' SET state=?,reviewed_at=?,reviewed_by=? WHERE id=? AND state=\'pending\' AND EXISTS(SELECT 1 FROM e2e_applications a WHERE a.id='+TABLE+'.application_id AND a.stage_name='+TABLE+'.previous_stage_name AND a.affiliation='+TABLE+'.previous_affiliation)')
      .bind(decision,when,account.id,rid)
    ];
    if(decision==='accepted')mutations.push(
@@ -78,7 +78,7 @@ export async function handleCorrectionRoute(request,env,account,{json,deny,bodyJ
    mutations.push(db.prepare("INSERT INTO e2e_member_correction_audit(id,correction_id,actor_account_id,action,occurred_at) SELECT ?,id,?, ?,? FROM "+TABLE+" WHERE id=? AND state=? AND reviewed_by=?")
     .bind(uuid(),account.id,decision,when,rid,decision,account.id));
    const results=await db.batch(mutations);
-   if(Number(results?.[0]?.meta?.changes||0)!==1||Number(results?.at(-1)?.meta?.changes||0)!==1)return deny('correction_concurrent_change',409);
+   if(Number(results?.[0]?.meta?.changes||0)!==1||Number(results?.at(-1)?.meta?.changes||0)!==1||(decision==='accepted'&&Number(results?.[1]?.meta?.changes||0)!==1))return deny('correction_concurrent_change',409);
   }catch{return deny('correction_already_decided_or_unavailable',409)}
   const saved=await db.prepare('SELECT state,reviewed_at FROM '+TABLE+' WHERE id=?').bind(rid).first();
   if(saved?.state!==decision)return deny('correction_readback_failed',503);
