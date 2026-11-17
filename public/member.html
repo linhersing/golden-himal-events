@@ -219,6 +219,13 @@
  <p data-l="proofSignupHelp">資格證明是報名必要資料。目前私有檔案儲存及存取權限尚待驗收，勿上傳真實證件、也勿貼公開連結。</p>
  <ul><li data-l="proofUniversity">在學生：有效學生證或在學證明。</li><li data-l="proofCommunity">已畢業者：大專院校以上畢業證明或必要的其他資格佐證。</li></ul>
  <p class="proof-boundary" data-l="proofWhen">開放日期尚未確定。完成私人 R2 上傳、權限及安全驗收後才會啟用，屆時另行公告。</p>
+ <div id="eligibility-private-upload" class="eligibility-private-upload" hidden>
+  <label><span data-l="proofChooseFile">選擇資格證明｜PDF、JPG、PNG，最大 5 MB</span>
+   <input id="eligibility-upload-file" type="file" accept="application/pdf,image/png,image/jpeg" autocomplete="off">
+  </label>
+  <button type="button" id="eligibility-upload-submit" class="btn btn-soft" data-l="proofUploadAction">上傳測試資格證明</button>
+  <p id="eligibility-upload-status" role="status" aria-live="polite" data-l="proofUploadTestOnly">僅受控測試，不得上傳真實證件。</p>
+ </div>
 </section>
 <div class="form-actions full"><button class="btn btn-primary" type="submit" data-l="save">Save my TEST application</button><small class="field-hint" data-l="saveHelp">Saving is not a paid or officially approved entry.</small></div>
 </form>
