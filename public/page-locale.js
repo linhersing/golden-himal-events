@@ -310,7 +310,26 @@ Object.assign(texts.ne,{proofChooseFile:"योग्यता प्रमा�
 Object.assign(texts.zh,{museContact:"常用聯絡帳號（WhatsApp／Viber／Messenger 等） *"});
 Object.assign(texts.en,{museContact:"Preferred contact account (WhatsApp / Viber / Messenger, etc.) *"});
 Object.assign(texts.ne,{museContact:"नियमित सम्पर्क खाता (WhatsApp / Viber / Messenger आदि) *"});
-const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
+/* 2026-11-17: Other means an explicit free-text language, not a blocking category. */
+ Object.assign(texts.en,{
+  songLangOtherLabel:'Specify the song language',
+  songLangOtherPlaceholder:'Type the language name (e.g. Korean, French)',
+  languageHelp:'Choose the song language. If it is not listed, select Other and type its name.',
+  invalidSongLanguage:'Select a language or enter its name under Other.'
+ });
+ Object.assign(texts.zh,{
+  songLangOtherLabel:'請填寫其他歌曲語言',
+  songLangOtherPlaceholder:'請輸入實際語言，例如韓語、法語',
+  languageHelp:'請選擇實際演唱語言；未列出的語言可選「其他語言」並自行填寫。',
+  invalidSongLanguage:'請選擇歌曲語言；如果選擇其他語言，請填寫具體名稱。'
+ });
+ Object.assign(texts.ne,{
+  songLangOtherLabel:'गीत गाउने अन्य भाषाको नाम लेख्नुहोस्',
+  songLangOtherPlaceholder:'भाषाको नाम लेख्नुहोस् (जस्तै Korean, French)',
+  languageHelp:'गीतको भाषा छान्नुहोस्। सूचीमा नभए Other छानेर भाषाको नाम लेख्नुहोस्।',
+  invalidSongLanguage:'गीतको भाषा छान्नुहोस् वा Other मा भाषाको नाम लेख्नुहोस्।'
+ });
+ const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
  document.querySelectorAll('[data-l]').forEach(el=>{el.textContent=t(el.dataset.l)});

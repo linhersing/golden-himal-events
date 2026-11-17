@@ -90,6 +90,57 @@ const node=(tag,txt,cls)=>{const x=document.createElement(tag);if(txt!==undefine
 const safeLink=(url)=>{try{const u=new URL(url);return u.protocol==='https:'?u.href:null}catch{return null}};
 const formValues=form=>Object.fromEntries(new FormData(form));
 const mt=k=>window.GHVLocale?.t(k)||k;
+const EXTRA_LANGUAGE_OPTIONS=[
+ ['Tharu','Tharu'],['Nepal Bhasa','Nepal Bhasa (Newari)'],['Awadhi','Awadhi'],
+ ['Gurung','Gurung'],['Magar','Magar'],['Limbu','Limbu'],['Urdu','Urdu'],
+ ['Sanskrit','Sanskrit'],['Tibetan','Tibetan']
+];
+function enhanceLanguageSelect(select){
+ if(!select)return;
+ if(select._customLanguageInput)return;
+ const other=[...select.options].find(o=>o.value==='Other');
+ if(!other)return;
+ for(const [value,label] of EXTRA_LANGUAGE_OPTIONS){
+  if([...select.options].some(o=>o.value===value))continue;
+  const option=node('option',label);option.value=value;select.insertBefore(option,other);
+ }
+ const custom=node('input',undefined,'song-language-other');
+ custom.type='text';custom.maxLength=60;custom.minLength=2;custom.autocomplete='off';
+ custom.dataset.lPlaceholder='songLangOtherPlaceholder';
+ custom.placeholder=mt('songLangOtherPlaceholder');
+ custom.setAttribute('aria-label',mt('songLangOtherLabel'));
+ custom.hidden=true;custom.disabled=true;
+ select.insertAdjacentElement('afterend',custom);select._customLanguageInput=custom;
+ const sync=()=>{
+  const active=select.value==='Other';
+  custom.hidden=!active;custom.disabled=!active;custom.required=active&&!select.disabled;
+ };
+ select.addEventListener('change',sync);
+ select._syncOtherLanguage=sync;
+ sync();
+}
+function prepareLanguageSelects(root){
+ root.querySelectorAll('select[name="song_language"],select[name^="demo_"][name$="_language"]').forEach(enhanceLanguageSelect);
+}
+function selectSongLanguage(select,saved){
+ enhanceLanguageSelect(select);
+ const name=String(saved||'').trim();
+ if(name&&name!=='Other'&&![...select.options].some(x=>x.value===name)){
+  select.value='Other';
+  if(select._customLanguageInput)select._customLanguageInput.value=name;
+ }else{
+  select.value=name;
+  if(select._customLanguageInput)select._customLanguageInput.value='';
+ }
+ select._syncOtherLanguage?.();
+}
+function songLanguageValue(select){
+ if(!select)return '';
+ return (select.value==='Other'
+  ?select._customLanguageInput?.value||''
+  :select.value||'').trim();
+}
+
 const staff=page==='back',prefix=staff?'back':'member';
 let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,frontlineFormEnabled=false,museFormEnabled=false,fiveDemoEnabled=false,eligibilityUploadEnabled=false;
 const statusBox=$(prefix+'-status');
@@ -225,6 +276,7 @@ function addDemoSlot(){
  if(!card){status(mt('demoLimit'),true);return;}
  card.hidden=false;card.disabled=false;
  for(const el of card.querySelectorAll('input,select'))el.required=true;
+ card.querySelectorAll('select[name$="_language"]').forEach(select=>select._syncOtherLanguage?.());
  updateDemoCount();
  card.querySelector('input')?.focus({preventScroll:true});
 }
@@ -251,7 +303,7 @@ function collectDemoEntries(form){
  const entries=[{
   song_title:String(main.get('song_title')||'').trim(),
   original_artist:String(main.get('original_artist')||'').trim(),
-  song_language:String(main.get('song_language')||'').trim(),
+  song_language:songLanguageValue(form.querySelector('[name="song_language"]')),
   demo_url:String(main.get('demo_url')||'').trim()
  }];
  for(const card of activeExtraDemoSlots()){
@@ -259,7 +311,7 @@ function collectDemoEntries(form){
   entries.push({
    song_title:String(main.get('demo_'+i+'_title')||'').trim(),
    original_artist:String(main.get('demo_'+i+'_artist')||'').trim(),
-   song_language:String(main.get('demo_'+i+'_language')||'').trim(),
+   song_language:songLanguageValue(card.querySelector('[name="demo_'+i+'_language"]')),
    demo_url:String(main.get('demo_'+i+'_url')||'').trim()
   });
  }
@@ -712,6 +764,7 @@ function showEdit(a){
   input.name=name;input.value=a[name]||'';
   input.required=!['gender','photo_url_1','photo_url_2','photo_url_3'].includes(name);
   lab.append(label,input);
+  if(name==='song_language')selectSongLanguage(input,a[name]);
   if(name==='demo_url')lab.classList.add('full');
   form.append(lab);
  }
@@ -737,7 +790,9 @@ function showEdit(a){
     }
     input.name='demo_edit_'+slot+'_'+name;input.value=old[name]||'';
     input.required=!card.hidden;input.disabled=card.hidden;
-    label.append(input);group.append(label);
+    label.append(input);
+    if(name==='song_language')selectSongLanguage(input,old[name]);
+    group.append(label);
    }
    card.append(group);
    const remove=node('button',mt('demoRemove'),'btn btn-soft');remove.type='button';
@@ -755,6 +810,7 @@ function showEdit(a){
   add.onclick=()=>{
    const card=editDemoCards.find(c=>c.hidden);if(!card)return;
    card.hidden=false;for(const input of card.querySelectorAll('input,select')){input.disabled=false;input.required=true;}
+   card.querySelectorAll('select[name$="_song_language"]').forEach(select=>select._syncOtherLanguage?.());
    syncEditAdd();card.querySelector('input')?.focus({preventScroll:true});
   };
   syncEditAdd();series.append(add);form.append(series);
@@ -772,18 +828,19 @@ function showEdit(a){
  buttons.append(save,cancel);form.append(buttons);
  form.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
   const payload={application_id:a.id,...formValues(form)};
+  payload.song_language=songLanguageValue(form.querySelector('[name="song_language"]'));
   let verifiedDemoEntries=null;
   if(fiveDemoEnabled){
    verifiedDemoEntries=[{
     song_title:String(payload.song_title||'').trim(),
     original_artist:String(payload.original_artist||'').trim(),
-    song_language:String(payload.song_language||'').trim(),
+    song_language:songLanguageValue(form.querySelector('[name="song_language"]')),
     demo_url:String(payload.demo_url||'').trim()
    }];
    for(const card of editDemoCards.filter(c=>!c.hidden)){
     const slot=card.dataset.demoSlot;
     verifiedDemoEntries.push(Object.fromEntries(['song_title','original_artist','song_language','demo_url']
-      .map(k=>[k,String(payload['demo_edit_'+slot+'_'+k]||'').trim()])));
+      .map(k=>[k,k==='song_language' ?songLanguageValue(card.querySelector('[name="demo_edit_'+slot+'_song_language"]')):String(payload['demo_edit_'+slot+'_'+k]||'').trim()])));
    }
    for(const key of Object.keys(payload))if(key.startsWith('demo_edit_'))delete payload[key];
    payload.demo_entries=verifiedDemoEntries;
@@ -1024,7 +1081,12 @@ if(page==='member'){
    status('已刪除你的測試會員與相關測試報名資料。');
   });
  });
- window.addEventListener('ghv:languagechange',()=>{if(account&&account.role==='member'){if(document.querySelector('[data-editing]'))return;renderMember().catch(e=>status(friendlyError(e),true))}});
+ window.addEventListener('ghv:languagechange',()=>{
+  document.querySelectorAll('.song-language-other').forEach(input=>{
+   input.setAttribute('aria-label',mt('songLangOtherLabel'));
+  });
+  if(account&&account.role==='member'){if(document.querySelector('[data-editing]'))return;renderMember().catch(e=>status(friendlyError(e),true))}
+ });
  $('eligibility-upload-submit')?.addEventListener('click',()=>{
   const file=$('eligibility-upload-file')?.files?.[0];
   const button=$('eligibility-upload-submit');
@@ -1052,6 +1114,7 @@ if(page==='member'){
   });
  });
 const application=$('application-form'),details=$('application-details'),start=$('start-application');
+ prepareLanguageSelects(application);
  $('demo-add')?.addEventListener('click',addDemoSlot);
  document.querySelectorAll('[data-demo-remove]').forEach(button=>{
   button.addEventListener('click',()=>removeDemoSlot(button.closest('[data-demo-slot]')));
@@ -1080,10 +1143,12 @@ const application=$('application-form'),details=$('application-details'),start=$
   return;
  }
  run(async()=>{
- const v=formValues(application),data={...v,frontline_2027:frontlineFormEnabled,video_confirmed:application.querySelector('[name=video_confirmed]')?.checked===true,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,nonreligious_song_ack:application.querySelector('[name=nonreligious_song_ack]')?.checked===true,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
+ const v=formValues(application);v.song_language=songLanguageValue(application.querySelector('[name="song_language"]'));
+ const data={...v,frontline_2027:frontlineFormEnabled,video_confirmed:application.querySelector('[name=video_confirmed]')?.checked===true,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,nonreligious_song_ack:application.querySelector('[name=nonreligious_song_ack]')?.checked===true,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
  for(const key of Object.keys(data))if(/^demo_[2-5]_(title|artist|language|url)$/.test(key))delete data[key];
  if(fiveDemoEnabled)data.demo_entries=selectedDemos;
- const saved=await api('applications',data);application.reset();demoSlots().forEach(card=>removeDemoSlot(card));toggle();
+ const saved=await api('applications',data);application.reset();demoSlots().forEach(card=>removeDemoSlot(card));
+ application.querySelectorAll('select[name$="_language"],select[name="song_language"]').forEach(select=>select._syncOtherLanguage?.());toggle();
  status('✓ '+mt('saved')+' '+mt('entryId')+': '+saved.application_id);await renderMember()})});
  const toggle=()=>{const community=$('category').value==='community',modern=frontlineFormEnabled;const adult=application.querySelector('[name=adult_confirmed]'),student=application.querySelector('[name=student_confirmed]');$('community-statement').hidden=modern||!community;$('university-statement').hidden=modern||community;adult.required=!modern&&community;student.required=!modern&&!community;if(modern){adult.checked=false;student.checked=false;}else if(community)student.checked=false;else adult.checked=false;};
  $('category').addEventListener('change',toggle);toggle();

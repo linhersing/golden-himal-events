@@ -1426,3 +1426,7 @@ body[data-page="member"] .eligibility-private-upload input[type=file]{width:100%
 body[data-page="member"] .eligibility-private-upload button{justify-self:start}
 body[data-page="member"] .eligibility-private-upload [role=status]{font-size:.9rem;margin:0;line-height:1.6}
 @media(max-width:600px){body[data-page="member"] .eligibility-private-upload button{width:100%}}
+
+/* 2026-11-17: explicit language detail field when Other is selected. */
+.song-language-other{display:block;width:100%;max-width:100%;min-height:44px;margin-top:8px;box-sizing:border-box}
+.song-language-other[hidden]{display:none!important}

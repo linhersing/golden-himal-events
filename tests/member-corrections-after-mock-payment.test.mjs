@@ -76,8 +76,11 @@ test('mock-paid member may correct owned song before judging, then scores lock a
   assert.equal(saved.payment_status,'simulated_paid');
   assert.equal(saved.can_edit,1);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM e2e_payment_events').get().n,1);
-  const invalid=await handleE2E(request('update-application',{...corrections,song_language:'invalid'},member),env);
+  // Any human-readable song language name is valid; the literal selector placeholder is not.
+  const invalid=await handleE2E(request('update-application',{...corrections,song_language:'Other'},member),env);
   assert.equal(invalid.status,422);
+  const unsafe=await handleE2E(request('update-application',{...corrections,song_language:'<script>alert(1)</script>'},member),env);
+  assert.equal(unsafe.status,422);
   const judge=await auth('judge@example.invalid','reviewer');
   const score=await handleE2E(request('score',{application_id:id,phase:'demo',technique:42,interpretation:33,no_conflict:true},judge),env);
   assert.equal(score.status,200,await score.clone().text());
