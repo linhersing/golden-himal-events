@@ -21,7 +21,10 @@ if(process.env.WORKERS_CI!=='1'||process.env.WORKERS_CI_BRANCH!=='codex/initial-
    '1004_self_service_signup_STAGING_ONLY.sql',
    '1007_test_application_approval_STAGING_ONLY.sql',
    '1009_test_video_supplements_STAGING_ONLY.sql',
-   '1010_nepal_locations_STAGING_ONLY.sql'
+   '1010_nepal_locations_STAGING_ONLY.sql',
+   '1011_frontline_2027_registration_STAGING_ONLY.sql',
+   '1012_frontline_region_lock_STAGING_ONLY.sql',
+   '1013_member_corrections_STAGING_ONLY.sql'
   ])run(['d1','execute','E2E_DB','--remote','--file','backend/migrations/'+file,'--yes','--json']);
   evidence.phase='readback';evidence.after=query(counts);
   evidence.schema=query("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'ghv_practice_%') AS tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name LIKE 'ghv_practice_%') AS triggers");
@@ -29,6 +32,8 @@ if(process.env.WORKERS_CI!=='1'||process.env.WORKERS_CI_BRANCH!=='codex/initial-
   if(evidence.before.accounts!==evidence.after.accounts||evidence.before.applications!==evidence.after.applications||Number(evidence.schema.tables)!==12||Number(evidence.schema.triggers)!==21||Number(evidence.external_test_schema.signup_tables)!==2||Number(evidence.external_test_schema.approval_tables)!==1||Number(evidence.external_test_schema.video_supplement_tables)!==1)throw Error('practice_provision_readback_mismatch');
   evidence.location_schema=query("SELECT COUNT(*) AS tables FROM sqlite_master WHERE type='table' AND name='e2e_application_locations'");
   if(Number(evidence.location_schema.tables)!==1)throw Error('location_provision_readback_mismatch');
+  evidence.frontline_and_corrections=query("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='e2e_frontline_2027_registration') AS frontline,(SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name='e2e_frontline_2027_account_region_guard') AS region_guard,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='e2e_member_correction_requests') AS correction_requests,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='e2e_member_correction_audit') AS correction_audit");
+  if(Object.values(evidence.frontline_and_corrections).some(v=>Number(v)!==1))throw Error('frontline_correction_schema_readback_mismatch');
   evidence.status='PASS';evidence.phase='complete';
  }catch(e){evidence.reason=e.message;}
  mkdirSync('dist',{recursive:true});writeFileSync('dist/practice-build.json',JSON.stringify(evidence));
