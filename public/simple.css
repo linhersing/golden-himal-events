@@ -1346,3 +1346,10 @@ body[data-page="member"] .muse-test-fields[disabled] input,
 body[data-page="member"] .muse-test-fields[disabled] textarea{opacity:.7;cursor:not-allowed;background:#eeeae6}
 body[data-page="member"] .muse-region-lock{font-weight:700;color:#714b2a}
 @media(max-width:720px){body[data-page="member"] .muse-fields-grid{grid-template-columns:1fr}}
+
+
+/* Keep the only primary edit/delete management group at the end of the portal.
+   Entry-specific controls remain with each saved entry, but no top duplicate. */
+body[data-page="member"] #member-primary-actions #member-quick-edit{
+ display:none!important;
+}
