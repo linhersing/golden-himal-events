@@ -307,6 +307,7 @@ test('all Palace footers blend the real Nepal view without mobile overflow or lo
    expect(design.overflow).toBeLessThanOrEqual(1);
    const logo=footer.locator('img');
    await expect(logo).toHaveAttribute('src','./images/ghp-clean-official-logo-20261116.png');
+   await logo.scrollIntoViewIfNeeded();
    await expect.poll(()=>logo.evaluate(img=>img.complete&&img.naturalWidth===2048)).toBeTruthy();
   }
  }

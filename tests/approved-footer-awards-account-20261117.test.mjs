@@ -51,3 +51,19 @@ test('first-time singer sees application action before account deletion, with no
  const css=read('public/simple.css');
  assert.match(css,/#member-panel > #member-account-tools\{order:3\}/);
 });
+
+test('Muse form is present but cannot collect private fields before approved migration',()=>{
+ const h=read('public/member.html'),script=read('public/simple.js'),backend=read('backend/staging-e2e.js');
+ const start=h.indexOf('id="muse-test-fields"');
+ assert.ok(start>0&&h.slice(start,start+170).includes('disabled'));
+ for(const key of ['full_name','contact_phone','contact_email','city','street_address','educational_background','short_description','musical_training']){
+  assert.ok(h.includes('name="'+key+'"'),key);
+ }
+ assert.ok(h.includes('data-l="museRegionLock"'));
+ assert.match(script,/setupMuseForm\(v\.muse_form_enabled===true\)/);
+ assert.match(backend,/museAuditionReady\(env\)/);
+ assert.match(backend,/muse_fields_not_enabled/);
+ const migration=read('backend/migrations/1013_muse_audition_details_STAGING_ONLY.sql');
+ assert.match(migration,/CREATE TABLE IF NOT EXISTS e2e_muse_audition_details/);
+ assert.match(migration,/ON DELETE CASCADE/);
+});
