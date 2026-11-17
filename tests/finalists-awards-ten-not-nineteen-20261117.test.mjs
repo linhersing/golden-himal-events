@@ -20,7 +20,7 @@ test('10 finalists include 9 ranking winners; three languages cannot imply 19 di
  const cases=[
   ['zh',/10位|10人|10位入圍者/,/前9名/,/同一批10位/],
   ['en',/10 finalists/,/top 9/,/same 10 finalists/],
-  ['ne',/१० जना/,/शीर्ष ९/,/तिनै १० जनालाई/]
+  ['ne',/१० जना|१० फाइनलिस्ट/,/शीर्ष ९/,/तिनै १० जनालाई|यी नै १० जनाको/]
  ];
  for(const [lang,ten,nine,same] of cases){
   const title=translated(lang,'awardOverviewTitle'),body=translated(lang,'awardOverviewBody');
