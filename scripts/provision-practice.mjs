@@ -24,7 +24,8 @@ if(process.env.WORKERS_CI!=='1'||process.env.WORKERS_CI_BRANCH!=='codex/initial-
    '1010_nepal_locations_STAGING_ONLY.sql',
    '1011_frontline_2027_registration_STAGING_ONLY.sql',
    '1012_frontline_region_lock_STAGING_ONLY.sql',
-   '1013_member_corrections_STAGING_ONLY.sql'
+   '1013_member_corrections_STAGING_ONLY.sql',
+   '1014_five_demo_videos_STAGING_ONLY.sql'
   ])run(['d1','execute','E2E_DB','--remote','--file','backend/migrations/'+file,'--yes','--json']);
   evidence.phase='readback';evidence.after=query(counts);
   evidence.schema=query("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'ghv_practice_%') AS tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name LIKE 'ghv_practice_%') AS triggers");
@@ -34,6 +35,8 @@ if(process.env.WORKERS_CI!=='1'||process.env.WORKERS_CI_BRANCH!=='codex/initial-
   if(Number(evidence.location_schema.tables)!==1)throw Error('location_provision_readback_mismatch');
   evidence.frontline_and_corrections=query("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='e2e_frontline_2027_registration') AS frontline,(SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name='e2e_frontline_2027_account_region_guard') AS region_guard,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='e2e_member_correction_requests') AS correction_requests,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='e2e_member_correction_audit') AS correction_audit");
   if(Object.values(evidence.frontline_and_corrections).some(v=>Number(v)!==1))throw Error('frontline_correction_schema_readback_mismatch');
+  evidence.five_demo_schema=query("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='e2e_demo_videos') AS videos,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='e2e_extra_demo_scores') AS scores,(SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name='e2e_extra_demo_insert_guard') AS video_guard,(SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name='e2e_extra_demo_score_stage_guard') AS score_guard");
+  if(Object.values(evidence.five_demo_schema).some(v=>Number(v)!==1))throw Error('five_demo_schema_readback_mismatch');
   evidence.status='PASS';evidence.phase='complete';
  }catch(e){evidence.reason=e.message;}
  mkdirSync('dist',{recursive:true});writeFileSync('dist/practice-build.json',JSON.stringify(evidence));
