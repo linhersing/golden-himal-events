@@ -329,6 +329,11 @@ Object.assign(texts.ne,{museContact:"नियमित सम्पर्क �
   languageHelp:'गीतको भाषा छान्नुहोस्। सूचीमा नभए Other छानेर भाषाको नाम लेख्नुहोस्।',
   invalidSongLanguage:'गीतको भाषा छान्नुहोस् वा Other मा भाषाको नाम लेख्नुहोस्।'
  });
+
+ /* 2026-11-17 clarification: one cohort of 10 finalists, not 9 + 10 distinct recipients. */
+ Object.assign(texts.zh,{"guidePrizeText":"決賽10人均有入圍獎；其中前9名另得名次獎","news05lead":"決賽10人均有入圍獎；前9名另得名次獎","awardOverviewTitle":"4月14日總決賽共10位入圍者：10人均獲入圍獎，前9名另獲名次獎","awardOverviewBody":"晉級2027年4月14日總決賽的10位選手，每人均獲入圍獎金 NPR 20,000（合計 NPR 200,000）。同一批10位選手依總決賽成績統一排名，前9名另獲名次獎金：第一名1位 NPR 50,000、第二名3位各 NPR 30,000、第三名5位各 NPR 15,000（名次獎合計 NPR 215,000）。全場現金獎金總計 NPR 415,000。"});
+ Object.assign(texts.en,{"guidePrizeText":"10 finalists all receive an award; top 9 also win ranking prizes","news05lead":"The same 10 finalists all get an award; the top 9 also earn ranking prizes","awardOverviewTitle":"April 14 final: all 10 finalists receive an award; the top 9 also receive ranking prizes","awardOverviewBody":"All 10 contestants advancing to the April 14, 2027 final each receive a finalist cash award of NPR 20,000 (NPR 200,000 in total). These same 10 finalists are ranked together by their final-round results. The top 9 also receive ranking prizes: first place, 1 person at NPR 50,000; second place, 3 people at NPR 30,000 each; and third place, 5 people at NPR 15,000 each (NPR 215,000 in ranking prizes). Total cash awards for the final: NPR 415,000."});
+ Object.assign(texts.ne,{"guidePrizeText":"फाइनलका १० जनाले पुरस्कार पाउँछन्; शीर्ष ९ लाई थप स्थान पुरस्कार","news05lead":"उही १० फाइनलिस्ट सबैलाई फाइनलिस्ट पुरस्कार; शीर्ष ९ लाई थप स्थान पुरस्कार","awardOverviewTitle":"अप्रिल १४ को फाइनलमा १० जना: सबैलाई फाइनलिस्ट पुरस्कार र शीर्ष ९ लाई थप स्थान पुरस्कार","awardOverviewBody":"२०२७ अप्रिल १४ को फाइनलमा पुग्ने सबै १० प्रतिस्पर्धीले जनही NPR 20,000 फाइनलिस्ट नगद पुरस्कार पाउँछन् (जम्मा NPR 200,000)। यी नै १० जनाको फाइनलको नतिजाका आधारमा एकैपटक स्थान निर्धारण गरिन्छ। शीर्ष ९ जनाले थप स्थान पुरस्कार पाउँछन्: पहिलो स्थानमा १ जनालाई NPR 50,000, दोस्रो स्थानमा ३ जनालाई जनही NPR 30,000 र तेस्रो स्थानमा ५ जनालाई जनही NPR 15,000 (स्थान पुरस्कार जम्मा NPR 215,000)। फाइनलको कुल नगद पुरस्कार NPR 415,000।"});
  const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
