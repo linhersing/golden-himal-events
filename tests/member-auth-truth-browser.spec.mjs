@@ -57,14 +57,15 @@ test('Nepal singer onboarding CTA and category guidance work on mobile (syntheti
  await page.locator('[data-lang=en]').click();
  await expect(page.locator('#member-panel')).toBeVisible();
  await expect(page.locator('#start-application')).toBeVisible();
- await expect(page.locator('#application-details')).not.toHaveAttribute('open','');
+ await expect(page.locator('#application-details')).toBeVisible();
+ await expect(page.locator('#application-form [name=stage_name]')).toBeVisible();
  const before=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
  expect(before).toBeLessThanOrEqual(0);
  await page.locator('#start-application').scrollIntoViewIfNeeded();
  await page.screenshot({path:'test-results/ghv-singer-ux-20261104/01-mobile-start-button.png'});
  await page.locator('#start-application').click();
- await expect(page.locator('#application-details')).toHaveAttribute('open','');
- await expect(page.locator('#start-application')).toHaveAttribute('aria-expanded','true');
+ await expect(page.locator('#application-details')).toBeVisible();
+ await expect(page.locator('#application-form [name=stage_name]')).toBeFocused();
  await expect(page.locator('#university-statement')).toBeVisible();
  await expect(page.locator('#community-statement')).toBeHidden();
  await page.locator('#category').selectOption('community');
@@ -281,4 +282,23 @@ test('main member page sends a fresh Turnstile token and verifies the same mailb
   {email:'singer@example.invalid',role:'member',turnstile_token:'synthetic-token'},
   {email:'singer@example.invalid',challenge_id:'synthetic-challenge',code:'123456'}
  ]);
+});
+
+test('signed-in singer can type fictional private fields while server-side storage remains gated',async({page})=>{
+ await page.route('**/api/e2e/**',async r=>{
+  const endpoint=new URL(r.request().url()).pathname;
+  const payload=endpoint.endsWith('/me')?{ok:true,account:{id:'test-private-preview',role:'member'},muse_form_enabled:false}:
+   endpoint.endsWith('/applications')?{ok:true,applications:[]}:{ok:false,error:'not_found'};
+  await r.fulfill({status:payload.ok?200:404,contentType:'application/json',body:JSON.stringify(payload)});
+ });
+ await page.goto('/member.html#register');
+ await page.locator('[data-lang=zh]').click();
+ await expect(page.locator('#application-details')).toBeVisible();
+ await expect(page.locator('#muse-test-fields')).toBeEnabled();
+ await expect(page.locator('#muse-fields-title')).toHaveText('報名資料');
+ await page.locator('#muse-test-fields [name=full_name]').fill('TEST FICTIONAL ONLY');
+ await page.locator('#muse-test-fields [name=contact_phone]').fill('+977 9800000000');
+ await expect(page.locator('#muse-test-fields [name=contact_phone]')).toHaveValue('+977 9800000000');
+ await expect(page.locator('#muse-fields-notice')).toContainText('只供介面測試');
+ await expect(page.locator('#member-panel')).toBeVisible();
 });
