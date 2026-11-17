@@ -193,8 +193,18 @@ function setupMuseForm(ready){
  museFormEnabled=ready===true;
  const box=$('muse-test-fields'),notice=$('muse-fields-notice');
  if(!box)return;
- box.disabled=!museFormEnabled;
- if(notice){notice.dataset.l=museFormEnabled?'museEnabled':'musePending';notice.textContent=mt(notice.dataset.l);}
+ // Members can practice typing with synthetic fields. This is NOT D1 storage.
+ // The backend and form submit both fail closed until a reviewed D1 migration.
+ box.disabled=false;
+ box.dataset.mode=museFormEnabled?'storage':'preview';
+ for(const input of box.querySelectorAll('input,textarea,select')){
+  input.required=museFormEnabled;
+  input.autocomplete='off';
+ }
+ if(notice){
+  notice.dataset.l=museFormEnabled?'museEnabled':'musePreview';
+  notice.textContent=mt(notice.dataset.l);
+ }
 }
 function setupFrontlineForm(enabled){
  if(page!=='member')return;
@@ -474,13 +484,13 @@ async function renderMember(){
  const callout=$('new-application-callout'),form=$('application-details');
  if(callout){
   callout.hidden=hasEntries&&!secondAudition;
-  for(const [element,key] of [[$('new-application-title'),secondAudition?'secondAuditionTitle':'ready'],[$('start-application')?.querySelector('[data-l]'),secondAudition?'secondAuditionStart':'start']]){
+  for(const [element,key] of [[$('new-application-title'),secondAudition?'secondAuditionTitle':'ready'],[$('start-application')?.querySelector('[data-l]'),secondAudition?'secondAuditionStart':'goToForm']]){
    if(element){element.dataset.l=key;element.textContent=mt(key);}
   }
   callout.querySelector('[data-l="startHelp"]').hidden=secondAudition;
   $('second-audition-help').hidden=!secondAudition;
  }
- if(form){form.hidden=hasEntries;if(hasEntries)form.open=false;}
+ if(form)form.hidden=hasEntries&&!secondAudition;
  const fields=$('application-form')?.elements;
  if(fields){
   for(const option of fields.round_code.options){
@@ -788,15 +798,28 @@ if(page==='member'){
  });
  window.addEventListener('ghv:languagechange',()=>{if(account&&account.role==='member'){if(document.querySelector('[data-editing]'))return;renderMember().catch(e=>status(friendlyError(e),true))}});
  const application=$('application-form'),details=$('application-details'),start=$('start-application');
- const syncStart=()=>start?.setAttribute('aria-expanded',String(details.open));
- details.addEventListener('toggle',syncStart);
- start?.addEventListener('click',()=>{details.hidden=false;details.open=true;syncStart();details.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>application.querySelector('[name=stage_name]')?.focus({preventScroll:true}),180)});
- application.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+ // No second click: for a member without an entry, the form is already visible.
+ // This optional CTA is now only a shortcut to the expanded registration form.
+ start?.addEventListener('click',()=>{
+  if(details.hidden)return;
+  details.scrollIntoView({block:'start',behavior:'smooth'});
+  setTimeout(()=>application.querySelector('[name=stage_name]')?.focus({preventScroll:true}),180);
+ });
+ application.addEventListener('submit',e=>{e.preventDefault();
+ // Never silently omit private contact fields or imply that they were saved.
+ // In preview mode the member may type fictional values, but must clear them
+ // before submitting the separate legacy TEST entry (until D1 is approved).
+ if(!museFormEnabled&&[...$('muse-test-fields').querySelectorAll('input,textarea')].some(el=>el.value.trim())){
+  status(mt('musePreviewCannotSave'),true);
+  $('muse-fields-notice')?.scrollIntoView({block:'center',behavior:'smooth'});
+  return;
+ }
+ run(async()=>{
  const v=formValues(application),data={...v,frontline_2027:frontlineFormEnabled,video_confirmed:application.querySelector('[name=video_confirmed]')?.checked===true,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,nonreligious_song_ack:application.querySelector('[name=nonreligious_song_ack]')?.checked===true,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
- const saved=await api('applications',data);application.reset();toggle();details.open=false;status('✓ '+mt('saved')+' '+mt('entryId')+': '+saved.application_id);await renderMember()})});
+ const saved=await api('applications',data);application.reset();toggle();status('✓ '+mt('saved')+' '+mt('entryId')+': '+saved.application_id);await renderMember()})});
  const toggle=()=>{const community=$('category').value==='community';const adult=application.querySelector('[name=adult_confirmed]'),student=application.querySelector('[name=student_confirmed]');$('community-statement').hidden=!community;$('university-statement').hidden=community;adult.required=community;student.required=!community;if(community)student.checked=false;else adult.checked=false;};
  $('category').addEventListener('change',toggle);toggle();
- if(location.hash==='#register')details.open=true;syncStart();
+ // The #register deep link is handled by the same always-visible registration section.
  loadSession();
 }else if(page==='back'){
  setupAuth();staffTabs();document.querySelectorAll('[data-role-tab]').forEach(button=>button.addEventListener('click',()=>{const next=button.dataset.roleTab;if(next===role||!account)return;run(async()=>{const v=await api('switch-role',{role:next});account=v.account;role=account.role;staffTabs();await dashboard();status('已切換為'+(role==='organizer'?'主辦方':'評審')+'。')})}));loadSession();
