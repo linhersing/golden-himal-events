@@ -2,6 +2,7 @@ import {humanSignupSource,publicSignupReady,publicSignupChecklist,reservePublicS
 import {passwordModeReady,passwordIdentity,passwordRequest} from './staging-password-auth.js';
 import {emailAddress,mailProviderReady,mailSenderReady,sendTestEmail} from './staging-mail.js';
 import {validPerformanceLink} from '../public/performance-link.js';
+import {parseFiveDemos,fiveDemoReady,insertFiveDemos,replaceFiveDemos,attachFiveDemos} from './demo-five-2027.js';
 import {handleV2Route} from './staging-v2-flow.js';
 import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
 import {approvalRequired,approvalSchemaReady,approvalColumn,approvalGuard,pendingGuard} from './test-application-approval.js';
@@ -215,11 +216,12 @@ async function applications(a,env,supplements){
  const nextRound=env.STAGING_SECOND_AUDITION_ENABLED==='true'&&entries.some(row=>row.round_code==='2027-01')&&
   !entries.some(row=>row.round_code==='2027-04'||row.phase==='final')?'2027-04':null;
  const decorated=await attachProfiles(env,entries);
- return json({ok:true,account:{id:a.id,role:a.role},applications:a.role==='member'?await attachMuseAudition(env,decorated):decorated,next_audition_round:nextRound,testOnly:true});
+ const personal=a.role==='member'?await attachMuseAudition(env,decorated):decorated;
+ return json({ok:true,account:{id:a.id,role:a.role},applications:a.role==='member'?await attachFiveDemos(env,personal):personal,next_audition_round:nextRound,testOnly:true});
 }
 async function submitApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
- const b=await bodyJSON(request,6200);if(!b)return deny('invalid_json');
+ const b=await bodyJSON(request,13500);if(!b)return deny('invalid_json');
  if(!['2027-01','2027-04'].includes(b.round_code))return deny('invalid_audition_window');
  if(b.round_code==='2027-04'){
   if(env.STAGING_SECOND_AUDITION_ENABLED!=='true')return deny('second_audition_not_open',409);
@@ -257,6 +259,9 @@ async function submitApplication(request,env,a){
  if(values.some(x=>x.length<1||x.length>100)||values[0].length<2)return deny('missing_song_or_identity_test_fields',422);
  const url=String(b.demo_url||'').trim();
  if((env.STAGING_SUBMISSION_MODE==='links'&&!url)||(url&&!validPerformanceLink(url)))return deny('invalid_demo_url',422);
+ const five=parseFiveDemos(b,validPerformanceLink);
+ if(five.error)return deny(five.error,422);
+ if(five.entries&&!await fiveDemoReady(env))return deny('five_demo_not_enabled',503);
  const parsed=parseProfileInput(b);
  if(parsed.error)return deny(parsed.error,422);
  const profile=parsed.profile;
@@ -274,13 +279,14 @@ async function submitApplication(request,env,a){
   const createApp=env.DB.prepare('INSERT INTO e2e_applications(id,account_id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,demo_url,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
    .bind(id,a.id,b.round_code,b.category,location.legacyProvince,b.location_basis,...values.slice(1,2),values[0],...values.slice(2),url||null,now,now);
   // Save the actual province and optional profile in the same transaction as the entry.
-  if(profile||location.location||frontline.entry||muse.profile){
+  if(profile||location.location||frontline.entry||muse.profile||five.entries){
    if(typeof env.DB.batch!=='function')return deny('frontline_transaction_unavailable',503);
    const statements=[createApp];
    if(profile)statements.push(profileInsert(env.DB,id,profile,now));
    if(location.location)statements.push(insertEntrantLocation(env.DB,id,location.location));
    if(frontline.entry)statements.push(insertFrontline2027(env.DB,id,frontline.entry,now));
    if(muse.profile)statements.push(insertMuseAudition(env.DB,id,muse.profile,now));
+   if(five.entries)statements.push(...insertFiveDemos(env.DB,id,five.entries,now));
    await env.DB.batch(statements);
   }else await createApp.run();
  }catch{return deny(frontline.entry?'frontline_database_error':profile?'profile_database_error':'duplicate_round_or_database_rejected',frontline.entry||profile?503:409)}
@@ -293,15 +299,19 @@ async function submitApplication(request,env,a){
 // These routes do not change the payment state and cannot update another account.
 async function updateApplication(request,env,a,supplements){
  if(!requireRole(a,'member'))return deny('member_only',403);
- const b=await bodyJSON(request,5200);if(!b)return deny('invalid_json');
+ const b=await bodyJSON(request,13500);if(!b)return deny('invalid_json');
  const profileFields=['gender','photo_url_1','photo_url_2','photo_url_3','profile_consent'];
  const locationFields=['province','location_detail','location_basis'];
- const allowed=['application_id','stage_name','song_title','original_artist','song_language','demo_url','affiliation','song_key',...locationFields,...profileFields,...MUSE_FIELDS];
+ const allowed=['application_id','stage_name','song_title','original_artist','song_language','demo_url','affiliation','song_key',...locationFields,...profileFields,...MUSE_FIELDS,'demo_entries'];
  if(Object.keys(b).some(k=>!allowed.includes(k)))return deny('update_fields_only',422);
  const id=String(b.application_id||'');
  const values=['stage_name','song_title','original_artist','demo_url'].map(k=>typeof b[k]==='string'?b[k].trim():'');
  if(values.some((v,i)=>!v||v.length>(i===3?1000:100))||values[0].length<2||!validPerformanceLink(values[3]))
    return deny('invalid_demo_url_or_fields',422);
+ const fiveEditing=Object.hasOwn(b,'demo_entries');
+ const five=fiveEditing?parseFiveDemos(b,validPerformanceLink):{entries:null};
+ if(five.error)return deny(five.error,422);
+ if(fiveEditing&&!await fiveDemoReady(env))return deny('five_demo_not_enabled',503);
  const museEditing=museHasFields(b);
  const museReady=await museAuditionReady(env);
  if(museEditing&&!museReady)return deny('muse_fields_not_enabled',503);
@@ -336,7 +346,7 @@ async function updateApplication(request,env,a,supplements){
   .bind(...values.slice(0,3),songLanguage,values[3],affiliation,songKey,editingLocation?location.legacyProvince:null,editingLocation?b.location_basis:null,NOW(),id,a.id);
  let affected=0;
  try {
-  if(editingProfile||editingLocation||museEditing){
+  if(editingProfile||editingLocation||museEditing||fiveEditing){
    if(typeof env.DB.batch!=='function')return deny(editingLocation?'location_storage_unavailable':'profile_storage_unavailable',503);
    const statements=[updateStmt];
    if(editingLocation)statements.push(updateEntrantLocation(env.DB,id,location.location));
@@ -352,6 +362,7 @@ async function updateApplication(request,env,a,supplements){
     statements.push(profileStmt);
    }
    if(museEditing)statements.push(updateMuseAudition(env.DB,id,a.id,muse.profile,NOW(),pendingProfile));
+   if(fiveEditing)statements.push(...replaceFiveDemos(env.DB,id,a.id,five.entries,NOW(),pendingProfile));
    const result=await env.DB.batch(statements);
    affected=Number(result?.[0]?.meta?.changes||0);
   }else{
@@ -523,6 +534,7 @@ export async function handleE2E(request,env){
     ...(a.role==='member'&&await entrantLocationsReady(env.DB)?{nepal_locations_enabled:true}:{}),
     ...(a.role==='member'&&env.STAGING_FRONTLINE_2027_ENABLED==='true'&&await entrantLocationsReady(env.DB)&&await frontline2027Ready(env.DB)?{frontline_form_enabled:true}:{}),
     ...(a.role==='member'&&await museAuditionReady(env)?{muse_form_enabled:true}:{}),
+    ...(a.role==='member'&&await fiveDemoReady(env)?{five_demo_enabled:true}:{}),
     ...(approval?{approval_enabled:true}:{})});
   if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env,supplements);
   if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
