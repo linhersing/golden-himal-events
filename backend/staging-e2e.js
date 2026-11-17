@@ -3,6 +3,7 @@ import {passwordModeReady,passwordIdentity,passwordRequest} from './staging-pass
 import {emailAddress,mailProviderReady,mailSenderReady,sendTestEmail} from './staging-mail.js';
 import {validPerformanceLink} from '../public/performance-link.js';
 import {parseFiveDemos,fiveDemoReady,insertFiveDemos,replaceFiveDemos,attachFiveDemos} from './demo-five-2027.js';
+import {validSongLanguage} from './song-language.js';
 import {handleV2Route} from './staging-v2-flow.js';
 import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
 import {approvalRequired,approvalSchemaReady,approvalColumn,approvalGuard,pendingGuard} from './test-application-approval.js';
@@ -257,6 +258,7 @@ async function submitApplication(request,env,a){
  const fields=['stage_name','affiliation','song_title','original_artist','song_language','song_key'];
  const values=fields.map(k=>String(b[k]||'').trim());
  if(values.some(x=>x.length<1||x.length>100)||values[0].length<2)return deny('missing_song_or_identity_test_fields',422);
+ if(!validSongLanguage(values[4]))return deny('invalid_song_language',422);
  const url=String(b.demo_url||'').trim();
  if((env.STAGING_SUBMISSION_MODE==='links'&&!url)||(url&&!validPerformanceLink(url)))return deny('invalid_demo_url',422);
  const five=parseFiveDemos(b,validPerformanceLink);
@@ -333,7 +335,7 @@ async function updateApplication(request,env,a,supplements){
  if(editingLocation&&!['residence','study','work'].includes(b.location_basis))return deny('invalid_location_basis',422);
  if(editingLocation&&!await entrantLocationsReady(env.DB))return deny('location_storage_unavailable',503);
  const songLanguage=b.song_language===undefined?app.song_language:String(b.song_language).trim();
- if(!['Nepali','English','Hindi','Maithili','Bhojpuri','Tamang','Chinese','Other'].includes(songLanguage))return deny('invalid_song_language',422);
+ if(!validSongLanguage(songLanguage))return deny('invalid_song_language',422);
  if(!['unpaid','simulated_paid'].includes(app.payment_status)||!['submitted','under_review'].includes(app.status)||app.phase!=='demo')
    return deny('update_locked',409);
  const anyScores=await env.DB.prepare("SELECT EXISTS(SELECT 1 FROM e2e_judge_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_live_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_promotion_events WHERE application_id=?) AS n").bind(id,id,id).first();
