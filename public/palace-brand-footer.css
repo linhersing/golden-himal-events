@@ -65,3 +65,48 @@
  .ghp-universal-footer-brand .ghp-footer-full-name{letter-spacing:.005em}
 }
 @media print{.ghp-universal-footer-brand{page-break-inside:avoid}}
+
+
+/* 2026-11-17 · Owner request: a real Chitwan, Nepal landscape in the
+   full-width Palace closing. Three soft atmospheric washes preserve text and
+   the exact approved logo; use only the existing 232KB site-owned WebP. */
+.ghp-universal-footer-brand{
+ background-color:#f2ebe1!important;
+ background-image:
+   radial-gradient(ellipse 78% 72% at 50% 43%,
+     rgba(251,247,240,.82) 0%,
+     rgba(249,244,236,.65) 43%,
+     rgba(246,240,230,.26) 100%),
+   linear-gradient(180deg,
+     rgba(248,244,238,.94) 0%,
+     rgba(248,244,238,.55) 29%,
+     rgba(248,244,238,.39) 68%,
+     rgba(248,244,238,.90) 100%),
+   linear-gradient(90deg,
+     rgba(248,244,238,.47) 0%,
+     rgba(248,244,238,.05) 28%,
+     rgba(248,244,238,.05) 72%,
+     rgba(248,244,238,.47) 100%),
+   url("./images/gh-real-chitwan-view-20261113.webp")!important;
+ background-position:center,center,center,center 63%!important;
+ background-size:cover!important;
+ background-repeat:no-repeat!important;
+ background-attachment:scroll!important;
+}
+@media(max-width:650px){
+ .ghp-universal-footer-brand{
+  background-position:center,center,center,52% 60%!important;
+  background-image:
+   radial-gradient(ellipse 105% 65% at 50% 43%,
+     rgba(251,247,240,.90) 0%,rgba(249,244,236,.72) 53%,rgba(246,240,230,.36) 100%),
+   linear-gradient(180deg,
+     rgba(248,244,238,.92) 0%,rgba(248,244,238,.48) 35%,
+     rgba(248,244,238,.52) 73%,rgba(248,244,238,.93) 100%),
+   linear-gradient(90deg,
+     rgba(248,244,238,.22),rgba(248,244,238,.04) 50%,rgba(248,244,238,.22)),
+   url("./images/gh-real-chitwan-view-20261113.webp")!important;
+ }
+}
+@media print{
+ .ghp-universal-footer-brand{background-image:none!important;background-color:#f5efe7!important}
+}

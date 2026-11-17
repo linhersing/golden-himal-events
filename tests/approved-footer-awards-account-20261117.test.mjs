@@ -28,3 +28,17 @@ test('full-width prize area keeps the link and published amounts',()=>{
  assert.ok(css.includes('.voice-prize-link:hover'));
  assert.ok(css.includes('calc(100vw - 32px)'));
 });
+
+test('Palace footer reuses approved Chitwan photo under mobile-safe gradients',()=>{
+ const selectors=[['public/simple.css','.ghp-universal-footer-brand'],['public/palace-brand-footer.css','.ghp-universal-footer-brand'],['public/brand-portal.css','.portal-footer .ghp-footer-brand']];
+ for(const [path,selector] of selectors){
+  const css=read(path);
+  assert.ok(css.includes(selector),path+' needs its own brand component');
+  assert.match(css,/gh-real-chitwan-view-20261113\.webp/);
+  assert.match(css,/radial-gradient\(/);
+  assert.match(css,/background-size:cover!important/);
+  assert.match(css,/@media\(max-width:650px\)/);
+ }
+ const img=readFileSync(new URL('../public/images/gh-real-chitwan-view-20261113.webp',import.meta.url));
+ assert.ok(img.byteLength>20000&&img.byteLength<300000,'existing real panorama must stay small and unchanged');
+});

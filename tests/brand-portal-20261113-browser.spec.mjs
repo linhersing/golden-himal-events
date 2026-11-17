@@ -284,3 +284,30 @@ test('new wooden door and diversified photos remain usable on mobile',async({pag
   expect(overflow).toBeLessThanOrEqual(1);
  }
 });
+
+
+test('all Palace footers blend the real Nepal view without mobile overflow or logo cropping',async({page})=>{
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:850});
+  for(const route of ['/', '/golden-himal.html', '/voice.html', '/member.html']){
+   await page.goto(route);
+   const selector=route==='/'||route==='/golden-himal.html'?'.portal-footer .ghp-footer-brand':'.ghp-universal-footer-brand';
+   const footer=page.locator(selector);
+   await expect(footer).toHaveCount(1);
+   const design=await footer.evaluate(el=>{
+    const style=getComputedStyle(el);
+    return {background:style.backgroundImage,size:style.backgroundSize,position:style.backgroundPosition,
+     width:el.getBoundingClientRect().width,
+     overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth};
+   });
+   expect(design.background).toContain('gh-real-chitwan-view-20261113.webp');
+   expect(design.background).toContain('gradient');
+   expect(design.size).toContain('cover');
+   expect(design.width).toBeGreaterThan(width-50);
+   expect(design.overflow).toBeLessThanOrEqual(1);
+   const logo=footer.locator('img');
+   await expect(logo).toHaveAttribute('src','./images/ghp-clean-official-logo-20261116.png');
+   await expect.poll(()=>logo.evaluate(img=>img.complete&&img.naturalWidth===2048)).toBeTruthy();
+  }
+ }
+});
