@@ -142,7 +142,8 @@ test('member home shows two statuses, edit after simulated checkout and true rea
 test('member dashboard locks edit button when first judge score exists',async({page})=>{
  const state={entries:[{...entry,can_edit:0}]};await mockMemberApi(page,state);
  await page.goto('/member.html#login');
- await expect(page.locator('#member-manage-edit')).toBeHidden();
+ await expect(page.locator('#member-manage-edit')).toBeVisible();
+ await expect(page.locator('#member-manage-edit')).toBeDisabled();
  await expect(page.locator('#member-edit-lock-reason')).toBeVisible();
  await expect(page.locator('#member-edit-lock-reason')).toContainText('已開始評分');
  await expect(page.locator('#entries')).toContainText('已開始評分');
