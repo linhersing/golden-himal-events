@@ -9,6 +9,7 @@ import {parseLocation,entrantLocationsReady,entrantLocationFields,entrantLocatio
 import {parseFrontline2027,frontline2027Ready,insertFrontline2027,frontlineSelect,frontlineJoin} from './frontline-2027.js';
 import {MUSE_FIELDS,museHasFields,parseMuseAudition,museAuditionReady,insertMuseAudition,updateMuseAudition,attachMuseAudition} from './muse-audition.js';
 import {handleVideoSupplement,supplementColumns,supplementGuard,supplementJoin,videoSupplementsReady} from './test-video-supplement.js';
+import {handleCorrectionRoute} from './member-corrections.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
  * No official entries, actual payments, or exposed R2 URLs.
@@ -241,10 +242,12 @@ async function submitApplication(request,env,a){
  if(location.error)return deny(location.error,location.status);
  if(location.location&&!await entrantLocationsReady(env.DB))return deny('location_storage_unavailable',503);
  if(!['residence','study','work'].includes(b.location_basis))return deny('invalid_location_basis');
- // V2 only explicitly sets the 18+ cut-off for the community group.
- // This TEST checkbox is self-attestation, not proof of real eligibility.
- if(b.category==='community'&&b.adult_confirmed!==true)return deny('community_age_confirmation_required',422);
- if(b.category==='university'&&b.student_confirmed!==true)return deny('university_student_confirmation_required',422);
+ // 2027-01 frontline: ONE competition group. Degree status is eligibility,
+ // not an 18+ community/college category. Legacy TEST keeps its old checks.
+ if(!frontline.entry){
+  if(b.category==='community'&&b.adult_confirmed!==true)return deny('community_age_confirmation_required',422);
+  if(b.category==='university'&&b.student_confirmed!==true)return deny('university_student_confirmation_required',422);
+ }
  if(b.no_exclusive_contract!==true)return deny('contract_declaration_required',422);
  if(Object.hasOwn(b,'nonreligious_song_ack')&&b.nonreligious_song_ack!==true)return deny('song_policy_declaration_required',422);
  // A self-declared filming checklist is not automatic inspection of an external video.
@@ -506,6 +509,8 @@ export async function handleE2E(request,env){
   }
   if(pathname==='/api/e2e/logout'&&isPost)return await logout(request,env,a);
   if(pathname==='/api/e2e/switch-role'&&isPost)return await switchRole(request,env,a);
+  const corrections=await handleCorrectionRoute(request,env,a,{json,deny,bodyJSON,uuid,NOW});
+  if(corrections)return corrections;
   const approval=approvalRequired(env);
   if(approval&&!await approvalSchemaReady(env))return deny('test_approval_schema_unavailable',503);
    const supplements=await videoSupplementsReady(env,approval);
