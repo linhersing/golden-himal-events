@@ -36,8 +36,10 @@ test('zh/en/ne latest authoritative news translations state 10 people and same t
   assert(body.includes('10')||body.includes('१०'),localeName+' ten finalists');
   assert(body.includes('9')||body.includes('९'),localeName+' nine ranking winners');
   assert(!(/9\s*\+\s*10/.test(t.guidePrizeText)),localeName+' no disjoint 9+10');
-  assert(t.news05lead.length>30,localeName+' clear summary');
-  assert(t.awardOverviewTitle.length>40,localeName+' clear title');
+  for(const [name,text] of [['lead',t.news05lead],['title',t.awardOverviewTitle]]){
+   assert(/(?:10|१०)/.test(text),localeName+' '+name+' clearly names the 10 finalists');
+   assert(/(?:9|९)/.test(text),localeName+' '+name+' clearly names the top 9');
+  }
  }
 });
 test('home teaser voice markup and active zh/en/ne translations use correct same-ten cash amounts',()=>{
