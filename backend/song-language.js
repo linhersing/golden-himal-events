@@ -12,5 +12,5 @@ export function validSongLanguage(value){
  // "Other" is a UI choice, not an actual language; it must be specified.
  if(name==='Other'||name.length<2||name.length>60)return false;
  // Human-language names, including Nepali/Indic scripts, accents, spaces and hyphens.
- return /^[\p{L}\p{M}][\p{L}\p{M} .'-\u2019()/]{1,59}$/u.test(name);
+ return /^[\p{L}\p{M}][\p{L}\p{M} .'’()\-]{1,59}$/u.test(name);
 }
