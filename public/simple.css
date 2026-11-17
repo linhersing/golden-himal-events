@@ -1415,3 +1415,14 @@ body[data-page="member"] .demo-edit-card label{min-width:0}
 body[data-page="member"] .demo-edit-card .demo-extra-grid input,
 body[data-page="member"] .demo-edit-card .demo-extra-grid select{width:100%;box-sizing:border-box}
 @media(max-width:600px){body[data-page="member"] .registration-roadmap{grid-template-columns:1fr}}
+
+body[data-page="member"] .eligibility-private-upload{
+ background:#fff;border:1px solid #d3b48c;border-radius:14px;padding:15px 17px;
+ margin:15px 0;display:grid;gap:12px;
+}
+body[data-page="member"] .eligibility-private-upload[hidden]{display:none}
+body[data-page="member"] .eligibility-private-upload label{display:grid;gap:8px;font-weight:750;color:#603e2a}
+body[data-page="member"] .eligibility-private-upload input[type=file]{width:100%;max-width:100%;box-sizing:border-box}
+body[data-page="member"] .eligibility-private-upload button{justify-self:start}
+body[data-page="member"] .eligibility-private-upload [role=status]{font-size:.9rem;margin:0;line-height:1.6}
+@media(max-width:600px){body[data-page="member"] .eligibility-private-upload button{width:100%}}

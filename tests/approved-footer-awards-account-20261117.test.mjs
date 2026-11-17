@@ -100,3 +100,17 @@ test('November 16 frontline 2027 form has up to five DEMO slots, dates, safe pro
  assert.match(js,/verifiedDemoEntries/);
  assert.match(css,/\.demo-extra-grid/);
 });
+
+test('private qualification upload is fail-closed unless R2, owner checks, and explicit flag exist',()=>{
+ const member=read('public/member.html'),backend=read('backend/staging-e2e.js'),js=read('public/simple.js');
+ assert.match(member,/id="eligibility-private-upload"/);
+ assert.match(member,/id="eligibility-upload-file"/);
+ assert.match(backend,/STAGING_ELIGIBILITY_UPLOAD_ENABLED==='true'/);
+ assert.match(backend,/!env.STAGING_MEDIA/);
+ assert.match(backend,/invalid_file_signature/);
+ assert.match(backend,/eligibility_upload_locked/);
+ assert.match(js,/eligibilityUploadEnabled=v\.eligibility_upload_enabled===true/);
+ assert.match(js,/has_eligibility_file/);
+ const config=read('wrangler.jsonc');
+ assert.doesNotMatch(config,/"STAGING_ELIGIBILITY_UPLOAD_ENABLED"\s*:\s*"true"/);
+});

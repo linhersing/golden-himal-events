@@ -332,3 +332,16 @@ test('2027 singer may add up to five separately described demo videos without mo
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
  expect(overflow).toBeLessThanOrEqual(1);
 });
+
+test('credential evidence remains hidden when private R2 is not bound, while five demos can be previewed',async({page})=>{
+ await page.route('**/api/e2e/**',async route=>{
+  const pathname=new URL(route.request().url()).pathname;
+  const data=pathname.endsWith('/me')?{ok:true,account:{id:'synthetic-proof-member',role:'member'},five_demo_enabled:false,eligibility_upload_enabled:false}:
+   pathname.endsWith('/applications')?{ok:true,applications:[]}:{ok:false,error:'not_found'};
+  await route.fulfill({status:data.ok?200:404,json:data});
+ });
+ await page.goto('/member.html#register');
+ await expect(page.locator('#eligibility-docs')).toContainText('安全');
+ await expect(page.locator('#eligibility-private-upload')).toBeHidden();
+ await expect(page.locator('#demo-add')).toBeEnabled();
+});
