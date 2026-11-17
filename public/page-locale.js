@@ -299,6 +299,10 @@ Object.assign(texts.ne,{
  proofWhen:"अपलोड खुल्ने निश्चित मिति घोषणा भएको छैन; सुरक्षित निजी भण्डारण र अनुमति परीक्षणपछि मात्र खुल्नेछ।",
  demoFeeBoundary:"जनवरी अडिसन निःशुल्क छ, अवधि २०२७ जनवरी १–३१ (नेपाल समय)। धेरै डेमो सुरक्षित गर्न अलग स्वीकृति चाहिन्छ।"
 });
+/* Published 2026-11-16 planned 2027 stages; all local times Nepal. */
+Object.assign(texts.zh,{scheduleRound1:'2月12日｜第一次初選 · 免費（預定）',scheduleRound2:'3月5日｜第二次初選 · NPR 300（預定）',scheduleRound3:'3月12日｜晉級賽 · NPR 500（預定）',scheduleFinal:'4月14日｜季度總決賽（預定）',scheduleCaveat:'以上為預定日期。確切時間、地點和名額以主辦單位公告為準，均採尼泊爾當地時間；資料缺漏或影片無法開啟者，接獲通知後48小時內可補正一次。'});
+Object.assign(texts.en,{scheduleRound1:'Feb 12 · First qualifier · Free (planned)',scheduleRound2:'Mar 5 · Second qualifier · NPR 300 (planned)',scheduleRound3:'Mar 12 · Advancement round · NPR 500 (planned)',scheduleFinal:'Apr 14 · Quarterly final (planned)',scheduleCaveat:'Dates are provisional. Organizers will confirm exact times, venues and quotas; Nepal local time applies. A requested correction is due within 48 hours, once only.'});
+Object.assign(texts.ne,{scheduleRound1:'फेब्रुअरी १२ · पहिलो छनोट · निःशुल्क (प्रस्तावित)',scheduleRound2:'मार्च ५ · दोस्रो छनोट · NPR 300 (प्रस्तावित)',scheduleRound3:'मार्च १२ · अगाडि बढ्ने चरण · NPR 500 (प्रस्तावित)',scheduleFinal:'अप्रिल १४ · त्रैमासिक अन्तिम चरण (प्रस्तावित)',scheduleCaveat:'मितिहरू प्रस्तावित हुन्। ठ्याक्कै समय, स्थान र सिट आयोजकले घोषणा गर्नेछन्; नेपालको स्थानीय समय लागु हुन्छ। विवरण अपुग भए सूचना पाएपछि ४८ घण्टाभित्र एक पटक सच्याउन सकिन्छ।'});
 const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
