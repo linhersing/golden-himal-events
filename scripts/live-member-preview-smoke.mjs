@@ -25,6 +25,12 @@ async function run() {
     const body=await (await read(path)).text();
     for(const marker of markers)if(!body.includes(marker))throw Error(path+' missing current UI marker '+JSON.stringify(marker));
     if(path==='/member.html'){
+      if(!body.includes('<section class="panel application-panel" id="application-details"')||
+         !body.includes('id="application-form-heading"')||
+         body.includes('<details class="panel application-panel"'))
+        throw Error('The form must be directly expanded with no disclosure toggle');
+      if(body.includes('Muse audition information'))
+        throw Error('Contributor name must not appear in public registration title');
       const newEntry=body.indexOf('id="new-application-callout"');
       const application=body.indexOf('id="application-details"');
       const existing=body.indexOf('class="panel member-home"');
@@ -32,7 +38,7 @@ async function run() {
       if(!(newEntry>=0&&newEntry<application&&application<existing&&existing<management))
         throw Error('member user journey is not registration > form > saved data > management');
       if(!body.includes('id="muse-test-fields" class="full muse-test-fields" disabled'))
-        throw Error('Muse contact fields must remain disabled until D1 privacy release');
+        throw Error('Private fields should initialize disabled before an authenticated JS capability check');
     }
     console.log('PASS current member preview '+path);
   }
