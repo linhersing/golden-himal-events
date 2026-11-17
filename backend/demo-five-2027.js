@@ -1,8 +1,9 @@
 /* 2026-11-17 Nepal 2027 audition: up to five songs per singer.
  * All storage remains gated; per-video judging must be separately deployed.
  * The legacy single demo remains the only enabled TEST submission. */
+import {validSongLanguage,SUGGESTED_SONG_LANGUAGES} from './song-language.js';
 export const FIVE_DEMO_LIMIT=5;
-export const LANGUAGES=['Nepali','English','Hindi','Maithili','Bhojpuri','Tamang','Chinese','Other'];
+export const LANGUAGES=SUGGESTED_SONG_LANGUAGES;
 export function parseFiveDemos(body,validLink){
  if(!Object.hasOwn(body||{},'demo_entries'))return {entries:null};
  const rows=body.demo_entries;
@@ -17,7 +18,7 @@ export function parseFiveDemos(body,validLink){
    entry[k]=r[k].trim();
   }
   if(!entry.song_title||entry.song_title.length>100||!entry.original_artist||entry.original_artist.length>100
-   ||!LANGUAGES.includes(entry.song_language)||entry.demo_url.length>1000||!validLink(entry.demo_url))
+   ||!validSongLanguage(entry.song_language)||entry.demo_url.length>1000||!validLink(entry.demo_url))
    return {error:'invalid_demo_fields'};
   const norm=entry.demo_url.toLowerCase();
   if(urls.has(norm))return {error:'duplicate_demo_url'};
