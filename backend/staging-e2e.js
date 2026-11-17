@@ -424,7 +424,7 @@ async function mediaUpload(request,env,a){
  // Only a separately reviewed private eligibility lane may bypass the
  // existing links-only VIDEO workflow. Never auto-enable it via deployment.
  const privateProof=kind==='eligibility'&&env.STAGING_ELIGIBILITY_UPLOAD_ENABLED==='true';
- if(kind==='eligibility'&&!privateProof)return deny('eligibility_upload_not_open',503);
+ if(kind==='eligibility'&&!privateProof&&env.STAGING_SUBMISSION_MODE==='links')return deny('eligibility_upload_not_open',503);
  if(env.STAGING_SUBMISSION_MODE==='links'&&!privateProof)return deny('link_submission_only',409);
  if(!env.STAGING_MEDIA)return deny('r2_bucket_not_configured',503);
  const app=await selectApplication(env.DB,url.searchParams.get('application'),a.id);
