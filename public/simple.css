@@ -1317,3 +1317,21 @@ body[data-page="member"] #member-manage-note{margin:10px 0 0}
 @media print{
  .ghp-universal-footer-brand{background-image:none!important;background-color:#f5efe7!important}
 }
+
+/* 2026-11-17: Singer portal task order. New entry FIRST, destructive
+   account controls LAST. Existing-entry dashboard remains visible after login. */
+body[data-page="member"] #member-panel:not([hidden]){
+ display:flex;flex-direction:column;min-width:0;
+}
+body[data-page="member"] #member-panel > #new-application-callout{order:0}
+body[data-page="member"] #member-panel > #application-details{order:1}
+body[data-page="member"] #member-panel > .member-home{order:2}
+body[data-page="member"] #member-panel > #member-account-tools{order:3}
+body[data-page="member"] #member-account-tools{
+ margin:24px 0 12px;background:#f8f6f3;
+ border:1px solid #d6c8bc;
+}
+body[data-page="member"] #member-account-tools .btn-danger-outline{
+ background:#fff;color:#9b342b;border-color:#bd7c73;
+}
+body[data-page="member"] #member-account-tools .btn-danger-outline:hover{background:#fff2ef}

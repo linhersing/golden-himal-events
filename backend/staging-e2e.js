@@ -227,6 +227,14 @@ async function submitApplication(request,env,a){
  const frontline=parseFrontline2027(b);
  if(frontline.error)return deny(frontline.error,frontline.status);
  if(frontline.entry&&!await frontline2027Ready(env.DB))return deny('frontline_2027_registration_unavailable',503);
+ const priorRegion=frontline.entry
+  ?await env.DB.prepare(`SELECT f.competition_region FROM e2e_frontline_2027_registration f
+     JOIN e2e_applications p ON p.id=f.application_id
+     WHERE p.account_id=? LIMIT 1`).bind(a.id).first()
+  :null;
+ if(priorRegion&&priorRegion.competition_region!==frontline.entry.competition_region)
+  return deny('competition_region_locked',409);
+
  const location=parseLocation(b);
  if(location.error)return deny(location.error,location.status);
  if(location.location&&!await entrantLocationsReady(env.DB))return deny('location_storage_unavailable',503);

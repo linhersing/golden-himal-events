@@ -42,3 +42,12 @@ test('Palace footer reuses approved Chitwan photo under mobile-safe gradients',(
  const img=readFileSync(new URL('../public/images/gh-real-chitwan-view-20261113.webp',import.meta.url));
  assert.ok(img.byteLength>20000&&img.byteLength<300000,'existing real panorama must stay small and unchanged');
 });
+
+test('first-time singer sees application action before account deletion, with no URL changes',()=>{
+ const h=read('public/member.html');
+ assert.ok(h.indexOf('id="new-application-callout"')<h.indexOf('id="member-account-tools"'));
+ assert.ok(h.indexOf('id="application-details"')<h.indexOf('id="member-account-tools"'));
+ assert.ok(h.indexOf('id="member-manage-delete"')>h.indexOf('id="application-form"'));
+ const css=read('public/simple.css');
+ assert.match(css,/#member-panel > #member-account-tools\{order:3\}/);
+});

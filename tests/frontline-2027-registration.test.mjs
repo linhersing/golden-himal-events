@@ -29,3 +29,12 @@ test('legacy D1 is not destructively changed and new region is not inferred from
  assert.match(backend,/frontline_2027_registration_unavailable/);
  assert.match(backend,/insertFrontline2027/);
 });
+
+test('cross-region account guard is checked before the application is written',()=>{
+ assert.match(backend,/competition_region_locked/);
+ assert.match(backend,/priorRegion\.competition_region!==frontline\.entry\.competition_region/);
+ const lock=readFileSync(new URL('../backend/migrations/1012_frontline_region_lock_STAGING_ONLY.sql',import.meta.url),'utf8');
+ assert.match(lock,/BEFORE INSERT ON e2e_frontline_2027_registration/);
+ assert.match(lock,/locked\.competition_region<>NEW\.competition_region/);
+ assert.doesNotMatch(lock,/DROP TABLE|DELETE FROM|UPDATE e2e_/i);
+});
