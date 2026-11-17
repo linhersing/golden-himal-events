@@ -1335,3 +1335,14 @@ body[data-page="member"] #member-account-tools .btn-danger-outline{
  background:#fff;color:#9b342b;border-color:#bd7c73;
 }
 body[data-page="member"] #member-account-tools .btn-danger-outline:hover{background:#fff2ef}
+
+/* Muse sample fields remain visually outlined, disabled until protected D1 is ready. */
+body[data-page="member"] .muse-test-fields{border:1px solid #dbc29e;border-radius:15px;background:#fffaf1;padding:clamp(15px,2.4vw,26px);margin:8px 0}
+body[data-page="member"] .muse-test-fields legend{color:#68412d;font-size:1.15rem;font-weight:800;padding:0 8px}
+body[data-page="member"] .muse-fields-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+body[data-page="member"] .muse-fields-grid .field.full{grid-column:1/-1}
+body[data-page="member"] .muse-fields-grid textarea{min-height:85px}
+body[data-page="member"] .muse-test-fields[disabled] input,
+body[data-page="member"] .muse-test-fields[disabled] textarea{opacity:.7;cursor:not-allowed;background:#eeeae6}
+body[data-page="member"] .muse-region-lock{font-weight:700;color:#714b2a}
+@media(max-width:720px){body[data-page="member"] .muse-fields-grid{grid-template-columns:1fr}}

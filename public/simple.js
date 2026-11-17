@@ -91,7 +91,7 @@ const safeLink=(url)=>{try{const u=new URL(url);return u.protocol==='https:'?u.h
 const formValues=form=>Object.fromEntries(new FormData(form));
 const mt=k=>window.GHVLocale?.t(k)||k;
 const staff=page==='back',prefix=staff?'back':'member';
-let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,frontlineFormEnabled=false;
+let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,frontlineFormEnabled=false,museFormEnabled=false;
 const statusBox=$(prefix+'-status');
 function permittedPhoto(url){const href=safeLink(url);if(!href)return null;try{const x=new URL(href);if(x.username||x.password||(x.port&&x.port!=='443')||x.hostname==='localhost'||x.hostname.endsWith('.local')||x.hostname.endsWith('.internal'))return null;return href}catch{return null}}
 function profileImage(url,large=false){
@@ -189,6 +189,13 @@ function authUI(signedIn){
  }
 }
 function authForms(email){$(prefix+'-email-form').hidden=!email;$(prefix+'-code-form').hidden=email}
+function setupMuseForm(ready){
+ museFormEnabled=ready===true;
+ const box=$('muse-test-fields'),notice=$('muse-fields-notice');
+ if(!box)return;
+ box.disabled=!museFormEnabled;
+ if(notice){notice.dataset.l=museFormEnabled?'museEnabled':'musePending';notice.textContent=mt(notice.dataset.l);}
+}
 function setupFrontlineForm(enabled){
  if(page!=='member')return;
  const next=$('frontline-test-fields'),legacy=$('legacy-category-field'),form=$('application-form');
@@ -225,6 +232,7 @@ async function loadSession(){try{
  if(staff)staffTabs();else{
   setupProfileFields(v.profile_enabled===true);
   setupFrontlineForm(v.frontline_form_enabled===true);
+  setupMuseForm(v.muse_form_enabled===true);
   const nationwide=v.nepal_locations_enabled===true,location=$('entrant-location-detail'),field=location.querySelector('input');
   location.hidden=!nationwide;field.disabled=!nationwide;field.required=nationwide;
   const note=$('province-note');note.dataset.l=nationwide?'provinceHelp':'provincePending';note.textContent=mt(note.dataset.l);
@@ -543,6 +551,7 @@ function showEdit(a){
   ['original_artist','artist'],['song_language','songLang'],['demo_url','videoUrl'],
   ...(a.affiliation?[['affiliation','occupation']]:[]),...(a.song_key?[['song_key','songKey']]:[]),
   ...(locationsEnabled?[['province','province'],['location_basis','basis'],['location_detail','locationDetail']]:[]),
+  ...(museFormEnabled?[['full_name','museFullName'],['contact_phone','musePhone'],['contact_email','museEmail'],['city','museCity'],['street_address','museStreet'],['educational_background','museEducation'],['short_description','museDescription'],['musical_training','museTraining']]:[]),
   ...(profileEnabled?[['gender','profileGender'],['photo_url_1','profileMainPhoto'],['photo_url_2','profilePhoto2'],['photo_url_3','profilePhoto3']]:[])
  ];
  for(const [name,key] of fields){
@@ -555,9 +564,11 @@ function showEdit(a){
   }else if(['song_language','province','location_basis'].includes(name)){
    input=$('application-form').elements[name].cloneNode(true);input.removeAttribute('id');
   }else{
-   input=node('input');
+   input=['educational_background','short_description','musical_training'].includes(name)?node('textarea'):node('input');
    if(name==='demo_url'||name.startsWith('photo_url_'))input.type='url';
-   input.maxLength=name==='demo_url'?1000:name.startsWith('photo_url_')?600:name==='location_detail'?120:100;
+   if(name==='contact_email')input.type='email';
+   if(name==='contact_phone')input.type='tel';
+   input.maxLength={"full_name":120,"contact_phone":32,"contact_email":180,"city":100,"street_address":160,"educational_background":400,"short_description":500,"musical_training":400}[name]||(name==='demo_url'?1000:name.startsWith('photo_url_')?600:name==='location_detail'?120:100);
   }
   input.name=name;input.value=a[name]||'';
   input.required=!['gender','photo_url_1','photo_url_2','photo_url_3'].includes(name);

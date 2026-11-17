@@ -131,10 +131,24 @@
 <label class="field"><span data-l="profilePhoto3">補充照片 3</span><input name="photo_url_3" type="url" maxlength="600" placeholder="https://example.com/photo3.jpg"></label></details>
 <label class="check"><input name="profile_consent" type="checkbox" id="entrant-profile-consent"><span data-l="profileConsent">我同意主辦方及授權評審查看所填照片網址及性別；外部圖片服務可能取得瀏覽器連線資訊。</span></label>
 </fieldset>
+<fieldset id="muse-test-fields" class="full muse-test-fields" disabled aria-labelledby="muse-fields-title">
+<legend id="muse-fields-title" data-l="museTitle">Muse audition information</legend>
+<p class="field-hint" data-l="museInfo">Reference fields: full name, phone, email, province, city, street/Tol address, educational background, short description, and musical education/training. Province is selected below.</p>
+<p id="muse-fields-notice" class="helper-banner" data-l="musePending" role="status">Secure private storage is not yet approved. These controls are disabled; no personal details will be submitted or saved.</p>
+<div class="muse-fields-grid"><label class="field"><span data-l="museFullName">Full name *</span><input type="text" name="full_name" maxlength="120" autocomplete="off" required></label>
+<label class="field"><span data-l="musePhone">Phone number *</span><input type="tel" name="contact_phone" maxlength="32" autocomplete="off" required></label>
+<label class="field"><span data-l="museEmail">Email address *</span><input type="email" name="contact_email" maxlength="180" autocomplete="off" required></label>
+<label class="field"><span data-l="museCity">City *</span><input type="text" name="city" maxlength="100" autocomplete="off" required></label>
+<label class="field"><span data-l="museStreet">Street address / Tol address *</span><input type="text" name="street_address" maxlength="160" autocomplete="off" required></label>
+<label class="field full"><span data-l="museEducation">Educational background *</span><textarea name="educational_background" rows="3" maxlength="400" required></textarea></label>
+<label class="field full"><span data-l="museDescription">Short description *</span><textarea name="short_description" rows="3" maxlength="500" required></textarea></label>
+<label class="field full"><span data-l="museTraining">Musical education / training experience *</span><textarea name="musical_training" rows="3" maxlength="400" required></textarea></label></div>
+</fieldset>
 <label class="field"><span data-l="window">Audition window *</span><select name="round_code"><option value="2027-01" data-l="jan">January 2027</option><option value="2027-04" data-l="apr" hidden disabled>April 2027</option></select><small class="field-hint" data-l="windowHelp">Choose the online audition window.</small></label>
 <fieldset id="frontline-test-fields" class="full" hidden disabled aria-labelledby="frontline-test-legend">
 <legend id="frontline-test-legend" data-l="frontlineHeading">2027 單一競賽組別｜參賽地區與資格（TEST）</legend>
 <p class="field-hint" data-l="frontlineScope">A區 Lumbini／B區 Bagmati 是參加實體比賽的地區，不是居住省份；兩區只屬同一競賽組別。</p>
+<p class="field-hint full muse-region-lock" data-l="museRegionLock">選定 A 區 Lumbini 或 B 區 Bagmati 並確認後，後續實體選拔不得自行跨區；與居住省份不同。</p>
 <label class="field"><span data-l="frontlineArea">選擇參賽地區 *</span><select name="competition_region" required><option value="A" data-l="frontlineA">A區 · Lumbini</option><option value="B" data-l="frontlineB">B區 · Bagmati</option></select></label>
 <label class="field"><span data-l="frontlineBasis">參賽資格 *</span><select name="eligibility_basis" required><option value="enrolled" data-l="frontlineStudent">大專以上在學生</option><option value="graduated" data-l="frontlineGraduate">大專以上畢業者</option></select></label>
 </fieldset>
