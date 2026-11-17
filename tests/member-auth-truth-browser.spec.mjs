@@ -302,3 +302,33 @@ test('signed-in singer can type fictional private fields while server-side stora
  await expect(page.locator('#muse-fields-notice')).toContainText('只供介面測試');
  await expect(page.locator('#member-panel')).toBeVisible();
 });
+
+test('2027 singer may add up to five separately described demo videos without mobile overflow',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.route('**/api/e2e/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  const data=path.endsWith('/me')?{ok:true,account:{id:'fictional-five-demo',role:'member'},five_demo_enabled:false}:
+   path.endsWith('/applications')?{ok:true,applications:[]}:{ok:false,error:'not_found'};
+  await route.fulfill({status:data.ok?200:404,json:data});
+ });
+ await page.goto('/member.html#register');
+ await expect(page.locator('#application-details')).toBeVisible();
+ await expect(page.locator('#demo-counter')).toContainText('1 / 5');
+ await expect(page.locator('#demo-add')).toBeEnabled();
+ for(let i=2;i<=5;i++){
+  await page.locator('#demo-add').click();
+  const card=page.locator('[data-demo-slot="'+i+'"]');
+  await expect(card).toBeVisible();
+  await expect(card.locator('[name="demo_'+i+'_url"]')).toBeEnabled();
+  await expect(card.locator('[name="demo_'+i+'_title"]')).toHaveAttribute('required','');
+ }
+ await expect(page.locator('#demo-counter')).toContainText('5 / 5');
+ await expect(page.locator('#demo-add')).toBeDisabled();
+ await expect(page.locator('[data-demo-slot="5"]')).toBeVisible();
+ await page.locator('[data-demo-remove="3"]').click();
+ await expect(page.locator('#demo-counter')).toContainText('2 / 5');
+ await expect(page.locator('[data-demo-slot="3"]')).toBeHidden();
+ await expect(page.locator('[data-demo-slot="5"]')).toBeHidden();
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+ expect(overflow).toBeLessThanOrEqual(1);
+});

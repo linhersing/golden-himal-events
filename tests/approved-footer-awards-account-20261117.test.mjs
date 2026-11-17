@@ -83,3 +83,20 @@ test('member form is expanded by default and neutral labels replace collaborator
  assert.match(locale,/"museTitle":"報名資料"/);
  assert.doesNotMatch(locale,/Muse 海選個人資料|Muse audition information|Muse अडिसन जानकारी/);
 });
+
+test('November 16 frontline 2027 form has up to five DEMO slots, dates, safe proof boundary',()=>{
+ const html=read('public/member.html'),js=read('public/simple.js'),locale=read('public/page-locale.js'),css=read('public/simple.css');
+ for(let i=2;i<=5;i++){assert.match(html,new RegExp('data-demo-slot="'+i+'"'));assert.match(html,new RegExp('name="demo_'+i+'_url"'));}
+ assert.match(html,/id="demo-add"/);
+ assert.match(html,/data-l="entryPeriodDates"/);
+ assert.match(html,/data-l="scheduleCaveat"/);
+ assert.match(html,/data-l="proofUniversity"/);
+ assert.match(html,/data-l="proofCommunity"/);
+ assert.doesNotMatch(html,/大學組：有效學生證|社會組：年滿18歲證明/);
+ assert.doesNotMatch(html,/at least 14 days/);
+ assert.match(locale,/2027年1月1日至1月31日/);
+ assert.match(js,/selectedDemos.length>1&&!fiveDemoEnabled/);
+ assert.match(js,/payload.demo_entries=selectedDemos/);
+ assert.match(js,/verifiedDemoEntries/);
+ assert.match(css,/\.demo-extra-grid/);
+});

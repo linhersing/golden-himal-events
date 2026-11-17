@@ -1398,3 +1398,20 @@ body[data-page="member"] .evidence-required h3{margin:0 0 8px;font-size:1.1rem;c
 body[data-page="member"] .evidence-required ul{margin:9px 0;padding-left:25px;line-height:1.8}
 body[data-page="member"] .proof-boundary{font-size:.9rem;font-weight:600;color:#71583f;margin-bottom:0}
 @media(max-width:600px){body[data-page="member"] .demo-extra-grid{grid-template-columns:1fr}body[data-page="member"] .demo-multi{padding:15px 13px}body[data-page="member"] .registration-deadline{padding:14px}}
+
+body[data-page="member"] .registration-roadmap{
+ margin:14px 0 10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+body[data-page="member"] .registration-roadmap>div{
+ padding:10px 12px;border:1px solid #e2cdae;border-radius:10px;
+ background:#fffdf8;color:#744b31;line-height:1.45;font-size:.88rem;
+}
+body[data-page="member"] .demo-edit-series{margin:18px 0;padding:16px;border:1px solid #d8c5a9;border-radius:13px}
+body[data-page="member"] .demo-edit-series legend{font-weight:800;color:#603c26}
+body[data-page="member"] .demo-edit-card{margin:12px 0;padding:14px;background:#fffaf2;border-radius:12px;border:1px solid #deceb5}
+body[data-page="member"] .demo-edit-card[hidden]{display:none}
+body[data-page="member"] .demo-edit-card h4{margin:0 0 8px;color:#5f432f}
+body[data-page="member"] .demo-edit-card label{min-width:0}
+body[data-page="member"] .demo-edit-card .demo-extra-grid input,
+body[data-page="member"] .demo-edit-card .demo-extra-grid select{width:100%;box-sizing:border-box}
+@media(max-width:600px){body[data-page="member"] .registration-roadmap{grid-template-columns:1fr}}
