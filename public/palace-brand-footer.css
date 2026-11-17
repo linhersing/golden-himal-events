@@ -25,3 +25,43 @@
  .ghp-universal-footer-brand p[lang=en]{font-size:clamp(.96rem,4vw,1.13rem)}
 }
 @media print{.ghp-universal-footer-brand{display:none!important}}
+
+
+/* 2026-11-17: approved sharp, full-bleed, text-first Palace brand ending. */
+.ghp-universal-footer-brand{
+ box-sizing:border-box!important;position:relative!important;left:auto!important;
+ width:100%!important;max-width:none!important;margin:28px 0 0!important;
+ padding:clamp(32px,5vw,68px) clamp(16px,4vw,54px)!important;
+ display:flex!important;flex-direction:column!important;align-items:center!important;
+ justify-content:center!important;gap:clamp(8px,1.3vw,14px)!important;
+ text-align:center!important;color:#75502d!important;background:#f5efe7!important;
+ border:0!important;border-top:1px solid #e1d2bd!important;
+ box-shadow:none!important;
+}
+.ghp-universal-footer-brand .ghp-footer-full-name{
+ display:block;font:700 clamp(1.45rem,4vw,3rem)/1.16 Georgia,"Noto Serif",serif;
+ letter-spacing:.035em;color:#704023;max-width:100%;
+}
+.ghp-universal-footer-brand p[lang=en]{
+ margin:0!important;font:700 clamp(1rem,2.35vw,1.75rem)/1.35 Georgia,serif!important;
+ color:#77502b!important;
+}
+.ghp-universal-footer-brand p[lang=ne]{
+ margin:0!important;font:600 clamp(.92rem,1.9vw,1.28rem)/1.5 "Noto Serif Devanagari","Noto Sans Devanagari",serif!important;
+ color:#896746!important;
+}
+.ghp-universal-footer-brand .ghp-universal-logo-window{
+ width:min(640px,100%)!important;max-width:100%!important;
+ aspect-ratio:auto!important;overflow:visible!important;flex:none!important;
+ display:block!important;
+}
+.ghp-universal-footer-brand .ghp-universal-logo-window img{
+ display:block!important;width:100%!important;height:auto!important;
+ max-width:100%!important;object-fit:contain!important;
+ object-position:center!important;transform:none!important;margin:0 auto!important;
+}
+@media(max-width:500px){
+ .ghp-universal-footer-brand{padding:28px 14px 32px!important}
+ .ghp-universal-footer-brand .ghp-footer-full-name{letter-spacing:.005em}
+}
+@media print{.ghp-universal-footer-brand{page-break-inside:avoid}}

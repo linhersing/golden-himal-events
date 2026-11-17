@@ -19,6 +19,12 @@ Object.assign(translations.en,{"contactHeading":"Questions about the contest?","
 Object.assign(translations.ne,{"contactHeading":"प्रतियोगिताबारे प्रश्न छ?","contactIntro":"प्रतियोगिता, सहभागी हुने नियम वा कार्यक्रमबारे प्रश्न भए Golden Himal Palace को आधिकारिक सम्पर्क नम्बरमा फोन गर्नुहोस्।","contactCall":"फोन गर्नुहोस्","contactNote":"यो नेपालको मोबाइल नम्बर हो; सेवा प्रदायकको शुल्क लाग्न सक्छ।","contactShortcut":"प्रश्न छ? सम्पर्क गर्नुहोस् →"});
 
 
+
+/* 2026-11-17 prize labels for four responsive award cards. */
+Object.assign(translations.en,{rewardFirst:'First prize · 1 winner',rewardSecond:'Second prize · 3 winners, each',rewardThird:'Third prize · 5 winners, each',rewardFinalist:'Finalists · 10 singers, each'});
+Object.assign(translations.ne,{rewardFirst:'प्रथम पुरस्कार · १ जना',rewardSecond:'दोस्रो पुरस्कार · ३ जना, प्रत्येक',rewardThird:'तेस्रो पुरस्कार · ५ जना, प्रत्येक',rewardFinalist:'फाइनलमा छानिएका १० जना, प्रत्येक'});
+Object.assign(translations.zh,{rewardFirst:'第一名 · 1位',rewardSecond:'第二名 · 3位，各得',rewardThird:'第三名 · 5位，各得',rewardFinalist:'決賽入圍 · 10位，各得'});
+
 /* Audience copy: separate rules from updates; talent discovery is an aim, not a training/employment guarantee. */
 Object.assign(translations.zh,{"headline":"下一位歌唱新星，會是你嗎？","talentLead":"不只是一場比賽，更希望發掘有潛力的歌手與社群創作者，讓好聲音被更多人聽見。","news":"比賽規則","newsSub":"報名前必讀｜資格、影片與獎項","announcementsShortcut":"最新公告・入選與賽事通知 →"});
 Object.assign(translations.en,{"headline":"Could you be the next singing star?","talentLead":"More than a contest, Golden Himal Voice aims to discover promising singers and digital creators, giving talented voices a chance to be heard.","news":"Contest rules","newsSub":"Read before entering · Eligibility, video & prizes","announcementsShortcut":"Latest updates · Selections & event notices →"});
@@ -449,6 +455,12 @@ async function renderMember(){
  if(editSlot){editSlot.replaceChildren();editSlot.hidden=true;}
  const v=await api('applications'),rows=Array.isArray(v.applications)?v.applications:[];
  const hasEntries=rows.length>0,first=rows[0];
+ const manageEdit=$('member-manage-edit'),manageNote=$('member-manage-note');
+ const editable=rows.find(memberCanEdit);
+ if(manageEdit){manageEdit.disabled=!editable;manageEdit.onclick=editable?()=>showEdit(editable):null;}
+ if(manageNote)manageNote.textContent=editable
+  ?'可修改尚未進入評審或晉級程序的測試報名。'
+  :hasEntries?'目前的報名已進入鎖定階段；如需更正，請聯繫主辦單位。':'尚未有報名資料，請先建立一筆測試報名。';
  // The API must explicitly open the later TEST round; a January entry alone is not permission.
  const secondAudition=hasEntries&&v.next_audition_round==='2027-04';
  const callout=$('new-application-callout'),form=$('application-details');
@@ -751,6 +763,18 @@ async function renderJudge(){
 
 if(page==='member'){
  role='member';setupAuth();
+ $('member-manage-delete')?.addEventListener('click',()=>{
+  if(!account||account.role!=='member'){status('請先登入本人會員帳號。',true);return;}
+  if(!confirm('刪除測試會員將永久清除你的測試帳號、報名與相關資料；這項操作無法復原。確定繼續？'))return;
+  const phrase=prompt('最後確認：請輸入 DELETE，才會刪除你的測試帳號。');
+  if(phrase!=='DELETE'){status('已取消刪除。未修改任何資料。');return;}
+  run(async()=>{
+   const result=await api('delete-my-data',{});
+   if(result.deletedTestData!==true)throw Error('readback_mismatch');
+   account=null;challenge=null;authUI(false);authForms(true);
+   status('已刪除你的測試會員與相關測試報名資料。');
+  });
+ });
  window.addEventListener('ghv:languagechange',()=>{if(account&&account.role==='member'){if(document.querySelector('[data-editing]'))return;renderMember().catch(e=>status(friendlyError(e),true))}});
  const application=$('application-form'),details=$('application-details'),start=$('start-application');
  const syncStart=()=>start?.setAttribute('aria-expanded',String(details.open));

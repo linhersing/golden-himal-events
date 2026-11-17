@@ -99,7 +99,7 @@ test('Palace footer shows one prominent standalone logo below the three brand li
    await expect(footer.locator('p[lang=en]')).toHaveText(slogan);
    await expect(footer.locator('p[lang=ne]')).toHaveText(nepali);
    await expect(logo).toHaveCount(1);
-   await expect(logo).toHaveAttribute('src',route==='/'?'./images/ghp-clean-official-logo-20261116.png':'./images/brand-identity.png');
+   await expect(logo).toHaveAttribute('src','./images/ghp-clean-official-logo-20261116.png');
    await expect.poll(()=>logo.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
    const copyBox=await footer.locator('.ghp-footer-brand-copy').boundingBox();
    const logoBox=await logo.boundingBox();
@@ -143,13 +143,14 @@ test('All website and staging pages have footer brand without cropped or squashe
    await expect(footer.locator('p[lang=en]')).toHaveText(slogan);
    const window=footer.locator('.ghp-universal-logo-window');
    const logo=window.locator('img');
-   await expect(logo).toHaveAttribute('src','./images/brand-identity.png');
+   await expect(logo).toHaveAttribute('src','./images/ghp-clean-official-logo-20261116.png');
    await expect.poll(()=>logo.evaluate(el=>el.complete&&el.naturalWidth>0)).toBeTruthy();
    const ratio=await window.evaluate(el=>{
     const img=el.querySelector('img');
     return {viewport:el.getBoundingClientRect().height,image:img.getBoundingClientRect().height};
    });
-   expect(ratio.viewport/ratio.image).toBeLessThanOrEqual(.69);
+   expect(ratio.viewport/ratio.image).toBeGreaterThanOrEqual(.97);
+   expect(ratio.viewport/ratio.image).toBeLessThanOrEqual(1.03);
    const footerBox=await footer.boundingBox();
    expect(footerBox.x,route+' footer left at '+width+'px').toBeGreaterThanOrEqual(-1);
    expect(footerBox.x+footerBox.width,route+' footer right at '+width+'px').toBeLessThanOrEqual(width+1);
@@ -166,13 +167,8 @@ test('Palace footer image is clipped without distortion and stops below PALACE',
    const i=el.querySelector('img');
    return {crop:el.clientHeight,width:el.clientWidth,displayWidth:i.getBoundingClientRect().width,displayHeight:i.getBoundingClientRect().height,naturalWidth:i.naturalWidth,naturalHeight:i.naturalHeight};
   });
-  if(route==='/'){
-   expect(ratio.crop/ratio.displayHeight).toBeCloseTo(1,1);
-   await expect(image).toHaveAttribute('src','./images/ghp-clean-official-logo-20261116.png');
-  }else{
-   expect(ratio.crop/ratio.displayHeight).toBeLessThanOrEqual(.69);
-   await expect(image).toHaveAttribute('src','./images/brand-identity.png');
-  }
+  expect(ratio.crop/ratio.displayHeight).toBeCloseTo(1,1);
+  await expect(image).toHaveAttribute('src','./images/ghp-clean-official-logo-20261116.png');
   expect(ratio.displayWidth).toBeGreaterThan(0);
   expect(ratio.displayWidth/ratio.displayHeight).toBeCloseTo(ratio.naturalWidth/ratio.naturalHeight,1);
  }

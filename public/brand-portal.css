@@ -1683,3 +1683,37 @@ body[data-page="portal"] .ghp-home-header .locale{
   max-width:100%;
  }
 }
+
+
+/* 2026-11-17: user-approved wide Palace closing, clean official logo. */
+.brand-portal .portal-footer .ghp-footer-brand{
+ box-sizing:border-box;width:100%!important;max-width:none!important;
+ margin:20px 0 0!important;padding:clamp(33px,5vw,65px) 18px!important;
+ background:#f5efe7;border-top:1px solid #e1d2bd;
+ display:flex!important;flex-direction:column!important;align-items:center!important;
+ gap:clamp(8px,1.6vw,16px)!important;text-align:center!important;
+}
+.brand-portal .ghp-footer-brand .ghp-footer-brand-copy{width:100%;max-width:100%}
+.brand-portal .ghp-footer-brand strong{
+ font-size:clamp(1.45rem,4vw,3rem)!important;line-height:1.16!important;
+ letter-spacing:.035em!important;
+}
+.brand-portal .ghp-footer-brand p[lang=en]{
+ font-size:clamp(1rem,2.35vw,1.75rem)!important;margin-top:9px!important;
+}
+.brand-portal .ghp-footer-brand p[lang=ne]{
+ font-size:clamp(.92rem,1.9vw,1.28rem)!important;margin-top:5px!important;
+}
+.brand-portal .ghp-footer-logo-window{
+ width:min(640px,100%)!important;aspect-ratio:auto!important;
+ overflow:visible!important;flex:none!important;max-width:100%!important;
+}
+.brand-portal .ghp-footer-brand img.ghp-footer-main-logo{
+ display:block!important;width:100%!important;height:auto!important;
+ max-width:100%!important;object-fit:contain!important;
+ margin:0 auto!important;transform:none!important;
+}
+@media(max-width:500px){
+ .brand-portal .portal-footer .ghp-footer-brand{padding:29px 14px!important}
+ .brand-portal .ghp-footer-brand strong{letter-spacing:.005em!important}
+}
