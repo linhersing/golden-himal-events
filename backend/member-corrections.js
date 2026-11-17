@@ -32,10 +32,9 @@ export async function handleCorrectionRoute(request,env,account,{json,deny,bodyJ
   if(!id||stage.length<2||stage.length>60||!affiliation||affiliation.length>100||reason.length<8||reason.length>400)return deny('correction_invalid_input',422);
   const app=await db.prepare("SELECT id,stage_name,affiliation,phase,status FROM e2e_applications WHERE id=? AND account_id=?").bind(id,account.id).first();
   if(!app)return deny('application_not_found',404);
-  // If no score/review exists, the normal member edit flow must be used.
-  const hasScore=await db.prepare("SELECT (SELECT COUNT(*) FROM e2e_judge_scores WHERE application_id=?) + (SELECT COUNT(*) FROM e2e_live_scores WHERE application_id=?) + (SELECT COUNT(*) FROM e2e_promotion_events WHERE application_id=?) AS n")
-   .bind(id,id,id).first();
-  if(Number(hasScore?.n||0)===0&&['submitted','under_review'].includes(app.status)&&app.phase==='demo')return deny('correction_use_normal_edit',409);
+  // Locked entries may be approved by staff even before first score.
+  // Normal edits are preferred in the UI whenever can_edit=true; this route
+  // never rewrites songs, grades or source media, including approved entries.
   if(stage===app.stage_name&&affiliation===app.affiliation)return deny('correction_nothing_changed',422);
   const rid=uuid(),when=NOW();
   try{
