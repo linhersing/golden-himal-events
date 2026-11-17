@@ -82,10 +82,10 @@
 <h2 id="new-application-title" data-l="ready">Ready to enter the competition?</h2>
 <p data-l="startHelp">Tap below to open the form.</p>
 <p data-l="secondAuditionHelp" id="second-audition-help" hidden>Enter the April audition in your original category.</p>
-<button type="button" class="btn btn-primary btn-apply" id="start-application" aria-controls="application-details" aria-expanded="false"><span aria-hidden="true">✚ </span><span data-l="start">Start a new application</span> <span aria-hidden="true">↓</span></button>
+<button type="button" class="btn btn-primary btn-apply" id="start-application" aria-controls="application-details"><span aria-hidden="true">✚ </span><span data-l="goToForm">Go to registration form</span></button>
 </section>
-<details class="panel application-panel" id="application-details">
-<summary><span data-l="formTitle">Application form</span> <small data-l="formOpen">Tap to open / close</small></summary>
+<section class="panel application-panel" id="application-details" aria-labelledby="application-form-heading">
+<h2 id="application-form-heading" class="application-title" data-l="formTitle">Registration form</h2>
 <p class="form-lead" data-l="formLead">This is a legacy TEST form, not the final 2027 entry. Fields marked * are required.</p>
 <p class="helper-banner" data-l="frontlineFormBoundary" role="note">11月16日新版：1月海選免費，每人最多5支Demo，單一組別，選A區Lumbini或B區Bagmati。此測試表單仍使用舊欄位且暫只可送1支作品；尚未轉換成正式報名。請勿在測試階段上傳真實證件或付款。</p>
 <p class="helper-banner" data-l-html="demoRules">...</p>
@@ -107,8 +107,8 @@
 <label class="check"><input name="profile_consent" type="checkbox" id="entrant-profile-consent"><span data-l="profileConsent">我同意主辦方及授權評審查看所填照片網址及性別；外部圖片服務可能取得瀏覽器連線資訊。</span></label>
 </fieldset>
 <fieldset id="muse-test-fields" class="full muse-test-fields" disabled aria-labelledby="muse-fields-title">
-<legend id="muse-fields-title" data-l="museTitle">Muse audition information</legend>
-<p class="field-hint" data-l="museInfo">Reference fields: full name, phone, email, province, city, street/Tol address, educational background, short description, and musical education/training. Province is selected below.</p>
+<legend id="muse-fields-title" data-l="museTitle">Registration details</legend>
+<p class="field-hint" data-l="museInfo">Enter contact and education details. Select your province separately in the location section below.</p>
 <p id="muse-fields-notice" class="helper-banner" data-l="musePending" role="status">Secure private storage is not yet approved. These controls are disabled; no personal details will be submitted or saved.</p>
 <div class="muse-fields-grid"><label class="field"><span data-l="museFullName">Full name *</span><input type="text" name="full_name" maxlength="120" autocomplete="off" required></label>
 <label class="field"><span data-l="musePhone">Phone number *</span><input type="tel" name="contact_phone" maxlength="32" autocomplete="off" required></label>
@@ -165,7 +165,7 @@
 <div class="form-actions full"><button class="btn btn-primary" type="submit" data-l="save">Save my TEST application</button><small class="field-hint" data-l="saveHelp">Saving is not a paid or officially approved entry.</small></div>
 </form>
 <p class="privacy-notice" data-l="privacy">Portrait photo and identity documents are not collected in this rehearsal. The organizer must approve a secure upload method and privacy rules before these become required.</p>
-</details>
+</section>
 <div class="panel member-home">
 <div class="page-top member-home-title">
  <div><p class="section-eyebrow" data-l="homeKicker">MY ENTRY</p><h2 data-l="entryOverviewTitle">My details</h2></div>
