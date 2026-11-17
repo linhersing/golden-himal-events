@@ -67,3 +67,19 @@ test('Muse form is present but cannot collect private fields before approved mig
  assert.match(migration,/CREATE TABLE IF NOT EXISTS e2e_muse_audition_details/);
  assert.match(migration,/ON DELETE CASCADE/);
 });
+
+test('member form is expanded by default and neutral labels replace collaborator names',()=>{
+ const h=read('public/member.html'),js=read('public/simple.js'),locale=read('public/page-locale.js');
+ assert.match(h,/<section class="panel application-panel" id="application-details"/);
+ assert.match(h,/<h2 id="application-form-heading" class="application-title"/);
+ assert.doesNotMatch(h,/<details class="panel application-panel"/);
+ assert.doesNotMatch(h,/Muse audition information/);
+ assert.doesNotMatch(h,/aria-expanded="false"/);
+ assert.ok(h.includes('id="muse-test-fields" class="full muse-test-fields" disabled'));
+ assert.match(js,/box\.disabled=false/);
+ assert.match(js,/musePreviewCannotSave/);
+ assert.match(js,/if\(form\)form\.hidden=hasEntries&&!secondAudition/);
+ assert.doesNotMatch(js,/details\.addEventListener\('toggle',syncStart\)/);
+ assert.match(locale,/"museTitle":"報名資料"/);
+ assert.doesNotMatch(locale,/Muse 海選個人資料|Muse audition information|Muse अडिसन जानकारी/);
+});
