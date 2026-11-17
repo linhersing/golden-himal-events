@@ -165,6 +165,12 @@ function friendlyError(e){
  main_photo_required:'填寫補充照片前，請先提供主照片網址。',
  invalid_song_language:mt('invalidSongLanguage'),
  readback_mismatch:mt('readbackFail'),
+ correction_schema_pending:'更正申請功能尚待TEST資料庫部署，未儲存任何更正。',
+ correction_pending_or_database_error:'已有待審申請，或資料庫儲存未成功。',
+ correction_invalid_input:'請確認姓名、學校／職業，以及至少8個字的更正原因。',
+ correction_use_normal_edit:'這筆報名尚未評分，請使用「修改報名資料」直接儲存。',
+ correction_nothing_changed:'姓名與學校／職業都沒有變更。',
+ correction_readback_failed:'更正申請的資料庫讀回失敗，請聯絡管理員確認。',
  mock_payment_not_allowed:'This application cannot be checked out.',
  test_payment_result_unverified:'TEST payment could not be verified. No charge was made.'
  };
@@ -440,7 +446,11 @@ function drawEntry(a){
  const actions=node('div',undefined,'inline-actions member-entry-buttons');
  if(memberCanEdit(a)){
   const edit=node('button',mt('edit'),'btn btn-primary');edit.type='button';edit.onclick=()=>showEdit(a);actions.append(edit);
+ }else{
+  const correction=node('button','申請更正基本資料（不影響分數）','btn btn-soft');correction.type='button';
+  correction.onclick=()=>showCorrection(a);actions.append(correction);
  }
+
  const url=safeLink(a.demo_url);
  if(url){const link=node('a',mt('viewVideo'),'btn btn-soft');link.href=url;link.target='_blank';link.rel='noopener noreferrer';actions.append(link);}
  if(a.payment_status==='unpaid'&&a.status==='submitted'){
@@ -475,10 +485,15 @@ async function renderMember(){
  const hasEntries=rows.length>0,first=rows[0];
  const manageEdit=$('member-manage-edit'),manageNote=$('member-manage-note');
  const editable=rows.find(memberCanEdit);
- if(manageEdit){manageEdit.disabled=!editable;manageEdit.onclick=editable?()=>showEdit(editable):null;}
+ if(manageEdit){
+  manageEdit.disabled=!hasEntries;
+  manageEdit.textContent=editable?'修改報名資料':'申請更正基本資料（已評分）';
+  manageEdit.onclick=editable?()=>showEdit(editable):hasEntries?()=>showCorrection(first):null;
+ }
  if(manageNote)manageNote.textContent=editable
-  ?'可修改尚未進入評審或晉級程序的測試報名。'
-  :hasEntries?'目前的報名已進入鎖定階段；如需更正，請聯繫主辦單位。':'尚未有報名資料，請先建立一筆測試報名。';
+  ?'尚未評分的TEST報名可直接修改並經資料庫讀回確認。'
+  :hasEntries?'已評分的歌曲、影片及分數不得改寫；可申請更正姓名或學校／職業，由主辦方留下審核紀錄。':'尚未有報名資料，請先建立一筆測試報名。';
+
  // The API must explicitly open the later TEST round; a January entry alone is not permission.
  const secondAudition=hasEntries&&v.next_audition_round==='2027-04';
  const callout=$('new-application-callout'),form=$('application-details');
@@ -546,6 +561,52 @@ async function renderMember(){
  $('step-login')?.classList.add('active');
  $('step-apply')?.classList.toggle('active',hasEntries);
  $('step-checkout')?.classList.toggle('active',Boolean(paidEntry));
+}
+async function showCorrection(a){
+ // A graded entry is immutable as to scored song/video. Only display identity
+ // and affiliation are eligible for a traceable organizer-reviewed change.
+ const holder=$('member-edit-panel');if(!holder)return;
+ holder.hidden=false;holder.replaceChildren();
+ const box=node('div',undefined,'member-edit-box');box.dataset.editing='true';
+ box.append(node('h3','已評分報名｜申請更正基本資料'),
+  node('p','正式評分不會被刪除或覆蓋。更正姓名或學校／職業須經主辦審核；歌曲、影片與分數不可透過此表修改。','minor'));
+ holder.append(box);holder.scrollIntoView({block:'start',behavior:'smooth'});
+ let current;
+ try{current=await api('member-corrections')}
+ catch(e){status(friendlyError(e),true);return;}
+ if(!current.enabled){
+  box.append(node('p','更正申請功能尚待TEST資料庫增量遷移驗證；目前無法送出。請勿以此作為已修改成功。','feedback error'));
+  return;
+ }
+ const prior=(current.requests||[]).find(x=>x.application_id===a.id&&x.state==='pending');
+ if(prior){
+  box.append(node('p','已有待審更正申請：'+prior.id+'。主辦審核前不能重複提交。','notice'));
+  return;
+ }
+ const form=node('form',undefined,'form-grid');
+ for(const [name,caption,value,max] of [
+  ['stage_name','報名姓名／顯示名稱',a.stage_name,60],
+  ['affiliation','學校／職業',a.affiliation,100],
+  ['reason','更正原因（至少8字）','',400]
+ ]){
+  const label=node('label',undefined,'field full'),input=name==='reason'?node('textarea'):node('input');
+  input.name=name;input.required=true;input.maxLength=max;
+  if(name==='reason')input.minLength=8;else input.value=value||'';
+  label.append(node('span',caption),input);form.append(label);
+ }
+ const buttons=node('div',undefined,'form-actions full');
+ const submit=node('button','提交更正申請','btn btn-primary');submit.type='submit';
+ const cancel=node('button','取消','btn btn-soft');cancel.type='button';cancel.onclick=()=>{holder.replaceChildren();holder.hidden=true;};
+ buttons.append(submit,cancel);form.append(buttons);
+ form.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+  const v=formValues(form);
+  const result=await api('request-member-correction',{application_id:a.id,...v});
+  if(!result.request?.id||result.request?.state!=='pending'||result.testOnly!==true)throw Error('readback_mismatch');
+  const check=await api('member-corrections');
+  if(!(check.requests||[]).some(x=>x.id===result.request.id&&x.state==='pending'))throw Error('readback_mismatch');
+  await renderMember();status('已提交更正申請，編號：'+result.request.id+'。原始分數與影片保持不變。');
+ });});
+ box.append(form);form.querySelector('input')?.focus({preventScroll:true});
 }
 function showEdit(a){
  if(!memberCanEdit(a)){status(editLockMessage(a),true);return;}
@@ -708,6 +769,39 @@ async function renderOrganizer(){
   control.onchange=()=>{pageNo=1;paint()};
  }
  paint();
+ const correctionPanel=$('organizer-corrections'),correctionList=$('organizer-correction-list');
+ if(correctionPanel&&correctionList){
+  correctionList.replaceChildren();
+  try{
+   const reqs=await api('organizer-corrections');
+   correctionPanel.hidden=!reqs.enabled;
+   if(reqs.enabled){
+    const pending=(reqs.requests||[]).filter(x=>x.state==='pending');
+    correctionPanel.querySelector('[data-correction-count]').textContent='待審 '+pending.length+' 筆';
+    if(!pending.length)correctionList.append(node('p','目前沒有待審更正申請。','minor'));
+    for(const c of pending){
+     const card=node('article',undefined,'roster-entry');
+     card.append(node('strong','報名編號：'+c.application_id));
+     card.append(node('p','姓名：'+c.previous_stage_name+' → '+c.proposed_stage_name,'minor'));
+     card.append(node('p','學校／職業：'+c.previous_affiliation+' → '+c.proposed_affiliation,'minor'));
+     card.append(node('p','更正原因：'+c.reason,'minor'));
+     card.append(node('p','已評分作品、影片與分數不受此更正影響。','minor'));
+     for(const [decision,label] of [['accepted','同意更正基本資料'],['declined','不接受更正']]){
+      const btn=node('button',label,'btn btn-soft');btn.type='button';
+      btn.onclick=()=>{if(!confirm('確認'+label+'？本次操作會保留稽核紀錄。'))return;
+       run(async()=>{
+        const result=await api('decide-member-correction',{request_id:c.id,decision});
+        if(result.decision!==decision)throw Error('readback_mismatch');
+        await renderOrganizer();status('更正申請已處理：'+label);
+       });
+      };
+      card.append(btn);
+     }
+     correctionList.append(card);
+    }
+   }
+  }catch{correctionPanel.hidden=true;}
+ }
 }
 async function renderJudge(){
  $('organizer-dashboard').hidden=true;$('judge-dashboard').hidden=false;
@@ -817,7 +911,7 @@ if(page==='member'){
  run(async()=>{
  const v=formValues(application),data={...v,frontline_2027:frontlineFormEnabled,video_confirmed:application.querySelector('[name=video_confirmed]')?.checked===true,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,nonreligious_song_ack:application.querySelector('[name=nonreligious_song_ack]')?.checked===true,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
  const saved=await api('applications',data);application.reset();toggle();status('✓ '+mt('saved')+' '+mt('entryId')+': '+saved.application_id);await renderMember()})});
- const toggle=()=>{const community=$('category').value==='community';const adult=application.querySelector('[name=adult_confirmed]'),student=application.querySelector('[name=student_confirmed]');$('community-statement').hidden=!community;$('university-statement').hidden=community;adult.required=community;student.required=!community;if(community)student.checked=false;else adult.checked=false;};
+ const toggle=()=>{const community=$('category').value==='community',modern=frontlineFormEnabled;const adult=application.querySelector('[name=adult_confirmed]'),student=application.querySelector('[name=student_confirmed]');$('community-statement').hidden=modern||!community;$('university-statement').hidden=modern||community;adult.required=!modern&&community;student.required=!modern&&!community;if(modern){adult.checked=false;student.checked=false;}else if(community)student.checked=false;else adult.checked=false;};
  $('category').addEventListener('change',toggle);toggle();
  // The #register deep link is handled by the same always-visible registration section.
  loadSession();

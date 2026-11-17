@@ -143,7 +143,12 @@ test('member dashboard locks edit button when first judge score exists',async({p
  const state={entries:[{...entry,can_edit:0}]};await mockMemberApi(page,state);
  await page.goto('/member.html#login');
  await expect(page.locator('#member-manage-edit')).toBeVisible();
- await expect(page.locator('#member-manage-edit')).toBeDisabled();
+ await expect(page.locator('#member-manage-edit')).toBeEnabled();
+ await expect(page.locator('#member-manage-edit')).toContainText('申請更正基本資料');
+ await page.locator('#member-manage-edit').click();
+ await expect(page.locator('#member-edit-panel')).toBeVisible();
+ await expect(page.locator('#member-edit-panel')).toContainText('更正申請功能尚待TEST資料庫');
+ await expect(page.locator('#member-edit-panel')).not.toContainText('已提交更正申請');
  await expect(page.locator('#member-edit-lock-reason')).toBeVisible();
  await expect(page.locator('#member-edit-lock-reason')).toContainText('已開始評分');
  await expect(page.locator('#entries')).toContainText('已開始評分');
