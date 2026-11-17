@@ -74,7 +74,7 @@ test('free January A/B application joins reviewer queue without mock payment; fi
  assert.deepEqual(entries.map(x=>x.video_index),[1,2,3,4,5]);
  assert.equal((await f.v2('score',f.member,{application_id:'app1',phase:'demo',no_conflict:true,technique:50,interpretation:30})).status,403);
  assert.equal((await f.v2('score',f.judge('j1'),{application_id:'app1',phase:'demo',video_index:6,no_conflict:true,technique:40,interpretation:30})).status,422);
- const grade=(index,score)=>({application_id:'app1',phase:'demo',video_index:index,no_conflict:true,technique:score-30,interpretation:30});
+ const grade=(index,score)=>({application_id:'app1',phase:'demo',video_index:index,no_conflict:true,technique:Math.min(60,score),interpretation:score-Math.min(60,score)});
  for(const j of ['j1','j2','j3']){
   for(let index=1;index<=5;index++){
    const points=index===4?95:index===3?85:70;
