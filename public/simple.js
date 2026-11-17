@@ -91,7 +91,7 @@ const safeLink=(url)=>{try{const u=new URL(url);return u.protocol==='https:'?u.h
 const formValues=form=>Object.fromEntries(new FormData(form));
 const mt=k=>window.GHVLocale?.t(k)||k;
 const staff=page==='back',prefix=staff?'back':'member';
-let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,frontlineFormEnabled=false,museFormEnabled=false,fiveDemoEnabled=false;
+let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,frontlineFormEnabled=false,museFormEnabled=false,fiveDemoEnabled=false,eligibilityUploadEnabled=false;
 const statusBox=$(prefix+'-status');
 function permittedPhoto(url){const href=safeLink(url);if(!href)return null;try{const x=new URL(href);if(x.username||x.password||(x.port&&x.port!=='443')||x.hostname==='localhost'||x.hostname.endsWith('.local')||x.hostname.endsWith('.internal'))return null;return href}catch{return null}}
 function profileImage(url,large=false){
@@ -303,6 +303,7 @@ async function loadSession(){try{
   setupFrontlineForm(v.frontline_form_enabled===true);
   setupMuseForm(v.muse_form_enabled===true);
   setupFiveDemo(v.five_demo_enabled===true);
+  eligibilityUploadEnabled=v.eligibility_upload_enabled===true;
   const nationwide=v.nepal_locations_enabled===true,location=$('entrant-location-detail'),field=location.querySelector('input');
   location.hidden=!nationwide;field.disabled=!nationwide;field.required=nationwide;
   const note=$('province-note');note.dataset.l=nationwide?'provinceHelp':'provincePending';note.textContent=mt(note.dataset.l);
@@ -543,6 +544,13 @@ async function renderMember(){
  if(editSlot){editSlot.replaceChildren();editSlot.hidden=true;}
  const v=await api('applications'),rows=Array.isArray(v.applications)?v.applications:[];
  const hasEntries=rows.length>0,first=rows[0];
+ const proofBox=$('eligibility-private-upload'),proofBtn=$('eligibility-upload-submit');
+ if(proofBox){
+  const target=rows.find(row=>row.phase==='demo'&&row.status==='submitted'&&row.payment_status==='unpaid'&&!row.has_eligibility_file);
+  proofBox.hidden=!eligibilityUploadEnabled||!target;
+  if(proofBtn)proofBtn.dataset.applicationId=target?.id||'';
+ }
+
  const manageEdit=$('member-manage-edit'),manageNote=$('member-manage-note');
  const editable=rows.find(memberCanEdit);
  if(manageEdit){
@@ -1017,7 +1025,33 @@ if(page==='member'){
   });
  });
  window.addEventListener('ghv:languagechange',()=>{if(account&&account.role==='member'){if(document.querySelector('[data-editing]'))return;renderMember().catch(e=>status(friendlyError(e),true))}});
- const application=$('application-form'),details=$('application-details'),start=$('start-application');
+ $('eligibility-upload-submit')?.addEventListener('click',()=>{
+  const file=$('eligibility-upload-file')?.files?.[0];
+  const button=$('eligibility-upload-submit');
+  if(!eligibilityUploadEnabled||!button?.dataset.applicationId){
+   status(mt('proofUploadNotReady'),true);return;
+  }
+  if(!file||!['application/pdf','image/jpeg','image/png'].includes(file.type)||file.size<100||file.size>5*1024*1024){
+   status(mt('proofUploadInvalid'),true);return;
+  }
+  if(!confirm(mt('proofUploadConfirm')))return;
+  run(async()=>{
+   const url='/api/e2e/demo-upload?kind=eligibility&application='+encodeURIComponent(button.dataset.applicationId);
+   const response=await fetch(url,{method:'POST',credentials:'same-origin',
+    headers:{'Content-Type':file.type},body:file,cache:'no-store'});
+   let result;
+   try{result=await response.json()}catch{throw new Error('proof_upload_failed')}
+   if(!response.ok||result.ok!==true||result.kind!=='eligibility'||result.private!==true||result.stored!==true)
+    throw new Error(result.error||'proof_upload_failed');
+   const check=await api('applications');
+   const own=(check.applications||[]).find(a=>a.id===button.dataset.applicationId);
+   if(!own?.has_eligibility_file)throw new Error('readback_mismatch');
+   $('eligibility-upload-file').value='';
+   await renderMember();
+   status(mt('proofUploadDone'));
+  });
+ });
+const application=$('application-form'),details=$('application-details'),start=$('start-application');
  $('demo-add')?.addEventListener('click',addDemoSlot);
  document.querySelectorAll('[data-demo-remove]').forEach(button=>{
   button.addEventListener('click',()=>removeDemoSlot(button.closest('[data-demo-slot]')));
