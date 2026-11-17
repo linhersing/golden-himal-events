@@ -82,3 +82,28 @@ test('unscored application uses normal edit instead of creating redundant correc
  assert.equal(r.status,409);
  assert.equal((await r.json()).error,'correction_use_normal_edit');
 });
+
+test('stale organizer correction cannot overwrite a changed entry or mark a false approval',async t=>{
+ const f=fixture();t.after(()=>f.db.close());
+ const sent=await f.call('request-member-correction',f.member,{
+  application_id:'a',stage_name:'Proposed Name',affiliation:'Proposed School',reason:'Correction requested by the account'
+ });
+ assert.equal(sent.status,201);
+ const id=(await sent.json()).request.id;
+ f.db.prepare("UPDATE e2e_applications SET stage_name='Separately Updated' WHERE id='a'").run();
+ const decision=await f.call('decide-member-correction',f.organizer,{request_id:id,decision:'accepted'});
+ assert.equal(decision.status,409);
+ assert.equal(f.db.prepare("SELECT stage_name FROM e2e_applications WHERE id='a'").get().stage_name,'Separately Updated');
+ assert.equal(f.db.prepare('SELECT state FROM e2e_member_correction_requests WHERE id=?').get(id).state,'pending');
+ assert.equal(f.db.prepare('SELECT COUNT(*) AS n FROM e2e_member_correction_audit WHERE correction_id=?').get(id).n,1);
+});
+test('organizer may decline without changing the locked entry or its grade',async t=>{
+ const f=fixture();t.after(()=>f.db.close());
+ const sent=await f.call('request-member-correction',f.member,{application_id:'a',stage_name:'New Person',affiliation:'Other School',reason:'Please check submitted name'});
+ const id=(await sent.json()).request.id;
+ const rejected=await f.call('decide-member-correction',f.organizer,{request_id:id,decision:'declined'});
+ assert.equal(rejected.status,200);
+ assert.equal(f.db.prepare("SELECT stage_name FROM e2e_applications WHERE id='a'").get().stage_name,'Old Name');
+ assert.equal(f.db.prepare("SELECT state FROM e2e_member_correction_requests WHERE id=?").get(id).state,'declined');
+ assert.equal(f.db.prepare('SELECT COUNT(*) AS n FROM e2e_member_correction_audit WHERE correction_id=?').get(id).n,2);
+});
