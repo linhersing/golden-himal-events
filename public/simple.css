@@ -1370,3 +1370,31 @@ body[data-page="member"] .muse-test-fields[data-mode="preview"] #muse-fields-not
 body[data-page="member"] .muse-test-fields[data-mode="preview"] .helper-banner{
  border-left:4px solid #b77e36;background:#fff4de;color:#624529;
 }
+
+/* Frontline five-demo composition and single-screen registration hierarchy. */
+body[data-page="member"] .registration-deadline{border:1px solid #cba16d;border-radius:16px;padding:17px 20px;background:linear-gradient(110deg,#fffaf1,#f6ead8);color:#503426}
+body[data-page="member"] .registration-deadline-label{font-size:.83rem;letter-spacing:.055em;font-weight:800;color:#985f2d}
+body[data-page="member"] .registration-deadline-dates{font-size:clamp(1.15rem,2.4vw,1.5rem);font-weight:850;margin:5px 0}
+body[data-page="member"] .registration-deadline p{font-size:.89rem;margin:0;line-height:1.65;color:#775b4a}
+body[data-page="member"] .demo-first-heading{font-size:1.14rem;font-weight:800;border-left:4px solid #aa7d45;padding:8px 11px;margin:14px 0 0;background:#fcf6ed}
+body[data-page="member"] .demo-multi{background:#fffcf7;border:1px solid #ddc9ad;border-radius:17px;padding:clamp(15px,2.7vw,25px)}
+body[data-page="member"] .demo-multi-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:15px}
+body[data-page="member"] .demo-multi-heading h3{margin:0 0 8px;color:#563827;font-size:clamp(1.15rem,2.3vw,1.46rem)}
+body[data-page="member"] .demo-multi-heading p{margin:0 0 12px;max-width:75ch}
+body[data-page="member"] .demo-counter{flex:none;border-radius:999px;padding:6px 12px;background:#f1e0c6;color:#6f4829;font-weight:800;font-variant-numeric:tabular-nums}
+body[data-page="member"] .demo-extra-list{display:grid;gap:14px}
+body[data-page="member"] .demo-extra-card{border:1px solid #dac4a4;border-radius:14px;padding:16px;margin:8px 0;background:#fff}
+body[data-page="member"] .demo-extra-card[hidden]{display:none}
+body[data-page="member"] .demo-extra-card legend{font-weight:800;color:#644128;padding:0 8px}
+body[data-page="member"] .demo-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+body[data-page="member"] .demo-extra-grid label{display:flex;flex-direction:column;gap:6px;font-size:.91rem;font-weight:700}
+body[data-page="member"] .demo-extra-grid input,body[data-page="member"] .demo-extra-grid select{min-height:48px;max-width:100%;border:1px solid #d9c8ae;border-radius:10px;padding:10px 12px;background:#fff}
+body[data-page="member"] .demo-extra-grid label:last-child{grid-column:1/-1}
+body[data-page="member"] .demo-remove{margin-top:12px}
+body[data-page="member"] .demo-add{margin-top:15px;min-height:48px;font-weight:800}
+body[data-page="member"] .demo-add:disabled{opacity:.5}
+body[data-page="member"] .evidence-required{border:1px solid #ddc4a4;border-radius:14px;background:#faf5ed;padding:16px 20px}
+body[data-page="member"] .evidence-required h3{margin:0 0 8px;font-size:1.1rem;color:#6e4126}
+body[data-page="member"] .evidence-required ul{margin:9px 0;padding-left:25px;line-height:1.8}
+body[data-page="member"] .proof-boundary{font-size:.9rem;font-weight:600;color:#71583f;margin-bottom:0}
+@media(max-width:600px){body[data-page="member"] .demo-extra-grid{grid-template-columns:1fr}body[data-page="member"] .demo-multi{padding:15px 13px}body[data-page="member"] .registration-deadline{padding:14px}}

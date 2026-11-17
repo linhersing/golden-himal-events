@@ -262,6 +262,43 @@ Object.assign(texts.en,{formTitle:'Registration form',goToForm:'Go to registrati
 Object.assign(texts.ne,{formTitle:'दर्ता फाराम',goToForm:'दर्ता फाराममा जानुहोस्',
  musePreview:'यहाँ काल्पनिक विवरण परीक्षणका लागि भर्न सकिन्छ तर सुरक्षित भण्डारण चालू छैन। वास्तविक नाम, फोन, इमेल वा ठेगाना नराख्नुहोस्।',
  musePreviewCannotSave:'यी परीक्षण सम्पर्क विवरणहरू अहिले सुरक्षित हुँदैनन्। पुरानो परीक्षण फाराम पठाउन यी विवरण हटाउनुहोस्; सुरक्षित भण्डारण अझै उपलब्ध छैन।'});
+/* 2026-11-17 front-line audition rules: 2027-01-01—2027-01-31 Nepal local. */
+Object.assign(texts.zh,{
+ entryPeriodTitle:"2027 海選收件日期",entryPeriodDates:"2027年1月1日至1月31日｜尼泊爾當地時間",entryPeriodHelp:"海選與第一次初選免費；確切開放及截止時刻、地點以主辦單位官網公告為準。目前仍是測試網站。",
+ demoFirstTitle:"Demo 1｜必填歌曲與影片",demoMultiTitle:"海選 Demo｜每人最多五支",demoMultiRules:"每人提交1至5支影片，每支60–90秒，必須本人連續實際演唱；每支都需歌曲名稱、原唱、語言及連結。評審逐支評分，只取最高分的一支。",
+ demoMultiPending:"第2–5支已提供試填介面；安全儲存及逐支評分尚未啟用。請勿提交真人影片或認為已完成多支報名。",
+ demoMultiEnabled:"受控測試已開通多支Demo存取（僅測試）；正式報名仍須前線核准。",
+ demoAdd:"＋ 增加一支 Demo（最多5支）",demoRemove:"移除這支 Demo",
+ demoLimit:"每人最多五支 Demo。",demoMultiCannotSave:"目前只支援儲存第一支測試Demo；你新增的第2–5支尚未啟用安全儲存，請移除新增支數後再送出。正式多支報名仍待開通。",
+ proofTitle:"資格證明文件｜安全上傳尚未開放",proofSignupHelp:"依前線規定須備妥資格證明。安全上傳及授權讀取仍待驗收；請勿提供公開學生證連結，也不要在測試頁提交真實證件。",
+ proofUniversity:"在學生：有效學生證或在學證明。",proofCommunity:"已畢業者：大專院校以上畢業證明或必要的其他資格佐證。",
+ proofWhen:"目前沒有已核定的上傳開放日期；須先完成私人 R2 儲存、身分驗證、審核人員權限及安全驗收。",
+ demoFeeBoundary:"1月海選免費，2027年1月1日至1月31日收件（尼泊爾時間）。正式每人可提交最多五支Demo；本TEST版多支儲存仍需正式啟用。"
+});
+Object.assign(texts.en,{
+ entryPeriodTitle:"2027 audition submission window",entryPeriodDates:"January 1–31, 2027 · Nepal local time",entryPeriodHelp:"The audition and first qualifier are free. Exact opening/closing times and locations are subject to organizer announcement. This remains a TEST site.",
+ demoFirstTitle:"Demo 1 · Required song and video",demoMultiTitle:"Audition demos · Up to five per singer",demoMultiRules:"Submit 1–5 continuous 60–90-second videos of your own singing. Each video needs its own song title, original artist, language and link. Only the highest-scoring video counts.",
+ demoMultiPending:"Additional demo fields are a TEST preview. Secure multi-demo storage and per-video judging are not enabled. Do not submit real entries.",
+ demoMultiEnabled:"Controlled TEST storage for multiple videos is enabled. Official entries remain closed.",
+ demoAdd:"+ Add another demo (maximum five)",demoRemove:"Remove this demo",
+ demoLimit:"Up to five demo videos per singer.",demoMultiCannotSave:"Only one TEST demo can currently be saved. Remove additional preview demos before saving; multi-video registration is not yet enabled.",
+ proofTitle:"Eligibility proof · Secure upload not yet open",proofSignupHelp:"Keep the required eligibility document ready. Private uploading and authorized viewing are still under review. Do not share public document links or actual IDs on this TEST site.",
+ proofUniversity:"Current students: valid student ID or enrollment letter.",proofCommunity:"Graduates: tertiary degree certificate or other requested qualification proof.",
+ proofWhen:"No official upload-opening date has been confirmed. Private R2 access controls, identity checks and security testing are required.",
+ demoFeeBoundary:"January auditions are free. Entries are planned for January 1–31, 2027 (Nepal time). Multi-demo saving requires a separate approved release."
+});
+Object.assign(texts.ne,{
+ entryPeriodTitle:"२०२७ अडिसन दर्ता अवधि",entryPeriodDates:"सन् २०२७ जनवरी १–३१ · नेपालको स्थानीय समय",entryPeriodHelp:"अडिसन र पहिलो छनोट निःशुल्क छन्। ठ्याक्कै समय र स्थान आयोजकले घोषणा गर्नेछन्। यो परीक्षण साइट हो।",
+ demoFirstTitle:"डेमो १ · अनिवार्य गीत र भिडियो",demoMultiTitle:"अडिसन डेमो · प्रति गायक बढीमा पाँच",demoMultiRules:"आफ्नो लगातार गाएको ६०–९० सेकेन्डको १ देखि ५ भिडियो; हरेकको गीत, मूल गायक, भाषा र लिंक चाहिन्छ। सबैभन्दा बढी अंक पाएको एउटा भिडियोको अंक लिइन्छ।",
+ demoMultiPending:"थप डेमो परीक्षणका लागि मात्र हुन्। सुरक्षित भण्डारण र छुट्टाछुट्टै मूल्याङ्कन सुरु भएको छैन। वास्तविक भिडियो नराख्नुहोस्।",
+ demoMultiEnabled:"नियन्त्रित बहु-डेमो परीक्षण सक्रिय छ; आधिकारिक दर्ता खुलेको छैन।",
+ demoAdd:"+ अर्को डेमो थप्नुहोस् (बढीमा पाँच)",demoRemove:"यो डेमो हटाउनुहोस्",
+ demoLimit:"प्रति व्यक्ति बढीमा पाँच डेमो।",demoMultiCannotSave:"अहिले एउटा परीक्षण डेमो मात्र सुरक्षित हुन्छ। थप परीक्षण डेमो हटाएर मात्र पुरानो परीक्षण दर्ता पठाउनुहोस्।",
+ proofTitle:"योग्यता प्रमाणपत्र · सुरक्षित अपलोड खुल्न बाँकी",proofSignupHelp:"योग्यता प्रमाणपत्र तयार राख्नुहोस्। सुरक्षित अपलोड र अनुमतिप्राप्त पहुँच अझै परीक्षणमा छन्; वास्तविक प्रमाणपत्रको सार्वजनिक लिंक नराख्नुहोस्।",
+ proofUniversity:"अध्ययनरत: मान्य विद्यार्थी परिचयपत्र वा अध्ययन प्रमाण।",proofCommunity:"स्नातक: उच्च शिक्षाको प्रमाणपत्र वा मागिएको अन्य प्रमाण।",
+ proofWhen:"अपलोड खुल्ने निश्चित मिति घोषणा भएको छैन; सुरक्षित निजी भण्डारण र अनुमति परीक्षणपछि मात्र खुल्नेछ।",
+ demoFeeBoundary:"जनवरी अडिसन निःशुल्क छ, अवधि २०२७ जनवरी १–३१ (नेपाल समय)। धेरै डेमो सुरक्षित गर्न अलग स्वीकृति चाहिन्छ।"
+});
 const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;

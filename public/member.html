@@ -87,6 +87,11 @@
 <section class="panel application-panel" id="application-details" aria-labelledby="application-form-heading">
 <h2 id="application-form-heading" class="application-title" data-l="formTitle">Registration form</h2>
 <p class="form-lead" data-l="formLead">This is a legacy TEST form, not the final 2027 entry. Fields marked * are required.</p>
+<aside class="registration-deadline full" aria-label="2027 entry schedule">
+  <div class="registration-deadline-label" data-l="entryPeriodTitle">2027 海選收件日期</div>
+  <div class="registration-deadline-dates" data-l="entryPeriodDates">2027年1月1日至1月31日｜尼泊爾當地時間</div>
+  <p data-l="entryPeriodHelp">海選免費。正式開放與截止的確切時刻以主辦單位官網公告為準；目前僅為測試網站。</p>
+ </aside>
 <p class="helper-banner" data-l="frontlineFormBoundary" role="note">11月16日新版：1月海選免費，每人最多5支Demo，單一組別，選A區Lumbini或B區Bagmati。此測試表單仍使用舊欄位且暫只可送1支作品；尚未轉換成正式報名。請勿在測試階段上傳真實證件或付款。</p>
 <p class="helper-banner" data-l-html="demoRules">...</p>
 <form id="application-form" class="form-grid" style="margin-top:16px">
@@ -132,6 +137,7 @@
 <label class="field"><span data-l="basis">How do you qualify in this area? *</span><select name="location_basis"><option value="residence" data-l="live">I live here</option><option value="study" data-l="study">I study here</option><option value="work" data-l="work">I work here</option></select></label>
 <label class="field" id="entrant-location-detail" hidden><span data-l="locationDetail">District and municipality *</span><input name="location_detail" minlength="2" maxlength="120" disabled><small class="field-hint" data-l="locationDetailHelp">Enter the location where you live, study or work. Use sample data during testing.</small></label>
 <label class="field"><span data-l="occupation">University / occupation *</span><input name="affiliation" maxlength="100" required data-l-placeholder="occupationPlaceholder" placeholder="e.g. Chitwan university / teacher"></label>
+<p class="full demo-first-heading" data-l="demoFirstTitle">Demo 1 · 必填：歌曲與影片</p>
 <label class="field"><span data-l="songTitle">Song title *</span><input name="song_title" maxlength="100" required data-l-placeholder="songTitlePlaceholder" placeholder="Name of your song"></label>
 <label class="field"><span data-l="artist">Original performer *</span><input name="original_artist" maxlength="100" required data-l-placeholder="artistPlaceholder" placeholder="Original singer / artist"></label>
 <label class="field"><span data-l="songLang">Song language *</span><select name="song_language" required id="song-language"><option value="" data-l="chooseLang">Choose language</option><option value="Nepali">Nepali / नेपाली</option><option value="English">English</option><option value="Hindi">Hindi / हिन्दी</option><option value="Maithili">Maithili</option><option value="Bhojpuri">Bhojpuri</option><option value="Tamang">Tamang</option><option value="Chinese">Chinese / 中文</option><option value="Other" data-l="otherLang">Other / another language</option></select><small class="field-hint" data-l="languageHelp">Choose the language you sing in; this keeps the organizer's lists consistent.</small></label>
@@ -152,6 +158,46 @@
 </details>
 </section>
 <label class="field full"><span data-l="videoUrl">Audition performance video link *</span><input name="demo_url" type="url" inputmode="url" required placeholder="https://youtu.be/..."><small class="field-hint" data-l="videoHelp">Paste a YouTube or Google Drive link to the VIDEO of you singing. Before submitting, open the link in a private/incognito window: it must play without asking to sign in or request access.</small></label>
+<section class="demo-multi full" id="demo-multi" aria-labelledby="demo-multi-title">
+ <div class="demo-multi-heading"><div><h3 id="demo-multi-title" data-l="demoMultiTitle">海選 Demo 影片｜每人 1–5 支</h3>
+ <p class="field-hint" data-l="demoMultiRules">每支 60–90 秒，限本人連續實際演唱。每支填歌曲名稱、原唱、語言、網址；評審逐支評分，採最高分一支。</p></div><span class="demo-counter" id="demo-counter">1 / 5</span></div>
+ <p class="helper-banner" id="demo-storage-notice" data-l="demoMultiPending" role="status">其餘四支可先試填虛構資料，但多支儲存及逐支評分尚未開放，請勿提交真實作品。</p>
+ <div id="demo-extra-list" class="demo-extra-list">
+ <fieldset class="demo-extra-card" data-demo-slot="2" hidden disabled>
+  <legend>Demo 2</legend><div class="demo-extra-grid">
+   <label><span data-l="songTitle">歌曲名稱 *</span><input type="text" name="demo_2_title" maxlength="100" autocomplete="off"></label>
+   <label><span data-l="artist">原唱 *</span><input type="text" name="demo_2_artist" maxlength="100" autocomplete="off"></label>
+   <label><span data-l="songLang">歌曲語言 *</span><select name="demo_2_language"><option value="" data-l="chooseLang">請選擇語言</option><option value="Nepali">Nepali</option><option value="English">English</option><option value="Hindi">Hindi</option><option value="Maithili">Maithili</option><option value="Bhojpuri">Bhojpuri</option><option value="Tamang">Tamang</option><option value="Chinese">Chinese</option><option value="Other">Other</option></select></label>
+   <label><span data-l="videoUrl">Demo 連結 *</span><input type="url" name="demo_2_url" maxlength="1000" inputmode="url" placeholder="https://youtu.be/..."></label>
+  </div><button type="button" class="demo-remove btn btn-soft" data-demo-remove="2" data-l="demoRemove">移除本支</button>
+ </fieldset>
+ <fieldset class="demo-extra-card" data-demo-slot="3" hidden disabled>
+  <legend>Demo 3</legend><div class="demo-extra-grid">
+   <label><span data-l="songTitle">歌曲名稱 *</span><input type="text" name="demo_3_title" maxlength="100" autocomplete="off"></label>
+   <label><span data-l="artist">原唱 *</span><input type="text" name="demo_3_artist" maxlength="100" autocomplete="off"></label>
+   <label><span data-l="songLang">歌曲語言 *</span><select name="demo_3_language"><option value="" data-l="chooseLang">請選擇語言</option><option value="Nepali">Nepali</option><option value="English">English</option><option value="Hindi">Hindi</option><option value="Maithili">Maithili</option><option value="Bhojpuri">Bhojpuri</option><option value="Tamang">Tamang</option><option value="Chinese">Chinese</option><option value="Other">Other</option></select></label>
+   <label><span data-l="videoUrl">Demo 連結 *</span><input type="url" name="demo_3_url" maxlength="1000" inputmode="url" placeholder="https://youtu.be/..."></label>
+  </div><button type="button" class="demo-remove btn btn-soft" data-demo-remove="3" data-l="demoRemove">移除本支</button>
+ </fieldset>
+ <fieldset class="demo-extra-card" data-demo-slot="4" hidden disabled>
+  <legend>Demo 4</legend><div class="demo-extra-grid">
+   <label><span data-l="songTitle">歌曲名稱 *</span><input type="text" name="demo_4_title" maxlength="100" autocomplete="off"></label>
+   <label><span data-l="artist">原唱 *</span><input type="text" name="demo_4_artist" maxlength="100" autocomplete="off"></label>
+   <label><span data-l="songLang">歌曲語言 *</span><select name="demo_4_language"><option value="" data-l="chooseLang">請選擇語言</option><option value="Nepali">Nepali</option><option value="English">English</option><option value="Hindi">Hindi</option><option value="Maithili">Maithili</option><option value="Bhojpuri">Bhojpuri</option><option value="Tamang">Tamang</option><option value="Chinese">Chinese</option><option value="Other">Other</option></select></label>
+   <label><span data-l="videoUrl">Demo 連結 *</span><input type="url" name="demo_4_url" maxlength="1000" inputmode="url" placeholder="https://youtu.be/..."></label>
+  </div><button type="button" class="demo-remove btn btn-soft" data-demo-remove="4" data-l="demoRemove">移除本支</button>
+ </fieldset>
+ <fieldset class="demo-extra-card" data-demo-slot="5" hidden disabled>
+  <legend>Demo 5</legend><div class="demo-extra-grid">
+   <label><span data-l="songTitle">歌曲名稱 *</span><input type="text" name="demo_5_title" maxlength="100" autocomplete="off"></label>
+   <label><span data-l="artist">原唱 *</span><input type="text" name="demo_5_artist" maxlength="100" autocomplete="off"></label>
+   <label><span data-l="songLang">歌曲語言 *</span><select name="demo_5_language"><option value="" data-l="chooseLang">請選擇語言</option><option value="Nepali">Nepali</option><option value="English">English</option><option value="Hindi">Hindi</option><option value="Maithili">Maithili</option><option value="Bhojpuri">Bhojpuri</option><option value="Tamang">Tamang</option><option value="Chinese">Chinese</option><option value="Other">Other</option></select></label>
+   <label><span data-l="videoUrl">Demo 連結 *</span><input type="url" name="demo_5_url" maxlength="1000" inputmode="url" placeholder="https://youtu.be/..."></label>
+  </div><button type="button" class="demo-remove btn btn-soft" data-demo-remove="5" data-l="demoRemove">移除本支</button>
+ </fieldset>
+ </div>
+ <button id="demo-add" type="button" class="btn btn-soft demo-add" data-l="demoAdd">＋ 增加一支 Demo（最多5支）</button>
+</section>
 <p class="field-hint full" role="note" data-l="demoFeeBoundary">新版海選免費，正式規章每人最多5支Demo；本測試表單目前只支援單支影片，尚未開通正式報名或付款。</p>
 <label class="check full video-confirm"><input name="video_confirmed" type="checkbox" required><span data-l="videoConfirm">I confirm that the link shows me personally singing in one continuous 60–90 second video, with my face and voice clear. *</span></label>
 <div class="full eligibility-group" aria-label="Eligibility statements">
@@ -161,7 +207,12 @@
 <label class="check"><input name="nonreligious_song_ack" type="checkbox" required><span data-l="nonreligiousSongAck">I understand that entries should primarily feature non-religious songs, subject to organizer review. *</span></label>
 </div>
 <p class="field-hint full" data-l="stageRulesShort">Live qualifier: 90 seconds, your own choice. Final: organizer-assigned song, maximum 4 minutes. Backing music must not include recognizable original lead vocals. Musicians or dancers must be declared at least 14 days in advance.</p>
-<details class="full evidence-plan"><summary data-l="proofTitle">資格證明文件（安全上傳待開通）</summary><p data-l="proofSignupHelp">正式報名須提供資格證明；目前安全上傳尚未開通，請勿貼公開學生證或身分資料連結。測試時使用虛構資料。</p><ul><li data-l="proofUniversity">大學組：有效學生證清晰照片或在學證明。</li><li data-l="proofCommunity">社會組：年滿18歲證明及相關職業、工作或身分證明。</li></ul></details>
+<section class="full evidence-plan evidence-required" id="eligibility-docs" aria-labelledby="proof-heading">
+ <h3 id="proof-heading" data-l="proofTitle">資格證明文件｜安全上傳尚未開放</h3>
+ <p data-l="proofSignupHelp">資格證明是報名必要資料。目前私有檔案儲存及存取權限尚待驗收，勿上傳真實證件、也勿貼公開連結。</p>
+ <ul><li data-l="proofUniversity">在學生：有效學生證或在學證明。</li><li data-l="proofCommunity">已畢業者：大專院校以上畢業證明或必要的其他資格佐證。</li></ul>
+ <p class="proof-boundary" data-l="proofWhen">開放日期尚未確定。完成私人 R2 上傳、權限及安全驗收後才會啟用，屆時另行公告。</p>
+</section>
 <div class="form-actions full"><button class="btn btn-primary" type="submit" data-l="save">Save my TEST application</button><small class="field-hint" data-l="saveHelp">Saving is not a paid or officially approved entry.</small></div>
 </form>
 <p class="privacy-notice" data-l="privacy">Portrait photo and identity documents are not collected in this rehearsal. The organizer must approve a secure upload method and privacy rules before these become required.</p>
