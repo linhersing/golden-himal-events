@@ -690,7 +690,7 @@ function showEdit(a){
   ['original_artist','artist'],['song_language','songLang'],['demo_url','videoUrl'],
   ...(a.affiliation?[['affiliation','occupation']]:[]),...(a.song_key?[['song_key','songKey']]:[]),
   ...(locationsEnabled?[['province','province'],['location_basis','basis'],['location_detail','locationDetail']]:[]),
-  ...(museFormEnabled?[['full_name','museFullName'],['contact_phone','musePhone'],['contact_email','museEmail'],['city','museCity'],['street_address','museStreet'],['educational_background','museEducation'],['short_description','museDescription'],['musical_training','museTraining']]:[]),
+  ...(museFormEnabled?[['full_name','museFullName'],['contact_phone','musePhone'],['contact_email','museEmail'],['contact_handle','museContact'],['city','museCity'],['street_address','museStreet'],['educational_background','museEducation'],['short_description','museDescription'],['musical_training','museTraining']]:[]),
   ...(profileEnabled?[['gender','profileGender'],['photo_url_1','profileMainPhoto'],['photo_url_2','profilePhoto2'],['photo_url_3','profilePhoto3']]:[])
  ];
  for(const [name,key] of fields){
@@ -707,7 +707,7 @@ function showEdit(a){
    if(name==='demo_url'||name.startsWith('photo_url_'))input.type='url';
    if(name==='contact_email')input.type='email';
    if(name==='contact_phone')input.type='tel';
-   input.maxLength={"full_name":120,"contact_phone":32,"contact_email":180,"city":100,"street_address":160,"educational_background":400,"short_description":500,"musical_training":400}[name]||(name==='demo_url'?1000:name.startsWith('photo_url_')?600:name==='location_detail'?120:100);
+   input.maxLength={"full_name":120,"contact_phone":32,"contact_email":180,"contact_handle":160,"city":100,"street_address":160,"educational_background":400,"short_description":500,"musical_training":400}[name]||(name==='demo_url'?1000:name.startsWith('photo_url_')?600:name==='location_detail'?120:100);
   }
   input.name=name;input.value=a[name]||'';
   input.required=!['gender','photo_url_1','photo_url_2','photo_url_3'].includes(name);
