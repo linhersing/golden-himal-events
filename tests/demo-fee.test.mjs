@@ -23,8 +23,8 @@ test('fees are charged per person only at the second selection and PK rounds',()
 
 test('Voice and rules pages show latest rules without changing website link destinations',async()=>{
  const [home,rules,locale,member,simple]=await Promise.all(['public/voice.html','public/news.html','public/page-locale.js','public/member.html','public/simple.js'].map(read));
- assert.match(home,/data-t="entryFeeAmount">免費/);
- assert.match(home,/最多5支60–90秒Demo/);
+ assert.match(home,/id="contest-journey"/);
+ assert.match(home,/每人最多5支，每支60–90秒/);
  assert.match(home,/NPR 50,000/);
  assert.match(home,/NPR 30,000/);
  assert.match(home,/NPR 15,000/);
@@ -32,12 +32,12 @@ test('Voice and rules pages show latest rules without changing website link dest
  assert.match(rules,/單一競賽組別/);
  assert.match(rules,/A區Lumbini/);
  assert.match(rules,/NPR 415,000/);
- assert.match(rules,/海選 NPR 0/);
- assert.match(rules,/id="demo-fee-estimator"/);
+ assert.doesNotMatch(rules,/NPR\\s*(300|500)/);
+ assert.match(rules,/id="rules-registration"/);
  assert.doesNotMatch(rules,/id="demo-fee-count"/);
  assert.match(locale,/2026-11-16 authoritative frontline Word/);
  assert.match(locale,/फेब्रुअरी १२/);
- assert.match(simple,/entryFeeAmount/);
+ assert.match(simple,/journeyHeading/);
  assert.match(member,/data-l="frontlineFormBoundary"/);
  assert.match(member,/name="demo_url"/);
  for(const link of ['./member.html#register','./member.html#login','./news.html'])assert.ok(home.includes('href="'+link+'"'),link);
