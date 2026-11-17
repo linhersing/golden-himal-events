@@ -74,13 +74,14 @@ test('missing additive D1 table: GET reports disabled and POST fails closed, nev
  assert.equal(v.enabled,false);
  assert.equal((await f.call('request-member-correction',f.member,{application_id:'a',stage_name:'New Name',affiliation:'New School',reason:'correct spelling'})).status,503);
 });
-test('unscored application uses normal edit instead of creating redundant correction case',async t=>{
+test('approved-but-unscored entry can still request audited correction without modifying its song',async t=>{
  const f=fixture();t.after(()=>f.db.close());
  f.db.prepare('DELETE FROM e2e_judge_scores WHERE application_id=?').run('a');
  f.db.prepare("UPDATE e2e_applications SET status='submitted' WHERE id='a'").run();
  const r=await f.call('request-member-correction',f.member,{application_id:'a',stage_name:'New Name',affiliation:'New School',reason:'correct spelling'});
- assert.equal(r.status,409);
- assert.equal((await r.json()).error,'correction_use_normal_edit');
+ assert.equal(r.status,201);
+ assert.equal((await r.json()).request.state,'pending');
+ assert.equal(f.db.prepare("SELECT song_title FROM e2e_applications WHERE id='a'").get().song_title,'Song unchanged');
 });
 
 test('stale organizer correction cannot overwrite a changed entry or mark a false approval',async t=>{
