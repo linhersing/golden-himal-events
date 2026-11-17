@@ -165,6 +165,14 @@ function friendlyError(e){
  main_photo_required:'填寫補充照片前，請先提供主照片網址。',
  invalid_song_language:mt('invalidSongLanguage'),
  readback_mismatch:mt('readbackFail'),
+ five_demo_schema_unavailable:'TEST多支Demo資料庫尚未開通，作品沒有儲存。',
+ five_demo_locked:'報名已進入評分或鎖定，不能新增作品。',
+ five_demo_limit:'每人上限5支Demo影片。',
+ duplicate_demo_url:'這支Demo影片連結已提交，不能重複。',
+ extra_demo_conflict_or_locked:'新增影片失敗，可能達上限、重複或報名已鎖定。',
+ invalid_extra_demo_fields:'請檢查歌曲、原唱、語言、有效影片網址，以及本人演唱確認。',
+ extra_demo_readback_failed:'影片提交結果讀回不一致，請勿重複提交，先聯絡主辦確認。',
+
  correction_schema_pending:'更正申請功能尚待TEST資料庫部署，未儲存任何更正。',
  correction_pending_or_database_error:'已有待審申請，或資料庫儲存未成功。',
  correction_invalid_input:'請確認姓名、學校／職業，以及至少8個字的更正原因。',
@@ -545,7 +553,11 @@ async function renderMember(){
   const video=$('member-view-video'),link=safeLink(first.demo_url);
   video.hidden=!link;if(link)video.href=link;else video.removeAttribute('href');
   $('member-show-details').onclick=()=>document.getElementById('member-entry-overview').scrollIntoView({behavior:'smooth',block:'start'});
-  for(const a of rows)holder.append(drawEntry(a));
+  for(const a of rows){
+   const card=drawEntry(a);
+   holder.append(card);
+   if(a.round_code==='2027-01'&&a.competition_region)await renderExtraDemos(a,card);
+  }
  }else{
   $('member-hero-avatar').replaceChildren();
   $('member-quick-edit').onclick=null;
@@ -561,6 +573,66 @@ async function renderMember(){
  $('step-login')?.classList.add('active');
  $('step-apply')?.classList.toggle('active',hasEntries);
  $('step-checkout')?.classList.toggle('active',Boolean(paidEntry));
+}
+async function renderExtraDemos(a,container){
+ const panel=node('section',undefined,'member-demo-multi');
+ panel.append(node('h4','2027 1月海選｜最多5支Demo（TEST）'));
+ panel.append(node('p','同一人最多5支60–90秒影片；第1支包含在原報名中，追加作品不會重新報名或增加晉級名額。','minor'));
+ container.append(panel);
+ let data;
+ try{data=await api('demo-videos?application_id='+encodeURIComponent(a.id))}
+ catch(e){panel.append(node('p','無法核對多支影片資料庫：'+friendlyError(e),'feedback error'));return;}
+ if(!data.enabled){
+  panel.append(node('p','目前TEST多支Demo資料庫尚未開通，僅原本第1支影片已儲存。','minor'));
+  return;
+ }
+ const list=node('div',undefined,'member-demo-list');
+ for(const v of data.videos||[]){
+  const item=node('div',undefined,'member-demo-item');
+  const label=node('strong','Demo '+v.video_index+'／5 · '+v.song_title+' · '+v.song_language);
+  item.append(label);
+  const url=safeLink(v.demo_url);
+  if(url){const link=node('a','觀看影片 ↗','small-link');link.target='_blank';link.rel='noopener noreferrer';link.href=url;item.append(link);}
+  list.append(item);
+ }
+ panel.append(list);
+ const count=(data.videos||[]).length;
+ panel.append(node('p','目前 '+count+'／5 支 · 每支分開評分，只採其中最高分，不累加。','minor'));
+ if(count>=5){panel.append(node('p','已達5支上限，不能再新增作品。','notice'));return;}
+ if(!memberCanEdit(a)){panel.append(node('p','此筆報名已評分或鎖定，不能再新增或修改作品。','notice'));return;}
+ const form=node('form',undefined,'form-grid');
+ const fields=[
+  ['song_title','歌曲名稱／Song title','text',100],
+  ['original_artist','原唱／Original performer','text',100],
+  ['song_language','語言／Language','select',0],
+  ['demo_url','Demo影片連結（HTTPS）','url',1000]
+ ];
+ for(const [name,caption,kind,max] of fields){
+  const lab=node('label',undefined,'field'),input=node(kind==='select'?'select':'input');
+  input.name=name;input.required=true;
+  if(kind==='select'){
+   input.append(new Option('選擇歌曲語言',''));
+   for(const lang of ['Nepali','English','Hindi','Maithili','Bhojpuri','Tamang','Chinese','Other'])
+    input.append(new Option(lang,lang));
+  }else{input.type=kind;input.maxLength=max;if(kind==='url')input.placeholder='https://youtu.be/...';}
+  lab.append(node('span',caption),input);form.append(lab);
+ }
+ const consent=node('label',undefined,'check full'),checkbox=node('input');checkbox.name='video_confirmed';checkbox.type='checkbox';checkbox.required=true;
+ consent.append(checkbox,node('span','確認影片為本人連續演唱60–90秒，不對嘴、不修音、不拼接。'));
+ form.append(consent);
+ const submit=node('button','儲存下一支Demo並核對資料庫','btn btn-primary');submit.type='submit';
+ form.append(submit);
+ form.onsubmit=e=>{e.preventDefault();run(async()=>{
+  const values=formValues(form);
+  const saved=await api('add-demo-video',{application_id:a.id,
+   song_title:values.song_title,original_artist:values.original_artist,
+   song_language:values.song_language,demo_url:values.demo_url,video_confirmed:checkbox.checked});
+  if(saved.testOnly!==true||!saved.video?.id||saved.video?.application_id!==a.id)throw Error('readback_mismatch');
+  const check=await api('demo-videos?application_id='+encodeURIComponent(a.id));
+  if(!(check.videos||[]).some(x=>x.id===saved.video.id&&x.demo_url===values.demo_url.trim()))throw Error('readback_mismatch');
+  await renderMember();status('第 '+saved.video.video_index+' 支Demo已寫入TEST資料庫且重新讀回；不代表正式報名。');
+ });};
+ panel.append(form);
 }
 async function showCorrection(a){
  // A graded entry is immutable as to scored song/video. Only display identity
@@ -828,7 +900,7 @@ async function renderJudge(){
    const img=profileImage(a.photo_url_1);
    if(img)body.append(img);
    body.append(node('strong',a.stage_name||'選手'));
-   body.append(node('span',String(a.song_title||'作品')+' · '+a.round_code+' · '+(a.category==='university'?'大學組':'社會組'),'roster-mini'));
+   body.append(node('span',String(a.song_title||'作品')+' · '+a.round_code+' · Demo '+(a.video_index||1)+' · '+(a.competition_region?'單一組別 A/B TEST':a.category==='university'?'大學組':'社會組'),'roster-mini'));
    const flag=node('span',scoredByJudge(a)?'已評分':'開始評分','pill');
    row.append(body,flag);row.onclick=()=>openDetail(a);list.append(row);
   }
@@ -843,7 +915,7 @@ async function renderJudge(){
   const box=node('article',undefined,'entry');
   const phase=a.phase||'demo',demo=phase==='demo';
   box.append(node('h3',(a.stage_name||'選手')+' · '+a.round_code));
-  box.append(node('p',(a.song_title||'作品')+' · '+(a.song_language||'')+' · '+(demo?'線上海選':phase==='qualifier'?'現場初賽':'決賽'),'minor'));
+  box.append(node('p',(a.song_title||'作品')+' · '+(a.song_language||'')+' · '+(demo?'線上海選 Demo '+(a.video_index||1)+'/5':phase==='qualifier'?'現場初賽':'決賽'),'minor'));
   const pictures=profileGallery(a);if(pictures)box.append(pictures);
   if(a.gender)box.append(node('p','參賽者填寫的性別：'+({male:'男',female:'女',other:'其他',prefer_not_say:'不願透露'}[a.gender]||'未提供'),'minor'));
   const link=safeLink(a.demo_url);
@@ -866,7 +938,7 @@ async function renderJudge(){
   agree.append(checkbox,node('span','我確認此次評分沒有利益衝突。'));form.append(agree);
   const save=node('button','儲存我的評分','btn btn-primary');save.type='submit';form.append(save);
   form.onsubmit=e=>{e.preventDefault();run(async()=>{
-   const inputs=formValues(form),payload={application_id:a.id,phase,no_conflict:checkbox.checked};
+   const inputs=formValues(form),payload={application_id:a.id,phase,no_conflict:checkbox.checked,...(demo?{video_index:a.video_index||1}:{})};
    for(const [name] of criteria)payload[name]=Number(inputs[name]);
    await api('score',payload);status('評分已儲存。');await renderJudge();
   })};
