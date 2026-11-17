@@ -96,7 +96,7 @@ test('November 16 frontline 2027 form has up to five DEMO slots, dates, safe pro
  assert.doesNotMatch(html,/at least 14 days/);
  assert.match(locale,/2027年1月1日至1月31日/);
  assert.match(js,/selectedDemos.length>1&&!fiveDemoEnabled/);
- assert.match(js,/payload.demo_entries=selectedDemos/);
+ assert.match(js,/data\.demo_entries=selectedDemos/);
  assert.match(js,/verifiedDemoEntries/);
  assert.match(css,/\.demo-extra-grid/);
 });

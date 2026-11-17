@@ -116,7 +116,7 @@ test('frontline rules appear with a concise homepage and expandable schedule',as
   assert.match(locale,new RegExp('"'+field+'"'));
  }
  assert.match(news,/class="news-row" id="rules-schedule"><summary>/);
- assert.match(member,/class="full evidence-plan"/);
+ assert.match(member,/class="full evidence-plan evidence-required"/);
  assert.doesNotMatch(member,/<input[^>]*name="eligibility"/);
  assert.match(locale,/安全上傳待開通/);
 });
