@@ -8,6 +8,7 @@ export const SUGGESTED_SONG_LANGUAGES=Object.freeze([
 ]);
 export function validSongLanguage(value){
  if(typeof value!=='string')return false;
+ if(/[\r\n\t\u0000-\u001f]/u.test(value))return false;
  const name=value.trim();
  // "Other" is a UI choice, not an actual language; it must be specified.
  if(name==='Other'||name.length<2||name.length>60)return false;
