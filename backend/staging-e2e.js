@@ -418,13 +418,22 @@ async function mockPayment(request,env,a){
 // Judge access is limited to performance media, never eligibility/receipt documents.
 async function mediaUpload(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
- if(env.STAGING_SUBMISSION_MODE==='links')return deny('link_submission_only',409);
- if(!env.STAGING_MEDIA)return deny('r2_bucket_not_configured',503);
  const url=new URL(request.url);
- const app=await selectApplication(env.DB,url.searchParams.get('application'),a.id);
- if(!app||app.status==='withdrawn')return deny('application_not_found',404);
  const kind=url.searchParams.get('kind')||'demo';
  if(!['demo','eligibility','receipt'].includes(kind))return deny('upload_kind_not_allowed',422);
+ // Only a separately reviewed private eligibility lane may bypass the
+ // existing links-only VIDEO workflow. Never auto-enable it via deployment.
+ const privateProof=kind==='eligibility'&&env.STAGING_ELIGIBILITY_UPLOAD_ENABLED==='true';
+ if(kind==='eligibility'&&!privateProof)return deny('eligibility_upload_not_open',503);
+ if(env.STAGING_SUBMISSION_MODE==='links'&&!privateProof)return deny('link_submission_only',409);
+ if(!env.STAGING_MEDIA)return deny('r2_bucket_not_configured',503);
+ const app=await selectApplication(env.DB,url.searchParams.get('application'),a.id);
+ if(!app||app.status==='withdrawn')return deny('application_not_found',404);
+ if(privateProof){
+  if(app.phase!=='demo'||app.status!=='submitted'||app.payment_status!=='unpaid')return deny('eligibility_upload_locked',409);
+  const hasScores=await env.DB.prepare("SELECT EXISTS(SELECT 1 FROM e2e_judge_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_live_scores WHERE application_id=?) + EXISTS(SELECT 1 FROM e2e_promotion_events WHERE application_id=?) AS n").bind(app.id,app.id,app.id).first();
+  if(Number(hasScores?.n||0)>0)return deny('eligibility_upload_locked',409);
+ }
  const type=(request.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();
  const allowed=kind==='demo'?['video/mp4','video/webm']:['application/pdf','image/png','image/jpeg'];
  if(!allowed.includes(type))return deny('media_type_not_allowed',415);
@@ -432,16 +441,28 @@ async function mediaUpload(request,env,a){
  if(Number(request.headers.get('content-length')||0)>max)return deny('file_too_large',413);
  const data=await request.arrayBuffer();
  if(data.byteLength<100||data.byteLength>max)return deny('invalid_file_size',413);
+ if(privateProof){
+  const v=new Uint8Array(data.slice(0,16));
+  const pdf=type==='application/pdf'&&v[0]===0x25&&v[1]===0x50&&v[2]===0x44&&v[3]===0x46&&v[4]===0x2d;
+  const png=type==='image/png'&&v[0]===0x89&&v[1]===0x50&&v[2]===0x4e&&v[3]===0x47&&v[4]===0x0d&&v[5]===0x0a&&v[6]===0x1a&&v[7]===0x0a;
+  const jpeg=type==='image/jpeg'&&v[0]===0xff&&v[1]===0xd8&&v[2]===0xff;
+  if(!(pdf||png||jpeg))return deny('invalid_file_signature',415);
+ }
  const column=kind==='demo'?'media_key':kind==='eligibility'?'eligibility_key':'receipt_key';
  const key='e2e/'+app.account_id+'/'+app.id+'/'+kind+'/'+uuid();
  await env.STAGING_MEDIA.put(key,data,{httpMetadata:{contentType:type},customMetadata:{applicationId:app.id,kind}});
+ let changed;
  try{
   const approval=approvalRequired(env);
-  const changed=await env.DB.prepare(`UPDATE e2e_applications SET ${column}=?,updated_at=? WHERE id=? AND account_id=?${pendingGuard(approval,'e2e_applications')}`)
+  const boundary=privateProof
+   ?" AND phase='demo' AND status='submitted' AND payment_status='unpaid' AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=e2e_applications.id) AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=e2e_applications.id) AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=e2e_applications.id)"
+   :"";
+  changed=await env.DB.prepare(`UPDATE e2e_applications SET ${column}=?,updated_at=? WHERE id=? AND account_id=?${boundary}${pendingGuard(approval,'e2e_applications')}`)
    .bind(key,NOW(),app.id,a.id).run();
-  if(approval&&!changed.meta?.changes){await env.STAGING_MEDIA.delete(key);return deny('update_locked',409)}
- }
- catch{await env.STAGING_MEDIA.delete(key);return deny('database_unavailable',503)}
+  if((approval||privateProof)&&!changed.meta?.changes){
+   await env.STAGING_MEDIA.delete(key);return deny('eligibility_upload_locked',409);
+  }
+ }catch{await env.STAGING_MEDIA.delete(key);return deny('database_unavailable',503)}
  if(app[column])await env.STAGING_MEDIA.delete(app[column]);
  return json({ok:true,stored:true,kind,application_id:app.id,bytes:data.byteLength,private:true,testOnly:true});
 }
@@ -535,6 +556,7 @@ export async function handleE2E(request,env){
     ...(a.role==='member'&&env.STAGING_FRONTLINE_2027_ENABLED==='true'&&await entrantLocationsReady(env.DB)&&await frontline2027Ready(env.DB)?{frontline_form_enabled:true}:{}),
     ...(a.role==='member'&&await museAuditionReady(env)?{muse_form_enabled:true}:{}),
     ...(a.role==='member'&&await fiveDemoReady(env)?{five_demo_enabled:true}:{}),
+    ...(a.role==='member'&&env.STAGING_ELIGIBILITY_UPLOAD_ENABLED==='true'&&Boolean(env.STAGING_MEDIA)?{eligibility_upload_enabled:true}:{}),
     ...(approval?{approval_enabled:true}:{})});
   if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env,supplements);
   if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
