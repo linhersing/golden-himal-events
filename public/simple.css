@@ -1430,3 +1430,7 @@ body[data-page="member"] .eligibility-private-upload [role=status]{font-size:.9r
 /* 2026-11-17: explicit language detail field when Other is selected. */
 .song-language-other{display:block;width:100%;max-width:100%;min-height:44px;margin-top:8px;box-sizing:border-box}
 .song-language-other[hidden]{display:none!important}
+
+.staff-demo-list{margin:12px 0;padding:0;list-style:none;overflow-wrap:anywhere}
+.staff-demo-list li{padding:8px 0;border-top:1px solid #e9dfd1}
+.staff-demo-list p{margin:3px 0}

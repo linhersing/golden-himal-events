@@ -147,7 +147,7 @@ function songLanguageValue(select){
 }
 
 const staff=page==='back',prefix=staff?'back':'member';
-let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,frontlineFormEnabled=false,museFormEnabled=false,fiveDemoEnabled=false,eligibilityUploadEnabled=false;
+let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,frontlineFormEnabled=false,museFormEnabled=false,fiveDemoEnabled=false,fiveDemoJanuaryOnly=false,eligibilityUploadEnabled=false;
 const statusBox=$(prefix+'-status');
 function permittedPhoto(url){const href=safeLink(url);if(!href)return null;try{const x=new URL(href);if(x.username||x.password||(x.port&&x.port!=='443')||x.hostname==='localhost'||x.hostname.endsWith('.local')||x.hostname.endsWith('.internal'))return null;return href}catch{return null}}
 function profileImage(url,large=false){
@@ -360,6 +360,7 @@ async function loadSession(){try{
   setupFrontlineForm(v.frontline_form_enabled===true);
   setupMuseForm(v.muse_form_enabled===true);
   setupFiveDemo(v.five_demo_enabled===true);
+  fiveDemoJanuaryOnly=v.five_demo_january_only===true;
   eligibilityUploadEnabled=v.eligibility_upload_enabled===true;
   const nationwide=v.nepal_locations_enabled===true,location=$('entrant-location-detail'),field=location.querySelector('input');
   location.hidden=!nationwide;field.disabled=!nationwide;field.required=nationwide;
@@ -774,7 +775,7 @@ function showEdit(a){
   form.append(lab);
  }
  const editDemoCards=[];
- if(fiveDemoEnabled){
+ if(fiveDemoEnabled&&(!fiveDemoJanuaryOnly||a.round_code==='2027-01')){
   const series=node('fieldset',undefined,'full demo-edit-series');
   const heading=node('legend',mt('demoMultiTitle'));series.append(heading);
   const note=node('p',mt('demoMultiRules'),'minor');series.append(note);
@@ -835,7 +836,7 @@ function showEdit(a){
   const payload={application_id:a.id,...formValues(form)};
   payload.song_language=songLanguageValue(form.querySelector('[name="song_language"]'));
   let verifiedDemoEntries=null;
-  if(fiveDemoEnabled){
+  if(fiveDemoEnabled&&(!fiveDemoJanuaryOnly||a.round_code==='2027-01')){
    verifiedDemoEntries=[{
     song_title:String(payload.song_title||'').trim(),
     original_artist:String(payload.original_artist||'').trim(),
@@ -888,9 +889,76 @@ function scoredByJudge(a){
  const first=phase==='demo'?a.demo_technique:a.live_technique;
  return first!==null&&first!==undefined;
 }
+function staffDemoList(application,scoreForm){
+ const demos=application.demo_entries;
+ if(!Array.isArray(demos)||!demos.length)return null;
+ const list=node('ol',undefined,'staff-demo-list');
+ list.setAttribute('aria-label','參賽 Demo');
+ for(const [index,demo] of demos.entries()){
+  const item=node('li');
+  item.append(node('strong',(index+1)+'／'+demos.length+' · '+demo.song_title));
+  item.append(node('p','原唱 '+demo.original_artist+' · '+demo.song_language,'minor'));
+  if(application.approval_state)item.append(node('p',application.approval_state==='approved'?'主辦已核准報名':'待主辦核准報名','minor'));
+  const url=safeLink(demo.demo_url);
+  if(url){
+   const link=node('a','觀看影片 ↗','small-link');link.href=url;link.target='_blank';link.rel='noopener noreferrer';
+   link.setAttribute('aria-label','觀看第 '+(index+1)+' 支影片：'+demo.song_title);
+   item.append(link);
+  }
+  if(scoreForm)item.append(scoreForm(demo,index+1));
+  list.append(item);
+ }
+ return list;
+}
+async function renderJanuaryRoster(){
+ const panel=$('january-test-roster');
+ const data=await api('january-test-roster');
+ panel.replaceChildren(node('h2','1 月海選晉級名冊（TEST）'));
+ const blockers={seat_limit_pending:'名額待核定',scores_incomplete:'仍有作品的評分未收齊',cutoff_tie_pending:'名額邊界同分，待核定',no_candidates:'目前沒有符合條件的作品'};
+ for(const region of data.regions){
+  const section=node('section');
+  section.append(node('h3',region.region+' 區 · '+(region.published_at?'已確認 TEST 名冊':blockers[region.blocker]||'可確認 TEST 名冊')));
+  const rows=region.selected||region.ranked||[];
+  const list=node('ol');
+  for(const row of rows)list.append(node('li',row.stage_name+' · Demo '+row.position+' · '+row.average+' 分'));
+  section.append(list);
+  if(region.incomplete?.length)section.append(node('p','待評分完成：'+region.incomplete.length+' 位','minor'));
+  if(!region.published_at&&!region.blocker){
+   const submit=node('button','確認 '+region.region+' 區 TEST 名冊','btn btn-soft');submit.type='button';
+   submit.onclick=()=>{if(confirm('確認 TEST 名冊？確認後該區逐支評分停止。'))run(async()=>{
+    await api('january-test-roster',{region:region.region});await renderJanuaryRoster();
+   });};
+   section.append(submit);
+  }
+  panel.append(section);
+ }
+}
+function januaryScoreForm(application,demo,position,onSaved){
+ if(demo.my_score)return node('p','已儲存：'+(demo.my_score.technique+demo.my_score.interpretation)+' 分','minor');
+ const form=node('form',undefined,'form-grid');
+ form.setAttribute('aria-label','評分第 '+position+' 支 Demo');
+ for(const [name,title,max] of [['technique','技巧',60],['interpretation','情感',40]]){
+  const label=node('label',undefined,'field'),input=node('input');input.type='number';input.name=name;input.required=true;input.min='0';input.max=String(max);input.step='1';
+  label.append(node('span',title+'（0–'+max+'）'),input);form.append(label);
+ }
+ const declaration=node('label',undefined,'check'),check=node('input');check.type='checkbox';check.required=true;
+ declaration.append(check,node('span','我確認沒有利益衝突。'));
+ const button=node('button','儲存第 '+position+' 支評分','btn btn-primary');button.type='submit';
+ form.append(declaration,button);
+ form.onsubmit=event=>{
+  event.preventDefault();run(async()=>{
+   const values=formValues(form);
+   const saved=await api('january-video-score',{application_id:application.id,position,no_conflict:check.checked,technique:Number(values.technique),interpretation:Number(values.interpretation)});
+   form.replaceWith(node('p','已儲存：'+saved.score+' 分','minor'));onSaved();
+  });
+ };
+ return form;
+}
 async function renderOrganizer(){
  $('organizer-dashboard').hidden=false;$('judge-dashboard').hidden=true;
  const v=await api('organizer-queue'),apps=v.applications||[];
+ const january=$('january-test-roster');january.hidden=!v.january_roster_enabled;
+ if(!january.hidden)await renderJanuaryRoster();
  $('pending-count').textContent=String(apps.length);
  $('scores-count').textContent=String(apps.reduce((n,a)=>n+Number(a.demo_judges||0)+Number(a.live_judges||0),0));
  $('paid-count').textContent='0';
@@ -919,15 +987,16 @@ async function renderOrganizer(){
    info.append(node('p',a.round_code+' · '+(a.category==='university'?'大學組':'社會組')+' · '+(a.song_language||'語言未填'),'minor'));
    info.append(node('p','編號：'+a.id,'minor'));
    if(a.province)info.append(node('p',[a.province,a.location_detail].filter(Boolean).join(' · '),'minor'));
+   const demos=staffDemoList(a);if(demos)info.append(demos);
    const video=safeLink(a.demo_url);
-   if(video){
+   if(!demos&&video){
     const link=node('a','開啟參賽影片','btn btn-soft');
     link.href=video;link.target='_blank';link.rel='noopener noreferrer';info.append(link);
    }
    const img=profileImage(a.photo_url_1);
    if(img)info.prepend(img);
    const stats=node('div',undefined,'roster-entry-side');
-   stats.append(node('span',a.payment_status==='simulated_paid'?'模擬付款':'未付款','pill'));
+   stats.append(node('span',a.round_code==='2027-01'&&a.demo_entries?.length?'1 月免費海選':a.payment_status==='simulated_paid'?'模擬付款':'未付款','pill'));
    if(a.approval_state==='approved')stats.append(node('span','主辦已核准','pill pill-pass'));
    if(a.video_supplement_state){
     const stateText={pending:'等待選手補正資料',expired:'補正期限已過',submitted:'已收到補正資料，請重新檢查'};
@@ -950,7 +1019,7 @@ async function renderOrganizer(){
      run(async()=>{
       const result=await api('approve-test-application',{application_id:a.id});
       if(result.approval_state!=='approved'||result.testOnly!==true)throw Error('approval_readback_failed');
-      a.approval_state='approved';paint();status('已核准測試報名。');
+      await renderOrganizer();status('已核准測試報名。');
      });
     };
     stats.append(approve);
@@ -1042,8 +1111,14 @@ async function renderJudge(){
   box.append(node('p',(a.song_title||'作品')+' · '+(a.song_language||'')+' · '+(demo?'線上海選':phase==='qualifier'?'現場初賽':'決賽'),'minor'));
   const pictures=profileGallery(a);if(pictures)box.append(pictures);
   if(a.gender)box.append(node('p','參賽者填寫的性別：'+({male:'男',female:'女',other:'其他',prefer_not_say:'不願透露'}[a.gender]||'未提供'),'minor'));
+  const demos=staffDemoList(a,a.per_video_scoring?(work,position)=>januaryScoreForm(a,work,position,()=>status('已儲存本支 Demo 評分。')):null);if(demos)box.append(demos);
   const link=safeLink(a.demo_url);
-  if(link){const l=node('a','觀看作品 ↗','small-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l);}
+  if(!demos&&link){const l=node('a','觀看作品 ↗','small-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l);}
+  if(a.per_video_scoring){holder.append(box);back.focus();return;}
+  if(demo&&a.demo_entries?.length>1){
+   box.append(node('p','可逐支觀看。逐支評分功能尚未開放。','notice'));
+   holder.append(box);back.focus();return;
+  }
   if(scoredByJudge(a)){
    const xs=demo?[a.demo_technique,a.demo_interpretation]:[a.live_technique,a.live_interpretation,a.stage_presence,a.appearance];
    box.append(node('p','此階段已評分：'+xs.reduce((n,x)=>n+Number(x||0),0)+' 分（不能覆蓋）'));
@@ -1134,7 +1209,8 @@ const application=$('application-form'),details=$('application-details'),start=$
  });
  application.addEventListener('submit',e=>{e.preventDefault();
  const selectedDemos=collectDemoEntries(application);
- if(selectedDemos.length>1&&!fiveDemoEnabled){
+ const multiAllowed=fiveDemoEnabled&&(!fiveDemoJanuaryOnly||application.elements.namedItem('round_code')?.value==='2027-01');
+ if(selectedDemos.length>1&&!multiAllowed){
   status(mt('demoMultiCannotSave'),true);
   $('demo-storage-notice')?.scrollIntoView({block:'center',behavior:'smooth'});
   return;
@@ -1151,7 +1227,7 @@ const application=$('application-form'),details=$('application-details'),start=$
  const v=formValues(application);v.song_language=songLanguageValue(application.querySelector('[name="song_language"]'));
  const data={...v,frontline_2027:frontlineFormEnabled,video_confirmed:application.querySelector('[name=video_confirmed]')?.checked===true,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,nonreligious_song_ack:application.querySelector('[name=nonreligious_song_ack]')?.checked===true,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
  for(const key of Object.keys(data))if(/^demo_[2-5]_(title|artist|language|url)$/.test(key))delete data[key];
- if(fiveDemoEnabled)data.demo_entries=selectedDemos;
+ if(multiAllowed)data.demo_entries=selectedDemos;
  const saved=await api('applications',data);application.reset();demoSlots().forEach(card=>removeDemoSlot(card));
  application.querySelectorAll('select[name$="_language"],select[name="song_language"]').forEach(select=>select._syncOtherLanguage?.());toggle();
  status('✓ '+mt('saved')+' '+mt('entryId')+': '+saved.application_id);await renderMember()})});
