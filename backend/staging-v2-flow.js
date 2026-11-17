@@ -1,12 +1,15 @@
 import {approvalColumn,approvalGuard,approveTestApplication} from './test-application-approval.js';
 import {entrantLocationsReady,entrantLocationFields,entrantLocationJoin} from './entrant-location.js';
 import {supplementColumns,supplementGuard,supplementJoin} from './test-video-supplement.js';
+import {fiveDemoReady,getDemoVideos,bestDemo} from './five-demo.js';
 
 // Alan V2 competition logic, STAGING ONLY. Called only after verified session,
 // same-origin checks and configured() gate in staging-e2e.js.
 export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval=false,supplements=false}){
  const path=new URL(request.url).pathname,post=request.method==='POST';
  const db=env.DB;
+ const fiveEnabled=env.STAGING_FIVE_DEMOS_ENABLED==='true'&&await fiveDemoReady(db);
+ const feeGate=fiveEnabled?"(p.payment_status='simulated_paid' OR (p.round_code='2027-01' AND p.payment_status='unpaid' AND EXISTS(SELECT 1 FROM e2e_frontline_2027_registration f WHERE f.application_id=p.id)))":"p.payment_status='simulated_paid'";
  // Explicit closed rehearsal: link evidence is not identity or payment verification.
  const links=env.STAGING_SUBMISSION_MODE==='links';
  const evidence=links?"p.demo_url IS NOT NULL AND length(trim(p.demo_url))>0":
@@ -26,17 +29,27 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    FROM e2e_applications p
    LEFT JOIN e2e_judge_scores d ON d.application_id=p.id AND d.reviewer_id=?
    LEFT JOIN e2e_live_scores l ON l.application_id=p.id AND l.reviewer_id=? AND l.stage=p.phase
-   WHERE p.payment_status='simulated_paid' AND ${evidence}${approved}
+   WHERE ${feeGate} AND ${evidence}${approved}
     AND p.status NOT IN ('withdrawn','rejected')
    ORDER BY p.created_at DESC LIMIT 500`).bind(a.id,a.id).all();
-  return json({ok:true,queue:await attachProfiles(env,r.results||[]),testOnly:true});
+  const base=await attachProfiles(env,r.results||[]),queue=[];
+  for(const item of base){
+   queue.push({...item,video_index:1});
+   if(fiveEnabled&&item.phase==='demo'&&item.round_code==='2027-01'){
+    const videos=await getDemoVideos(db,item.id,{reviewerId:a.id,includeScores:true});
+    for(const v of videos.slice(1))queue.push({...item,video_index:v.video_index,
+     song_title:v.song_title,original_artist:v.original_artist,song_language:v.song_language,
+     demo_url:v.demo_url,demo_technique:v.reviewer_technique,demo_interpretation:v.reviewer_interpretation});
+   }
+  }
+  return json({ok:true,queue,testOnly:true});
  }
  if(path==='/api/e2e/score'&&post){
   if(forbidden('reviewer'))return forbidden('reviewer');
   const b=await bodyJSON(request);if(!b)return deny('invalid_json');
   if(b.no_conflict!==true)return deny('conflict_declaration_required',422);
   const app=await db.prepare(`SELECT p.id,p.phase,p.account_id FROM e2e_applications p WHERE p.id=?
-   AND p.payment_status='simulated_paid' AND ${evidence}${approved}
+   AND ${feeGate} AND ${evidence}${approved}
    AND p.status NOT IN ('withdrawn','rejected')`).bind(b.application_id).first();
   if(!app)return deny('not_reviewable',409);
   if(await ownsApplication(env,a,app.account_id))return deny('self_review_disallowed',403);
@@ -44,15 +57,24 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
   const demo=app.phase==='demo',caps=demo?[60,40]:[40,30,20,10];
   const inputs=demo?[b.technique,b.interpretation]:[b.technique,b.interpretation,b.stage_presence,b.appearance];
   if(inputs.some((v,i)=>!Number.isInteger(v)||v<0||v>caps[i]))return deny('invalid_stage_scores',422);
+  const extraIndex=b.video_index===undefined?1:Number(b.video_index);
+  if(!Number.isInteger(extraIndex)||extraIndex<1||extraIndex>5||(!demo&&extraIndex!==1)||(!fiveEnabled&&extraIndex!==1))return deny('invalid_demo_video_index',422);
+  let videoId=null;
+  if(extraIndex>1){
+   const video=await db.prepare('SELECT id FROM e2e_demo_videos WHERE application_id=? AND video_index=?').bind(app.id,extraIndex).first();
+   if(!video)return deny('extra_demo_not_found',404);videoId=video.id;
+  }
   try{
-   if(demo)await db.prepare('INSERT INTO e2e_judge_scores(application_id,reviewer_id,technique,interpretation,conflict_checked,created_at) VALUES(?,?,?,?,1,?)')
+   if(videoId)await db.prepare('INSERT INTO e2e_extra_demo_scores(video_id,reviewer_id,technique,interpretation,conflict_checked,created_at) VALUES(?,?,?,?,1,?)')
+    .bind(videoId,a.id,...inputs,NOW()).run();
+   else if(demo)await db.prepare('INSERT INTO e2e_judge_scores(application_id,reviewer_id,technique,interpretation,conflict_checked,created_at) VALUES(?,?,?,?,1,?)')
     .bind(app.id,a.id,...inputs,NOW()).run();
    else await db.prepare('INSERT INTO e2e_live_scores(application_id,reviewer_id,stage,technique,interpretation,stage_presence,appearance,conflict_checked,created_at) VALUES(?,?,?,?,?,?,?,1,?)')
     .bind(app.id,a.id,app.phase,...inputs,NOW()).run();
   }catch{return deny('already_scored_or_unavailable',409)}
   await db.prepare("UPDATE e2e_applications SET status='scored',updated_at=? WHERE id=? AND phase=? AND status NOT IN ('withdrawn','rejected')")
    .bind(NOW(),app.id,app.phase).run();
-  return json({ok:true,phase:app.phase,score:inputs.reduce((x,y)=>x+y,0),storedIn:'cloudflare-d1-staging',official:false});
+  return json({ok:true,phase:app.phase,video_index:extraIndex,score:inputs.reduce((x,y)=>x+y,0),storedIn:'cloudflare-d1-staging',official:false});
  }
  if(path==='/api/e2e/organizer-queue'&&!post){
   if(forbidden('organizer'))return forbidden('organizer');
@@ -75,11 +97,20 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
   if(approval&&app.approval_state!=='approved')return deny('test_approval_required',409);
   const next=app.phase==='demo'?'qualifier':app.phase==='qualifier'?'final':null;
   if(!next||b.to_phase!==next)return deny('invalid_stage_transition',409);
-  if(app.payment_status!=='simulated_paid')return deny('mock_payment_required',409);
+  const isFrontlineFree=fiveEnabled&&app.round_code==='2027-01'&&
+   Boolean((await db.prepare('SELECT 1 AS yes FROM e2e_frontline_2027_registration WHERE application_id=?').bind(app.id).first())?.yes);
+  if(app.payment_status!=='simulated_paid'&&!isFrontlineFree)return deny('mock_payment_required',409);
   const scored=app.phase==='demo'
     ?await db.prepare('SELECT COUNT(*) AS n FROM e2e_judge_scores WHERE application_id=?').bind(app.id).first()
     :await db.prepare('SELECT COUNT(*) AS n FROM e2e_live_scores WHERE application_id=? AND stage=?').bind(app.id,app.phase).first();
   if(Number(scored?.n||0)<3)return deny('three_judges_required_for_test',409);
+  let best=null;
+  if(isFrontlineFree&&app.phase==='demo'){
+   const videos=await getDemoVideos(db,app.id,{includeScores:true});
+   if(videos.some(v=>v.judges_count<3))return deny('three_judges_required_for_every_demo',409);
+   best=bestDemo(videos);
+   if(!best)return deny('demo_best_not_ready',409);
+  }
   try{
    const updated=await db.prepare(`UPDATE e2e_applications SET phase=?,status='shortlisted',updated_at=? WHERE id=? AND phase=?${approvalGuard(approval,'e2e_applications')}`)
     .bind(next,NOW(),app.id,app.phase).run();
@@ -87,7 +118,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    await db.prepare('INSERT INTO e2e_promotion_events(id,application_id,organizer_id,from_phase,to_phase,created_at) VALUES(?,?,?,?,?,?)')
     .bind(uuid(),app.id,a.id,app.phase,next,NOW()).run();
   }catch{return deny('quota_reached_or_transition_blocked',409)}
-  return json({ok:true,phase:next,official:false,message:'ORGANIZER TEST PROMOTION, NOT OFFICIAL ENTRY'});
+  return json({ok:true,phase:next,official:false,...(best?{best_demo_video_index:best.video_index,best_demo_mean:best.mean}:{}),message:'ORGANIZER TEST PROMOTION, NOT OFFICIAL ENTRY'});
  }
  if(path==='/api/e2e/finalists'&&!post){
   if(forbidden('member'))return forbidden('member');
