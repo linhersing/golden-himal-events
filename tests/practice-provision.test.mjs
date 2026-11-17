@@ -14,7 +14,7 @@ test('successful SQL file import with progress output still verifies actual sche
  const root=mkdtempSync(join(tmpdir(),'ghv-provision-output-')),script=resolve('scripts/provision-practice.mjs');
  try{
   mkdirSync(join(root,'bin'));mkdirSync(join(root,'backend/migrations'),{recursive:true});
-  for(const file of ['1002_private_practice_ONLY.sql','1004_self_service_signup_STAGING_ONLY.sql','1007_test_application_approval_STAGING_ONLY.sql','1009_test_video_supplements_STAGING_ONLY.sql','1010_nepal_locations_STAGING_ONLY.sql','1011_frontline_2027_registration_STAGING_ONLY.sql','1012_frontline_region_lock_STAGING_ONLY.sql','1013_member_corrections_STAGING_ONLY.sql'])
+  for(const file of ['1002_private_practice_ONLY.sql','1004_self_service_signup_STAGING_ONLY.sql','1007_test_application_approval_STAGING_ONLY.sql','1009_test_video_supplements_STAGING_ONLY.sql','1010_nepal_locations_STAGING_ONLY.sql','1011_frontline_2027_registration_STAGING_ONLY.sql','1012_frontline_region_lock_STAGING_ONLY.sql','1013_member_corrections_STAGING_ONLY.sql','1014_five_demo_videos_STAGING_ONLY.sql'])
    copyFileSync('backend/migrations/'+file,join(root,'backend/migrations',file));
   const cli=`#!/usr/bin/env node
 import {DatabaseSync} from 'node:sqlite';import {readFileSync} from 'node:fs';
@@ -31,5 +31,6 @@ db.close();`;
   assert.deepEqual(evidence.external_test_schema,{signup_tables:2,approval_tables:1,video_supplement_tables:1});
   assert.deepEqual(evidence.location_schema,{tables:1});
   assert.deepEqual(evidence.frontline_and_corrections,{frontline:1,region_guard:1,correction_requests:1,correction_audit:1});
+  assert.deepEqual(evidence.five_demo_schema,{videos:1,scores:1,video_guard:1,score_guard:1});
  }finally{rmSync(root,{recursive:true,force:true})}
 });
