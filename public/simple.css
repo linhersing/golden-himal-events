@@ -1353,3 +1353,20 @@ body[data-page="member"] .muse-region-lock{font-weight:700;color:#714b2a}
 body[data-page="member"] #member-primary-actions #member-quick-edit{
  display:none!important;
 }
+
+
+/* 2026-11-17: the signed-in registration form is visible immediately.
+   No extra accordion interaction, including at narrow phone widths. */
+body[data-page="member"] .application-panel > .application-title{
+ font-size:clamp(1.18rem,2.7vw,1.5rem);font-weight:800;line-height:1.35;
+ color:#553a31;margin:0 0 18px;padding:0 0 14px;
+ border-bottom:1px solid #e4d8c7;
+}
+body[data-page="member"] .muse-test-fields[data-mode="preview"] input,
+body[data-page="member"] .muse-test-fields[data-mode="preview"] textarea{
+ opacity:1;background:#fff;color:#29231e;cursor:text;
+}
+body[data-page="member"] .muse-test-fields[data-mode="preview"] #muse-fields-notice,
+body[data-page="member"] .muse-test-fields[data-mode="preview"] .helper-banner{
+ border-left:4px solid #b77e36;background:#fff4de;color:#624529;
+}
