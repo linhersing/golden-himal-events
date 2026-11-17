@@ -9,11 +9,11 @@ const endpoints=[
   ['/',['id="home-about"','id="home-competition"','id="home-news"','portal-tagline-official','portal-tagline-nepali','ghp-footer-brand','ghp-clean-official-logo-20261116.png',...footerMarkers]],
   ['/golden-himal.html',['data-page="story"','gh-story-slogan','ghp-footer-brand','ghp-clean-official-logo-20261116.png',...footerMarkers]],
   ['/voice.html',['data-page="home"','id="home-apply"','id="home-login"','voice-prize-grid','id="voice-rewards-heading"','NPR 50,000','NPR 30,000','NPR 15,000','NPR 20,000','href="./news.html#rules-awards"','ghp-universal-footer-brand','ghp-clean-official-logo-20261116.png','voice-wedding-hero-approved-20261114.jpg',...footerMarkers]],
-  ['/member.html',['id="member-email-form"','id="member-code-form"','id="member-status"','id="member-manage-edit"','id="member-manage-delete"','ghp-universal-footer-brand','ghp-clean-official-logo-20261116.png',...footerMarkers]],
+  ['/member.html',['id="member-email-form"','id="member-code-form"','id="member-status"','id="member-manage-edit"','id="member-manage-delete"','id="muse-test-fields"','name="contact_phone"','name="contact_email"','name="street_address"','name="educational_background"','data-l="museRegionLock"','ghp-universal-footer-brand','ghp-clean-official-logo-20261116.png',...footerMarkers]],
   ['/news.html',['id="rules-awards"','id="rules-voting"','ghp-universal-footer-brand','ghp-clean-official-logo-20261116.png',...footerMarkers]],
   ['/simple.css',['.voice-prize-grid','.voice-prize-link:hover','.member-account-tools','.ghp-universal-footer-brand']],
   ['/brand-portal.css',['portal-tagline-official','.ghp-footer-brand']],
-  ['/simple.js',["api('delete-my-data',{})","rows.find(memberCanEdit)"]],
+  ['/simple.js',["api('delete-my-data',{})","rows.find(memberCanEdit)","setupMuseForm(v.muse_form_enabled===true)"]],
 ];
 async function read(path) {
   const response=await fetch(BASE+path,{headers:{'Cache-Control':'no-cache'},cache:'no-store',signal:AbortSignal.timeout(15000)});
@@ -24,6 +24,16 @@ async function run() {
   for(const [path,markers] of endpoints){
     const body=await (await read(path)).text();
     for(const marker of markers)if(!body.includes(marker))throw Error(path+' missing current UI marker '+JSON.stringify(marker));
+    if(path==='/member.html'){
+      const newEntry=body.indexOf('id="new-application-callout"');
+      const application=body.indexOf('id="application-details"');
+      const existing=body.indexOf('class="panel member-home"');
+      const management=body.indexOf('id="member-account-tools"');
+      if(!(newEntry>=0&&newEntry<application&&application<existing&&existing<management))
+        throw Error('member user journey is not registration > form > saved data > management');
+      if(!body.includes('id="muse-test-fields" class="full muse-test-fields" disabled'))
+        throw Error('Muse contact fields must remain disabled until D1 privacy release');
+    }
     console.log('PASS current member preview '+path);
   }
   // Confirm the actual JPEG pixels are published, not only an HTML filename marker.
