@@ -56,7 +56,7 @@ test('April audition remains invisible until explicitly enabled in the member AP
  await page.goto('/member.html#login');
  await expect(page.locator('#new-application-callout')).toBeHidden();
  await expect(page.locator('#application-form option[value="2027-04"]')).toHaveJSProperty('disabled',true);
- await expect(page.locator('#member-quick-edit')).toBeVisible();
+ await expect(page.locator('#member-manage-edit')).toBeVisible();
 });
 
 test('April audition opens from the member home and keeps the original category',async({page})=>{
@@ -116,11 +116,11 @@ test('member home shows two statuses, edit after simulated checkout and true rea
  await expect(page.locator('#member-state-data')).toContainText('測試資料已儲存');
  await expect(page.locator('#member-state-payment')).toContainText('模擬付款');
  await expect(page.locator('#member-official-boundary')).toContainText('不代表正式報名成功');
- await expect(page.locator('#member-quick-edit')).toBeVisible();
+ await expect(page.locator('#member-manage-edit')).toBeVisible();
  await expect(page.locator('#member-primary-actions')).toBeVisible();
  await expect(page.locator('#application-details')).toBeHidden();
  await page.screenshot({path:'test-results/ghv-member-home-v2/member-home-desktop.png',fullPage:true});
- await page.locator('#member-quick-edit').click();
+ await page.locator('#member-manage-edit').click();
  await expect(page.locator('#member-edit-panel form')).toBeVisible();
  await page.locator('#member-edit-panel [name=stage_name]').fill('TEST Singer Revised');
  await page.locator('#member-edit-panel [name=song_title]').fill('English Song Revised');
@@ -142,7 +142,7 @@ test('member home shows two statuses, edit after simulated checkout and true rea
 test('member dashboard locks edit button when first judge score exists',async({page})=>{
  const state={entries:[{...entry,can_edit:0}]};await mockMemberApi(page,state);
  await page.goto('/member.html#login');
- await expect(page.locator('#member-quick-edit')).toBeHidden();
+ await expect(page.locator('#member-manage-edit')).toBeHidden();
  await expect(page.locator('#member-edit-lock-reason')).toBeVisible();
  await expect(page.locator('#member-edit-lock-reason')).toContainText('已開始評分');
  await expect(page.locator('#entries')).toContainText('已開始評分');
@@ -157,7 +157,7 @@ test('edit succeeds when the server trims text and canonicalizes an optional pho
  }));
  await page.setViewportSize({width:390,height:830});
  await page.goto('/member.html#login');
- await page.locator('#member-quick-edit').click();
+ await page.locator('#member-manage-edit').click();
  const form=page.locator('#member-edit-panel form');
  await form.locator('[name=stage_name]').fill('  TEST Revised Singer  ');
  await form.locator('[name=photo_url_1]').fill('https://EXAMPLE.org');
