@@ -1,3 +1,5 @@
+import {attachJanuaryScores,januaryDemoReady,januaryRoster,submitJanuaryScore} from './january-demo-test.js';
+import {attachFiveDemos,fiveDemoReady,fiveDemoRehearsal} from './demo-five-2027.js';
 import {approvalColumn,approvalGuard,approveTestApplication} from './test-application-approval.js';
 import {entrantLocationsReady,entrantLocationFields,entrantLocationJoin} from './entrant-location.js';
 import {supplementColumns,supplementGuard,supplementJoin} from './test-video-supplement.js';
@@ -13,9 +15,29 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
   "p.eligibility_key IS NOT NULL AND p.receipt_key IS NOT NULL AND (p.media_key IS NOT NULL OR p.demo_url IS NOT NULL)";
  const forbidden=role=>a?.role!==role?deny(role+'_only',403):null;
  const approved=approvalGuard(approval,'p');
+ const freeJanuary=approval&&fiveDemoRehearsal(env)&&await fiveDemoReady(env);
+ const perVideo=freeJanuary&&await januaryDemoReady(env);
+ const context={json,deny,NOW,bodyJSON,ownsApplication};
+ if(path==='/api/e2e/january-video-score'&&post){
+  if(forbidden('reviewer'))return forbidden('reviewer');
+  if(!perVideo)return deny('january_video_scoring_unavailable',503);
+  return submitJanuaryScore(request,env,a,context);
+ }
+ if(path==='/api/e2e/january-test-roster'){
+  if(forbidden('organizer'))return forbidden('organizer');
+  if(!perVideo)return deny('january_video_scoring_unavailable',503);
+  return januaryRoster(request,env,a,context);
+ }
+ const reviewablePayment=freeJanuary
+  ? `(p.payment_status='simulated_paid' OR (p.phase='demo' AND p.round_code='2027-01' AND p.payment_status='unpaid'
+     AND EXISTS(SELECT 1 FROM e2e_demo_2027_videos v WHERE v.application_id=p.id)))`
+  : "p.payment_status='simulated_paid'";
  if(path==='/api/e2e/approve-test-application'&&post&&approval){
   if(forbidden('organizer'))return forbidden('organizer');
-  return approveTestApplication(request,db,a,{json,deny,NOW,bodyJSON},supplementGuard(supplements,'p',true));
+  const rosterGuard=perVideo?` AND NOT EXISTS(SELECT 1 FROM e2e_january_demo_test_rosters r
+   JOIN e2e_frontline_2027_registration f ON f.competition_region=r.region
+   WHERE f.application_id=p.id AND p.round_code='2027-01' AND p.phase='demo')`:'';
+  return approveTestApplication(request,db,a,{json,deny,NOW,bodyJSON},supplementGuard(supplements,'p',true)+rosterGuard);
  }
  if(path==='/api/e2e/reviewer-queue'&&!post){
   if(forbidden('reviewer'))return forbidden('reviewer');
@@ -26,20 +48,25 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    FROM e2e_applications p
    LEFT JOIN e2e_judge_scores d ON d.application_id=p.id AND d.reviewer_id=?
    LEFT JOIN e2e_live_scores l ON l.application_id=p.id AND l.reviewer_id=? AND l.stage=p.phase
-   WHERE p.payment_status='simulated_paid' AND ${evidence}${approved}
+   WHERE ${reviewablePayment} AND ${evidence}${approved}
     AND p.status NOT IN ('withdrawn','rejected')
    ORDER BY p.created_at DESC LIMIT 500`).bind(a.id,a.id).all();
-  return json({ok:true,queue:await attachProfiles(env,r.results||[]),testOnly:true});
+  const queue=await attachFiveDemos(env,await attachProfiles(env,r.results||[]));
+  return json({ok:true,queue:perVideo?await attachJanuaryScores(env,queue,a.id):queue,testOnly:true});
  }
  if(path==='/api/e2e/score'&&post){
   if(forbidden('reviewer'))return forbidden('reviewer');
   const b=await bodyJSON(request);if(!b)return deny('invalid_json');
   if(b.no_conflict!==true)return deny('conflict_declaration_required',422);
   const app=await db.prepare(`SELECT p.id,p.phase,p.account_id FROM e2e_applications p WHERE p.id=?
-   AND p.payment_status='simulated_paid' AND ${evidence}${approved}
+   AND ${reviewablePayment} AND ${evidence}${approved}
    AND p.status NOT IN ('withdrawn','rejected')`).bind(b.application_id).first();
   if(!app)return deny('not_reviewable',409);
   if(await ownsApplication(env,a,app.account_id))return deny('self_review_disallowed',403);
+  if(app.phase==='demo'&&await fiveDemoReady(env)){
+   const videos=await db.prepare('SELECT COUNT(*) AS n FROM e2e_demo_2027_videos WHERE application_id=?').bind(app.id).first();
+   if(Number(videos?.n)>(perVideo?0:1))return deny('per_video_scoring_unavailable',409);
+  }
   if(b.phase!==app.phase)return deny('stale_reviewer_stage_reload_required',409);
   const demo=app.phase==='demo',caps=demo?[60,40]:[40,30,20,10];
   const inputs=demo?[b.technique,b.interpretation]:[b.technique,b.interpretation,b.stage_presence,b.appearance];
@@ -65,7 +92,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_judges,
    (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}${supplementColumns(supplements)}
    FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)} ORDER BY p.created_at ASC LIMIT 500`).all();
-  return json({ok:true,applications:await attachProfiles(env,r.results||[]),testOnly:true});
+  return json({ok:true,applications:await attachFiveDemos(env,await attachProfiles(env,r.results||[])),january_roster_enabled:perVideo,testOnly:true});
  }
  if(path==='/api/e2e/organizer-promote'&&post){
   if(forbidden('organizer'))return forbidden('organizer');
@@ -73,6 +100,8 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
   const app=await db.prepare(`SELECT p.id,p.phase,p.round_code,p.category,p.payment_status${approvalColumn(approval)} FROM e2e_applications p WHERE p.id=?`).bind(b.application_id).first();
   if(!app)return deny('application_not_found',404);
   if(approval&&app.approval_state!=='approved')return deny('test_approval_required',409);
+  if(app.round_code==='2027-01'&&app.phase==='demo'&&freeJanuary&&await db.prepare('SELECT 1 FROM e2e_demo_2027_videos WHERE application_id=? LIMIT 1').bind(app.id).first())
+   return deny('use_january_test_roster',409);
   const next=app.phase==='demo'?'qualifier':app.phase==='qualifier'?'final':null;
   if(!next||b.to_phase!==next)return deny('invalid_stage_transition',409);
   if(app.payment_status!=='simulated_paid')return deny('mock_payment_required',409);

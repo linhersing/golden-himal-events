@@ -1,6 +1,5 @@
 /* 2026-11-17 Nepal 2027 audition: up to five songs per singer.
- * All storage remains gated; per-video judging must be separately deployed.
- * The legacy single demo remains the only enabled TEST submission. */
+ * Storage is gated by configuration and the existing five-demo migration. */
 import {validSongLanguage,SUGGESTED_SONG_LANGUAGES} from './song-language.js';
 export const FIVE_DEMO_LIMIT=5;
 export const LANGUAGES=SUGGESTED_SONG_LANGUAGES;
@@ -30,11 +29,16 @@ export function parseFiveDemos(body,validLink){
  }
  return {entries:result};
 }
+export const fiveDemoRehearsal = env => env.STAGING_FIVE_DEMO_REHEARSAL==='true' &&
+ env.STAGING_TEST_APPROVAL_ENABLED==='true' && env.STAGING_SUBMISSION_MODE==='links';
+
 export async function fiveDemoReady(env){
- if(env.STAGING_FIVE_DEMO_ENABLED!=='true'||env.STAGING_PER_VIDEO_JUDGING_ENABLED!=='true'||!env.DB)return false;
+ if(!env.DB||(!fiveDemoRehearsal(env)&&(env.STAGING_FIVE_DEMO_ENABLED!=='true'||env.STAGING_PER_VIDEO_JUDGING_ENABLED!=='true')))return false;
  try{
-  const tables=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('e2e_demo_2027_videos','e2e_demo_2027_scores')").all();
-  return tables.results?.length===2;
+  const names=['e2e_demo_2027_videos','e2e_demo_2027_scores'];
+  if(fiveDemoRehearsal(env))names.push('e2e_frontline_2027_registration','e2e_january_demo_test_rosters');
+  const tables=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ("+names.map(()=>'?').join(',')+")").bind(...names).all();
+  return tables.results?.length===names.length;
  }catch{return false}
 }
 export function insertFiveDemos(db,id,rows,now){
@@ -68,11 +72,17 @@ export function replaceFiveDemos(db,id,owner,rows,now,guard=''){
 }
 export async function attachFiveDemos(env,rows){
  if(!rows.length||!await fiveDemoReady(env))return rows;
- for(const row of rows){
+ const byId=new Map(rows.map(row=>[row.id,row]));
+ for(let i=0;i<rows.length;i+=75){
+  const ids=rows.slice(i,i+75).map(row=>row.id);
   const links=await env.DB.prepare(
-   "SELECT position,song_title,original_artist,song_language,demo_url FROM e2e_demo_2027_videos WHERE application_id=? ORDER BY position"
-  ).bind(row.id).all();
-  if(links.results?.length)row.demo_entries=links.results.map(({position,...rest})=>rest);
+   'SELECT application_id,song_title,original_artist,song_language,demo_url FROM e2e_demo_2027_videos WHERE application_id IN ('+
+   ids.map(()=>'?').join(',')+') ORDER BY application_id,position'
+  ).bind(...ids).all();
+  for(const {application_id,...demo} of links.results||[]){
+   const row=byId.get(application_id);
+   (row.demo_entries??=[]).push(demo);
+  }
  }
  return rows;
 }

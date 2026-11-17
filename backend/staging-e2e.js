@@ -2,7 +2,7 @@ import {humanSignupSource,publicSignupReady,publicSignupChecklist,reservePublicS
 import {passwordModeReady,passwordIdentity,passwordRequest} from './staging-password-auth.js';
 import {emailAddress,mailProviderReady,mailSenderReady,sendTestEmail} from './staging-mail.js';
 import {validPerformanceLink} from '../public/performance-link.js';
-import {parseFiveDemos,fiveDemoReady,insertFiveDemos,replaceFiveDemos,attachFiveDemos} from './demo-five-2027.js';
+import {parseFiveDemos,fiveDemoReady,insertFiveDemos,replaceFiveDemos,attachFiveDemos,fiveDemoRehearsal} from './demo-five-2027.js';
 import {validSongLanguage} from './song-language.js';
 import {handleV2Route} from './staging-v2-flow.js';
 import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
@@ -263,6 +263,7 @@ async function submitApplication(request,env,a){
  if((env.STAGING_SUBMISSION_MODE==='links'&&!url)||(url&&!validPerformanceLink(url)))return deny('invalid_demo_url',422);
  const five=parseFiveDemos(b,validPerformanceLink);
  if(five.error)return deny(five.error,422);
+ if(five.entries&&fiveDemoRehearsal(env)&&b.round_code!=='2027-01')return deny('five_demo_round_unavailable',422);
  if(five.entries&&!await fiveDemoReady(env))return deny('five_demo_not_enabled',503);
  const parsed=parseProfileInput(b);
  if(parsed.error)return deny(parsed.error,422);
@@ -325,6 +326,7 @@ async function updateApplication(request,env,a,supplements){
  if(editingProfile&&!(await profileReady(env)))return deny('profile_not_enabled',503);
  const app=await selectApplication(env.DB,id,a.id);
  if(!app)return deny('application_not_found',404);
+ if(fiveEditing&&fiveDemoRehearsal(env)&&app.round_code!=='2027-01')return deny('five_demo_round_unavailable',422);
  const affiliation=Object.hasOwn(b,'affiliation')?(typeof b.affiliation==='string'?b.affiliation.trim():''):null;
  const songKey=Object.hasOwn(b,'song_key')?(typeof b.song_key==='string'?b.song_key.trim():''):null;
  if([affiliation,songKey].some(value=>value!==null&&(!value||value.length>100)))return deny('invalid_demo_url_or_fields',422);
@@ -557,7 +559,7 @@ export async function handleE2E(request,env){
     ...(a.role==='member'&&await entrantLocationsReady(env.DB)?{nepal_locations_enabled:true}:{}),
     ...(a.role==='member'&&env.STAGING_FRONTLINE_2027_ENABLED==='true'&&await entrantLocationsReady(env.DB)&&await frontline2027Ready(env.DB)?{frontline_form_enabled:true}:{}),
     ...(a.role==='member'&&await museAuditionReady(env)?{muse_form_enabled:true}:{}),
-    ...(a.role==='member'&&await fiveDemoReady(env)?{five_demo_enabled:true}:{}),
+    ...(a.role==='member'&&await fiveDemoReady(env)?{five_demo_enabled:true,five_demo_january_only:fiveDemoRehearsal(env)}:{}),
     ...(a.role==='member'&&env.STAGING_ELIGIBILITY_UPLOAD_ENABLED==='true'&&Boolean(env.STAGING_MEDIA)?{eligibility_upload_enabled:true}:{}),
     ...(approval?{approval_enabled:true}:{})});
   if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env,supplements);

@@ -31,7 +31,8 @@
     "STAGING_SUBMISSION_MODE": "links",
     "STAGING_PRACTICE_ENABLED": "true",
     "STAGING_TEST_APPROVAL_ENABLED": "true",
-    "STAGING_FRONTLINE_2027_ENABLED": "true"
+    "STAGING_FRONTLINE_2027_ENABLED": "true",
+    "STAGING_FIVE_DEMO_REHEARSAL": "true"
   },
   "triggers": {"crons": ["*/5 * * * *"]},
   "observability": {

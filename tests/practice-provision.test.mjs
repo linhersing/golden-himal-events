@@ -14,7 +14,7 @@ test('successful SQL file import with progress output still verifies actual sche
  const root=mkdtempSync(join(tmpdir(),'ghv-provision-output-')),script=resolve('scripts/provision-practice.mjs');
  try{
   mkdirSync(join(root,'bin'));mkdirSync(join(root,'backend/migrations'),{recursive:true});
-  for(const file of ['1002_private_practice_ONLY.sql','1004_self_service_signup_STAGING_ONLY.sql','1007_test_application_approval_STAGING_ONLY.sql','1009_test_video_supplements_STAGING_ONLY.sql','1010_nepal_locations_STAGING_ONLY.sql','1011_frontline_2027_registration_STAGING_ONLY.sql','1012_frontline_region_lock_STAGING_ONLY.sql','1013_member_corrections_STAGING_ONLY.sql'])
+  for(const file of ['1002_private_practice_ONLY.sql','1004_self_service_signup_STAGING_ONLY.sql','1007_test_application_approval_STAGING_ONLY.sql','1009_test_video_supplements_STAGING_ONLY.sql','1010_nepal_locations_STAGING_ONLY.sql','1011_frontline_2027_registration_STAGING_ONLY.sql','1012_frontline_region_lock_STAGING_ONLY.sql','1013_member_corrections_STAGING_ONLY.sql','1014_demo_five_2027_STAGING_ONLY.sql','1016_january_demo_test_rosters_ONLY.sql'])
    copyFileSync('backend/migrations/'+file,join(root,'backend/migrations',file));
   const cli=`#!/usr/bin/env node
 import {DatabaseSync} from 'node:sqlite';import {readFileSync} from 'node:fs';
