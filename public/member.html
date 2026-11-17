@@ -91,10 +91,29 @@
   <div class="registration-deadline-label" data-l="entryPeriodTitle">2027 海選收件日期</div>
   <div class="registration-deadline-dates" data-l="entryPeriodDates">2027年1月1日至1月31日｜尼泊爾當地時間</div>
   <p data-l="entryPeriodHelp">海選免費。正式開放與截止的確切時刻以主辦單位官網公告為準；目前僅為測試網站。</p>
+  <div class="registration-roadmap" role="list" aria-label="2027 planned competition timetable">
+   <div role="listitem"><strong data-l="scheduleRound1">2月12日 · 第一次初選</strong></div>
+   <div role="listitem"><strong data-l="scheduleRound2">3月5日 · 第二次初選</strong></div>
+   <div role="listitem"><strong data-l="scheduleRound3">3月12日 · 晉級賽</strong></div>
+   <div role="listitem"><strong data-l="scheduleFinal">4月14日 · 季度總決賽</strong></div>
+  </div><p data-l="scheduleCaveat">以上為預定日期；各階段確切時間與地點依公告。通知資料缺漏者須於48小時內補正一次。</p>
  </aside>
 <p class="helper-banner" data-l="frontlineFormBoundary" role="note">11月16日新版：1月海選免費，每人最多5支Demo，單一組別，選A區Lumbini或B區Bagmati。此測試表單仍使用舊欄位且暫只可送1支作品；尚未轉換成正式報名。請勿在測試階段上傳真實證件或付款。</p>
 <p class="helper-banner" data-l-html="demoRules">...</p>
 <form id="application-form" class="form-grid" style="margin-top:16px">
+<fieldset id="muse-test-fields" class="full muse-test-fields" disabled aria-labelledby="muse-fields-title">
+<legend id="muse-fields-title" data-l="museTitle">Registration details</legend>
+<p class="field-hint" data-l="museInfo">Enter contact and education details. Select your province separately in the location section below.</p>
+<p id="muse-fields-notice" class="helper-banner" data-l="musePending" role="status">Secure private storage is not yet approved. These controls are disabled; no personal details will be submitted or saved.</p>
+<div class="muse-fields-grid"><label class="field"><span data-l="museFullName">Full name *</span><input type="text" name="full_name" maxlength="120" autocomplete="off" required></label>
+<label class="field"><span data-l="musePhone">Phone number *</span><input type="tel" name="contact_phone" maxlength="32" autocomplete="off" required></label>
+<label class="field"><span data-l="museEmail">Email address *</span><input type="email" name="contact_email" maxlength="180" autocomplete="off" required></label>
+<label class="field"><span data-l="museCity">City *</span><input type="text" name="city" maxlength="100" autocomplete="off" required></label>
+<label class="field"><span data-l="museStreet">Street address / Tol address *</span><input type="text" name="street_address" maxlength="160" autocomplete="off" required></label>
+<label class="field full"><span data-l="museEducation">Educational background *</span><textarea name="educational_background" rows="3" maxlength="400" required></textarea></label>
+<label class="field full"><span data-l="museDescription">Short description *</span><textarea name="short_description" rows="3" maxlength="500" required></textarea></label>
+<label class="field full"><span data-l="museTraining">Musical education / training experience *</span><textarea name="musical_training" rows="3" maxlength="400" required></textarea></label></div>
+</fieldset>
 <label class="field"><span data-l="stageName">Singer or stage name *</span><input name="stage_name" maxlength="60" required autocomplete="name" data-l-placeholder="stagePlaceholder" placeholder="Name shown to judges"></label>
 <fieldset id="entrant-profile-fields" class="full entrant-profile-fields" hidden>
 <legend data-l="profileHeading">選手照片與基本資料（選填）</legend>
@@ -111,19 +130,7 @@
 <label class="field"><span data-l="profilePhoto3">補充照片 3</span><input name="photo_url_3" type="url" maxlength="600" placeholder="https://example.com/photo3.jpg"></label></details>
 <label class="check"><input name="profile_consent" type="checkbox" id="entrant-profile-consent"><span data-l="profileConsent">我同意主辦方及授權評審查看所填照片網址及性別；外部圖片服務可能取得瀏覽器連線資訊。</span></label>
 </fieldset>
-<fieldset id="muse-test-fields" class="full muse-test-fields" disabled aria-labelledby="muse-fields-title">
-<legend id="muse-fields-title" data-l="museTitle">Registration details</legend>
-<p class="field-hint" data-l="museInfo">Enter contact and education details. Select your province separately in the location section below.</p>
-<p id="muse-fields-notice" class="helper-banner" data-l="musePending" role="status">Secure private storage is not yet approved. These controls are disabled; no personal details will be submitted or saved.</p>
-<div class="muse-fields-grid"><label class="field"><span data-l="museFullName">Full name *</span><input type="text" name="full_name" maxlength="120" autocomplete="off" required></label>
-<label class="field"><span data-l="musePhone">Phone number *</span><input type="tel" name="contact_phone" maxlength="32" autocomplete="off" required></label>
-<label class="field"><span data-l="museEmail">Email address *</span><input type="email" name="contact_email" maxlength="180" autocomplete="off" required></label>
-<label class="field"><span data-l="museCity">City *</span><input type="text" name="city" maxlength="100" autocomplete="off" required></label>
-<label class="field"><span data-l="museStreet">Street address / Tol address *</span><input type="text" name="street_address" maxlength="160" autocomplete="off" required></label>
-<label class="field full"><span data-l="museEducation">Educational background *</span><textarea name="educational_background" rows="3" maxlength="400" required></textarea></label>
-<label class="field full"><span data-l="museDescription">Short description *</span><textarea name="short_description" rows="3" maxlength="500" required></textarea></label>
-<label class="field full"><span data-l="museTraining">Musical education / training experience *</span><textarea name="musical_training" rows="3" maxlength="400" required></textarea></label></div>
-</fieldset>
+
 <label class="field"><span data-l="window">Audition window *</span><select name="round_code"><option value="2027-01" data-l="jan">January 2027</option><option value="2027-04" data-l="apr" hidden disabled>April 2027</option></select><small class="field-hint" data-l="windowHelp">Choose the online audition window.</small></label>
 <fieldset id="frontline-test-fields" class="full" hidden disabled aria-labelledby="frontline-test-legend">
 <legend id="frontline-test-legend" data-l="frontlineHeading">2027 單一競賽組別｜參賽地區與資格（TEST）</legend>
