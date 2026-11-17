@@ -91,7 +91,7 @@ const safeLink=(url)=>{try{const u=new URL(url);return u.protocol==='https:'?u.h
 const formValues=form=>Object.fromEntries(new FormData(form));
 const mt=k=>window.GHVLocale?.t(k)||k;
 const staff=page==='back',prefix=staff?'back':'member';
-let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,frontlineFormEnabled=false,museFormEnabled=false;
+let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,frontlineFormEnabled=false,museFormEnabled=false,fiveDemoEnabled=false;
 const statusBox=$(prefix+'-status');
 function permittedPhoto(url){const href=safeLink(url);if(!href)return null;try{const x=new URL(href);if(x.username||x.password||(x.port&&x.port!=='443')||x.hostname==='localhost'||x.hostname.endsWith('.local')||x.hostname.endsWith('.internal'))return null;return href}catch{return null}}
 function profileImage(url,large=false){
@@ -212,6 +212,59 @@ function setupMuseForm(ready){
   notice.textContent=mt(notice.dataset.l);
  }
 }
+function demoSlots(){return [...document.querySelectorAll('#demo-extra-list [data-demo-slot]')];}
+function activeExtraDemoSlots(){return demoSlots().filter(el=>!el.hidden);}
+function updateDemoCount(){
+ const count=1+activeExtraDemoSlots().length;
+ const counter=$('demo-counter'),add=$('demo-add');
+ if(counter)counter.textContent=count+' / 5';
+ if(add){add.disabled=count>=5;add.setAttribute('aria-disabled',String(count>=5));}
+}
+function addDemoSlot(){
+ const card=demoSlots().find(c=>c.hidden);
+ if(!card){status(mt('demoLimit'),true);return;}
+ card.hidden=false;card.disabled=false;
+ for(const el of card.querySelectorAll('input,select'))el.required=true;
+ updateDemoCount();
+ card.querySelector('input')?.focus({preventScroll:true});
+}
+function removeDemoSlot(card){
+ // Maintain contiguous demo positions. Removing Demo 3 also removes any Demo 4–5
+ // to avoid silently shifting songs to another number after the singer saved it.
+ const start=Number(card?.dataset.demoSlot||6);
+ for(const item of demoSlots().filter(c=>Number(c.dataset.demoSlot)>=start)){
+  for(const input of item.querySelectorAll('input,select')){
+   input.value='';input.required=false;
+  }
+  item.hidden=true;item.disabled=true;
+ }
+ updateDemoCount();
+}
+function setupFiveDemo(enabled){
+ fiveDemoEnabled=enabled===true;
+ const notice=$('demo-storage-notice');
+ if(notice){notice.dataset.l=fiveDemoEnabled?'demoMultiEnabled':'demoMultiPending';notice.textContent=mt(notice.dataset.l);}
+ updateDemoCount();
+}
+function collectDemoEntries(form){
+ const main=new FormData(form);
+ const entries=[{
+  song_title:String(main.get('song_title')||'').trim(),
+  original_artist:String(main.get('original_artist')||'').trim(),
+  song_language:String(main.get('song_language')||'').trim(),
+  demo_url:String(main.get('demo_url')||'').trim()
+ }];
+ for(const card of activeExtraDemoSlots()){
+  const i=card.dataset.demoSlot;
+  entries.push({
+   song_title:String(main.get('demo_'+i+'_title')||'').trim(),
+   original_artist:String(main.get('demo_'+i+'_artist')||'').trim(),
+   song_language:String(main.get('demo_'+i+'_language')||'').trim(),
+   demo_url:String(main.get('demo_'+i+'_url')||'').trim()
+  });
+ }
+ return entries;
+}
 function setupFrontlineForm(enabled){
  if(page!=='member')return;
  const next=$('frontline-test-fields'),legacy=$('legacy-category-field'),form=$('application-form');
@@ -249,6 +302,7 @@ async function loadSession(){try{
   setupProfileFields(v.profile_enabled===true);
   setupFrontlineForm(v.frontline_form_enabled===true);
   setupMuseForm(v.muse_form_enabled===true);
+  setupFiveDemo(v.five_demo_enabled===true);
   const nationwide=v.nepal_locations_enabled===true,location=$('entrant-location-detail'),field=location.querySelector('input');
   location.hidden=!nationwide;field.disabled=!nationwide;field.required=nationwide;
   const note=$('province-note');note.dataset.l=nationwide?'provinceHelp':'provincePending';note.textContent=mt(note.dataset.l);
@@ -451,8 +505,14 @@ function drawEntry(a){
   correction.onclick=()=>showCorrection(a);actions.append(correction);
  }
 
- const url=safeLink(a.demo_url);
- if(url){const link=node('a',mt('viewVideo'),'btn btn-soft');link.href=url;link.target='_blank';link.rel='noopener noreferrer';actions.append(link);}
+ const savedVideos=Array.isArray(a.demo_entries)&&a.demo_entries.length?a.demo_entries:[{demo_url:a.demo_url,song_title:a.song_title}];
+ for(let i=0;i<savedVideos.length;i++){
+  const url=safeLink(savedVideos[i]?.demo_url);
+  if(url){
+   const link=node('a',savedVideos.length>1?'Demo '+(i+1)+' · '+(savedVideos[i].song_title||''):mt('viewVideo'),'btn btn-soft');
+   link.href=url;link.target='_blank';link.rel='noopener noreferrer';actions.append(link);
+  }
+ }
  if(a.payment_status==='unpaid'&&a.status==='submitted'){
   const del=node('button',mt('delete'),'btn btn-soft');del.type='button';
   del.onclick=()=>{
@@ -892,6 +952,11 @@ if(page==='member'){
  });
  window.addEventListener('ghv:languagechange',()=>{if(account&&account.role==='member'){if(document.querySelector('[data-editing]'))return;renderMember().catch(e=>status(friendlyError(e),true))}});
  const application=$('application-form'),details=$('application-details'),start=$('start-application');
+ $('demo-add')?.addEventListener('click',addDemoSlot);
+ document.querySelectorAll('[data-demo-remove]').forEach(button=>{
+  button.addEventListener('click',()=>removeDemoSlot(button.closest('[data-demo-slot]')));
+ });
+ updateDemoCount();
  // No second click: for a member without an entry, the form is already visible.
  // This optional CTA is now only a shortcut to the expanded registration form.
  start?.addEventListener('click',()=>{
@@ -900,6 +965,12 @@ if(page==='member'){
   setTimeout(()=>application.querySelector('[name=stage_name]')?.focus({preventScroll:true}),180);
  });
  application.addEventListener('submit',e=>{e.preventDefault();
+ const selectedDemos=collectDemoEntries(application);
+ if(selectedDemos.length>1&&!fiveDemoEnabled){
+  status(mt('demoMultiCannotSave'),true);
+  $('demo-storage-notice')?.scrollIntoView({block:'center',behavior:'smooth'});
+  return;
+ }
  // Never silently omit private contact fields or imply that they were saved.
  // In preview mode the member may type fictional values, but must clear them
  // before submitting the separate legacy TEST entry (until D1 is approved).
@@ -910,7 +981,10 @@ if(page==='member'){
  }
  run(async()=>{
  const v=formValues(application),data={...v,frontline_2027:frontlineFormEnabled,video_confirmed:application.querySelector('[name=video_confirmed]')?.checked===true,profile_consent:application.querySelector('[name=profile_consent]')?.checked===true,adult_confirmed:application.querySelector('[name=adult_confirmed]').checked,student_confirmed:application.querySelector('[name=student_confirmed]').checked,nonreligious_song_ack:application.querySelector('[name=nonreligious_song_ack]')?.checked===true,no_exclusive_contract:application.querySelector('[name=no_exclusive_contract]').checked};
- const saved=await api('applications',data);application.reset();toggle();status('✓ '+mt('saved')+' '+mt('entryId')+': '+saved.application_id);await renderMember()})});
+ for(const key of Object.keys(data))if(/^demo_[2-5]_(title|artist|language|url)$/.test(key))delete data[key];
+ if(fiveDemoEnabled)data.demo_entries=selectedDemos;
+ const saved=await api('applications',data);application.reset();demoSlots().forEach(card=>removeDemoSlot(card));toggle();
+ status('✓ '+mt('saved')+' '+mt('entryId')+': '+saved.application_id);await renderMember()})});
  const toggle=()=>{const community=$('category').value==='community',modern=frontlineFormEnabled;const adult=application.querySelector('[name=adult_confirmed]'),student=application.querySelector('[name=student_confirmed]');$('community-statement').hidden=modern||!community;$('university-statement').hidden=modern||community;adult.required=!modern&&community;student.required=!modern&&!community;if(modern){adult.checked=false;student.checked=false;}else if(community)student.checked=false;else adult.checked=false;};
  $('category').addEventListener('change',toggle);toggle();
  // The #register deep link is handled by the same always-visible registration section.
