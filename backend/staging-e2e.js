@@ -9,6 +9,7 @@ import {parseLocation,entrantLocationsReady,entrantLocationFields,entrantLocatio
 import {parseFrontline2027,frontline2027Ready,insertFrontline2027,frontlineSelect,frontlineJoin} from './frontline-2027.js';
 import {MUSE_FIELDS,museHasFields,parseMuseAudition,museAuditionReady,insertMuseAudition,updateMuseAudition,attachMuseAudition} from './muse-audition.js';
 import {handleVideoSupplement,supplementColumns,supplementGuard,supplementJoin,videoSupplementsReady} from './test-video-supplement.js';
+import {handleCorrectionRoute} from './member-corrections.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
  * No official entries, actual payments, or exposed R2 URLs.
@@ -506,6 +507,8 @@ export async function handleE2E(request,env){
   }
   if(pathname==='/api/e2e/logout'&&isPost)return await logout(request,env,a);
   if(pathname==='/api/e2e/switch-role'&&isPost)return await switchRole(request,env,a);
+  const corrections=await handleCorrectionRoute(request,env,a,{json,deny,bodyJSON,uuid,NOW});
+  if(corrections)return corrections;
   const approval=approvalRequired(env);
   if(approval&&!await approvalSchemaReady(env))return deny('test_approval_schema_unavailable',503);
    const supplements=await videoSupplementsReady(env,approval);
