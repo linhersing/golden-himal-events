@@ -27,7 +27,7 @@ const request=(path,payload)=>new Request(origin+'/api/e2e/'+path,{
 function fixture(withMigration=true){
  const db=new DatabaseSync(':memory:');
  db.exec(readFileSync(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
- if(withMigration)db.exec(readFileSync(new URL('../backend/migrations/1012_e2e_member_corrections_STAGING_ONLY.sql',import.meta.url),'utf8'));
+ if(withMigration)db.exec(readFileSync(new URL('../backend/migrations/1013_member_corrections_STAGING_ONLY.sql',import.meta.url),'utf8'));
  for(const [id,role] of [['m','member'],['j','reviewer'],['o','organizer']])
   db.prepare('INSERT INTO e2e_accounts (id,email_fingerprint,email_hint,role,created_at) VALUES(?,?,?,?,?)')
    .run(id,id+'-hash','hidden',role,1);
