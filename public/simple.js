@@ -707,6 +707,50 @@ function showEdit(a){
   if(name==='demo_url')lab.classList.add('full');
   form.append(lab);
  }
+ const editDemoCards=[];
+ if(fiveDemoEnabled){
+  const series=node('fieldset',undefined,'full demo-edit-series');
+  const heading=node('legend',mt('demoMultiTitle'));series.append(heading);
+  const note=node('p',mt('demoMultiRules'),'minor');series.append(note);
+  const saved=Array.isArray(a.demo_entries)&&a.demo_entries.length?a.demo_entries:[{demo_url:a.demo_url,song_title:a.song_title,original_artist:a.original_artist,song_language:a.song_language}];
+  for(let slot=2;slot<=5;slot++){
+   const old=saved[slot-1]||{},card=node('section',undefined,'demo-edit-card');
+   card.dataset.demoSlot=String(slot);card.hidden=slot>saved.length;
+   card.append(node('h4','Demo '+slot));
+   const group=node('div',undefined,'demo-extra-grid');
+   for(const [name,key,max] of [['song_title','songTitle',100],['original_artist','artist',100],['song_language','songLang',30],['demo_url','videoUrl',1000]]){
+    const label=node('label',undefined,'field');label.append(node('span',mt(key)));
+    let input;
+    if(name==='song_language'){
+     input=$('application-form').elements.song_language.cloneNode(true);input.removeAttribute('id');
+    }else{
+     input=node('input');input.maxLength=max;
+     if(name==='demo_url')input.type='url';
+    }
+    input.name='demo_edit_'+slot+'_'+name;input.value=old[name]||'';
+    input.required=!card.hidden;input.disabled=card.hidden;
+    label.append(input);group.append(label);
+   }
+   card.append(group);
+   const remove=node('button',mt('demoRemove'),'btn btn-soft');remove.type='button';
+   remove.onclick=()=>{
+    for(const c of editDemoCards.filter(c=>Number(c.dataset.demoSlot)>=slot)){
+     c.hidden=true;
+     for(const input of c.querySelectorAll('input,select')){input.value='';input.required=false;input.disabled=true;}
+    }
+    syncEditAdd();
+   };
+   card.append(remove);series.append(card);editDemoCards.push(card);
+  }
+  const add=node('button',mt('demoAdd'),'btn btn-soft');add.type='button';
+  function syncEditAdd(){add.disabled=editDemoCards.every(c=>!c.hidden)}
+  add.onclick=()=>{
+   const card=editDemoCards.find(c=>c.hidden);if(!card)return;
+   card.hidden=false;for(const input of card.querySelectorAll('input,select')){input.disabled=false;input.required=true;}
+   syncEditAdd();card.querySelector('input')?.focus({preventScroll:true});
+  };
+  syncEditAdd();series.append(add);form.append(series);
+ }
  if(profileEnabled){
   const consent=node('label',undefined,'check full'),check=node('input');
   check.type='checkbox';check.name='profile_consent';check.required=true;
@@ -720,6 +764,22 @@ function showEdit(a){
  buttons.append(save,cancel);form.append(buttons);
  form.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
   const payload={application_id:a.id,...formValues(form)};
+  let verifiedDemoEntries=null;
+  if(fiveDemoEnabled){
+   verifiedDemoEntries=[{
+    song_title:String(payload.song_title||'').trim(),
+    original_artist:String(payload.original_artist||'').trim(),
+    song_language:String(payload.song_language||'').trim(),
+    demo_url:String(payload.demo_url||'').trim()
+   }];
+   for(const card of editDemoCards.filter(c=>!c.hidden)){
+    const slot=card.dataset.demoSlot;
+    verifiedDemoEntries.push(Object.fromEntries(['song_title','original_artist','song_language','demo_url']
+      .map(k=>[k,String(payload['demo_edit_'+slot+'_'+k]||'').trim()])));
+   }
+   for(const key of Object.keys(payload))if(key.startsWith('demo_edit_'))delete payload[key];
+   payload.demo_entries=verifiedDemoEntries;
+  }
   if(profileEnabled)payload.profile_consent=form.querySelector('[name=profile_consent]')?.checked===true;
   await api('update-application',payload);
   const check=await api('applications');
@@ -731,6 +791,12 @@ function showEdit(a){
    const expected=entered&&key.startsWith('photo_url_')?new URL(entered).href:entered;
    return String(saved[key]??'')!==expected;
   }))throw Error('readback_mismatch');
+  if(verifiedDemoEntries){
+   if(!Array.isArray(saved.demo_entries)||saved.demo_entries.length!==verifiedDemoEntries.length)throw Error('readback_mismatch');
+   for(let i=0;i<verifiedDemoEntries.length;i++)
+    for(const k of ['song_title','original_artist','song_language','demo_url'])
+     if(saved.demo_entries[i][k]!==verifiedDemoEntries[i][k])throw Error('readback_mismatch');
+  }
   await renderMember();status(mt('savedChanges'));
  })});
  box.append(form);holder.append(box);
