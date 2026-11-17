@@ -1370,3 +1370,12 @@ body[data-page="member"] .muse-test-fields[data-mode="preview"] #muse-fields-not
 body[data-page="member"] .muse-test-fields[data-mode="preview"] .helper-banner{
  border-left:4px solid #b77e36;background:#fff4de;color:#624529;
 }
+
+/* 2026-11-17 · Safe TEST multi-Demo rows, mobile-first, no new external assets */
+.member-demo-multi{margin-top:20px;padding:18px;border:1px solid #e1c9ab;border-radius:16px;background:rgba(255,252,246,.85);max-width:100%;min-width:0}
+.member-demo-multi h4{margin:0 0 10px;color:#613b32}
+.member-demo-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px;margin:14px 0}
+.member-demo-item{min-width:0;padding:12px;border-radius:12px;background:#fff;border:1px solid #ebddc8;display:flex;flex-direction:column;gap:7px;overflow-wrap:anywhere}
+.member-demo-multi .form-grid{margin-top:16px}
+.member-demo-multi button{min-height:44px}
+@media(max-width:650px){.member-demo-multi{padding:13px}.member-demo-list{grid-template-columns:1fr}}
