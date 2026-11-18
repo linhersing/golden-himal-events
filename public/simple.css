@@ -1591,9 +1591,6 @@ body[data-page="back"] .roster-pagination .btn{min-height:46px;font-size:1rem}
 
 
 /* 2026-11-18 responsive judge acceptance: variable low-end Android devices. */
-body[data-page="back"]{
- overflow-x:clip;
-}
 body[data-page="back"] .page-shell,
 body[data-page="back"] .panel,
 body[data-page="back"] .entry,
