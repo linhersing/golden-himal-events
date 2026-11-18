@@ -1010,23 +1010,61 @@ async function renderJanuaryRoster(){
  }
 }
 function januaryScoreForm(application,demo,position,onSaved){
- if(demo.my_score)return node('p','已儲存：'+(demo.my_score.technique+demo.my_score.interpretation)+' 分','minor');
- const form=node('form',undefined,'form-grid');
+ if(demo.my_score){
+  const saved=Number(demo.my_score.technique||0)+Number(demo.my_score.interpretation||0);
+  return node('p','已儲存：'+saved+' 分（不可重複送出）','minor');
+ }
+ const form=node('form',undefined,'form-grid judge-score-form');
  form.setAttribute('aria-label','評分第 '+position+' 支 Demo');
+ form.setAttribute('data-demo-position',String(position));
  for(const [name,title,max] of [['technique','技巧',60],['interpretation','情感',40]]){
-  const label=node('label',undefined,'field'),input=node('input');input.type='number';input.name=name;input.required=true;input.min='0';input.max=String(max);input.step='1';
+  const label=node('label',undefined,'field'),input=node('input');
+  input.type='number';input.inputMode='numeric';input.name=name;
+  input.required=true;input.min='0';input.max=String(max);input.step='1';
   label.append(node('span',title+'（0–'+max+'）'),input);form.append(label);
  }
  const declaration=node('label',undefined,'check'),check=node('input');check.type='checkbox';check.required=true;
  declaration.append(check,node('span','我確認沒有利益衝突。'));
- const button=node('button','儲存第 '+position+' 支評分','btn btn-primary');button.type='submit';
- form.append(declaration,button);
+ const feedback=node('p',undefined,'judge-save-feedback');
+ feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');
+ const button=node('button','儲存第 '+position+' 支評分','btn btn-primary judge-score-submit');
+ button.type='submit';
+ form.append(declaration,feedback,button);
+ let submitting=false;
  form.onsubmit=event=>{
-  event.preventDefault();run(async()=>{
-   const values=formValues(form);
-   const saved=await api('january-video-score',{application_id:application.id,position,no_conflict:check.checked,technique:Number(values.technique),interpretation:Number(values.interpretation)});
-   form.dispatchEvent(new CustomEvent('ghv:demo-scored',{bubbles:true,detail:{position,form}}));
-   form.replaceWith(node('p','已儲存：'+saved.score+' 分','minor'));onSaved();
+  event.preventDefault();
+  if(submitting||busy)return;
+  const values=formValues(form);
+  // Navigator.onLine is only a hint: server response still determines success.
+  if(navigator.onLine===false){
+   feedback.textContent='手機目前顯示離線。分數尚未送出，請先恢復網路；不要關閉此頁。';
+   feedback.dataset.state='error';return;
+  }
+  run(async()=>{
+   submitting=true;button.disabled=true;
+   button.textContent='正在儲存，請勿重複點擊…';
+   feedback.textContent='正在連線並確認伺服器儲存結果…';
+   feedback.dataset.state='pending';
+   try{
+    const saved=await api('january-video-score',{
+     application_id:application.id,position,no_conflict:check.checked,
+     technique:Number(values.technique),interpretation:Number(values.interpretation)
+    });
+    if(!Number.isFinite(Number(saved.score)))throw new Error('score_readback_unavailable');
+    const done=node('p','已儲存：'+saved.score+' 分 · 第 '+position+' 首','judge-saved-confirmation');
+    done.setAttribute('role','status');done.setAttribute('aria-live','polite');
+    form.dispatchEvent(new CustomEvent('ghv:demo-scored',{bubbles:true,detail:{position,form}}));
+    form.replaceWith(done);onSaved();
+   }catch(error){
+    // Preserve typed values. A timed-out request might have reached the server:
+    // never claim it failed or automatically retry a non-idempotent action.
+    feedback.textContent='無法確認是否儲存成功。已保留輸入內容；請先重新核對評分紀錄，勿連續送出。';
+    feedback.dataset.state='error';
+    throw error;
+   }finally{
+    submitting=false;button.disabled=false;
+    button.textContent='儲存第 '+position+' 支評分';
+   }
   });
  };
  return form;
@@ -1341,12 +1379,28 @@ async function renderJudge(){
   }
   const agree=node('label',undefined,'check'),checkbox=node('input');checkbox.type='checkbox';checkbox.name='conflict';checkbox.required=true;
   agree.append(checkbox,node('span','我確認此次評分沒有利益衝突。'));form.append(agree);
-  const save=node('button','儲存我的評分','btn btn-primary');save.type='submit';form.append(save);
-  form.onsubmit=e=>{e.preventDefault();run(async()=>{
+  const feedback=node('p',undefined,'judge-save-feedback');
+  feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');
+  const save=node('button','儲存我的評分','btn btn-primary judge-score-submit');save.type='submit';
+  form.append(feedback,save);
+  let saving=false;
+  form.onsubmit=e=>{e.preventDefault();
+   if(saving||busy)return;
+   if(navigator.onLine===false){feedback.textContent='手機目前離線，分數尚未送出。請保留頁面直到網路恢復。';feedback.dataset.state='error';return;}
    const inputs=formValues(form),payload={application_id:a.id,phase,no_conflict:checkbox.checked};
    for(const [name] of criteria)payload[name]=Number(inputs[name]);
-   await api('score',payload);status('評分已儲存。');await renderJudge();
-  })};
+   run(async()=>{
+    saving=true;save.disabled=true;save.textContent='正在儲存…';
+    feedback.textContent='正在向伺服器確認評分結果…';feedback.dataset.state='pending';
+    try{
+     await api('score',payload);
+     status('評分已儲存。');await renderJudge();
+    }catch(error){
+     feedback.textContent='儲存狀態無法確認，分數仍保留在畫面。請先查詢評分紀錄，勿連續送出。';
+     feedback.dataset.state='error';throw error;
+    }finally{saving=false;save.disabled=false;save.textContent='儲存我的評分';}
+   });
+  };
   box.append(form);holder.append(box);back.focus();
  }
  search.oninput=()=>{pageNo=1;paint()};statusFilter.onchange=()=>{pageNo=1;paint()};
