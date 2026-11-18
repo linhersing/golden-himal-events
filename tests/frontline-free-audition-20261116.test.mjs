@@ -11,7 +11,8 @@ test('January 2027 audition is not blocked by checkout, and public payment UI is
  assert.match(member,/2027 January audition TEST/);
  const memberPage=readFileSync(new URL('../public/member.html',import.meta.url),'utf8');
  assert.match(memberPage,/id="register"/);
- assert.match(memberPage,/<div class="member-state" hidden style="display:none">/);
+ assert.match(memberPage,/data-l="statusPayment">Stage review<\x2fspan>/);
+ assert.doesNotMatch(memberPage,/<button[^>]*>[^<]*(?:checkout|simulate payment)/i);
 });
 test('historical simulated payment remains test-only, never an actual charge',()=>{
  assert.match(backend,/Legacy simulated-payment endpoint remains TEST-only/);
