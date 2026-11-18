@@ -1050,7 +1050,7 @@ function januaryScoreForm(application,demo,position,onSaved){
      application_id:application.id,position,no_conflict:check.checked,
      technique:Number(values.technique),interpretation:Number(values.interpretation)
     });
-    if(!Number.isFinite(Number(saved.score)))throw new Error('score_readback_unavailable');
+    if(saved.score===null||saved.score===undefined||saved.score===''||!Number.isFinite(Number(saved.score)))throw new Error('score_readback_unavailable');
     const done=node('p','已儲存：'+saved.score+' 分 · 第 '+position+' 首','judge-saved-confirmation');
     done.setAttribute('role','status');done.setAttribute('aria-live','polite');
     form.dispatchEvent(new CustomEvent('ghv:demo-scored',{bubbles:true,detail:{position,form}}));
@@ -1341,7 +1341,7 @@ async function renderJudge(){
    if(a.gender)profile.append(node('p','參賽者填寫的性別：'+({male:'男',female:'女',other:'其他',prefer_not_say:'不願透露'}[a.gender]||'未提供'),'minor'));
    box.append(profile);
   }
-  const demos=staffDemoList(a,a.per_video_scoring?(work,position)=>januaryScoreForm(a,work,position,()=>status('已儲存本支 Demo 評分。')):null,true);
+  const demos=staffDemoList(a,a.per_video_scoring?(work,position)=>januaryScoreForm(a,work,position,()=>{}):null,true);
   if(demos){
    box.append(demos);
    // Only warn on the way back if there really are unsaved score inputs.
