@@ -108,14 +108,15 @@ test('unregistered member has separate start and member links, without changing 
  await expect(page.locator('#home-login')).toHaveAttribute('href','./member.html#login');
  await expect(page.locator('.front-actions a')).toHaveCount(3);
 });
-test('member home shows two statuses, edit after simulated checkout and true readback across reload',async({page})=>{
+test('member home shows review status and preserves edits across reload',async({page})=>{
  const state={entries:[{...entry}]},writes=await mockMemberApi(page,state);
  await page.setViewportSize({width:1280,height:850});
  await page.goto('/member.html#login');
  await expect(page.locator('#member-welcome-name')).toContainText('TEST Singer 001');
  await expect(page.locator('#member-state-data')).toContainText('測試資料已儲存');
- await expect(page.locator('#member-state-payment')).toContainText('模擬付款');
- await expect(page.locator('#member-official-boundary')).toContainText('不代表正式報名成功');
+ await expect(page.locator('#member-state-payment')).toHaveText('已送出測試報名');
+ await expect(page.locator('#member-state-payment')).toBeVisible();
+ await expect(page.locator('#member-official-boundary')).toContainText('正式報名尚未開放');
  await expect(page.locator('#member-manage-edit')).toBeVisible();
  await expect(page.locator('#member-primary-actions')).toBeVisible();
  await expect(page.locator('#application-details')).toBeHidden();

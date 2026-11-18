@@ -26,9 +26,9 @@
 <p class="section-eyebrow" data-l="kicker">SINGER PORTAL</p>
 <h1 class="page-heading" data-l="memberTitle">Singer registration & login</h1>
 <p class="page-intro" id="member-auth-intro">Invited testers can sign in using Email. Public Email + password registration is not open yet.</p>
-<p class="notice" data-l="memberFeeBoundaryVisible" role="note">TEST mode: January audition is free, official registration is not open, and no real payment is collected.</p>
-<p class="member-rules-prep"><strong data-l="rulesRequiredHeading">報名前請詳閱比賽規則</strong><span data-l="rulesRequiredText">確認參賽資格、影片規定、報名費與評選方式。</span><a href="./news.html" data-l="rulesReadAction">閱讀完整比賽規則 →</a></p>
-<div class="steps" aria-label="Application steps"><span class="active" id="step-login">1 · Sign in</span><span id="step-apply" data-l="stepApply">2 · Song & details</span><span id="step-checkout" data-l="stepPay">3 · Test checkout</span></div>
+<p id="register" tabindex="-1" class="notice" data-l="memberFeeBoundaryVisible" role="note">報名入口測試中：首次使用請先完成登入與驗證，再填寫報名表；尚未開放正式報名。</p>
+<p class="member-rules-prep"><strong data-l="rulesRequiredHeading">報名前請詳閱比賽規則</strong><span data-l="rulesRequiredText">確認參賽資格、影片規定與評選方式。</span><a href="./news.html" data-l="rulesReadAction">閱讀完整比賽規則 →</a></p>
+<div class="steps" aria-label="Application steps"><span class="active" id="step-login">1 · Sign in</span><span id="step-apply" data-l="stepApply">2 · Song & details</span><span id="step-checkout" data-l="stepPay">3 · Submission</span></div>
 <div id="member-status" class="feedback" role="status" aria-live="polite" hidden></div>
 <section id="signin-panel" class="panel">
 <section id="password-portal" hidden aria-label="Username TEST authentication">
@@ -85,12 +85,12 @@
 <button type="button" class="btn btn-primary btn-apply" id="start-application" aria-controls="application-details"><span aria-hidden="true">✚ </span><span data-l="goToForm">Go to registration form</span></button>
 </section>
 <section class="panel application-panel" id="application-details" aria-labelledby="application-form-heading">
-<h2 id="application-form-heading" class="application-title" data-l="formTitle">Registration form</h2>
+<h2 id="application-form-heading" class="application-title" tabindex="-1" data-l="formTitle">Registration form</h2>
 <p class="form-lead" data-l="formLead">This is a legacy TEST form, not the final 2027 entry. Fields marked * are required.</p>
 <aside class="registration-deadline full" aria-label="2027 entry schedule">
   <div class="registration-deadline-label" data-l="entryPeriodTitle">2027 海選收件日期</div>
   <div class="registration-deadline-dates" data-l="entryPeriodDates">2027年1月1日至1月31日｜尼泊爾當地時間</div>
-  <p data-l="entryPeriodHelp">海選免費。正式開放與截止的確切時刻以主辦單位官網公告為準；目前僅為測試網站。</p>
+  <p data-l="entryPeriodHelp">正式開放與截止的確切時刻以主辦單位官網公告為準；目前僅為測試網站。</p>
   <div class="registration-roadmap" role="list" aria-label="2027 planned competition timetable">
    <div role="listitem"><strong data-l="scheduleRound1">2月12日 · 第一次初選</strong></div>
    <div role="listitem"><strong data-l="scheduleRound2">3月5日 · 第二次初選</strong></div>
@@ -98,7 +98,7 @@
    <div role="listitem"><strong data-l="scheduleFinal">4月14日 · 季度總決賽</strong></div>
   </div><p data-l="scheduleCaveat">以上為預定日期；各階段確切時間與地點依公告。通知資料缺漏者須於48小時內補正一次。</p>
  </aside>
-<p class="helper-banner" data-l="frontlineFormBoundary" role="note">11月16日新版：1月海選免費，每人最多5支Demo，單一組別，選A區Lumbini或B區Bagmati。此測試表單仍使用舊欄位且暫只可送1支作品；尚未轉換成正式報名。請勿在測試階段上傳真實證件或付款。</p>
+<p class="helper-banner" data-l="frontlineFormBoundary" role="note">11月16日新版：每人最多5支Demo，單一組別，選A區Lumbini或B區Bagmati。此測試表單仍使用舊欄位且暫只可送1支作品；尚未轉換成正式報名。請勿在測試階段上傳真實證件。</p>
 <p class="helper-banner" data-l-html="demoRules">...</p>
 <form id="application-form" class="form-grid" style="margin-top:16px">
 <fieldset id="muse-test-fields" class="full muse-test-fields" disabled aria-labelledby="muse-fields-title">
@@ -206,7 +206,7 @@
  </div>
  <button id="demo-add" type="button" class="btn btn-soft demo-add" data-l="demoAdd">＋ 增加一支 Demo（最多5支）</button>
 </section>
-<p class="field-hint full" role="note" data-l="demoFeeBoundary">新版海選免費，正式規章每人最多5支Demo；本測試表單目前只支援單支影片，尚未開通正式報名或付款。</p>
+<p class="field-hint full" role="note" data-l="demoFeeBoundary">可儲存的 Demo 數量以此表單的測試狀態為準。</p>
 <label class="check full video-confirm"><input name="video_confirmed" type="checkbox" required><span data-l="videoConfirm">I confirm that the link shows me personally singing in one continuous 60–90 second video, with my face and voice clear. *</span></label>
 <div class="full eligibility-group" aria-label="Eligibility statements">
 <label class="check" id="community-statement" hidden><input name="adult_confirmed" type="checkbox"><span data-l="adult">I am at least 18 and am not a current university student. (TEST declaration)</span></label>
@@ -222,7 +222,7 @@
  <p class="proof-boundary" data-l="proofWhen">開放日期尚未確定。完成私人 R2 上傳、權限及安全驗收後才會啟用，屆時另行公告。</p>
 
 </section>
-<div class="form-actions full"><button class="btn btn-primary" type="submit" data-l="save">Save my TEST application</button><small class="field-hint" data-l="saveHelp">Saving is not a paid or officially approved entry.</small></div>
+<div class="form-actions full"><button class="btn btn-primary" type="submit" data-l="save">Save my TEST application</button><small class="field-hint" data-l="saveHelp">Saving a TEST form does not mean the organizer has approved an official entry.</small></div>
 </form>
 <p class="privacy-notice" data-l="privacy">Portrait photo and identity documents are not collected in this rehearsal. The organizer must approve a secure upload method and privacy rules before these become required.</p>
 </section>
@@ -235,13 +235,13 @@
  <div id="member-hero-avatar" class="member-hero-avatar" aria-hidden="true"></div>
  <div class="member-welcome-copy"><span data-l="welcomeBack">Welcome back</span><strong id="member-welcome-name"></strong><small id="member-welcome-meta"></small></div>
 </div>
-<p id="member-dashboard-help" class="member-dashboard-help" data-l="dashboardHelp">View your song, application number, and test payment status.</p>
+<p id="member-dashboard-help" class="member-dashboard-help" data-l="dashboardHelp">View your Demo, application number and review status.</p>
 <div id="member-state-grid" class="member-state-grid" hidden>
  <div class="member-state"><span data-l="statusData">Entry information</span><strong id="member-state-data"></strong></div>
- <div class="member-state"><span data-l="statusPayment">Test payment</span><strong id="member-state-payment"></strong></div>
+ <div class="member-state"><span data-l="statusPayment">Stage review</span><strong id="member-state-payment"></strong></div>
 </div>
 <div id="test-completion" class="test-completion" role="status" aria-live="polite" hidden></div>
-<p id="member-official-boundary" class="member-official-boundary" data-l="officialBoundary" hidden>TEST mode only. No actual charge and no official entry has been confirmed.</p>
+<p id="member-official-boundary" class="member-official-boundary" data-l="officialBoundary" hidden>TEST mode only. Official participation is not yet confirmed.</p>
 <div id="member-primary-actions" class="member-primary-actions" hidden>
  <button id="member-quick-edit" class="btn btn-primary" type="button" data-l="editMyEntry">Edit my application</button>
  <a id="member-view-video" class="btn btn-soft" target="_blank" rel="noopener noreferrer" data-l="viewVideo" hidden>View my performance</a>
@@ -286,9 +286,9 @@
 </section>
 
 
-<footer class="site-footer"><a href="./" class="small-link" data-l="home">Home</a><small data-l="footer">TEST portal · No real payment or official registration.</small></footer>
+<footer class="site-footer"><a href="./" class="small-link" data-l="home">Home</a><small data-l="footer">TEST portal · Official registration is not yet open.</small></footer>
 </main>
-<aside class="test-site-banner test-site-footer wrap" role="note" aria-label="Website testing notice"><strong>TEST MODE · 測試階段 · परीक्षण चरण</strong><p data-l="testNotice">本網站僅供系統測試，尚未開放正式報名或真實付款。</p></aside>
+<aside class="test-site-banner test-site-footer wrap" role="note" aria-label="Website testing notice"><strong>TEST MODE · 測試階段 · परीक्षण चरण</strong><p data-l="testNotice">本網站僅供系統測試，尚未開放正式報名。</p></aside>
 <script src="./page-locale.js" defer></script><script src="./simple.js" defer></script><script src="./password-member.js" defer></script><script src="./palace-shared-header.js" defer></script><section class="ghp-universal-footer-brand" aria-label="Golden Himal Palace official brand closing">
  <strong class="ghp-footer-full-name">GOLDEN HIMAL PALACE</strong>
  <p lang="en">The Best Wedding at Golden Himal.</p>

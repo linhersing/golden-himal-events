@@ -5,10 +5,14 @@ import {readFileSync} from 'node:fs';
 const member=readFileSync(new URL('../public/simple.js',import.meta.url),'utf8');
 const backend=readFileSync(new URL('../backend/staging-e2e.js',import.meta.url),'utf8');
 
-test('January 2027 audition is clearly free on the member UI',()=>{
- assert.match(member,/a\.round_code!=='2027-01'\)actions\.append\(pay\)/);
- assert.match(member,/FREE · NPR 0 · 海選免費/);
- assert.match(member,/Free January audition/);
+test('January 2027 audition is not blocked by checkout, and public payment UI is disabled',()=>{
+ // Nov 18 Muse/Alan policy: public site must not surface payment UI.
+ assert.doesNotMatch(member,/actions\.append\(pay\)/);
+ assert.match(member,/2027 January audition TEST/);
+ const memberPage=readFileSync(new URL('../public/member.html',import.meta.url),'utf8');
+ assert.match(memberPage,/id="register"/);
+ assert.match(memberPage,/data-l="statusPayment">Stage review<\x2fspan>/);
+ assert.doesNotMatch(memberPage,/<button[^>]*>[^<]*(?:checkout|simulate payment)/i);
 });
 test('historical simulated payment remains test-only, never an actual charge',()=>{
  assert.match(backend,/Legacy simulated-payment endpoint remains TEST-only/);

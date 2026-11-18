@@ -75,7 +75,7 @@ test('member can view own stored entry, edit and delete its unpaid data in guard
  });
  await page.goto('/member.html#login');
  await expect(page.locator('#entries')).toContainText('TEST Singer');
- await expect(page.locator('#entries')).toContainText('FREE · NPR 0 · 海選免費');
+ await expect(page.locator('#entries')).toContainText('已送出測試報名');
  await page.locator('#entries button').filter({hasText:'修改資料'}).click();
  await page.locator('[data-editing] [name=song_title]').fill('TEST Revised');
  await page.locator('[data-editing] button[type=submit]').click();

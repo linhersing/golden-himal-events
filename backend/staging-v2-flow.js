@@ -1,3 +1,4 @@
+import {museAuditionReady} from './muse-audition.js';
 import {attachJanuaryScores,januaryDemoReady,januaryRoster,submitJanuaryScore} from './january-demo-test.js';
 import {attachFiveDemos,fiveDemoReady,fiveDemoRehearsal} from './demo-five-2027.js';
 import {approvalColumn,approvalGuard,approveTestApplication} from './test-application-approval.js';
@@ -92,7 +93,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_judges,
    (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}${supplementColumns(supplements)}
    FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)} ORDER BY p.created_at ASC LIMIT 500`).all();
-  return json({ok:true,applications:await attachFiveDemos(env,await attachProfiles(env,r.results||[])),january_roster_enabled:perVideo,testOnly:true});
+  return json({ok:true,applications:await attachFiveDemos(env,await attachProfiles(env,r.results||[])),january_roster_enabled:perVideo,contact_storage_enabled:await museAuditionReady(env),testOnly:true});
  }
  if(path==='/api/e2e/organizer-promote'&&post){
   if(forbidden('organizer'))return forbidden('organizer');
