@@ -1292,8 +1292,16 @@ async function renderJudge(){
   const phase=a.phase||'demo',demo=phase==='demo';
   box.append(node('h3',(a.stage_name||'選手')+' · '+a.round_code));
   box.append(node('p',(demo?'線上海選':phase==='qualifier'?'現場初賽':'決賽')+' · '+judgeDemoProgress(a),'minor'));
-  const pictures=profileGallery(a);if(pictures)box.append(pictures);
-  if(a.gender)box.append(node('p','參賽者填寫的性別：'+({male:'男',female:'女',other:'其他',prefer_not_say:'不願透露'}[a.gender]||'未提供'),'minor'));
+  // On-site judges can optionally inspect identity/profile information,
+  // but it must not push the current song's score form off the phone screen.
+  const pictures=profileGallery(a);
+  if(pictures||a.gender){
+   const profile=node('details',undefined,'judge-optional-profile');
+   profile.append(node('summary','查看參賽者照片與其他資料'));
+   if(pictures)profile.append(pictures);
+   if(a.gender)profile.append(node('p','參賽者填寫的性別：'+({male:'男',female:'女',other:'其他',prefer_not_say:'不願透露'}[a.gender]||'未提供'),'minor'));
+   box.append(profile);
+  }
   const demos=staffDemoList(a,a.per_video_scoring?(work,position)=>januaryScoreForm(a,work,position,()=>status('已儲存本支 Demo 評分。')):null,true);
   if(demos){
    box.append(demos);
