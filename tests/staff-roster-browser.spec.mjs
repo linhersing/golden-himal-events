@@ -18,6 +18,8 @@ test('organizer explicitly approves a test entry and member sees pending until a
  await expect(page.locator('#test-completion')).toContainText('等待主辦方核准');
  role='organizer';await page.goto('/backoffice.html');
  await expect(page.locator('#admin-apps')).toContainText('待主辦核准');
+ await page.locator('#admin-apps .organizer-record-open').click();
+ await page.locator('#organizer-entry-content .organizer-step-button').filter({hasText:'報名審核與補件'}).click();
  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'核准測試報名'}).click();
  await expect(page.locator('#admin-apps')).toContainText('主辦已核准');
  await expect(page.locator('#paid-count')).toHaveText('0');
@@ -94,6 +96,7 @@ test('organizer filters language, category and scoring with 133 synthetic entrie
  await expect(page.locator('#pending-count')).toHaveText('133');
  await expect(page.locator('#paid-count')).toHaveText('0');
  await expect(page.locator('#admin-apps .roster-entry')).toHaveCount(12);
+ await page.locator('.organizer-filter-panel').evaluate(el=>{el.open=true});
  await page.locator('#organizer-language').selectOption('English');
  await expect(page.locator('#organizer-count')).toContainText('66 筆');
  await page.locator('#organizer-category').selectOption('university');
@@ -105,6 +108,146 @@ test('organizer filters language, category and scoring with 133 synthetic entrie
  await page.setViewportSize({width:375,height:850});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
  await page.screenshot({path:'test-results/ghv-staff-roster/organizer-mobile-375.png',fullPage:true});
+});
+
+
+test('organizer five-demo rows remain compact until expanded, with song-level search and filters',async({page})=>{
+ const application={
+  id:'SYNTHETIC-2027-FIVE',stage_name:'Synthetic Five Singer',
+  song_title:'FAKE SONG 1',song_language:'Chinese',
+  category:'university',round_code:'2027-01',approval_state:'pending',
+  status:'submitted',payment_status:'unpaid',demo_judges:0,live_judges:0,
+  demo_entries:Array.from({length:5},(_,i)=>({
+   position:i+1,song_title:'FAKE SONG '+(i+1),
+   original_artist:'FICTIONAL ARTIST '+(i+1),
+   song_language:i===4?'English':'Chinese',
+   demo_url:'https://example.org/test-demo-'+(i+1)
+  }))
+ };
+ await page.route('**/api/e2e/**',async route=>{
+  const p=new URL(route.request().url()).pathname.split('/').at(-1);
+  const json=p==='me'
+   ?{ok:true,account:{id:'synthetic-organizer',role:'organizer',available_roles:['organizer']}}
+   :p==='organizer-queue'
+    ?{ok:true,applications:[application],registration_management_enabled:false}
+    :{ok:true};
+  return route.fulfill({status:200,json});
+ });
+ await page.setViewportSize({width:1280,height:900});
+ await page.goto('/backoffice.html');
+ const cards=page.locator('#admin-apps .organizer-roster-entry');
+ await expect(cards).toHaveCount(1);
+ await expect(cards.first()).toContainText('5 首作品');
+ await expect(cards.first()).toContainText('待主辦核准');
+ await expect(cards.locator('details')).toHaveCount(0);
+ await expect(cards.locator('button.organizer-record-open')).toHaveCount(1);
+ // The fifth song differs from the main application language/title.
+ await page.locator('.organizer-filter-panel').evaluate(el=>{el.open=true});
+ await page.locator('#organizer-language').selectOption('English');
+ await expect(cards).toHaveCount(1);
+ await page.locator('#organizer-search').fill('FICTIONAL ARTIST 5');
+ await expect(cards).toHaveCount(1);
+ await cards.locator('.organizer-record-open').click();
+ const modal=page.locator('#organizer-entry-dialog');
+ await expect(modal).toBeVisible();
+ await expect(modal).toContainText('Synthetic Five Singer');
+ await expect(modal.locator('.organizer-step-button')).toHaveCount(4);
+ await modal.locator('.organizer-step-button').filter({hasText:'歌曲與影片'}).click();
+ await expect(modal.locator('.organizer-step-button')).toHaveCount(5);
+ await modal.locator('.organizer-step-button').filter({hasText:'FAKE SONG 5'}).click();
+ await expect(modal.locator('#organizer-entry-content')).toContainText('FAKE SONG 5');
+ await expect(modal.locator('.organizer-record-watch')).toHaveAttribute('href','https://example.org/test-demo-5');
+ await modal.locator('#organizer-entry-back').click();
+ await expect(modal.locator('.organizer-step-button')).toHaveCount(5);
+ await modal.locator('#organizer-entry-back').click();
+ await modal.locator('.organizer-step-button').filter({hasText:'報名審核與補件'}).click();
+ await expect(modal.getByRole('button',{name:'核准測試報名'})).toBeVisible();
+ await modal.locator('#organizer-entry-close').click();
+ await expect(modal).toBeHidden();
+ for(const width of [390,320]){
+  await page.setViewportSize({width,height:780});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await expect(cards).toHaveCount(1);
+  await expect(cards.locator('details')).toHaveCount(0);
+ }
+});
+
+
+test('onsite mobile judge selects one of five songs, saves the correct score and keeps drafts safe',async({page})=>{
+ const works=Array.from({length:5},(_,i)=>({
+  position:i+1,song_title:'FICTIONAL TEST TRACK '+(i+1),
+  song_language:i===4?'English':'Nepali',original_artist:'FAKE ARTIST '+(i+1),
+  demo_url:'https://example.org/only-test-'+(i+1),my_score:null
+ }));
+ const entry={
+  id:'JUDGE-TEST-FIVE',stage_name:'TEST Participant',
+  song_title:'FICTIONAL TEST TRACK 1',song_language:'Nepali',
+  round_code:'2027-01',category:'community',phase:'demo',
+  per_video_scoring:true,demo_entries:works
+ };
+ const saved=[];
+ await page.route('**/api/e2e/**',async route=>{
+  const p=new URL(route.request().url()).pathname.split('/').at(-1);
+  let json={ok:true};
+  if(p==='me')json={ok:true,account:{id:'judge-synthetic',role:'reviewer',available_roles:['reviewer']}};
+  if(p==='reviewer-queue')json={ok:true,queue:[entry]};
+  if(p==='january-video-score'){
+   const payload=route.request().postDataJSON();
+   saved.push(payload);
+   json={ok:true,score:payload.technique+payload.interpretation};
+  }
+  await route.fulfill({status:200,json});
+ });
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/backoffice.html');
+ await expect(page.locator('#judge-list .roster-entry')).toHaveCount(1);
+ await expect(page.locator('#judge-list')).toContainText('0／5 首已評');
+ await page.locator('#judge-list .roster-entry').click();
+ const chooser=page.locator('.judge-demo-chooser select');
+ await expect(chooser.locator('option')).toHaveCount(5);
+ await expect(page.locator('.judge-demo-switcher .staff-demo-list>li:visible')).toHaveCount(1);
+ await expect(page.locator('.judge-demo-progress')).toContainText('0／5');
+ await chooser.selectOption('4');
+ let visible=page.locator('.judge-demo-switcher .staff-demo-list>li:visible');
+ await expect(visible).toContainText('FICTIONAL TEST TRACK 5');
+ await expect(visible.getByRole('link',{name:/觀看第 5 支影片/})).toHaveAttribute('href','https://example.org/only-test-5');
+ await visible.locator('[name=technique]').fill('48');
+ await visible.locator('[name=interpretation]').fill('31');
+ await visible.locator('[type=checkbox]').check();
+ await visible.getByRole('button',{name:'儲存第 5 支評分'}).click();
+ await expect(page.locator('.judge-demo-progress')).toContainText('1／5');
+ await expect(chooser.locator('option').last()).toContainText('已評');
+ expect(saved).toHaveLength(1);
+ expect(saved[0]).toMatchObject({application_id:'JUDGE-TEST-FIVE',position:5,technique:48,interpretation:31,no_conflict:true});
+ await chooser.selectOption('0');
+ visible=page.locator('.judge-demo-switcher .staff-demo-list>li:visible');
+ await visible.locator('[name=technique]').fill('22');
+ page.once('dialog',dialog=>{expect(dialog.message()).toContain('尚未儲存');dialog.dismiss()});
+ await page.locator('#judge-back-list').click();
+ await expect(page.locator('#judge-detail')).toBeVisible();
+ for(const width of [390,320]){
+  await page.setViewportSize({width,height:830});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await expect(page.locator('.judge-demo-switcher .staff-demo-list>li:visible')).toHaveCount(1);
+ }
+});
+test('staff dashboard shows two concise totals and hides payment info and advanced filters by default',async({page})=>{
+ await page.route('**/api/e2e/**',async route=>{
+  const p=new URL(route.request().url()).pathname.split('/').at(-1);
+  await route.fulfill({status:200,json:p==='me'?
+   {ok:true,account:{id:'staff-synthetic',role:'organizer',available_roles:['organizer']}}
+   :p==='organizer-queue'?{ok:true,applications:[]}:{ok:true}});
+ });
+ await page.setViewportSize({width:375,height:812});
+ await page.goto('/backoffice.html');
+ await expect(page.locator('.staff-mobile-summary .dash-stat')).toHaveCount(2);
+ await expect(page.locator('#paid-count')).toHaveText('0');
+ await expect(page.locator('.staff-system-note')).not.toHaveAttribute('open','');
+ await expect(page.locator('#organizer-language')).toBeHidden();
+ await expect(page.locator('#organizer-search')).toBeVisible();
+ await page.locator('.organizer-filter-panel summary').click();
+ await expect(page.locator('#organizer-language')).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });
 
 for(const [device,width] of [['desktop',1280],['mobile',375]]){
