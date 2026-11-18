@@ -38,8 +38,8 @@ test('member and staff share server-issued identity but never fake official paym
  for(const path of ['update-application','delete-application','reviewer-queue','organizer-queue'])assert.match(api,new RegExp(path));
  assert.match(backend,/account_id=\?/);assert.match(backend,/payment_status='unpaid'/);
  const locale=await read('public/page-locale.js');
- assert.match(api,/mt\('testComplete'\)/); // TEST receipt must remain explicitly non-official
- assert.match(api,/result\.testOnly!==true/);
+ assert.match(api,/'entryReceived'/); // The member dashboard reports receipt and review.
+ assert.doesNotMatch(api,/api\('mock-payment'/);
  assert.match(locale,/No real payment/);
  for(const lang of ['en','ne','zh'])assert.match(locale,new RegExp('"'+lang+'"\\s*:'));
  assert.match(member,/id="start-application"/);
@@ -278,7 +278,7 @@ test('brand pages omit image provenance claims in all languages while retaining 
  assert.match(home,/approved-grand-hall-20261114\.jpg/);
  assert.match(home,/approved-peace-tower-20261114\.jpg/);
  assert.match(legacy,/Do not enter real personal information/);
- assert.match(home,/正式比賽報名與真實付款尚未開放/);
+ assert.match(home,/正式比賽報名尚未開放/); // 2026-11-18 Muse/Alan: public notice omits payment
 });
 
 

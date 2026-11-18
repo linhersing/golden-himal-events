@@ -11,7 +11,17 @@
       "/api/staging/*",
       "/api/e2e/*",
       "/member",
-      "/member.html"
+      "/member.html",
+      "/member-login*",
+      "/member-portal*",
+      "/e2e-stage*",
+      "/payment-lab*",
+      "/test-lab*",
+      "/practice*",
+      "/admin-center*",
+      "/judge-stage*",
+      "/organizer-stage*",
+      "/architecture-preview*"
     ]
   },
   "d1_databases": [
@@ -32,7 +42,8 @@
     "STAGING_PRACTICE_ENABLED": "true",
     "STAGING_TEST_APPROVAL_ENABLED": "true",
     "STAGING_FRONTLINE_2027_ENABLED": "true",
-    "STAGING_FIVE_DEMO_REHEARSAL": "true"
+    "STAGING_FIVE_DEMO_REHEARSAL": "true",
+    "STAGING_MUSE_AUDITION_ENABLED": "true"
   },
   "triggers": {"crons": ["*/5 * * * *"]},
   "observability": {

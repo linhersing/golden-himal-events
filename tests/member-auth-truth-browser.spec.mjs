@@ -81,29 +81,18 @@ test('Nepal singer onboarding CTA and category guidance work on mobile (syntheti
  await page.screenshot({path:'test-results/ghv-singer-ux-20261104/02-mobile-category-and-guidance.png'});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });
-test('TEST payment state is displayed after explicit confirmation, never claimed as real payment (synthetic UI screenshot)',async({page})=>{
- let paid=false;
- await page.setViewportSize({width:1280,height:820});
- await page.route('**/api/e2e/**',async r=>{
-  const u=new URL(r.request().url()),p=u.pathname;
-  let payload;
-  if(p.endsWith('/me'))payload={ok:true,account:{id:'synthetic-member',role:'member'}};
-  else if(p.endsWith('/applications'))payload={ok:true,applications:[{id:'TEST-ENTRY-0001',stage_name:'TEST Singer',song_title:'Example Song',category:'university',round_code:'2027-04',status:paid?'under_review':'submitted',payment_status:paid?'simulated_paid':'unpaid',demo_url:'https://youtu.be/abcdef'}]};
-  else if(p.endsWith('/mock-payment')){paid=true;payload={ok:true,status:'simulated_paid',testOnly:true,realCharge:false,amount_npr:500};}
-  else payload={ok:false,error:'not_found'};
-  await r.fulfill({status:payload.ok?200:404,contentType:'application/json',body:JSON.stringify(payload)});
+test('previously simulated entries show the review state without a checkout control',async({page})=>{
+ await page.route('**/api/e2e/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  const data=path.endsWith('/me')?{ok:true,account:{id:'synthetic-member',role:'member'}}:
+   {ok:true,applications:[{id:'TEST-ENTRY-0001',stage_name:'TEST Singer',song_title:'Example Song',category:'university',round_code:'2027-04',status:'under_review',payment_status:'simulated_paid',demo_url:'https://youtu.be/abcdef',approval_state:'pending'}]};
+  await route.fulfill({json:data});
  });
- page.on('dialog',d=>d.accept());
  await page.goto('/member.html#login');
  await page.locator('[data-lang=en]').click();
- await expect(page.getByText('Complete TEST checkout (no charge)')).toBeVisible();
- await page.getByText('Complete TEST checkout (no charge)').click();
- await expect(page.locator('#test-completion')).toBeVisible();
- await expect(page.locator('#test-completion')).toContainText('TEST REGISTRATION COMPLETE');
- await expect(page.locator('#test-completion')).toContainText('No payment charged');
- await expect(page.getByText('✓ TEST checkout complete')).toBeVisible();
- await page.locator('#test-completion').scrollIntoViewIfNeeded();
- await page.screenshot({path:'test-results/ghv-singer-ux-20261104/03-desktop-mock-payment-receipt.png'});
+ await expect(page.locator('#entries')).toContainText('TEST entry submitted');
+ await expect(page.getByRole('button',{name:/checkout|payment/i})).toHaveCount(0);
+ await expect(page.locator('#test-completion')).toBeHidden();
 });
 test('latest news remains short expandable cards (synthetic UI screenshot)',async({page})=>{
  await page.setViewportSize({width:390,height:844});
@@ -278,6 +267,7 @@ test('main member page sends a fresh Turnstile token and verifies the same mailb
  await page.locator('#member-code-form [name=code]').fill('123456');
  await page.locator('#member-code-form button[type=submit]').click();
  await expect(page.locator('#start-application')).toBeVisible();
+ await expect(page.locator('#application-form-heading')).toBeFocused();
  expect(requests).toEqual([
   {email:'singer@example.invalid',role:'member',turnstile_token:'synthetic-token'},
   {email:'singer@example.invalid',challenge_id:'synthetic-challenge',code:'123456'}

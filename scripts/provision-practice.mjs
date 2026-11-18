@@ -28,6 +28,18 @@ if(process.env.WORKERS_CI!=='1'||process.env.WORKERS_CI_BRANCH!=='codex/initial-
    '1014_demo_five_2027_STAGING_ONLY.sql',
    '1016_january_demo_test_rosters_ONLY.sql'
   ])run(['d1','execute','E2E_DB','--remote','--file','backend/migrations/'+file,'--yes','--json']);
+  evidence.phase='contact_preflight';
+  const contactTable="SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name='e2e_muse_audition_details'";
+  const contactRows="SELECT COUNT(*) AS n FROM e2e_muse_audition_details";
+  const contactColumn="SELECT COUNT(*) AS n FROM pragma_table_info('e2e_muse_audition_details') WHERE name='contact_handle'";
+  evidence.contact_before=Number(query(contactTable).n)===1?Number(query(contactRows).n):0;
+  evidence.phase='contact_migration';
+  run(['d1','execute','E2E_DB','--remote','--file','backend/migrations/1013_muse_audition_details_STAGING_ONLY.sql','--yes','--json']);
+  if(Number(query(contactColumn).n)!==1)
+   run(['d1','execute','E2E_DB','--remote','--file','backend/migrations/1015_muse_contact_handle_STAGING_ONLY.sql','--yes','--json']);
+  evidence.contact_after=Number(query(contactRows).n);
+  evidence.contact_schema_ready=Number(query(contactColumn).n)===1;
+  if(!evidence.contact_schema_ready||evidence.contact_before!==evidence.contact_after)throw Error('contact_migration_readback_mismatch');
   evidence.phase='readback';evidence.after=query(counts);
   evidence.schema=query("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'ghv_practice_%') AS tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name LIKE 'ghv_practice_%') AS triggers");
   evidence.external_test_schema=query("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('e2e_public_signup_attempts','e2e_public_signup_accounts')) AS signup_tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='e2e_test_application_approvals') AS approval_tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='e2e_test_video_supplements') AS video_supplement_tables");
@@ -44,5 +56,5 @@ if(process.env.WORKERS_CI!=='1'||process.env.WORKERS_CI_BRANCH!=='codex/initial-
  }catch(e){evidence.reason=e.message;}
  mkdirSync('dist',{recursive:true});writeFileSync('dist/practice-build.json',JSON.stringify(evidence));
  console.log('Practice remote provisioning evidence: '+JSON.stringify(evidence));
- if(evidence.status!=='PASS')console.log('Existing site will still deploy; practice API stays fail-closed until its complete schema is available.');
+ if(evidence.status!=='PASS')throw Error('E2E_D1 rollout stopped: '+evidence.reason);
 }

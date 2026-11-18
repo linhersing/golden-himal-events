@@ -14,7 +14,7 @@ test('successful SQL file import with progress output still verifies actual sche
  const root=mkdtempSync(join(tmpdir(),'ghv-provision-output-')),script=resolve('scripts/provision-practice.mjs');
  try{
   mkdirSync(join(root,'bin'));mkdirSync(join(root,'backend/migrations'),{recursive:true});
-  for(const file of ['1002_private_practice_ONLY.sql','1004_self_service_signup_STAGING_ONLY.sql','1007_test_application_approval_STAGING_ONLY.sql','1009_test_video_supplements_STAGING_ONLY.sql','1010_nepal_locations_STAGING_ONLY.sql','1011_frontline_2027_registration_STAGING_ONLY.sql','1012_frontline_region_lock_STAGING_ONLY.sql','1013_member_corrections_STAGING_ONLY.sql','1014_demo_five_2027_STAGING_ONLY.sql','1016_january_demo_test_rosters_ONLY.sql'])
+  for(const file of ['1002_private_practice_ONLY.sql','1004_self_service_signup_STAGING_ONLY.sql','1007_test_application_approval_STAGING_ONLY.sql','1009_test_video_supplements_STAGING_ONLY.sql','1010_nepal_locations_STAGING_ONLY.sql','1011_frontline_2027_registration_STAGING_ONLY.sql','1012_frontline_region_lock_STAGING_ONLY.sql','1013_member_corrections_STAGING_ONLY.sql','1014_demo_five_2027_STAGING_ONLY.sql','1016_january_demo_test_rosters_ONLY.sql','1013_muse_audition_details_STAGING_ONLY.sql','1015_muse_contact_handle_STAGING_ONLY.sql'])
    copyFileSync('backend/migrations/'+file,join(root,'backend/migrations',file));
   const cli=`#!/usr/bin/env node
 import {DatabaseSync} from 'node:sqlite';import {readFileSync} from 'node:fs';
@@ -25,11 +25,19 @@ else if(args.includes('--file')){db.exec(readFileSync(args[args.indexOf('--file'
 else{const sql=args[args.indexOf('--command')+1];console.log(JSON.stringify([{success:true,results:db.prepare(sql).all()}]));}
 db.close();`;
   writeFileSync(join(root,'bin/npx'),cli,{mode:0o755});
-  const r=spawnSync(process.execPath,[script],{cwd:root,env:{...process.env,PATH:join(root,'bin')+':'+process.env.PATH,WORKERS_CI:'1',WORKERS_CI_BRANCH:'codex/initial-site',WORKERS_CI_COMMIT_SHA:'a'.repeat(40)},encoding:'utf8'});
-  assert.equal(r.status,0);const evidence=JSON.parse(readFileSync(join(root,'dist/practice-build.json'),'utf8'));
+  const invoke=()=>spawnSync(process.execPath,[script],{cwd:root,env:{...process.env,PATH:join(root,'bin')+':'+process.env.PATH,WORKERS_CI:'1',WORKERS_CI_BRANCH:'codex/initial-site',WORKERS_CI_COMMIT_SHA:'a'.repeat(40)},encoding:'utf8'});
+  const r=invoke();
+  assert.equal(r.status,0,r.stderr);const evidence=JSON.parse(readFileSync(join(root,'dist/practice-build.json'),'utf8'));
   assert.equal(evidence.status,'PASS');assert.deepEqual(evidence.before,{accounts:1,applications:1});assert.deepEqual(evidence.after,evidence.before);assert.deepEqual(evidence.schema,{tables:12,triggers:21});
   assert.deepEqual(evidence.external_test_schema,{signup_tables:2,approval_tables:1,video_supplement_tables:1});
   assert.deepEqual(evidence.location_schema,{tables:1});
+  assert.equal(evidence.contact_schema_ready,true);
+  assert.equal(evidence.contact_before,0);assert.equal(evidence.contact_after,0);
+  const retry=invoke();
+  assert.equal(retry.status,0,retry.stderr);
+  const retried=JSON.parse(readFileSync(join(root,'dist/practice-build.json'),'utf8'));
+  assert.equal(retried.contact_schema_ready,true);
+  assert.equal(retried.contact_before,retried.contact_after);
   assert.deepEqual(evidence.frontline_and_corrections,{frontline:1,region_guard:1,correction_requests:1,correction_audit:1});
  }finally{rmSync(root,{recursive:true,force:true})}
 });

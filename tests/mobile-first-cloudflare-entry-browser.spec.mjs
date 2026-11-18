@@ -89,7 +89,7 @@ test('desktop print brief exists and is A4 portrait printable with V2 dates',asy
  await page.goto('/print-brief.html');
  await expect(page.locator('h1')).toContainText('歌唱嘉年華');
  await expect(page.locator('.grid .step')).toHaveCount(5);
- await expect(page.locator('.points')).toContainText('NPR 300');
+ await expect(page.locator('.points')).not.toContainText('NPR 300');
  await page.emulateMedia({media:'print'});
  const vals=await page.evaluate(()=>({
   print:getComputedStyle(document.querySelector('.toolbar')).display,

@@ -190,7 +190,16 @@ async function handleE2EReadiness(request,env){
 export default {
   async scheduled(controller,env,ctx){return runPracticeSchedule(env);},
   async fetch(request,env,ctx) {
-    const pathname=new URL(request.url).pathname;
+    const url=new URL(request.url);
+    const {pathname}=url;
+    const brand=['goldenhimalpalace.com','www.goldenhimalpalace.com'].includes(url.hostname);
+    const alias=pathname.replace(/^\/+|\/+$/g,'').replace(/\.html$/,'');
+    if(brand&&['member-login','member-portal','e2e-stage','payment-lab','test-lab','practice','admin-center'].includes(alias))
+      return Response.redirect(new URL('/member.html#register',url),302);
+    if(brand&&['judge-stage','organizer-stage'].includes(alias))
+      return Response.redirect(new URL('/backoffice.html',url),302);
+    if(brand&&alias==='architecture-preview')return Response.redirect(new URL('/news.html',url),302);
+    if(brand&&pathname==='/api/e2e/mock-payment')return failure('checkout_paused',404);
     if(pathname.startsWith('/api/e2e/')){
       // Do not mix new applicant/OTP data with the legacy synthetic D1 fixture.
       // E2E_DB auto-provisions separately from the existing ghv-staging DB.

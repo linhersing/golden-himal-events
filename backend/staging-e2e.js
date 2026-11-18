@@ -9,7 +9,7 @@ import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpser
 import {approvalRequired,approvalSchemaReady,approvalColumn,approvalGuard,pendingGuard} from './test-application-approval.js';
 import {parseLocation,entrantLocationsReady,entrantLocationFields,entrantLocationJoin,insertEntrantLocation,updateEntrantLocation} from './entrant-location.js';
 import {parseFrontline2027,frontline2027Ready,insertFrontline2027,frontlineSelect,frontlineJoin} from './frontline-2027.js';
-import {MUSE_FIELDS,museHasFields,parseMuseAudition,museAuditionReady,insertMuseAudition,updateMuseAudition,attachMuseAudition} from './muse-audition.js';
+import {readMuseContact,MUSE_FIELDS,museHasFields,parseMuseAudition,museAuditionReady,insertMuseAudition,updateMuseAudition,attachMuseAudition} from './muse-audition.js';
 import {handleVideoSupplement,supplementColumns,supplementGuard,supplementJoin,videoSupplementsReady} from './test-video-supplement.js';
 import {handleCorrectionRoute} from './member-corrections.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
@@ -39,6 +39,7 @@ function emailAllowed(email,env,role){
 }
 const ROLES=['member','reviewer','organizer'];
 function grantedRoles(email,env){return ROLES.filter(role=>emailAllowed(email,env,role))}
+const memberContactReady=(env,actor)=>actor.role==='member'&&Boolean(actor.email)&&emailAllowed(actor.email,env,'member')&&museAuditionReady(env);
 async function emailForFingerprint(env,fingerprint,role){
  const list=emails(env,role==='organizer'?'STAGING_ORGANIZER_EMAILS':role==='reviewer'?'STAGING_REVIEWER_EMAILS':'STAGING_ALLOWED_EMAILS');
  for(const email of list){
@@ -269,9 +270,9 @@ async function submitApplication(request,env,a){
  if(parsed.error)return deny(parsed.error,422);
  const profile=parsed.profile;
  if(profile&&!(await profileReady(env)))return deny('profile_not_enabled',503);
- const museReady=await museAuditionReady(env);
+ const museReady=await memberContactReady(env,a);
  if(museHasFields(b)&&!museReady)return deny('muse_fields_not_enabled',503);
- const muse=museReady?parseMuseAudition(b):{profile:null};
+ const muse=museReady&&(frontline.entry||museHasFields(b))?parseMuseAudition(b):{profile:null};
  if(muse.error)return deny(muse.error,422);
  const prior=await env.DB.prepare('SELECT category,phase FROM e2e_applications WHERE account_id=? LIMIT 1').bind(a.id).first();
  if(prior&&prior.category!==b.category)return deny('annual_category_locked',409);
@@ -316,7 +317,7 @@ async function updateApplication(request,env,a,supplements){
  if(five.error)return deny(five.error,422);
  if(fiveEditing&&!await fiveDemoReady(env))return deny('five_demo_not_enabled',503);
  const museEditing=museHasFields(b);
- const museReady=await museAuditionReady(env);
+ const museReady=await memberContactReady(env,a);
  if(museEditing&&!museReady)return deny('muse_fields_not_enabled',503);
  const muse=museEditing?parseMuseAudition(b):{profile:null};
  if(muse.error)return deny(muse.error,422);
@@ -543,6 +544,14 @@ export async function handleE2E(request,env){
    return json({ok:true,testOnly:true,...report,
     note:'TEST configuration only. Ready does not prove email delivery, login or official registration.'});
   }
+  if(pathname==='/api/e2e/organizer-contact'&&!isPost){
+   if(a.role!=='organizer')return deny('organizer_only',403);
+   if(!await museAuditionReady(env))return deny('contact_storage_unavailable',503);
+   const id=new URL(request.url).searchParams.get('id');
+   if(!/^[a-f0-9-]{36}$/i.test(id||''))return deny('invalid_application_id',422);
+   const contact=await readMuseContact(env.DB,id);
+   return contact?json({ok:true,contact,testOnly:true}):deny('contact_not_found',404);
+  }
   if(pathname==='/api/e2e/logout'&&isPost)return await logout(request,env,a);
   if(pathname==='/api/e2e/switch-role'&&isPost)return await switchRole(request,env,a);
   const corrections=await handleCorrectionRoute(request,env,a,{json,deny,bodyJSON,uuid,NOW});
@@ -558,7 +567,7 @@ export async function handleE2E(request,env){
    if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),testOnly:true,
     ...(a.role==='member'&&await entrantLocationsReady(env.DB)?{nepal_locations_enabled:true}:{}),
     ...(a.role==='member'&&env.STAGING_FRONTLINE_2027_ENABLED==='true'&&await entrantLocationsReady(env.DB)&&await frontline2027Ready(env.DB)?{frontline_form_enabled:true}:{}),
-    ...(a.role==='member'&&await museAuditionReady(env)?{muse_form_enabled:true}:{}),
+    ...(await memberContactReady(env,a)?{muse_form_enabled:true}:{}),
     ...(a.role==='member'&&await fiveDemoReady(env)?{five_demo_enabled:true,five_demo_january_only:fiveDemoRehearsal(env)}:{}),
     ...(a.role==='member'&&env.STAGING_ELIGIBILITY_UPLOAD_ENABLED==='true'&&Boolean(env.STAGING_MEDIA)?{eligibility_upload_enabled:true}:{}),
     ...(approval?{approval_enabled:true}:{})});

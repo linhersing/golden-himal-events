@@ -9,9 +9,9 @@ Object.assign(translations.en,{organizerLabel:'Organized by',organizerValue:'Gol
 Object.assign(translations.ne,{organizerLabel:'आयोजक',organizerValue:'Golden Himal Palace',partnersLabel:'सहआयोजक',partnersValue:'Synergy FM, Kalika FM; अन्य साझेदार पछि घोषणा गरिनेछन्',missionTitle:'उद्देश्य',missionDescription:'संगीत आदानप्रदान र मञ्चीय प्रस्तुतिमार्फत नेपालको संगीत विकास र गायन स्तर उकास्दै स्वास्थ्य, आनन्द, शान्ति र खुशी प्रवर्द्धन गर्नु।',testNotice:'यो परीक्षण वेबसाइट मात्र हो। आधिकारिक दर्ता र वास्तविक भुक्तानी खुला छैन।'});
 Object.assign(translations.zh,{organizerLabel:'主辦單位',organizerValue:'Golden Himal Palace',partnersLabel:'協辦單位',partnersValue:'Synergy FM、Kalika FM；其他合作單位陸續公告',missionTitle:'活動宗旨',missionDescription:'帶動尼泊爾音樂發展，提升歌唱水平，透過歌唱交流與舞台演出，促進人民健康、歡樂、平安與幸福。',testNotice:'本網站僅供系統測試，尚未開放正式報名或真實付款。'});
 
-Object.assign(translations.en,{rewardsEyebrow:"2027 · Awards",rewardsTitle:"A stage for every voice.",rewardsTop:"Each category: 1 first prize NPR 45,000; 3 second prizes of NPR 22,000 each; 5 third prizes of NPR 11,000 each.",rewardsVoucher:"Dining voucher for every officially paid, eligibility-approved entrant; one per person per year, non-cash, subject to voucher terms.",rewardsStatus:"2027 contest rules preview only. Official registration, payments and voucher redemption are not yet open.",rewardsLink:"Explore awards and judging ↗"});
-Object.assign(translations.ne,{rewardsEyebrow:"२०२७ · पुरस्कार",rewardsTitle:"हरेक स्वरलाई आफ्नै मञ्च।",rewardsTop:"प्रत्येक समूहमा पहिलो पुरस्कार १ जनालाई NPR 45,000, दोस्रो ३ जनालाई जनही NPR 22,000 र तेस्रो ५ जनालाई जनही NPR 11,000।",rewardsVoucher:"आधिकारिक रूपमा शुल्क तिरेर योग्य ठहरिएका प्रत्येक सहभागीलाई वार्षिक एक भोजन छुट कुपन। नगदमा बदल्न मिल्दैन; कुपनका सर्त लागू हुन्छन्।",rewardsStatus:"२०२७ को नियमसम्बन्धी प्रारम्भिक जानकारी मात्र। आधिकारिक दर्ता, शुल्क भुक्तानी वा कुपन वितरण खुलेको छैन।",rewardsLink:"पुरस्कार र मूल्याङ्कन नियम हेर्नुहोस् ↗"});
-Object.assign(translations.zh,{rewardsEyebrow:"2027 · 比賽獎項",rewardsTitle:"讓努力被看見，讓歌聲有舞台。",rewardsTop:"大學組、社會組各設第一名 1 位 NPR 45,000、第二名 3 位各 NPR 22,000、第三名 5 位各 NPR 11,000。",rewardsVoucher:"餐飲折抵券：正式完成繳費並通過資格審核者，每人每年度限領 1 張；不折現，依券面條款使用。",rewardsStatus:"以上為 2027 年度比賽辦法資訊；正式報名、付款及領券尚未開放。",rewardsLink:"查看獎項與評選規則 ↗"});
+Object.assign(translations.en,{rewardsEyebrow:"2027 · Awards",rewardsTitle:"A stage for every voice.",rewardsTop:"Each category: 1 first prize NPR 45,000; 3 second prizes of NPR 22,000 each; 5 third prizes of NPR 11,000 each.",rewardsStatus:"2027 contest rules preview only. Official registration, payments and voucher redemption are not yet open.",rewardsLink:"Explore awards and judging ↗"});
+Object.assign(translations.ne,{rewardsEyebrow:"२०२७ · पुरस्कार",rewardsTitle:"हरेक स्वरलाई आफ्नै मञ्च।",rewardsTop:"प्रत्येक समूहमा पहिलो पुरस्कार १ जनालाई NPR 45,000, दोस्रो ३ जनालाई जनही NPR 22,000 र तेस्रो ५ जनालाई जनही NPR 11,000।",rewardsStatus:"२०२७ को नियमसम्बन्धी प्रारम्भिक जानकारी मात्र। आधिकारिक दर्ता, शुल्क भुक्तानी वा कुपन वितरण खुलेको छैन।",rewardsLink:"पुरस्कार र मूल्याङ्कन नियम हेर्नुहोस् ↗"});
+Object.assign(translations.zh,{rewardsEyebrow:"2027 · 比賽獎項",rewardsTitle:"讓努力被看見，讓歌聲有舞台。",rewardsTop:"大學組、社會組各設第一名 1 位 NPR 45,000、第二名 3 位各 NPR 22,000、第三名 5 位各 NPR 11,000。",rewardsStatus:"以上為 2027 年度比賽辦法資訊；正式報名、付款及領券尚未開放。",rewardsLink:"查看獎項與評選規則 ↗"});
 
 /* Public Golden Himal Palace contact translations: approved number only. */
 Object.assign(translations.zh,{"contactHeading":"有問題需要聯絡我們？","contactIntro":"歌唱比賽、參賽規則或活動相關問題，可撥打 Golden Himal Palace 官方洽詢電話。","contactCall":"撥打電話","contactNote":"尼泊爾電話；通話費用依電信業者規定。","contactShortcut":"對比賽有疑問？聯絡我們 →"});
@@ -31,9 +31,9 @@ Object.assign(translations.en,{"headline":"Could you be the next singing star?",
 Object.assign(translations.ne,{"headline":"अर्को उदीयमान गायक तपाईं नै हो?","talentLead":"यो केवल प्रतियोगिता होइन। नयाँ गायक र डिजिटल सिर्जनशील प्रतिभा पहिचान गरी उनीहरूको आवाज धेरैसम्म पुर्‍याउने हाम्रो उद्देश्य हो।","news":"प्रतियोगिता नियम","newsSub":"भाग लिनुअघि पढ्नुहोस् · योग्यता र पुरस्कार","announcementsShortcut":"नयाँ सूचना · छनोट र कार्यक्रम →"});
 
 /* 2026-11-16 frontline Word rules: latest authoritative contest copy; TEST functions remain gated. */
-Object.assign(translations.zh,{"entryFeeLabel":"2027年1月線上海選","entryFeeAmount":"免費","entryFeeNote":"每人最多5支60–90秒Demo；2月12日第一次初選免費，3月5日第二次初選每人 NPR 300，3月12日晉級PK每人 NPR 500。","entryFeeStatus":"目前僅供測試；正式報名、多支影片送出與收款尚未開放。","rewardsTop":"單一組別：第一名1位 NPR 50,000、第二名3位各 NPR 30,000、第三名5位各 NPR 15,000；總決賽10名選手另各得入圍獎金 NPR 20,000。","rewardsVoucher":"餐飲折抵券：完成第二次初選繳費並通過資格審核者，每人每季度限領1張；不折現，使用條件及期限另行公告。"});
-Object.assign(translations.en,{"entryFeeLabel":"January 2027 online audition","entryFeeAmount":"FREE","entryFeeNote":"Up to five 60–90-second Demos per person. First selection on Feb 12 is free; second selection on Mar 5 is NPR 300 per person; Mar 12 PK round is NPR 500 per person.","entryFeeStatus":"TEST preview only. Official registration, multi-video submission and real payments are not open.","rewardsTop":"One division: first prize NPR 50,000 (1 winner); second prize NPR 30,000 each (3); third prize NPR 15,000 each (5). Ten finalists also receive NPR 20,000 each.","rewardsVoucher":"NPR 10,000 dining voucher: one per eligible person per quarter after paying for the second selection round. Not redeemable for cash; terms and dates to be announced."});
-Object.assign(translations.ne,{"entryFeeLabel":"जनवरी २०२७ अनलाइन प्रारम्भिक छनोट","entryFeeAmount":"निःशुल्क","entryFeeNote":"प्रति व्यक्ति ६०–९० सेकेन्डका बढीमा ५ डेमो। फेब्रुअरी १२ को पहिलो छनोट निःशुल्क; मार्च ५ को दोस्रो छनोट प्रति व्यक्ति NPR 300; मार्च १२ को PK चरण प्रति व्यक्ति NPR 500।","entryFeeStatus":"परीक्षण वेबसाइट मात्र। आधिकारिक दर्ता, धेरै भिडियो पठाउने सुविधा र वास्तविक भुक्तानी खुलेका छैनन्।","rewardsTop":"एउटै समूह: पहिलो पुरस्कार १ जनालाई NPR 50,000; दोस्रो ३ जनालाई जनही NPR 30,000; तेस्रो ५ जनालाई जनही NPR 15,000। १० फाइनलिस्टलाई थप जनही NPR 20,000।","rewardsVoucher":"दोस्रो छनोट चरणको शुल्क बुझाई योग्यता स्वीकृत भएकालाई प्रति व्यक्ति प्रति त्रैमासिक एक NPR 10,000 भोजन छुट कुपन। नगदमा साट्न मिल्दैन; सर्तहरू पछि घोषणा गरिनेछन्।"});
+Object.assign(translations.zh,{"entryFeeLabel":"2027年1月線上海選","entryFeeAmount":"免費","entryFeeNote":"每人最多5支60–90秒Demo；2月12日第一次初選免費，3月5日第二次初選每人 NPR 300，3月12日晉級PK每人 NPR 500。","entryFeeStatus":"目前僅供測試；正式報名、多支影片送出與收款尚未開放。","rewardsTop":"單一組別：第一名1位 NPR 50,000、第二名3位各 NPR 30,000、第三名5位各 NPR 15,000；總決賽10名選手另各得入圍獎金 NPR 20,000。",});
+Object.assign(translations.en,{"entryFeeLabel":"January 2027 online audition","entryFeeAmount":"FREE","entryFeeNote":"Up to five 60–90-second Demos per person. First selection on Feb 12 is free; second selection on Mar 5 is NPR 300 per person; Mar 12 PK round is NPR 500 per person.","entryFeeStatus":"TEST preview only. Official registration, multi-video submission and real payments are not open.","rewardsTop":"One division: first prize NPR 50,000 (1 winner); second prize NPR 30,000 each (3); third prize NPR 15,000 each (5). Ten finalists also receive NPR 20,000 each.",});
+Object.assign(translations.ne,{"entryFeeLabel":"जनवरी २०२७ अनलाइन प्रारम्भिक छनोट","entryFeeAmount":"निःशुल्क","entryFeeNote":"प्रति व्यक्ति ६०–९० सेकेन्डका बढीमा ५ डेमो। फेब्रुअरी १२ को पहिलो छनोट निःशुल्क; मार्च ५ को दोस्रो छनोट प्रति व्यक्ति NPR 300; मार्च १२ को PK चरण प्रति व्यक्ति NPR 500।","entryFeeStatus":"परीक्षण वेबसाइट मात्र। आधिकारिक दर्ता, धेरै भिडियो पठाउने सुविधा र वास्तविक भुक्तानी खुलेका छैनन्।","rewardsTop":"एउटै समूह: पहिलो पुरस्कार १ जनालाई NPR 50,000; दोस्रो ३ जनालाई जनही NPR 30,000; तेस्रो ५ जनालाई जनही NPR 15,000। १० फाइनलिस्टलाई थप जनही NPR 20,000।",});
 
 /* 2026-11-17 award clarification: top 9 are within the SAME 10 finalists. */
 Object.assign(translations.zh,{"rewardsTop":"4月14日總決賽共有10位選手，10位皆獲入圍獎金 NPR 20,000（合計 NPR 200,000）；同一批10人再依成績統一排名，前9名另獲名次獎金：第一名1位 NPR 50,000、第二名3位各 NPR 30,000、第三名5位各 NPR 15,000（合計 NPR 215,000）。全場現金獎金總計 NPR 415,000。","rewardFinalist":"決賽10位選手 · 人人獲入圍獎"});
@@ -45,6 +45,34 @@ Object.assign(translations.zh,{"journeyStatus":"目前為網站預覽測試階�
 Object.assign(translations.en,{"journeyStatus":"TEST preview only. Official registration is not yet open.","journeyEyebrow":"2027 · 5 competition stages","journeyHeading":"Your journey to the final, in 5 steps","journeyLead":"Submit a video in January, compete in your selected area in February and March, and watch 10 finalists perform in April.","journeyRegionTitle":"Competition areas","journeyRegionA":"Area A · Lumbini","journeyRegionB":"Area B · Bagmati","journeyRegionNote":"There is only one competition division. A and B are in-person competition areas, not separate singer categories. Eligible entrants from other provinces may choose either area.","journeyDate1":"Jan 1–31","journeyChannel1":"Online","journeyTitle1":"Online audition","journeyDesc1":"Submit up to 5 singing videos per person, 60–90 seconds each. Professional judges review them.","journeyDate2":"Feb 12","journeyChannel2":"Held separately in Areas A & B","journeyTitle2":"First selection","journeyDesc2":"Selected singers perform individually in their chosen area before professional judges.","journeyDate3":"Mar 5","journeyChannel3":"Held separately in Areas A & B","journeyTitle3":"Second selection","journeyDesc3":"Qualified singers may perform solo or in a team. Professional judges select those who advance.","journeyDate4":"Mar 12","journeyChannel4":"Held separately in Areas A & B","journeyTitle4":"Advancement round","journeyDesc4":"Five singers advance from each area, making 10 finalists in total.","journeyDate5":"Apr 14","journeyChannel5":"Golden Himal Palace","journeyTitle5":"Quarterly grand final","journeyDesc5":"Ten finalists compete in person. Valid votes on the official website count for 51% and professional judges for 49%; social-media likes are not official votes.","journeyTraining":"Optional music training is planned from mid-March. It is not another elimination round; finalists keep their place even if they do not attend.","journeyNotice":"These are planned 2027 dates. Exact times, venues and quotas will be confirmed by the organizer. All times are in Nepal local time.","journeyDetails":"Read the full competition rules →"});
 Object.assign(translations.ne,{"journeyStatus":"यो परीक्षण वेबसाइट हो। आधिकारिक दर्ता अझै खुलेको छैन।","journeyEyebrow":"२०२७ · प्रतियोगिताका ५ चरण","journeyHeading":"दर्तादेखि फाइनलसम्म: ५ सजिला चरण","journeyLead":"जनवरीमा गायन भिडियो पठाउनुहोस्, फेब्रुअरी–मार्चमा क्षेत्रीय छनोट, अप्रिलमा १० जनाको फाइनल।","journeyRegionTitle":"प्रतियोगिता क्षेत्र","journeyRegionA":"क्षेत्र A · लुम्बिनी (Lumbini)","journeyRegionB":"क्षेत्र B · बागमती (Bagmati)","journeyRegionNote":"प्रतियोगिता समूह एउटै हो। A र B फरक गायन समूह होइनन्, प्रत्यक्ष प्रतिस्पर्धा हुने क्षेत्र मात्र हुन्। अन्य प्रदेशका योग्य व्यक्तिले पनि एउटा क्षेत्र रोज्न सक्छन्।","journeyDate1":"जनवरी १–३१","journeyChannel1":"अनलाइन","journeyTitle1":"अनलाइन अडिसन","journeyDesc1":"प्रति व्यक्ति बढीमा ५ गायन भिडियो, प्रत्येक ६०–९० सेकेन्ड। पेशेवर निर्णायकले मूल्याङ्कन गर्छन्।","journeyDate2":"फेब्रुअरी १२","journeyChannel2":"A र B क्षेत्रमा छुट्टाछुट्टै","journeyTitle2":"पहिलो छनोट","journeyDesc2":"छानिएका गायकले आफूले रोजेको क्षेत्रमा एकल प्रस्तुति दिन्छन्। पेशेवर निर्णायकले मूल्याङ्कन गर्छन्।","journeyDate3":"मार्च ५","journeyChannel3":"A र B क्षेत्रमा छुट्टाछुट्टै","journeyTitle3":"दोस्रो छनोट","journeyDesc3":"छानिएका गायकले एकल वा टोलीमा प्रस्तुति दिन सक्छन्। निर्णायकले अर्को चरणका लागि छान्छन्।","journeyDate4":"मार्च १२","journeyChannel4":"A र B क्षेत्रमा छुट्टाछुट्टै","journeyTitle4":"अर्को चरणको छनोट","journeyDesc4":"प्रत्येक क्षेत्रबाट ५ जना छानिन्छन्। कुल १० जना फाइनलमा पुग्छन्।","journeyDate5":"अप्रिल १४","journeyChannel5":"Golden Himal Palace","journeyTitle5":"त्रैमासिक ग्रान्ड फाइनल","journeyDesc5":"१० फाइनलिस्टले प्रत्यक्ष प्रस्तुति दिन्छन्। आधिकारिक वेबसाइटको मान्य मत ५१% र पेशेवर निर्णायकको अंक ४९% हुन्छ। सामाजिक सञ्जालका लाइक आधिकारिक मत होइनन्।","journeyTraining":"मार्चको मध्यदेखि स्वेच्छिक संगीत प्रशिक्षण योजना छ। यो अर्को छनोट होइन; सहभागी नभए पनि फाइनलको योग्यता कायम रहन्छ।","journeyNotice":"यी २०२७ का प्रस्तावित मिति हुन्। अन्तिम समय, स्थान र संख्या आयोजकले घोषणा गर्नेछ। सबै समय नेपालको स्थानीय समयअनुसार हुनेछ।","journeyDetails":"सम्पूर्ण प्रतियोगिता नियम हेर्नुहोस् →"});
 
+
+/* 2026-11-18 Muse/Alan public policy: no entry-fee or payment copy in UI.
+ * Internal stage amounts are retained in backend payment-readiness only.
+ */
+Object.assign(translations.zh,{
+ preview:'網站預覽測試｜正式報名尚未開放',
+ testNotice:'本網站僅供系統測試，尚未開放正式報名。',
+ rewardsStatus:'以上為2027年預定賽事資訊；正式報名與餐券核發尚未開放。',
+ entryFeeLabel:'海選影片與報名',entryFeeAmount:'準備參賽',
+ entryFeeNote:'每人最多5支60–90秒的Demo影片，請確認影片及資格要求。',
+ entryFeeStatus:'目前為測試階段，正式報名尚未開放。'
+});
+Object.assign(translations.en,{
+ preview:'Website preview · Official registration is not yet open',
+ testNotice:'TEST PREVIEW ONLY. Official registration is not yet open.',
+ rewardsStatus:'2027 competition information; official entry and voucher issuance are not yet open.',
+ entryFeeLabel:'Audition preparation',entryFeeAmount:'Apply online',
+ entryFeeNote:'Up to five 60–90 second Demo videos per entrant. Review the video and eligibility requirements.',
+ entryFeeStatus:'TEST preview only. Official registration is not open.'
+});
+Object.assign(translations.ne,{
+ preview:'पूर्वावलोकन वेबसाइट · आधिकारिक दर्ता अझै खुलेको छैन',
+ testNotice:'यो परीक्षण वेबसाइट मात्र हो। आधिकारिक दर्ता अझै खुलेको छैन।',
+ rewardsStatus:'२०२७ को प्रतियोगितासम्बन्धी जानकारी। आधिकारिक दर्ता र कुपन वितरण खुला छैन।',
+ entryFeeLabel:'अडिसनका लागि तयारी',entryFeeAmount:'अनलाइन आवेदन',
+ entryFeeNote:'प्रति व्यक्ति बढीमा पाँच ६०–९० सेकेन्डका डेमो। भिडियो र योग्यता नियम जाँच्नुहोस्।',
+ entryFeeStatus:'परीक्षण वेबसाइट मात्र। आधिकारिक दर्ता खुलेको छैन।'
+});
 if(page==='home'){
  let lang='zh',homeState='anonymous';
  try{const stored=localStorage.getItem('ghv_ui_language_v1');if(translations[stored])lang=stored}catch{}
@@ -199,6 +227,11 @@ function friendlyError(e){
  const common={"e2e_not_configured":"errNoEmail","test_email_service_unavailable":"errMail","not_on_test_allowlist":"errAllow","expired_or_invalid_code":"errInvalid","login_required":"errLogin","human_check_required":"signupHumanRequired","too_many_code_requests":"signupLimited"};
  if(common[e?.message])return mt(common[e.message]);
  const errors={
+ muse_profile_missing:mt('contactRequired'),
+ muse_profile_invalid:mt('contactInvalid'),
+ muse_phone_invalid:mt('contactPhoneInvalid'),
+ muse_email_invalid:mt('contactEmailInvalid'),
+ muse_fields_not_enabled:mt('contactUnavailable'),
  member_only:'This account is not a singer account.',
  update_locked:mt('editLockedAfterReview'),
  delete_locked:'This entry cannot be deleted.',
@@ -236,7 +269,11 @@ function friendlyError(e){
  const errors={self_review_disallowed:'同一信箱不能評自己的參賽作品，請由其他獨立評審評分。',too_many_code_requests:'驗證信已達次數限制，請稍候再試；登入後切換已授權身分不必重新寄信。',e2e_not_configured:'目前尚未開通 Email 驗證服務，無法登入。正式系統需先完成寄信設定。',test_email_service_unavailable:'寄信服務目前不可使用，請稍後或確認平台設定。',not_on_test_allowlist:'此 Email 尚未獲授權，目前只接受受邀帳號。',expired_or_invalid_code:'驗證碼錯誤或已過期，請重新取得。',login_required:'請先登入。',organizer_only:'這個帳號不是主辦單位，無權查看管理資料。',reviewer_only:'這個帳號不是評審，無權打分。',member_only:'此帳號並非會員。',update_locked:'這筆資料已進入審核或模擬繳費階段，無法直接修改。',delete_locked:'這筆資料已進入評審或後續流程，無法直接刪除。',invalid_demo_url:'請輸入有效的公開作品連結。',annual_category_locked:'年度組別已鎖定。',already_scored_or_unavailable:'你已評過這位選手，不能重複給分。'};return errors[e?.message]||('目前無法完成操作（'+(e?.message||'連線失敗')+'）。')}
 async function api(path,body){const c=new AbortController(),timer=setTimeout(()=>c.abort(),18000);try{const r=await fetch('/api/e2e/'+path,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),credentials:'same-origin',cache:'no-store',signal:c.signal});const data=await r.json();if(!r.ok||data.ok!==true)throw new Error(data.error||('HTTP '+r.status));return data}finally{clearTimeout(timer)}}
 async function run(fn){if(busy)return;busy=true;document.body.classList.add('requesting');try{await fn()}catch(e){status(friendlyError(e),true)}finally{busy=false;document.body.classList.remove('requesting')}}
+function clearStaffContact(){
+ document.querySelectorAll('[data-staff-contact]').forEach(item=>item.remove());
+}
 function authUI(signedIn){
+ if(staff&&!signedIn)clearStaffContact();
  (staff?$('back-signin'):$('signin-panel')).hidden=signedIn;
  $(prefix+'-dashboard')?.setAttribute('hidden','');
  if(staff)$('back-dashboard').hidden=!signedIn;
@@ -371,6 +408,17 @@ async function loadSession(){try{
   }
  }
  await dashboard();
+ // Preserve the public QR URL: after successful OTP, take a first-time singer
+ // straight to the visible form. Existing entrants remain on their dashboard.
+ if(!staff&&location.hash==='#register'){
+  const registration=$('application-details');
+  if(registration&&!registration.hidden){
+   requestAnimationFrame(()=>{
+    registration.scrollIntoView({block:'start',behavior:'auto'});
+    registration.querySelector('h2')?.focus({preventScroll:true});
+   });
+  }
+ }
  }catch(e){account=null;authUI(false);if(staff)staffTabs();if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
 function setupAuth(){
 const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
@@ -554,7 +602,7 @@ function drawEntry(a){
   meta.append(field);
  }
  box.append(meta);
- box.append(node('span',a.round_code==='2027-01'&&a.payment_status!=='simulated_paid'?'FREE · NPR 0 · 海選免費':mt(a.payment_status==='simulated_paid'?'testPaid':'testPending'),'pill '+(a.round_code==='2027-01'||a.payment_status==='simulated_paid'?'pill-pass':'pill-warn')));
+ box.append(node('span',mt(a.approval_state==='approved'?'approvalAccepted':'entryReceived'),'pill '+(a.approval_state==='approved'?'pill-pass':'pill-warn')));
  if(a.approval_state)box.append(node('p',mt(a.approval_state==='approved'?'approvalAccepted':'approvalPending'),'minor'));
  drawMemberSupplement(box,a);
  const actions=node('div',undefined,'inline-actions member-entry-buttons');
@@ -579,18 +627,8 @@ function drawEntry(a){
    if(!confirm(mt('delTitle')+'\n\n'+mt('delBody')+' '+a.id))return;
    run(async()=>{await api('delete-application',{application_id:a.id});status(mt('deleted'));await renderMember()});
   };
-  const pay=node('button',mt('testCheckout'),'btn btn-soft');pay.type='button';
-  pay.onclick=()=>{
-   if(!confirm(mt('payTitle')))return;
-   run(async()=>{
-    const result=await api('mock-payment',{application_id:a.id});
-    if(result.status!=='simulated_paid'||result.testOnly!==true||result.realCharge!==false)throw Error('test_payment_result_unverified');
-    await renderMember();status(mt(a.approval_state==='pending'?'paymentAwaitingApproval':'paymentDone'));
-   });
-  };
-  // January 2027 audition is free: no simulated checkout should appear for this round.
-  if(a.round_code!=='2027-01')actions.append(pay);
-  else box.append(node('p','Free January audition / जनवरी अडिसन निःशुल्क / 1月海選免費；不需付款。','minor'));
+  // Public checkout is disabled under the 2026-11-18 Muse/Alan policy.
+  if(a.round_code==='2027-01')box.append(node('p','2027 January audition TEST · 將依參賽資格審核 · परीक्षण आवेदन','minor'));
   if(a.approval_state!=='approved'&&!a.video_supplement_state)actions.append(del);
  }
  box.append(actions);
@@ -662,8 +700,7 @@ async function renderMember(){
   const avatar=$('member-hero-avatar');avatar.replaceChildren();
   avatar.append(profileImage(first.photo_url_1)||node('span','✦'));
   $('member-state-data').textContent=mt('dataSaved');
-  const paid=first.payment_status==='simulated_paid';
-  $('member-state-payment').textContent=first.round_code==='2027-01'&&!paid?'FREE · NPR 0 · 海選免費':mt(paid?'statusSimulatedPaid':'testPending');
+  $('member-state-payment').textContent=mt(first.approval_state==='approved'?'approvalAccepted':'entryReceived');
   $('member-quick-edit').hidden=!memberCanEdit(first);
   $('member-quick-edit').onclick=()=>showEdit(first);
   const editReason=$('member-edit-lock-reason');
@@ -678,16 +715,11 @@ async function renderMember(){
   $('member-quick-edit').onclick=null;
   $('member-edit-lock-reason').hidden=true;
  }
- const paidEntry=rows.find(a=>a.payment_status==='simulated_paid');
  const done=$('test-completion');
- if(done){
-  done.hidden=!paidEntry;
-  const completion=paidEntry?.approval_state==='pending'?mt('paymentAwaitingApproval'):paidEntry?.approval_state==='approved'?mt('approvalAccepted'):mt('testComplete');
-  done.textContent=paidEntry?'✓ '+completion+' · '+mt('noCharge'):'';
- }
+ if(done){done.hidden=true;done.textContent='';}
  $('step-login')?.classList.add('active');
  $('step-apply')?.classList.toggle('active',hasEntries);
- $('step-checkout')?.classList.toggle('active',Boolean(paidEntry));
+ $('step-checkout')?.classList.toggle('active',hasEntries);
 }
 async function showCorrection(a){
  // A graded entry is immutable as to scored song/video. Only display identity
@@ -988,6 +1020,25 @@ async function renderOrganizer(){
    info.append(node('p',a.round_code+' · '+(a.category==='university'?'大學組':'社會組')+' · '+(a.song_language||'語言未填'),'minor'));
    info.append(node('p','編號：'+a.id,'minor'));
    if(a.province)info.append(node('p',[a.province,a.location_detail].filter(Boolean).join(' · '),'minor'));
+   if(v.contact_storage_enabled){
+    const lookup=node('details'),result=node('div');
+    lookup.dataset.staffContact='true';
+    lookup.append(node('summary','查看受控報名聯絡資料'),result);
+    let loaded=false;
+    lookup.ontoggle=async()=>{
+     if(!lookup.open){loaded=false;result.replaceChildren();return;}
+     if(loaded)return;
+     loaded=true;result.textContent='讀取中…';
+     try{
+      const {contact}=await api('organizer-contact?id='+encodeURIComponent(a.id));
+      if(!lookup.isConnected||!lookup.open||account?.role!=='organizer')return;
+      const fields=[['full_name','完整姓名'],['contact_phone','電話'],['contact_email','Email'],['contact_handle','常用聯絡帳號'],
+       ['city','城市'],['street_address','地址'],['educational_background','學歷'],['short_description','自我介紹'],['musical_training','音樂經歷']];
+      result.replaceChildren(...fields.map(([key,label])=>node('p',label+'：'+contact[key],'minor')));
+     }catch(error){loaded=false;result.textContent=error.message==='contact_not_found'?'這筆報名無受控聯絡資料。':'目前無法讀取聯絡資料。';}
+    };
+    info.append(lookup);
+   }
    const demos=staffDemoList(a);if(demos)info.append(demos);
    const video=safeLink(a.demo_url);
    if(!demos&&video){
@@ -1070,6 +1121,7 @@ async function renderOrganizer(){
  }
 }
 async function renderJudge(){
+ clearStaffContact();
  $('organizer-dashboard').hidden=true;$('judge-dashboard').hidden=false;
  const v=await api('reviewer-queue'),queue=v.queue||[];
  const list=$('judge-list'),pager=$('judge-pagination'),summary=$('judge-count');
