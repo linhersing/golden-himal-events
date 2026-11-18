@@ -1711,3 +1711,167 @@ body[data-page="back"] .roster-pagination button{
   min-height:54px;
  }
 }
+
+
+/* 2026-11-18 organizer 1 ID = 1 compact row; one modal with drill-down screens. */
+body[data-page="back"] .organizer-record-row{
+ display:flex;flex-direction:row;align-items:center;gap:8px;min-width:0;
+ padding:4px 10px;border-radius:13px;
+}
+body[data-page="back"] .organizer-record-open{
+ appearance:none;-webkit-appearance:none;border:0;background:transparent;color:inherit;
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+ flex:1;min-width:0;text-align:left;cursor:pointer;padding:11px 5px;
+ min-height:58px;touch-action:manipulation;
+}
+body[data-page="back"] .organizer-record-open .roster-entry-text{flex:1;min-width:0;gap:3px}
+body[data-page="back"] .organizer-record-open strong{font-size:1.04rem;line-height:1.4}
+body[data-page="back"] .organizer-record-open .roster-mini{
+ font-size:.86rem;line-height:1.4;overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-record-arrow{
+ flex:0 0 auto;color:#795232;font-weight:800;font-size:.94rem;white-space:nowrap;
+}
+body[data-page="back"] .organizer-record-status{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;
+ max-width:30%;min-width:0;
+}
+body[data-page="back"] .organizer-record-status .pill{white-space:normal;line-height:1.35;text-align:center}
+body[data-page="back"] .organizer-record-open:focus-visible,
+body[data-page="back"] .organizer-step-button:focus-visible{
+ outline:3px solid #b98947;outline-offset:2px;border-radius:9px;
+}
+body.organizer-dialog-open{overflow:hidden}
+body[data-page="back"] .organizer-entry-dialog{
+ position:fixed;inset:0;margin:auto;padding:0;
+ width:min(94vw,700px);height:min(86vh,780px);height:min(86dvh,780px);
+ max-width:100%;max-height:100%;
+ border:1px solid #d6bd9c;border-radius:17px;
+ background:#fcfaf6;color:#47332a;
+ box-shadow:0 28px 80px rgba(28,20,15,.26);
+ overscroll-behavior:contain;
+}
+body[data-page="back"] .organizer-entry-dialog::backdrop{background:rgba(24,18,14,.55)}
+body[data-page="back"] .organizer-entry-dialog.organizer-dialog-fallback{
+ z-index:99999;display:block;
+ box-shadow:0 0 0 100vmax rgba(24,18,14,.55),0 18px 50px rgba(0,0,0,.26);
+}
+body[data-page="back"] .organizer-dialog-shell{
+ display:flex;flex-direction:column;height:100%;min-height:0;min-width:0;
+}
+body[data-page="back"] .organizer-dialog-head{
+ display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+ align-items:center;gap:10px;
+ flex-shrink:0;padding:13px 17px;
+ border-bottom:1px solid #e5d6be;background:#f8f2e8;
+}
+body[data-page="back"] .organizer-dialog-heading{min-width:0}
+body[data-page="back"] .organizer-dialog-heading h2{
+ font-size:clamp(1.1rem,3.5vw,1.4rem);line-height:1.35;margin:0;
+ overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-step{
+ margin:0 0 3px;font-size:.76rem;color:#806e5d;line-height:1.3;
+ overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-dialog-back,
+body[data-page="back"] .organizer-dialog-close{
+ min-height:46px;font-size:.94rem;white-space:normal;line-height:1.25;
+}
+body[data-page="back"] .organizer-dialog-back[hidden]{display:none!important}
+body[data-page="back"] .organizer-dialog-content{
+ flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+ padding:18px 20px max(22px,env(safe-area-inset-bottom));
+ outline:0;scrollbar-gutter:stable;
+}
+body[data-page="back"] .organizer-dialog-intro{
+ margin:0 0 14px;font-size:1rem;line-height:1.55;
+}
+body[data-page="back"] .organizer-record-menu{display:grid;gap:10px}
+body[data-page="back"] .organizer-step-button{
+ appearance:none;border:1px solid #dac6aa;border-radius:12px;
+ background:#fffefa;color:#49352a;
+ display:grid;grid-template-columns:minmax(0,1fr) auto;
+ gap:4px 10px;align-items:center;
+ width:100%;min-height:74px;padding:14px 15px;
+ text-align:left;cursor:pointer;touch-action:manipulation;
+}
+body[data-page="back"] .organizer-step-button strong{
+ grid-column:1;line-height:1.4;font-size:1.06rem;overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-step-button .minor{
+ grid-column:1;font-size:.86rem;line-height:1.4;overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-step-arrow{
+ grid-column:2;grid-row:1/span 2;align-self:center;
+ color:#835531;font-size:1.35rem;font-weight:800;
+}
+body[data-page="back"] .organizer-record-fields{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+ margin:0 0 16px;
+}
+body[data-page="back"] .organizer-record-field{
+ min-width:0;padding:11px 12px;
+ border:1px solid #e6d7c1;border-radius:11px;background:#fffdf8;
+}
+body[data-page="back"] .organizer-record-field dt{
+ font-size:.78rem;font-weight:700;color:#806a58;margin:0 0 4px;
+}
+body[data-page="back"] .organizer-record-field dd{
+ font-size:1rem;line-height:1.5;color:#48362c;margin:0;
+ overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-dialog-subtitle{font-size:1.04rem}
+body[data-page="back"] .organizer-private-boundary{
+ background:#fffaf0;border:1px solid #d5b98c;border-radius:12px;
+ padding:17px;line-height:1.65;
+}
+body[data-page="back"] .organizer-private-boundary h3{margin:0 0 8px;font-size:1.1rem}
+body[data-page="back"] .organizer-roster-actions{
+ display:grid;grid-template-columns:1fr;justify-content:stretch;
+ gap:10px;
+}
+body[data-page="back"] .organizer-roster-actions button{
+ width:100%;min-height:54px;white-space:normal;
+}
+body[data-page="back"] .organizer-record-watch{
+ display:flex;align-items:center;justify-content:center;
+ min-height:54px;width:100%;box-sizing:border-box;
+}
+body[data-page="back"] .organizer-dialog-content .entrant-gallery{
+ max-width:100%;overflow-wrap:anywhere;
+}
+@media(max-width:600px){
+ body[data-page="back"] .organizer-entry-dialog{
+  inset:0;margin:0;width:100%;height:100vh;height:100dvh;
+  max-width:100vw;max-height:100dvh;
+  border:0;border-radius:0;
+ }
+ body[data-page="back"] .organizer-dialog-head{
+  padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
+  gap:7px;grid-template-columns:auto minmax(0,1fr) auto;
+ }
+ body[data-page="back"] .organizer-dialog-back,
+ body[data-page="back"] .organizer-dialog-close{
+  min-height:48px;padding:8px 10px;font-size:.88rem;
+ }
+ body[data-page="back"] .organizer-dialog-heading h2{font-size:1.12rem}
+ body[data-page="back"] .organizer-dialog-content{
+  padding:14px 13px max(18px,env(safe-area-inset-bottom));
+  scrollbar-gutter:auto;
+ }
+ body[data-page="back"] .organizer-record-fields{grid-template-columns:1fr}
+ body[data-page="back"] .organizer-record-status{max-width:37%}
+ body[data-page="back"] .organizer-step-button{min-height:74px}
+}
+@media(max-width:340px){
+ body[data-page="back"] .organizer-record-row{flex-direction:column;align-items:stretch}
+ body[data-page="back"] .organizer-record-status{
+  max-width:none;justify-content:flex-start;padding:0 6px 8px;
+ }
+ body[data-page="back"] .organizer-dialog-head{grid-template-columns:auto minmax(0,1fr) auto}
+ body[data-page="back"] .organizer-dialog-back,
+ body[data-page="back"] .organizer-dialog-close{font-size:.78rem;padding:7px 6px}
+ body[data-page="back"] .organizer-dialog-heading h2{font-size:1rem}
+ body[data-page="back"] .organizer-step{font-size:.66rem}
+}
