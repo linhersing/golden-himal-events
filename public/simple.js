@@ -1209,7 +1209,7 @@ async function renderOrganizer(){
   if(!modal||!selectedEntry||!viewStack.length)return;
   const {page,index}=viewStack[viewStack.length-1],a=selectedEntry,works=entryWorks(a);
   const names={overview:'選手總覽',songs:'參賽歌曲',song:'歌曲詳情',profile:'基本資料',contact:'受控聯絡資料',review:'報名審核'};
-  modalStep.textContent='報名編號 · '+a.id+'　｜　'+viewStack.length+' / '+(page==='overview'?'1':'2+');
+  modalStep.textContent='編號 '+String(a.id||'').slice(0,12)+' · '+viewStack.map(item=>names[item.page]).join(' › ');
   modalTitle.textContent=(a.stage_name||'選手')+' · '+names[page];
   backButton.hidden=viewStack.length===1;
   panel.replaceChildren();
@@ -1316,6 +1316,11 @@ async function renderOrganizer(){
  if(modal){
   closeButton.onclick=closeOrganizerRecord;
   backButton.onclick=previousRecordStep;
+  modal.onkeydown=event=>{
+   if(event.key==='Escape'&&modal.classList.contains('organizer-dialog-fallback')){
+    event.preventDefault();closeOrganizerRecord();
+   }
+  };
   modal.onclose=()=>{
    document.body.classList.remove('organizer-dialog-open');
    selectedEntry=null;viewStack=[];panel.replaceChildren();
