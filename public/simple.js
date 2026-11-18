@@ -45,6 +45,34 @@ Object.assign(translations.zh,{"journeyStatus":"目前為網站預覽測試階�
 Object.assign(translations.en,{"journeyStatus":"TEST preview only. Official registration is not yet open.","journeyEyebrow":"2027 · 5 competition stages","journeyHeading":"Your journey to the final, in 5 steps","journeyLead":"Submit a video in January, compete in your selected area in February and March, and watch 10 finalists perform in April.","journeyRegionTitle":"Competition areas","journeyRegionA":"Area A · Lumbini","journeyRegionB":"Area B · Bagmati","journeyRegionNote":"There is only one competition division. A and B are in-person competition areas, not separate singer categories. Eligible entrants from other provinces may choose either area.","journeyDate1":"Jan 1–31","journeyChannel1":"Online","journeyTitle1":"Online audition","journeyDesc1":"Submit up to 5 singing videos per person, 60–90 seconds each. Professional judges review them.","journeyDate2":"Feb 12","journeyChannel2":"Held separately in Areas A & B","journeyTitle2":"First selection","journeyDesc2":"Selected singers perform individually in their chosen area before professional judges.","journeyDate3":"Mar 5","journeyChannel3":"Held separately in Areas A & B","journeyTitle3":"Second selection","journeyDesc3":"Qualified singers may perform solo or in a team. Professional judges select those who advance.","journeyDate4":"Mar 12","journeyChannel4":"Held separately in Areas A & B","journeyTitle4":"Advancement round","journeyDesc4":"Five singers advance from each area, making 10 finalists in total.","journeyDate5":"Apr 14","journeyChannel5":"Golden Himal Palace","journeyTitle5":"Quarterly grand final","journeyDesc5":"Ten finalists compete in person. Valid votes on the official website count for 51% and professional judges for 49%; social-media likes are not official votes.","journeyTraining":"Optional music training is planned from mid-March. It is not another elimination round; finalists keep their place even if they do not attend.","journeyNotice":"These are planned 2027 dates. Exact times, venues and quotas will be confirmed by the organizer. All times are in Nepal local time.","journeyDetails":"Read the full competition rules →"});
 Object.assign(translations.ne,{"journeyStatus":"यो परीक्षण वेबसाइट हो। आधिकारिक दर्ता अझै खुलेको छैन।","journeyEyebrow":"२०२७ · प्रतियोगिताका ५ चरण","journeyHeading":"दर्तादेखि फाइनलसम्म: ५ सजिला चरण","journeyLead":"जनवरीमा गायन भिडियो पठाउनुहोस्, फेब्रुअरी–मार्चमा क्षेत्रीय छनोट, अप्रिलमा १० जनाको फाइनल।","journeyRegionTitle":"प्रतियोगिता क्षेत्र","journeyRegionA":"क्षेत्र A · लुम्बिनी (Lumbini)","journeyRegionB":"क्षेत्र B · बागमती (Bagmati)","journeyRegionNote":"प्रतियोगिता समूह एउटै हो। A र B फरक गायन समूह होइनन्, प्रत्यक्ष प्रतिस्पर्धा हुने क्षेत्र मात्र हुन्। अन्य प्रदेशका योग्य व्यक्तिले पनि एउटा क्षेत्र रोज्न सक्छन्।","journeyDate1":"जनवरी १–३१","journeyChannel1":"अनलाइन","journeyTitle1":"अनलाइन अडिसन","journeyDesc1":"प्रति व्यक्ति बढीमा ५ गायन भिडियो, प्रत्येक ६०–९० सेकेन्ड। पेशेवर निर्णायकले मूल्याङ्कन गर्छन्।","journeyDate2":"फेब्रुअरी १२","journeyChannel2":"A र B क्षेत्रमा छुट्टाछुट्टै","journeyTitle2":"पहिलो छनोट","journeyDesc2":"छानिएका गायकले आफूले रोजेको क्षेत्रमा एकल प्रस्तुति दिन्छन्। पेशेवर निर्णायकले मूल्याङ्कन गर्छन्।","journeyDate3":"मार्च ५","journeyChannel3":"A र B क्षेत्रमा छुट्टाछुट्टै","journeyTitle3":"दोस्रो छनोट","journeyDesc3":"छानिएका गायकले एकल वा टोलीमा प्रस्तुति दिन सक्छन्। निर्णायकले अर्को चरणका लागि छान्छन्।","journeyDate4":"मार्च १२","journeyChannel4":"A र B क्षेत्रमा छुट्टाछुट्टै","journeyTitle4":"अर्को चरणको छनोट","journeyDesc4":"प्रत्येक क्षेत्रबाट ५ जना छानिन्छन्। कुल १० जना फाइनलमा पुग्छन्।","journeyDate5":"अप्रिल १४","journeyChannel5":"Golden Himal Palace","journeyTitle5":"त्रैमासिक ग्रान्ड फाइनल","journeyDesc5":"१० फाइनलिस्टले प्रत्यक्ष प्रस्तुति दिन्छन्। आधिकारिक वेबसाइटको मान्य मत ५१% र पेशेवर निर्णायकको अंक ४९% हुन्छ। सामाजिक सञ्जालका लाइक आधिकारिक मत होइनन्।","journeyTraining":"मार्चको मध्यदेखि स्वेच्छिक संगीत प्रशिक्षण योजना छ। यो अर्को छनोट होइन; सहभागी नभए पनि फाइनलको योग्यता कायम रहन्छ।","journeyNotice":"यी २०२७ का प्रस्तावित मिति हुन्। अन्तिम समय, स्थान र संख्या आयोजकले घोषणा गर्नेछ। सबै समय नेपालको स्थानीय समयअनुसार हुनेछ।","journeyDetails":"सम्पूर्ण प्रतियोगिता नियम हेर्नुहोस् →"});
 
+
+/* 2026-11-18 Muse/Alan public policy: no entry-fee or payment copy in UI.
+ * Internal stage amounts are retained in backend payment-readiness only.
+ */
+Object.assign(translations.zh,{
+ preview:'網站預覽測試｜正式報名尚未開放',
+ testNotice:'本網站僅供系統測試，尚未開放正式報名。',
+ rewardsStatus:'以上為2027年預定賽事資訊；正式報名與餐券核發尚未開放。',
+ entryFeeLabel:'海選影片與報名',entryFeeAmount:'準備參賽',
+ entryFeeNote:'每人最多5支60–90秒的Demo影片，請確認影片及資格要求。',
+ entryFeeStatus:'目前為測試階段，正式報名尚未開放。'
+});
+Object.assign(translations.en,{
+ preview:'Website preview · Official registration is not yet open',
+ testNotice:'TEST PREVIEW ONLY. Official registration is not yet open.',
+ rewardsStatus:'2027 competition information; official entry and voucher issuance are not yet open.',
+ entryFeeLabel:'Audition preparation',entryFeeAmount:'Apply online',
+ entryFeeNote:'Up to five 60–90 second Demo videos per entrant. Review the video and eligibility requirements.',
+ entryFeeStatus:'TEST preview only. Official registration is not open.'
+});
+Object.assign(translations.ne,{
+ preview:'पूर्वावलोकन वेबसाइट · आधिकारिक दर्ता अझै खुलेको छैन',
+ testNotice:'यो परीक्षण वेबसाइट मात्र हो। आधिकारिक दर्ता अझै खुलेको छैन।',
+ rewardsStatus:'२०२७ को प्रतियोगितासम्बन्धी जानकारी। आधिकारिक दर्ता र कुपन वितरण खुला छैन।',
+ entryFeeLabel:'अडिसनका लागि तयारी',entryFeeAmount:'अनलाइन आवेदन',
+ entryFeeNote:'प्रति व्यक्ति बढीमा पाँच ६०–९० सेकेन्डका डेमो। भिडियो र योग्यता नियम जाँच्नुहोस्।',
+ entryFeeStatus:'परीक्षण वेबसाइट मात्र। आधिकारिक दर्ता खुलेको छैन।'
+});
 if(page==='home'){
  let lang='zh',homeState='anonymous';
  try{const stored=localStorage.getItem('ghv_ui_language_v1');if(translations[stored])lang=stored}catch{}
@@ -588,8 +616,8 @@ function drawEntry(a){
    });
   };
   // January 2027 audition is free: no simulated checkout should appear for this round.
-  if(a.round_code!=='2027-01')actions.append(pay);
-  else box.append(node('p','Free January audition / जनवरी अडिसन निःशुल्क / 1月海選免費；不需付款。','minor'));
+  // Muse/Alan policy: never surface TEST checkout to a participant. Future payment is gated separately.
+  if(a.round_code==='2027-01')box.append(node('p','2027 January audition TEST · 將依參賽資格審核 · परीक्षण आवेदन','minor'));
   if(a.approval_state!=='approved'&&!a.video_supplement_state)actions.append(del);
  }
  box.append(actions);
