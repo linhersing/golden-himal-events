@@ -165,6 +165,84 @@ test('organizer five-demo rows remain compact until expanded, with song-level se
  }
 });
 
+
+test('onsite mobile judge selects one of five songs, saves the correct score and keeps drafts safe',async({page})=>{
+ const works=Array.from({length:5},(_,i)=>({
+  position:i+1,song_title:'FICTIONAL TEST TRACK '+(i+1),
+  song_language:i===4?'English':'Nepali',original_artist:'FAKE ARTIST '+(i+1),
+  demo_url:'https://example.org/only-test-'+(i+1),my_score:null
+ }));
+ const entry={
+  id:'JUDGE-TEST-FIVE',stage_name:'TEST Participant',
+  song_title:'FICTIONAL TEST TRACK 1',song_language:'Nepali',
+  round_code:'2027-01',category:'community',phase:'demo',
+  per_video_scoring:true,demo_entries:works
+ };
+ const saved=[];
+ await page.route('**/api/e2e/**',async route=>{
+  const p=new URL(route.request().url()).pathname.split('/').at(-1);
+  let json={ok:true};
+  if(p==='me')json={ok:true,account:{id:'judge-synthetic',role:'reviewer',available_roles:['reviewer']}};
+  if(p==='reviewer-queue')json={ok:true,queue:[entry]};
+  if(p==='january-video-score'){
+   const payload=route.request().postDataJSON();
+   saved.push(payload);
+   json={ok:true,score:payload.technique+payload.interpretation};
+  }
+  await route.fulfill({status:200,json});
+ });
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/backoffice.html');
+ await expect(page.locator('#judge-list .roster-entry')).toHaveCount(1);
+ await expect(page.locator('#judge-list')).toContainText('0／5 首已評');
+ await page.locator('#judge-list .roster-entry').click();
+ const chooser=page.locator('.judge-demo-chooser select');
+ await expect(chooser.locator('option')).toHaveCount(5);
+ await expect(page.locator('.judge-demo-switcher .staff-demo-list>li:visible')).toHaveCount(1);
+ await expect(page.locator('.judge-demo-progress')).toContainText('0／5');
+ await chooser.selectOption('4');
+ let visible=page.locator('.judge-demo-switcher .staff-demo-list>li:visible');
+ await expect(visible).toContainText('FICTIONAL TEST TRACK 5');
+ await expect(visible.getByRole('link',{name:/觀看第 5 支影片/})).toHaveAttribute('href','https://example.org/only-test-5');
+ await visible.locator('[name=technique]').fill('48');
+ await visible.locator('[name=interpretation]').fill('31');
+ await visible.locator('[type=checkbox]').check();
+ await visible.getByRole('button',{name:'儲存第 5 支評分'}).click();
+ await expect(page.locator('.judge-demo-progress')).toContainText('1／5');
+ await expect(chooser.locator('option').last()).toContainText('已評');
+ expect(saved).toHaveLength(1);
+ expect(saved[0]).toMatchObject({application_id:'JUDGE-TEST-FIVE',position:5,technique:48,interpretation:31,no_conflict:true});
+ await chooser.selectOption('0');
+ visible=page.locator('.judge-demo-switcher .staff-demo-list>li:visible');
+ await visible.locator('[name=technique]').fill('22');
+ page.once('dialog',dialog=>{expect(dialog.message()).toContain('尚未儲存');dialog.dismiss()});
+ await page.locator('#judge-back-list').click();
+ await expect(page.locator('#judge-detail')).toBeVisible();
+ for(const width of [390,320]){
+  await page.setViewportSize({width,height:830});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await expect(page.locator('.judge-demo-switcher .staff-demo-list>li:visible')).toHaveCount(1);
+ }
+});
+test('staff dashboard shows two concise totals and hides payment info and advanced filters by default',async({page})=>{
+ await page.route('**/api/e2e/**',async route=>{
+  const p=new URL(route.request().url()).pathname.split('/').at(-1);
+  await route.fulfill({status:200,json:p==='me'?
+   {ok:true,account:{id:'staff-synthetic',role:'organizer',available_roles:['organizer']}}
+   :p==='organizer-queue'?{ok:true,applications:[]}:{ok:true}});
+ });
+ await page.setViewportSize({width:375,height:812});
+ await page.goto('/backoffice.html');
+ await expect(page.locator('.staff-mobile-summary .dash-stat')).toHaveCount(2);
+ await expect(page.locator('#paid-count')).toHaveText('0');
+ await expect(page.locator('.staff-system-note')).not.toHaveAttribute('open','');
+ await expect(page.locator('#organizer-language')).toBeHidden();
+ await expect(page.locator('#organizer-search')).toBeVisible();
+ await page.locator('.organizer-filter-panel summary').click();
+ await expect(page.locator('#organizer-language')).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+});
+
 for(const [device,width] of [['desktop',1280],['mobile',375]]){
  test('organizer can search, edit, disable, delete, restore and read audit on '+device,async({page})=>{
   let row={id:'11111111-2222-4333-8444-555555555555',stage_name:'Fictional Singer',affiliation:'Fictional School',state:'active',version:0,updated_at:1,protected:0};
