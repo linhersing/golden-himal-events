@@ -18,7 +18,8 @@ test('organizer explicitly approves a test entry and member sees pending until a
  await expect(page.locator('#test-completion')).toContainText('等待主辦方核准');
  role='organizer';await page.goto('/backoffice.html');
  await expect(page.locator('#admin-apps')).toContainText('待主辦核准');
- await page.locator('#admin-apps .organizer-roster-details > summary').click();
+ await page.locator('#admin-apps .organizer-record-open').click();
+ await page.locator('#organizer-entry-content .organizer-step-button').filter({hasText:'報名審核與補件'}).click();
  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'核准測試報名'}).click();
  await expect(page.locator('#admin-apps')).toContainText('主辦已核准');
  await expect(page.locator('#paid-count')).toHaveText('0');
@@ -95,6 +96,7 @@ test('organizer filters language, category and scoring with 133 synthetic entrie
  await expect(page.locator('#pending-count')).toHaveText('133');
  await expect(page.locator('#paid-count')).toHaveText('0');
  await expect(page.locator('#admin-apps .roster-entry')).toHaveCount(12);
+ await page.locator('.organizer-filter-panel').evaluate(el=>{el.open=true});
  await page.locator('#organizer-language').selectOption('English');
  await expect(page.locator('#organizer-count')).toContainText('66 筆');
  await page.locator('#organizer-category').selectOption('university');
@@ -137,31 +139,36 @@ test('organizer five-demo rows remain compact until expanded, with song-level se
  await expect(cards).toHaveCount(1);
  await expect(cards.first()).toContainText('5 首作品');
  await expect(cards.first()).toContainText('待主辦核准');
- const detail=cards.locator('details');
- await expect(detail).not.toHaveAttribute('open','');
- await expect(cards.locator('.staff-demo-list li')).toHaveCount(5);
- await expect(cards.locator('.staff-demo-list')).toBeHidden();
- await expect(cards.getByRole('button',{name:'核准測試報名'})).toBeHidden();
+ await expect(cards.locator('details')).toHaveCount(0);
+ await expect(cards.locator('button.organizer-record-open')).toHaveCount(1);
  // The fifth song differs from the main application language/title.
+ await page.locator('.organizer-filter-panel').evaluate(el=>{el.open=true});
  await page.locator('#organizer-language').selectOption('English');
  await expect(cards).toHaveCount(1);
  await page.locator('#organizer-search').fill('FICTIONAL ARTIST 5');
  await expect(cards).toHaveCount(1);
- await detail.locator('summary').click();
- await expect(cards.locator('.staff-demo-list')).toBeVisible();
- await expect(cards.locator('.staff-demo-list li')).toHaveCount(5);
- await expect(cards.getByRole('button',{name:'核准測試報名'})).toBeVisible();
- await expect(cards.locator('.staff-demo-list li').last()).toContainText('FAKE SONG 5');
- const urls=await cards.locator('.staff-demo-list a').evaluateAll(anchors=>anchors.map(a=>a.href));
- expect(urls).toHaveLength(5);
- expect(urls.every(x=>x.startsWith('https://example.org/test-demo-'))).toBe(true);
- await detail.locator('summary').click();
- await expect(cards.locator('.staff-demo-list')).toBeHidden();
+ await cards.locator('.organizer-record-open').click();
+ const modal=page.locator('#organizer-entry-dialog');
+ await expect(modal).toBeVisible();
+ await expect(modal).toContainText('Synthetic Five Singer');
+ await expect(modal.locator('.organizer-step-button')).toHaveCount(4);
+ await modal.locator('.organizer-step-button').filter({hasText:'歌曲與影片'}).click();
+ await expect(modal.locator('.organizer-step-button')).toHaveCount(5);
+ await modal.locator('.organizer-step-button').filter({hasText:'FAKE SONG 5'}).click();
+ await expect(modal.locator('#organizer-entry-content')).toContainText('FAKE SONG 5');
+ await expect(modal.locator('.organizer-record-watch')).toHaveAttribute('href','https://example.org/test-demo-5');
+ await modal.locator('#organizer-entry-back').click();
+ await expect(modal.locator('.organizer-step-button')).toHaveCount(5);
+ await modal.locator('#organizer-entry-back').click();
+ await modal.locator('.organizer-step-button').filter({hasText:'報名審核與補件'}).click();
+ await expect(modal.getByRole('button',{name:'核准測試報名'})).toBeVisible();
+ await modal.locator('#organizer-entry-close').click();
+ await expect(modal).toBeHidden();
  for(const width of [390,320]){
   await page.setViewportSize({width,height:780});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   await expect(cards).toHaveCount(1);
-  await expect(cards.locator('.staff-demo-list')).toBeHidden();
+  await expect(cards.locator('details')).toHaveCount(0);
  }
 });
 
