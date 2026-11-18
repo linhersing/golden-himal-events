@@ -18,6 +18,7 @@ test('organizer explicitly approves a test entry and member sees pending until a
  await expect(page.locator('#test-completion')).toContainText('等待主辦方核准');
  role='organizer';await page.goto('/backoffice.html');
  await expect(page.locator('#admin-apps')).toContainText('待主辦核准');
+ await page.locator('#admin-apps .organizer-roster-details > summary').click();
  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'核准測試報名'}).click();
  await expect(page.locator('#admin-apps')).toContainText('主辦已核准');
  await expect(page.locator('#paid-count')).toHaveText('0');
@@ -105,6 +106,63 @@ test('organizer filters language, category and scoring with 133 synthetic entrie
  await page.setViewportSize({width:375,height:850});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
  await page.screenshot({path:'test-results/ghv-staff-roster/organizer-mobile-375.png',fullPage:true});
+});
+
+
+test('organizer five-demo rows remain compact until expanded, with song-level search and filters',async({page})=>{
+ const application={
+  id:'SYNTHETIC-2027-FIVE',stage_name:'Synthetic Five Singer',
+  song_title:'FAKE SONG 1',song_language:'Chinese',
+  category:'university',round_code:'2027-01',approval_state:'pending',
+  status:'submitted',payment_status:'unpaid',demo_judges:0,live_judges:0,
+  demo_entries:Array.from({length:5},(_,i)=>({
+   position:i+1,song_title:'FAKE SONG '+(i+1),
+   original_artist:'FICTIONAL ARTIST '+(i+1),
+   song_language:i===4?'English':'Chinese',
+   demo_url:'https://example.org/test-demo-'+(i+1)
+  }))
+ };
+ await page.route('**/api/e2e/**',async route=>{
+  const p=new URL(route.request().url()).pathname.split('/').at(-1);
+  const json=p==='me'
+   ?{ok:true,account:{id:'synthetic-organizer',role:'organizer',available_roles:['organizer']}}
+   :p==='organizer-queue'
+    ?{ok:true,applications:[application],registration_management_enabled:false}
+    :{ok:true};
+  return route.fulfill({status:200,json});
+ });
+ await page.setViewportSize({width:1280,height:900});
+ await page.goto('/backoffice.html');
+ const cards=page.locator('#admin-apps .organizer-roster-entry');
+ await expect(cards).toHaveCount(1);
+ await expect(cards.first()).toContainText('5 首作品');
+ await expect(cards.first()).toContainText('待主辦核准');
+ const detail=cards.locator('details');
+ await expect(detail).not.toHaveAttribute('open','');
+ await expect(cards.locator('.staff-demo-list li')).toHaveCount(5);
+ await expect(cards.locator('.staff-demo-list')).toBeHidden();
+ await expect(cards.getByRole('button',{name:'核准測試報名'})).toBeHidden();
+ // The fifth song differs from the main application language/title.
+ await page.locator('#organizer-language').selectOption('English');
+ await expect(cards).toHaveCount(1);
+ await page.locator('#organizer-search').fill('FICTIONAL ARTIST 5');
+ await expect(cards).toHaveCount(1);
+ await detail.locator('summary').click();
+ await expect(cards.locator('.staff-demo-list')).toBeVisible();
+ await expect(cards.locator('.staff-demo-list li')).toHaveCount(5);
+ await expect(cards.getByRole('button',{name:'核准測試報名'})).toBeVisible();
+ await expect(cards.locator('.staff-demo-list li').last()).toContainText('FAKE SONG 5');
+ const urls=await cards.locator('.staff-demo-list a').evaluateAll(anchors=>anchors.map(a=>a.href));
+ expect(urls).toHaveLength(5);
+ expect(urls.every(x=>x.startsWith('https://example.org/test-demo-'))).toBe(true);
+ await detail.locator('summary').click();
+ await expect(cards.locator('.staff-demo-list')).toBeHidden();
+ for(const width of [390,320]){
+  await page.setViewportSize({width,height:780});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await expect(cards).toHaveCount(1);
+  await expect(cards.locator('.staff-demo-list')).toBeHidden();
+ }
 });
 
 for(const [device,width] of [['desktop',1280],['mobile',375]]){
