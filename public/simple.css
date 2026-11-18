@@ -1434,3 +1434,45 @@ body[data-page="member"] .eligibility-private-upload [role=status]{font-size:.9r
 .staff-demo-list{margin:12px 0;padding:0;list-style:none;overflow-wrap:anywhere}
 .staff-demo-list li{padding:8px 0;border-top:1px solid #e9dfd1}
 .staff-demo-list p{margin:3px 0}
+
+
+/* 2026-11-18 organizer: one compact record per entry; five Demos on demand. */
+body[data-page="back"] .organizer-roster-entry{
+ display:block;padding:11px 15px;min-width:0;
+}
+body[data-page="back"] .organizer-roster-head{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;
+}
+body[data-page="back"] .organizer-roster-head .roster-entry-text{flex:1;min-width:0;gap:3px}
+body[data-page="back"] .organizer-roster-badges{
+ display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:5px;max-width:45%;
+}
+body[data-page="back"] .organizer-roster-details{
+ margin-top:6px;border-top:1px solid #f0e5d6;min-width:0;
+}
+body[data-page="back"] .organizer-roster-details>summary{
+ cursor:pointer;padding:7px 0 3px;font-size:.82rem;font-weight:750;
+ color:#78502e;list-style-position:inside;min-height:36px;
+}
+body[data-page="back"] .organizer-roster-details>summary:focus-visible{
+ outline:2px solid #bd9157;outline-offset:3px;border-radius:6px;
+}
+body[data-page="back"] .organizer-roster-body{padding:9px 0 7px;min-width:0}
+body[data-page="back"] .organizer-roster-body .staff-demo-list{
+ margin:8px 0 12px;padding-left:20px;display:grid;gap:4px;
+}
+body[data-page="back"] .organizer-roster-body .staff-demo-list li{padding:9px 0}
+body[data-page="back"] .organizer-roster-actions{
+ display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap;
+ margin-top:13px;padding-top:11px;border-top:1px solid #f0e5d6;
+}
+body[data-page="back"] .organizer-roster-actions .btn{min-height:42px}
+@media(max-width:520px){
+ body[data-page="back"] .organizer-roster-entry{padding:11px 12px}
+ body[data-page="back"] .organizer-roster-head{align-items:flex-start;gap:8px}
+ body[data-page="back"] .organizer-roster-badges{max-width:45%;flex:0 1 auto}
+ body[data-page="back"] .organizer-roster-badges .pill{font-size:.68rem;padding:3px 7px}
+ body[data-page="back"] .organizer-roster-head .roster-mini{font-size:.75rem}
+ body[data-page="back"] .organizer-roster-actions{justify-content:stretch}
+ body[data-page="back"] .organizer-roster-actions button{flex:1 1 100%}
+}
