@@ -255,16 +255,17 @@ function setupMuseForm(ready){
  museFormEnabled=ready===true;
  const box=$('muse-test-fields'),notice=$('muse-fields-notice');
  if(!box)return;
- // Members can practice typing with synthetic fields. This is NOT D1 storage.
- // The backend and form submit both fail closed until a reviewed D1 migration.
- box.disabled=false;
+ // Disabled fieldsets are omitted by FormData until private storage is ready.
+ box.disabled=!museFormEnabled;
+ const instructions=box.querySelector('[data-l="museInfo"]');
+ if(instructions)instructions.hidden=!museFormEnabled;
  box.dataset.mode=museFormEnabled?'storage':'preview';
  for(const input of box.querySelectorAll('input,textarea,select')){
   input.required=museFormEnabled;
   input.autocomplete='off';
  }
  if(notice){
-  notice.dataset.l=museFormEnabled?'museEnabled':'musePreview';
+  notice.dataset.l=museFormEnabled?'museEnabled':'musePending';
   notice.textContent=mt(notice.dataset.l);
  }
 }
@@ -1213,14 +1214,6 @@ const application=$('application-form'),details=$('application-details'),start=$
  if(selectedDemos.length>1&&!multiAllowed){
   status(mt('demoMultiCannotSave'),true);
   $('demo-storage-notice')?.scrollIntoView({block:'center',behavior:'smooth'});
-  return;
- }
- // Never silently omit private contact fields or imply that they were saved.
- // In preview mode the member may type fictional values, but must clear them
- // before submitting the separate legacy TEST entry (until D1 is approved).
- if(!museFormEnabled&&[...$('muse-test-fields').querySelectorAll('input,textarea')].some(el=>el.value.trim())){
-  status(mt('musePreviewCannotSave'),true);
-  $('muse-fields-notice')?.scrollIntoView({block:'center',behavior:'smooth'});
   return;
  }
  run(async()=>{

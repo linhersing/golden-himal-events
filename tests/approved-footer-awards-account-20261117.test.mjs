@@ -76,8 +76,8 @@ test('member form is expanded by default and neutral labels replace collaborator
  assert.doesNotMatch(h,/Muse audition information/);
  assert.doesNotMatch(h,/aria-expanded="false"/);
  assert.ok(h.includes('id="muse-test-fields" class="full muse-test-fields" disabled'));
- assert.match(js,/box\.disabled=false/);
- assert.match(js,/musePreviewCannotSave/);
+ assert.match(js,/box\.disabled=!museFormEnabled/);
+ assert.doesNotMatch(js,/musePreviewCannotSave/);
  assert.match(js,/if\(form\)form\.hidden=hasEntries&&!secondAudition/);
  assert.doesNotMatch(js,/details\.addEventListener\('toggle',syncStart\)/);
  assert.match(locale,/"museTitle":"報名資料"/);

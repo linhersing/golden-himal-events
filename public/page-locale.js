@@ -226,7 +226,7 @@ Object.assign(texts.en,{
  frontlineArea:'Competition region *',frontlineA:'Area A · Lumbini',frontlineB:'Area B · Bagmati',
  frontlineBasis:'Education eligibility *',frontlineStudent:'Currently enrolled in college/university',frontlineGraduate:'College/university graduate',
  frontlineOneGroup:'Single competition group',
- frontlineEnabledNotice:'New 2027 TEST fields: one competition group with A/B region and student/graduate eligibility. Only ONE Demo link is currently saved in TEST; the five-link feature and official registration are NOT open. No payment.'
+ frontlineEnabledNotice:'2027 TEST entry: choose Area A or B and select your education eligibility.'
 });
 Object.assign(texts.zh,{
  frontlineHeading:'2027單一競賽組別｜參賽區域與資格（測試）',
@@ -234,7 +234,7 @@ Object.assign(texts.zh,{
  frontlineArea:'選擇參賽地區 *',frontlineA:'A區 · Lumbini',frontlineB:'B區 · Bagmati',
  frontlineBasis:'學歷資格 *',frontlineStudent:'目前就讀大專院校以上',frontlineGraduate:'大專院校以上已畢業',
  frontlineOneGroup:'單一競賽組別',
- frontlineEnabledNotice:'新版2027測試欄位已開啟：單一競賽組別、A/B地區及在學／畢業資格。此時仍只可儲存1支Demo，5支功能及正式報名尚未開通，不收取費用。'
+ frontlineEnabledNotice:'新版 2027 測試欄位已開啟。請選擇 A/B 賽區與在學或畢業資格。'
 });
 Object.assign(texts.ne,{
  frontlineHeading:'२०२७ एउटै प्रतियोगिता समूह · क्षेत्र र योग्यता (परीक्षण)',
@@ -242,26 +242,20 @@ Object.assign(texts.ne,{
  frontlineArea:'प्रतियोगिता क्षेत्र *',frontlineA:'क्षेत्र A · लुम्बिनी',frontlineB:'क्षेत्र B · बागमती',
  frontlineBasis:'शैक्षिक योग्यता *',frontlineStudent:'हाल कलेज/विश्वविद्यालयमा अध्ययनरत',frontlineGraduate:'कलेज/विश्वविद्यालय उत्तीर्ण',
  frontlineOneGroup:'एउटै प्रतियोगिता समूह',
- frontlineEnabledNotice:'नयाँ २०२७ परीक्षण फाराम: एउटै समूह, A/B क्षेत्र, विद्यार्थी वा स्नातक योग्यता। अहिले एक डेमो लिङ्क मात्र सुरक्षित हुन्छ; पाँच लिङ्क र आधिकारिक दर्ता खुलेका छैनन्। पैसा लाग्दैन।'
+ frontlineEnabledNotice:'२०२७ को परीक्षण दर्तामा A वा B क्षेत्र र आफ्नो शैक्षिक योग्यता छान्नुहोस्।'
 });
 /* 2026-11-17: Public schedule clarity and front-page disclosure boundary. */
 Object.assign(texts.zh,{"newsIntro":"報名前請先了解賽程、資格、Demo影片、評審與獎項。","guideFeeLabel":"報名方式","guideFeeText":"報名資料・影片規格與測試狀態","scheduleJanDate":"2027年1月1日至1月31日｜每人最多5支Demo","scheduleMarDate":"2027年2月12日｜A/B地區各自舉行・個人演唱","scheduleAprDate":"2027年3月5日｜可個人或組隊","scheduleJunDate":"2027年3月12日｜各區選出5位決賽選手","news04":"報名方式與資料準備","news04lead":"先了解需要的資料；正式報名尚未開放","registrationPrepareTitle":"報名前需要準備什麼？","registrationPrepareBody":"姓名、聯絡方式、學歷資格證明、選定的A/B賽區及Demo影片資訊。每人最多5支影片，每支60–90秒；目前TEST表單尚未開放正式多支影片報名。","registrationPrepareStatus":"目前僅為系統測試，不代表正式報名成功；正式報名與後續賽務安排以主辦公告為準。","resultsTitle":"投票、獎項及申訴","news05":"獎項與獎金","awardFaq1Q":"海選最多可以提交幾支影片？","awardFaq1A":"每人最多5支，每支60–90秒；評審逐支評選，取最高分的作品作為海選成績。","awardFaq3Q":"何時會公布入選結果及場地？","awardFaq3A":"海選結果預計2月上旬公告；各階段確切時間、地點和名額，請以主辦單位最新公告為準。","awardCaution":"目前系統僅供測試，正式報名尚未開放；獎項及場地以主辦單位公告為準。"});
 Object.assign(texts.en,{"newsIntro":"Before entering, read the schedule, eligibility, Demo video rules, judging and awards.","guideFeeLabel":"How to enter","guideFeeText":"Entry details · Demo requirements · Preview status","scheduleJanDate":"Jan 1–31, 2027 · up to 5 Demos per person","scheduleMarDate":"Feb 12, 2027 · held in Areas A/B · solo singing","scheduleAprDate":"Mar 5, 2027 · solo or team performance","scheduleJunDate":"Mar 12, 2027 · 5 finalists selected from each area","news04":"Entry information and preparation","news04lead":"Get your information ready; official registration is not yet open","registrationPrepareTitle":"What do I need before entering?","registrationPrepareBody":"Prepare your name, contact details, educational eligibility documents, selected competition area (A or B) and Demo video details. Up to 5 videos of 60–90 seconds are permitted; the TEST form does not yet support official multi-video registration.","registrationPrepareStatus":"TEST PREVIEW ONLY. A test submission does not count as an official entry. Follow the organizer's announcements for opening dates.","resultsTitle":"Voting, awards and appeals","news05":"Awards and prize money","awardFaq1Q":"How many audition videos can I submit?","awardFaq1A":"Up to 5 videos, 60–90 seconds each. Judges review each; your highest-scoring Demo determines the audition result.","awardFaq3Q":"When will results and venues be announced?","awardFaq3A":"Audition results are expected in early February. Exact times, venues and quotas will be confirmed by official announcements.","awardCaution":"TEST PREVIEW ONLY. Official registration is not open. Awards and venues remain subject to the organizer's announcements."});
 Object.assign(texts.ne,{"newsIntro":"सहभागी हुनुअघि समयतालिका, योग्यता, डेमो भिडियो, मूल्याङ्कन र पुरस्कारको विवरण पढ्नुहोस्।","guideFeeLabel":"कसरी सहभागी हुने","guideFeeText":"दर्ता विवरण · भिडियो नियम · परीक्षण अवस्था","scheduleJanDate":"२०२७ जनवरी १–३१ · प्रति व्यक्ति बढीमा ५ डेमो","scheduleMarDate":"२०२७ फेब्रुअरी १२ · A/B क्षेत्रमा छुट्टाछुट्टै एकल गायन","scheduleAprDate":"२०२७ मार्च ५ · एकल वा टोली प्रस्तुति","scheduleJunDate":"२०२७ मार्च १२ · प्रत्येक क्षेत्रबाट ५ फाइनलिस्ट","news04":"दर्ता र आवश्यक तयारी","news04lead":"आवश्यक विवरण तयार राख्नुहोस्; आधिकारिक दर्ता अझै खुलेको छैन","registrationPrepareTitle":"दर्ताअघि के तयारी गर्ने?","registrationPrepareBody":"नाम, सम्पर्क, शैक्षिक योग्यता प्रमाण, छानेको A/B प्रतियोगिता क्षेत्र र डेमो भिडियो विवरण तयार राख्नुहोस्। प्रति व्यक्ति ६०–९० सेकेन्डका बढीमा ५ भिडियो अनुमत छन्; परीक्षण फारामबाट पाँचै भिडियोको आधिकारिक दर्ता अझै खुलेको छैन।","registrationPrepareStatus":"यो परीक्षण वेबसाइट मात्र हो। परीक्षण विवरणलाई आधिकारिक दर्ता नसम्झनुहोस्; आयोजकको आधिकारिक सूचना हेर्नुहोस्।","resultsTitle":"मतदान, पुरस्कार र उजुरी","news05":"पुरस्कार र नगद राशी","awardFaq1Q":"अडिसनमा कति भिडियो पठाउन पाइन्छ?","awardFaq1A":"प्रति व्यक्ति बढीमा ५ भिडियो, प्रत्येक ६०–९० सेकेन्ड। निर्णायकले प्रत्येक भिडियो हेर्छन्; सबैभन्दा बढी अंक पाएको भिडियोको अंक लिइन्छ।","awardFaq3Q":"नतिजा र कार्यक्रम स्थल कहिले घोषणा हुन्छ?","awardFaq3A":"अडिसन नतिजा फेब्रुअरीको सुरुतिर अपेक्षित छ। अन्तिम समय, स्थान र संख्या आयोजकको आधिकारिक सूचनाअनुसार हुनेछ।","awardCaution":"यो परीक्षण वेबसाइट हो। आधिकारिक दर्ता खुलेको छैन। पुरस्कार र स्थान आयोजकको घोषणाअनुसार हुनेछ।"});
 
-Object.assign(texts.zh,{"museTitle":"報名資料","museInfo":"請填寫姓名、電話、Email、城市、街道／Tol 地址、教育背景、簡短介紹與音樂學習經歷；居住省份在下方所在地欄位選擇。","musePending":"個資儲存尚未完成安全驗收；這些欄位目前僅展示，不會送出或保存，請勿填寫真人資料。","museEnabled":"受控測試表單已啟用。請只填虛構資料；不等於正式報名。","museFullName":"完整姓名 *","musePhone":"聯絡電話 *","museEmail":"電子郵件 *","museCity":"城市 *","museStreet":"街道／Tol 地址 *","museEducation":"教育背景 *","museDescription":"簡短自我介紹 *","museTraining":"音樂教育／訓練經歷 *","museRegionLock":"選定 A 區 Lumbini 或 B 區 Bagmati 並確認後，後續實體選拔不得自行跨區；與居住省份不同。"});
-Object.assign(texts.en,{"museTitle":"Registration details","museInfo":"Fill in your name, phone, email, city, street/Tol address, education, short description and musical training. Select your province below.","musePending":"Secure private storage is not yet approved. These controls are disabled; no personal details will be submitted or saved.","museEnabled":"Controlled TEST data entry enabled. Use fictional details only, not an official entry.","museFullName":"Full name *","musePhone":"Phone number *","museEmail":"Email address *","museCity":"City *","museStreet":"Street address / Tol address *","museEducation":"Educational background *","museDescription":"Short description *","museTraining":"Musical education / training experience *","museRegionLock":"Your confirmed A/B competition area stays fixed in later in-person rounds, independently of your residential province."});
-Object.assign(texts.ne,{"museTitle":"दर्ता विवरण","museInfo":"नाम, फोन, इमेल, सहर, टोल ठेगाना, शिक्षा, परिचय र सङ्गीत तालिमका विवरण भर्नुहोस्। प्रदेश तल छनोट गर्नुहोस्।","musePending":"निजी विवरणको सुरक्षित भण्डारण स्वीकृत भएको छैन। यी फिल्ड निष्क्रिय छन्; कुनै व्यक्तिगत विवरण सुरक्षित गरिँदैन।","museEnabled":"नियन्त्रित परीक्षण सक्रिय छ। काल्पनिक विवरण मात्र राख्नुहोस्, आधिकारिक दर्ता होइन।","museFullName":"पूरा नाम *","musePhone":"फोन नम्बर *","museEmail":"इमेल *","museCity":"सहर *","museStreet":"टोल ठेगाना *","museEducation":"शैक्षिक पृष्ठभूमि *","museDescription":"छोटो परिचय *","museTraining":"सङ्गीत शिक्षा / तालिम अनुभव *","museRegionLock":"A/B क्षेत्र पुष्टि भएपछि पछिल्ला प्रत्यक्ष चरणमा परिवर्तन गर्न पाइँदैन; बसोबास प्रदेश अलग हो।"});
+Object.assign(texts.zh,{"museTitle":"報名資料","museInfo":"請填寫姓名、電話、Email、城市、街道／Tol 地址、教育背景、簡短介紹與音樂學習經歷；居住省份在下方所在地欄位選擇。","musePending":"這些聯絡與學歷欄位尚未開放儲存，已停用。可繼續填寫下方的測試報名和 Demo 欄位。","museEnabled":"受控測試表單已啟用。請只填虛構資料；不等於正式報名。","museFullName":"完整姓名 *","musePhone":"聯絡電話 *","museEmail":"電子郵件 *","museCity":"城市 *","museStreet":"街道／Tol 地址 *","museEducation":"教育背景 *","museDescription":"簡短自我介紹 *","museTraining":"音樂教育／訓練經歷 *","museRegionLock":"選定 A 區 Lumbini 或 B 區 Bagmati 並確認後，後續實體選拔不得自行跨區；與居住省份不同。"});
+Object.assign(texts.en,{"museTitle":"Registration details","museInfo":"Fill in your name, phone, email, city, street/Tol address, education, short description and musical training. Select your province below.","musePending":"Contact and education fields are unavailable for storage. You can continue with the TEST entry and Demo fields below.","museEnabled":"Controlled TEST data entry enabled. Use fictional details only, not an official entry.","museFullName":"Full name *","musePhone":"Phone number *","museEmail":"Email address *","museCity":"City *","museStreet":"Street address / Tol address *","museEducation":"Educational background *","museDescription":"Short description *","museTraining":"Musical education / training experience *","museRegionLock":"Your confirmed A/B competition area stays fixed in later in-person rounds, independently of your residential province."});
+Object.assign(texts.ne,{"museTitle":"दर्ता विवरण","museInfo":"नाम, फोन, इमेल, सहर, टोल ठेगाना, शिक्षा, परिचय र सङ्गीत तालिमका विवरण भर्नुहोस्। प्रदेश तल छनोट गर्नुहोस्।","musePending":"सम्पर्क र शैक्षिक विवरण अहिले सुरक्षित गर्न मिल्दैन। तलको परीक्षण दर्ता र डेमो विवरण भर्न सक्नुहुन्छ।","museEnabled":"नियन्त्रित परीक्षण सक्रिय छ। काल्पनिक विवरण मात्र राख्नुहोस्, आधिकारिक दर्ता होइन।","museFullName":"पूरा नाम *","musePhone":"फोन नम्बर *","museEmail":"इमेल *","museCity":"सहर *","museStreet":"टोल ठेगाना *","museEducation":"शैक्षिक पृष्ठभूमि *","museDescription":"छोटो परिचय *","museTraining":"सङ्गीत शिक्षा / तालिम अनुभव *","museRegionLock":"A/B क्षेत्र पुष्टि भएपछि पछिल्ला प्रत्यक्ष चरणमा परिवर्तन गर्न पाइँदैन; बसोबास प्रदेश अलग हो।"});
 // Registration UI: remove the contributor attribution and disclosure terminology.
-Object.assign(texts.zh,{formTitle:'填寫報名表',goToForm:'前往報名表',
- musePreview:'可以試填虛構資料，這些欄位目前只供介面測試，尚未連接正式儲存。請勿輸入真實電話、Email 或住址。',
- musePreviewCannotSave:'這些試填聯絡欄位目前不會儲存。請先清空試填內容，才能送出其他測試報名資料；待私有資料庫通過驗收後才能儲存完整報名。'});
-Object.assign(texts.en,{formTitle:'Registration form',goToForm:'Go to registration form',
- musePreview:'You may try fictional entries in these fields, but secure storage is not enabled. Do not enter real names, phone numbers, email addresses or street addresses.',
- musePreviewCannotSave:'These preview contact fields cannot be saved yet. Clear their test content to submit the separate legacy TEST entry; secure storage is pending.'});
-Object.assign(texts.ne,{formTitle:'दर्ता फाराम',goToForm:'दर्ता फाराममा जानुहोस्',
- musePreview:'यहाँ काल्पनिक विवरण परीक्षणका लागि भर्न सकिन्छ तर सुरक्षित भण्डारण चालू छैन। वास्तविक नाम, फोन, इमेल वा ठेगाना नराख्नुहोस्।',
- musePreviewCannotSave:'यी परीक्षण सम्पर्क विवरणहरू अहिले सुरक्षित हुँदैनन्। पुरानो परीक्षण फाराम पठाउन यी विवरण हटाउनुहोस्; सुरक्षित भण्डारण अझै उपलब्ध छैन।'});
+Object.assign(texts.zh,{formTitle:'填寫報名表',goToForm:'前往報名表'});
+Object.assign(texts.en,{formTitle:'Registration form',goToForm:'Go to registration form'});
+Object.assign(texts.ne,{formTitle:'दर्ता फाराम',goToForm:'दर्ता फाराममा जानुहोस्'});
 /* 2026-11-17 front-line audition rules: 2027-01-01—2027-01-31 Nepal local. */
 Object.assign(texts.zh,{
  entryPeriodTitle:"2027 海選收件日期",entryPeriodDates:"2027年1月1日至1月31日｜尼泊爾當地時間",entryPeriodHelp:"海選與第一次初選免費；確切開放及截止時刻、地點以主辦單位官網公告為準。目前仍是測試網站。",
@@ -273,7 +267,7 @@ Object.assign(texts.zh,{
  proofTitle:"資格證明文件｜安全上傳尚未開放",proofSignupHelp:"依前線規定須備妥資格證明。安全上傳及授權讀取仍待驗收；請勿提供公開學生證連結，也不要在測試頁提交真實證件。",
  proofUniversity:"在學生：有效學生證或在學證明。",proofCommunity:"已畢業者：大專院校以上畢業證明或必要的其他資格佐證。",
  proofWhen:"目前沒有已核定的上傳開放日期；須先完成私人 R2 儲存、身分驗證、審核人員權限及安全驗收。",
- demoFeeBoundary:"1月海選免費，2027年1月1日至1月31日收件（尼泊爾時間）。正式每人可提交最多五支Demo；本TEST版多支儲存仍需正式啟用。"
+ demoFeeBoundary:"1 月海選免費，實際可儲存的 Demo 數量請見上方測試狀態。"
 });
 Object.assign(texts.en,{
  entryPeriodTitle:"2027 audition submission window",entryPeriodDates:"January 1–31, 2027 · Nepal local time",entryPeriodHelp:"The audition and first qualifier are free. Exact opening/closing times and locations are subject to organizer announcement. This remains a TEST site.",
@@ -285,7 +279,7 @@ Object.assign(texts.en,{
  proofTitle:"Eligibility proof · Secure upload not yet open",proofSignupHelp:"Keep the required eligibility document ready. Private uploading and authorized viewing are still under review. Do not share public document links or actual IDs on this TEST site.",
  proofUniversity:"Current students: valid student ID or enrollment letter.",proofCommunity:"Graduates: tertiary degree certificate or other requested qualification proof.",
  proofWhen:"No official upload-opening date has been confirmed. Private R2 access controls, identity checks and security testing are required.",
- demoFeeBoundary:"January auditions are free. Entries are planned for January 1–31, 2027 (Nepal time). Multi-demo saving requires a separate approved release."
+ demoFeeBoundary:"January auditions are free. The status above shows how many Demos this TEST form can save."
 });
 Object.assign(texts.ne,{
  entryPeriodTitle:"२०२७ अडिसन दर्ता अवधि",entryPeriodDates:"सन् २०२७ जनवरी १–३१ · नेपालको स्थानीय समय",entryPeriodHelp:"अडिसन र पहिलो छनोट निःशुल्क छन्। ठ्याक्कै समय र स्थान आयोजकले घोषणा गर्नेछन्। यो परीक्षण साइट हो।",
@@ -297,7 +291,7 @@ Object.assign(texts.ne,{
  proofTitle:"योग्यता प्रमाणपत्र · सुरक्षित अपलोड खुल्न बाँकी",proofSignupHelp:"योग्यता प्रमाणपत्र तयार राख्नुहोस्। सुरक्षित अपलोड र अनुमतिप्राप्त पहुँच अझै परीक्षणमा छन्; वास्तविक प्रमाणपत्रको सार्वजनिक लिंक नराख्नुहोस्।",
  proofUniversity:"अध्ययनरत: मान्य विद्यार्थी परिचयपत्र वा अध्ययन प्रमाण।",proofCommunity:"स्नातक: उच्च शिक्षाको प्रमाणपत्र वा मागिएको अन्य प्रमाण।",
  proofWhen:"अपलोड खुल्ने निश्चित मिति घोषणा भएको छैन; सुरक्षित निजी भण्डारण र अनुमति परीक्षणपछि मात्र खुल्नेछ।",
- demoFeeBoundary:"जनवरी अडिसन निःशुल्क छ, अवधि २०२७ जनवरी १–३१ (नेपाल समय)। धेरै डेमो सुरक्षित गर्न अलग स्वीकृति चाहिन्छ।"
+ demoFeeBoundary:"जनवरी अडिसन निःशुल्क छ। यस परीक्षण फारामबाट कति डेमो सुरक्षित गर्न सकिन्छ भन्ने जानकारी माथि छ।"
 });
 /* Published 2026-11-16 planned 2027 stages; all local times Nepal. */
 Object.assign(texts.zh,{scheduleRound1:'2月12日｜第一次初選 · 免費（預定）',scheduleRound2:'3月5日｜第二次初選（預定）',scheduleRound3:'3月12日｜晉級賽（預定）',scheduleFinal:'4月14日｜季度總決賽（預定）',scheduleCaveat:'以上為預定日期。確切時間、地點和名額以主辦單位公告為準，均採尼泊爾當地時間；資料缺漏或影片無法開啟者，接獲通知後48小時內可補正一次。'});
