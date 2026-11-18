@@ -278,7 +278,7 @@ test('brand pages omit image provenance claims in all languages while retaining 
  assert.match(home,/approved-grand-hall-20261114\.jpg/);
  assert.match(home,/approved-peace-tower-20261114\.jpg/);
  assert.match(legacy,/Do not enter real personal information/);
- assert.match(home,/正式比賽報名與真實付款尚未開放/);
+ assert.match(home,/正式比賽報名尚未開放/); // 2026-11-18 Muse/Alan: public notice omits payment
 });
 
 
