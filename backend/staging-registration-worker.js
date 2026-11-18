@@ -2,6 +2,7 @@ import {handlePractice,runPracticeSchedule} from './practice.js';
 import {handleManagement} from './management.js';
 import {architecturePreview} from './architecture-preview.js';
 import {mailProviderReady,mailSenderReady} from './staging-mail.js';
+import {drainRemovedMemberMedia} from './staging-admin-registration.js';
 import {handleE2E} from './staging-e2e.js';
 /*
  * Golden Himal Voice — SAFE STAGING SMOKE TEST ONLY.
@@ -188,7 +189,9 @@ async function handleE2EReadiness(request,env){
  });
 }
 export default {
-  async scheduled(controller,env,ctx){return runPracticeSchedule(env);},
+  async scheduled(controller,env,ctx){
+    await Promise.all([runPracticeSchedule(env),drainRemovedMemberMedia(env.E2E_DB,env.STAGING_MEDIA)]);
+  },
   async fetch(request,env,ctx) {
     const url=new URL(request.url);
     const {pathname}=url;
@@ -216,7 +219,10 @@ export default {
     if(pathname==='/api/staging/ci-read')return handleCiFixtureRead(request,env);
     if(pathname==='/api/staging/registration-test')return handleSampleRegistration(request,env);
     if(pathname.startsWith('/api/'))return failure('not_found',404);
-    if((env.STAGING_PUBLIC_SIGNUP_ENABLED!=='true'&&env.STAGING_PASSWORD_SIGNUP_ENABLED!=='true')||!['/member','/member.html'].includes(pathname))
+    const memberChallenge=['/member','/member.html'].includes(pathname)&&
+      (env.STAGING_PUBLIC_SIGNUP_ENABLED==='true'||env.STAGING_PASSWORD_SIGNUP_ENABLED==='true');
+    const staffChallenge=['/backoffice','/backoffice.html'].includes(pathname)&&env.STAGING_STAFF_TURNSTILE_REQUIRED==='true';
+    if(!memberChallenge&&!staffChallenge)
       return env.ASSETS.fetch(request);
     // The asset ETag identifies the HTML, not the flag-dependent CSP.
     const headers=new Headers(request.headers);

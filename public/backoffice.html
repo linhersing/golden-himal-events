@@ -1,10 +1,25 @@
 <!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer"><title>工作人員後台｜Golden Himal Voice</title><link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./simple.css"></head><body data-page="back"><header class="masthead wrap"><a class="brand gh-brand-lockup" href="./"><span class="gh-brand-mark" aria-hidden="true"><img src="./images/brand-identity.png" width="100" height="100" alt=""></span><span class="gh-brand-type"><strong>GOLDEN HIMAL</strong><small>VOICE · CHITWAN 2027</small><span class="gh-brand-slogan" lang="en">The Best Wedding at Golden Himal.</span></span></a><a href="./" class="small-link" data-t="home">返回前台</a></header><main class="page-shell"><p class="section-eyebrow">STAFF ONLY</p><h1 class="page-heading" data-t="backTitle">賽事管理後台</h1><p class="page-intro" data-t="backLead">主辦單位查看報名人數與評分；評審從同一入口登入，各自只能操作自己的權限。</p><div class="role-tabs" hidden><button type="button" class="active" data-role-tab="organizer" data-t="organizer">主辦方</button><button type="button" data-role-tab="reviewer" data-t="judge">評審</button></div><div id="back-status" class="feedback" role="status" aria-live="polite" hidden></div><p class="notice" data-t="backBoundary">權限由伺服器確認，僅受邀測試帳號可登入。沒有任何真實付款，因此正式成功報名人數不能用模擬付款推算。</p>
-<section class="panel" id="back-signin"><h2 data-t="backLogin">工作人員登入</h2><form id="back-email-form"><label class="field"><span data-t="staffEmail">受邀 Email</span><input name="email" type="email" autocomplete="email" required></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-t="sendCode">寄送驗證碼</button></div></form><form id="back-code-form" hidden><label class="field"><span data-t="verifyCode">輸入 6 位驗證碼</span><input name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-t="backEnter">進入後台</button><button type="button" class="btn btn-soft" id="back-change" data-t="changeEmail">更換 Email</button></div></form></section>
-<section id="back-dashboard" hidden><div class="page-top"><h2 data-t="dashboard">後台總覽</h2><button type="button" class="btn btn-soft" id="back-logout" data-t="logout">登出</button></div><div id="organizer-dashboard" hidden><div class="dashboard-numbers"><div class="dash-stat"><div class="dashboard-number" id="paid-count">0</div><small data-t="paidCount">正式付款完成</small></div><div class="dash-stat"><div class="dashboard-number" id="pending-count">—</div><small data-t="pendingCount">測試資料筆數</small></div><div class="dash-stat"><div class="dashboard-number" id="scores-count">—</div><small data-t="scoresCount">評審回覆筆數</small></div></div><p class="notice" data-t="notPaid">目前未接正式金流，正式完成報名數為 0；測試付款或待付款資料不算成功報名。</p><section class="panel" id="organizer-corrections" hidden><h2>會員資料更正申請（TEST）</h2><p data-correction-count role="status">待審 0 筆</p><p class="minor">只允許審核更正姓名與學校／職業，已提交的作品、影片、成績及晉級歷史不得覆蓋。</p><div id="organizer-correction-list" class="roster-list"></div></section><section class="panel" id="january-test-roster" hidden aria-live="polite"></section><div class="panel"><h2 data-t="registrationList">報名紀錄（目前僅測試資料）</h2><div class="roster-toolbar" aria-label="報名名冊搜尋與篩選">
+<section class="panel" id="back-signin"><h2 data-t="backLogin">工作人員登入</h2><form id="back-email-form"><label class="field"><span data-t="staffEmail">受邀 Email</span><input name="email" type="email" autocomplete="email" required></label><div id="signup-turnstile" hidden></div><p id="signup-human-status" role="status" aria-live="polite" hidden></p><div class="form-actions"><button class="btn btn-primary" type="submit" data-t="sendCode">寄送驗證碼</button></div></form><button type="button" class="btn btn-soft" id="signup-human-retry" hidden>重新載入真人驗證</button><form id="back-code-form" hidden><label class="field"><span data-t="verifyCode">輸入 6 位驗證碼</span><input name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required></label><div class="form-actions"><button class="btn btn-primary" type="submit" data-t="backEnter">進入後台</button><button type="button" class="btn btn-soft" id="back-change" data-t="changeEmail">更換 Email</button></div></form></section>
+<section id="back-dashboard" hidden><div class="page-top"><h2 data-t="dashboard">後台總覽</h2><button type="button" class="btn btn-soft" id="back-logout" data-t="logout">登出</button></div><div id="organizer-dashboard" hidden><div class="dashboard-numbers staff-mobile-summary" aria-label="後台快速統計"><div class="dash-stat"><div class="dashboard-number" id="pending-count">—</div><small data-t="pendingCount">測試報名筆數</small></div><div class="dash-stat"><div class="dashboard-number" id="scores-count">—</div><small data-t="scoresCount">評審回覆筆數</small></div></div><details class="staff-system-note"><summary>系統狀態（TEST）· 正式金流尚未啟用</summary><div class="staff-system-body"><span>正式付款完成 <strong id="paid-count">0</strong> 筆</span><p class="minor" data-t="notPaid">目前未接正式金流，正式完成報名數為 0；測試付款或待付款資料不算成功報名。</p></div></details><section class="panel" id="organizer-corrections" hidden><h2>會員資料更正申請（TEST）</h2><p data-correction-count role="status">待審 0 筆</p><p class="minor">只允許審核更正姓名與學校／職業，已提交的作品、影片、成績及晉級歷史不得覆蓋。</p><div id="organizer-correction-list" class="roster-list"></div></section><details class="panel" id="organizer-admin-registrations" hidden>
+ <summary>管理測試報名與操作紀錄</summary>
+ <form id="admin-registration-search" class="roster-toolbar">
+  <label class="roster-field"><span>搜尋姓名、曲目或編號</span><input type="search" name="q" maxlength="100"></label>
+  <label class="roster-field"><span>資料狀態</span><select name="state">
+   <option value="active">有效</option><option value="disabled">已停用</option><option value="deleted">已刪除，可復原</option><option value="all">全部</option>
+  </select></label>
+  <button type="submit" class="btn btn-soft">查詢</button>
+ </form>
+ <p id="admin-registration-results" class="minor" role="status"></p>
+ <div id="admin-registration-list" class="roster-list"></div>
+ <div id="admin-registration-pager" class="form-actions"></div>
+</details>
+<section class="panel" id="january-test-roster" hidden aria-live="polite"></section><div class="panel"><h2 data-t="registrationList">報名紀錄（目前僅測試資料）</h2><div class="roster-toolbar organizer-toolbar" aria-label="報名名冊搜尋與篩選">
 <label class="roster-field"><span>搜尋選手、曲目、編號</span><input id="organizer-search" type="search" placeholder="搜尋姓名、歌曲、報名編號"></label>
+<details class="organizer-filter-panel"><summary>進階篩選｜語言、組別、狀態</summary><div class="organizer-filter-grid">
 <label class="roster-field"><span>歌曲語言</span><select id="organizer-language"><option value="">所有語言</option><option value="Nepali">尼泊爾語</option><option value="English">英文</option><option value="Hindi">印地語</option><option value="Maithili">邁蒂利語</option><option value="Bhojpuri">博傑普爾語</option><option value="Tamang">塔芒語</option><option value="Chinese">中文</option><option value="Other">其他</option></select></label>
 <label class="roster-field"><span>參賽組別</span><select id="organizer-category"><option value="">所有組別</option><option value="university">大學組</option><option value="community">社會組</option></select></label>
 <label class="roster-field"><span>測試狀態</span><select id="organizer-status"><option value="">所有狀態</option><option value="scored">已有評分</option><option value="unscored">尚未評分</option><option value="simulated_paid">已模擬付款</option><option value="unpaid">未付款</option></select></label>
+</div></details>
 </div><p class="roster-count" id="organizer-count" role="status" aria-live="polite"></p>
 <div id="admin-apps" class="roster-list"></div><nav id="organizer-pagination" class="roster-pagination" aria-label="報名名單分頁"></nav></div></div><div id="judge-dashboard" hidden><section class="panel"><h2 data-t="judgeTitle">我的評分工作台</h2><p data-t="judgeSub">查看作品後依項目給分，儲存後不能重複覆蓋。</p><div id="judge-roster-panel">
 <div class="roster-toolbar">
@@ -16,6 +31,19 @@
 <button id="judge-back-list" type="button" class="btn btn-soft">← 返回參賽者名單</button>
 <div id="judge-queue" class="cards"></div>
 </section></section></div></section>
+
+
+<!-- Organizer records use one accessible, layered workspace instead of inline disclosure lists. -->
+<dialog id="organizer-entry-dialog" class="organizer-entry-dialog" aria-labelledby="organizer-entry-title" aria-modal="true">
+ <div class="organizer-dialog-shell">
+  <header class="organizer-dialog-head">
+   <button id="organizer-entry-back" class="btn btn-soft organizer-dialog-back" type="button">← 上一步</button>
+   <div class="organizer-dialog-heading"><p id="organizer-entry-step" class="organizer-step"></p><h2 id="organizer-entry-title">選手專屬資料</h2></div>
+   <button id="organizer-entry-close" class="btn btn-soft organizer-dialog-close" type="button" aria-label="關閉選手資料">關閉 ✕</button>
+  </header>
+  <div id="organizer-entry-content" class="organizer-dialog-content" tabindex="-1"></div>
+ </div>
+</dialog>
 
 
 <footer class="site-footer"><a href="./" class="small-link" data-t="home">返回前台</a><small data-t="adminFooter">需受邀身分授權；不是公開評分頁。</small></footer></main><script src="./simple.js" defer></script><section class="ghp-universal-footer-brand" aria-label="Golden Himal Palace official brand closing">

@@ -1,4 +1,5 @@
 import {museAuditionReady} from './muse-audition.js';
+import {adminManagementReady} from './staging-admin-registration.js';
 import {attachJanuaryScores,januaryDemoReady,januaryRoster,submitJanuaryScore} from './january-demo-test.js';
 import {attachFiveDemos,fiveDemoReady,fiveDemoRehearsal} from './demo-five-2027.js';
 import {approvalColumn,approvalGuard,approveTestApplication} from './test-application-approval.js';
@@ -85,15 +86,18 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
  if(path==='/api/e2e/organizer-queue'&&!post){
   if(forbidden('organizer'))return forbidden('organizer');
   const locations=await entrantLocationsReady(db);
-  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.demo_url,p.phase,p.status,p.payment_status,${entrantLocationFields(locations)},p.location_basis,
+  const registrationManagement=await adminManagementReady(env);
+  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.original_artist,p.demo_url,p.phase,p.status,p.payment_status,${entrantLocationFields(locations)},p.location_basis,
    p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,
    p.receipt_key IS NOT NULL AS has_receipt_file,
    (SELECT COUNT(*) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_judges,
    (SELECT ROUND(AVG(technique+interpretation),2) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_mean,
    (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_judges,
    (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}${supplementColumns(supplements)}
-   FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)} ORDER BY p.created_at ASC LIMIT 500`).all();
-  return json({ok:true,applications:await attachFiveDemos(env,await attachProfiles(env,r.results||[])),january_roster_enabled:perVideo,contact_storage_enabled:await museAuditionReady(env),testOnly:true});
+   FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)}
+   ${registrationManagement?"WHERE NOT EXISTS(SELECT 1 FROM e2e_registration_controls c WHERE c.application_id=p.id AND c.state<>'active')":''}
+   ORDER BY p.created_at ASC LIMIT 500`).all();
+  return json({ok:true,applications:await attachFiveDemos(env,await attachProfiles(env,r.results||[])),january_roster_enabled:perVideo,registration_management_enabled:registrationManagement,contact_storage_enabled:await museAuditionReady(env),testOnly:true});
  }
  if(path==='/api/e2e/organizer-promote'&&post){
   if(forbidden('organizer'))return forbidden('organizer');

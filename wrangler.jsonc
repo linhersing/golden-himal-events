@@ -21,7 +21,9 @@
       "/admin-center*",
       "/judge-stage*",
       "/organizer-stage*",
-      "/architecture-preview*"
+      "/architecture-preview*",
+      "/backoffice",
+      "/backoffice.html"
     ]
   },
   "d1_databases": [

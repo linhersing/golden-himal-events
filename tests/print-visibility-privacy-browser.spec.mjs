@@ -5,6 +5,7 @@ test('logout removes old member records from print preview',async({page})=>{
  await page.route('**/api/e2e/**',async route=>{
   const path=new URL(route.request().url()).pathname;
   let result={ok:false,error:'login_required'},status=401;
+  if(path.endsWith('/staff-login-config'))result={ok:true,required:false};
   if(path.endsWith('/request-code'))result={ok:true,challenge_id:'test-id'};
   else if(path.endsWith('/verify-code')){logged=true;result={ok:true}}
   else if(path.endsWith('/logout')){logged=false;result={ok:true}}

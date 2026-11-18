@@ -12,6 +12,7 @@ test('staff see all five works after approval, reload and signing in again',asyn
   if(path==='january-test-roster')return route.fulfill({json:{ok:true,regions:[{region:'A',blocker:'seat_limit_pending',ranked:[]},{region:'B',blocker:'seat_limit_pending',ranked:[]}]}});
   if(path==='january-video-score'){score=route.request().postDataJSON();expect(score.position).toBe(1);return route.fulfill({json:{ok:true,score:90}});}
   if(path==='approve-test-application'){approved=true;return route.fulfill({json:{ok:true,testOnly:true,approval_state:'approved'}});}
+  if(path==='staff-login-config')return route.fulfill({json:{ok:true,required:false}});
   if(path==='request-code')return route.fulfill({json:{ok:true,challenge_id:'fixture'}});
   if(path==='verify-code')signed=true;
   if(path==='logout')signed=false;

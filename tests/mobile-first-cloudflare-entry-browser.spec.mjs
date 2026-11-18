@@ -32,6 +32,7 @@ test('email→code→account access-step states are accurate and change-email wo
   const req=route.request(),u=new URL(req.url());
   const path=u.pathname;
   const data=path.endsWith('/me')?logged?{ok:true,account:{id:'test-member-uuid',role:'member'}}:{ok:false,error:'login_required'}:
+    path.endsWith('/staff-login-config')?{ok:true,required:false}:
     path.endsWith('/request-code')?{ok:true,challenge_id:'test-challenge-id'}:
     path.endsWith('/verify-code')?(logged=true,{ok:true}):
     path.endsWith('/applications')?{ok:true,applications:[]}:

@@ -34,7 +34,7 @@ export async function publicSignupReady(env){
  return (await publicSignupChecklist(env)).ready;
 }
 
-export async function humanSignupSource(request,env,token){
+export async function humanSignupSource(request,env,token,expectedAction=ACTION){
  // This Worker is the public edge. Read only Cloudflare's injected client IP.
  const ip=request.headers.get('CF-Connecting-IP');
  if(!ip||!/^[a-f0-9:.]{3,45}$/i.test(ip)||typeof token!=='string'||!token||token.length>2048)return null;
@@ -46,7 +46,7 @@ export async function humanSignupSource(request,env,token){
   });
   if(!response.ok)return null;
   const result=await response.json();
-  return result.success===true&&result.action===ACTION&&result.hostname===new URL(request.url).hostname?ip:null;
+  return result.success===true&&result.action===expectedAction&&result.hostname===new URL(request.url).hostname?ip:null;
  }catch{return null}
 }
 
