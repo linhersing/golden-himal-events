@@ -398,6 +398,14 @@ async function loadSession(){try{
   }
  }
  await dashboard();
+ // Preserve the public QR URL: after successful OTP, take a first-time singer
+ // straight to the visible form. Existing entrants remain on their dashboard.
+ if(!staff&&location.hash==='#register'){
+  const registration=$('application-details');
+  if(registration&&!registration.hidden){
+   requestAnimationFrame(()=>registration.scrollIntoView({block:'start',behavior:'auto'}));
+  }
+ }
  }catch(e){account=null;authUI(false);if(staff)staffTabs();if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
 function setupAuth(){
 const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
@@ -606,17 +614,7 @@ function drawEntry(a){
    if(!confirm(mt('delTitle')+'\n\n'+mt('delBody')+' '+a.id))return;
    run(async()=>{await api('delete-application',{application_id:a.id});status(mt('deleted'));await renderMember()});
   };
-  const pay=node('button',mt('testCheckout'),'btn btn-soft');pay.type='button';
-  pay.onclick=()=>{
-   if(!confirm(mt('payTitle')))return;
-   run(async()=>{
-    const result=await api('mock-payment',{application_id:a.id});
-    if(result.status!=='simulated_paid'||result.testOnly!==true||result.realCharge!==false)throw Error('test_payment_result_unverified');
-    await renderMember();status(mt(a.approval_state==='pending'?'paymentAwaitingApproval':'paymentDone'));
-   });
-  };
-  // January 2027 audition is free: no simulated checkout should appear for this round.
-  // Muse/Alan policy: never surface TEST checkout to a participant. Future payment is gated separately.
+  // Public checkout is disabled under the 2026-11-18 Muse/Alan policy.
   if(a.round_code==='2027-01')box.append(node('p','2027 January audition TEST · 將依參賽資格審核 · परीक्षण आवेदन','minor'));
   if(a.approval_state!=='approved'&&!a.video_supplement_state)actions.append(del);
  }
