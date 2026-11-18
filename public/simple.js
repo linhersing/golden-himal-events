@@ -909,13 +909,24 @@ function makeRosterPager(target,page,totalPages,onPage){
  target.append(previous,label,next);
 }
 function scoredByJudge(a){
+ if(a.per_video_scoring&&Array.isArray(a.demo_entries)&&a.demo_entries.length){
+  return a.demo_entries.every(work=>Boolean(work.my_score));
+ }
  const phase=a.phase||'demo';
  const first=phase==='demo'?a.demo_technique:a.live_technique;
  return first!==null&&first!==undefined;
 }
+function judgeDemoProgress(a){
+ if(a.per_video_scoring&&Array.isArray(a.demo_entries)&&a.demo_entries.length){
+  const done=a.demo_entries.filter(work=>Boolean(work.my_score)).length;
+  return done+'／'+a.demo_entries.length+' 首已評';
+ }
+ return scoredByJudge(a)?'已評分':'待評分';
+}
 function staffDemoList(application,scoreForm){
  const demos=application.demo_entries;
  if(!Array.isArray(demos)||!demos.length)return null;
+ const focused=Boolean(scoreForm)&&demos.length>1;
  const list=node('ol',undefined,'staff-demo-list');
  list.setAttribute('aria-label','參賽 Demo');
  for(const [index,demo] of demos.entries()){
@@ -932,7 +943,48 @@ function staffDemoList(application,scoreForm){
   if(scoreForm)item.append(scoreForm(demo,index+1));
   list.append(item);
  }
- return list;
+ if(!focused)return list;
+ // The judge selects exactly one song to see its video and scoring form.
+ // Other forms remain mounted, so switching songs cannot discard typed scores.
+ const section=node('section',undefined,'judge-demo-switcher');
+ const chooser=node('label',undefined,'field judge-demo-chooser');
+ const selector=node('select');
+ selector.setAttribute('aria-label','選擇目前評分的歌曲');
+ selector.setAttribute('name','judge-current-demo');
+ const progress=node('p',undefined,'judge-demo-progress');
+ progress.setAttribute('role','status');
+ const options=[];
+ for(const [index,work] of demos.entries()){
+  const option=node('option');
+  option.value=String(index);
+  options.push(option);selector.append(option);
+ }
+ function updateProgress(){
+  const completed=demos.filter(work=>Boolean(work.my_score)).length;
+  progress.textContent='評分進度 '+completed+'／'+demos.length+' 首；請先看影片，再逐首儲存';
+  options.forEach((option,index)=>{
+   const work=demos[index];
+   option.textContent=(index+1)+'／'+demos.length+' · '+(work.song_title||'未命名曲目')+(work.my_score?'（已評）':'（待評）');
+  });
+ }
+ function selectDemo(index){
+  for(const [i,item] of Array.from(list.children).entries())item.hidden=i!==index;
+  selector.value=String(index);
+ }
+ chooser.append(node('span','目前評分歌曲'),selector);
+ section.append(chooser,progress,list);
+ updateProgress();
+ const firstPending=demos.findIndex(work=>!work.my_score);
+ selectDemo(firstPending===-1?0:firstPending);
+ selector.onchange=()=>selectDemo(Number(selector.value));
+ list.addEventListener('ghv:demo-scored',event=>{
+  const position=Number(event.detail?.position);
+  if(position>=1&&position<=demos.length){
+   demos[position-1].my_score={saved:true};
+   updateProgress();
+  }
+ });
+ return section;
 }
 async function renderJanuaryRoster(){
  const panel=$('january-test-roster');
@@ -973,6 +1025,7 @@ function januaryScoreForm(application,demo,position,onSaved){
   event.preventDefault();run(async()=>{
    const values=formValues(form);
    const saved=await api('january-video-score',{application_id:application.id,position,no_conflict:check.checked,technique:Number(values.technique),interpretation:Number(values.interpretation)});
+   form.dispatchEvent(new CustomEvent('ghv:demo-scored',{bubbles:true,detail:{position,form}}));
    form.replaceWith(node('p','已儲存：'+saved.score+' 分','minor'));onSaved();
   });
  };
@@ -1209,7 +1262,8 @@ async function renderJudge(){
   const found=queue.filter(a=>{
    if(st==='scored'&&!scoredByJudge(a))return false;
    if(st==='unscored'&&scoredByJudge(a))return false;
-   return !q||[a.stage_name,a.id,a.song_title,a.round_code].some(x=>String(x||'').toLowerCase().includes(q));
+   const works=Array.isArray(a.demo_entries)?a.demo_entries:[];
+   return !q||[a.stage_name,a.id,a.song_title,a.round_code,...works.flatMap(w=>[w.song_title,w.original_artist])].some(x=>String(x||'').toLowerCase().includes(q));
   });
   const pages=Math.max(1,Math.ceil(found.length/perPage));
   pageNo=Math.min(pageNo,pages);list.replaceChildren();
@@ -1221,8 +1275,9 @@ async function renderJudge(){
    const img=profileImage(a.photo_url_1);
    if(img)body.append(img);
    body.append(node('strong',a.stage_name||'選手'));
-   body.append(node('span',String(a.song_title||'作品')+' · '+a.round_code+' · '+(a.category==='university'?'大學組':'社會組'),'roster-mini'));
-   const flag=node('span',scoredByJudge(a)?'已評分':'開始評分','pill');
+   const works=Array.isArray(a.demo_entries)?a.demo_entries:[];
+   body.append(node('span',a.round_code+' · '+(works.length?works.length+' 首作品':(a.song_title||'作品')),'roster-mini'));
+   const flag=node('span',judgeDemoProgress(a),'pill');
    row.append(body,flag);row.onclick=()=>openDetail(a);list.append(row);
   }
   makeRosterPager(pager,pageNo,pages,p=>{pageNo=p;paint()});
@@ -1236,10 +1291,25 @@ async function renderJudge(){
   const box=node('article',undefined,'entry');
   const phase=a.phase||'demo',demo=phase==='demo';
   box.append(node('h3',(a.stage_name||'選手')+' · '+a.round_code));
-  box.append(node('p',(a.song_title||'作品')+' · '+(a.song_language||'')+' · '+(demo?'線上海選':phase==='qualifier'?'現場初賽':'決賽'),'minor'));
+  box.append(node('p',(demo?'線上海選':phase==='qualifier'?'現場初賽':'決賽')+' · '+judgeDemoProgress(a),'minor'));
   const pictures=profileGallery(a);if(pictures)box.append(pictures);
   if(a.gender)box.append(node('p','參賽者填寫的性別：'+({male:'男',female:'女',other:'其他',prefer_not_say:'不願透露'}[a.gender]||'未提供'),'minor'));
-  const demos=staffDemoList(a,a.per_video_scoring?(work,position)=>januaryScoreForm(a,work,position,()=>status('已儲存本支 Demo 評分。')):null);if(demos)box.append(demos);
+  const demos=staffDemoList(a,a.per_video_scoring?(work,position)=>januaryScoreForm(a,work,position,()=>status('已儲存本支 Demo 評分。')):null);
+  if(demos){
+   box.append(demos);
+   // Only warn on the way back if there really are unsaved score inputs.
+   const dirtyForms=new Set();
+   demos.addEventListener('input',event=>{
+    const form=event.target.closest('form');
+    if(form)dirtyForms.add(form);
+   });
+   demos.addEventListener('ghv:demo-scored',event=>dirtyForms.delete(event.detail?.form));
+   const previousBack=back.onclick;
+   back.onclick=()=>{
+    if(dirtyForms.size&&!confirm('有歌曲分數尚未儲存，確定返回名單嗎？'))return;
+    previousBack();
+   };
+  }
   const link=safeLink(a.demo_url);
   if(!demos&&link){const l=node('a','觀看作品 ↗','small-link');l.href=link;l.target='_blank';l.rel='noopener noreferrer';box.append(l);}
   if(a.per_video_scoring){holder.append(box);back.focus();return;}
