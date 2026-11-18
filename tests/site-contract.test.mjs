@@ -38,7 +38,7 @@ test('member and staff share server-issued identity but never fake official paym
  for(const path of ['update-application','delete-application','reviewer-queue','organizer-queue'])assert.match(api,new RegExp(path));
  assert.match(backend,/account_id=\?/);assert.match(backend,/payment_status='unpaid'/);
  const locale=await read('public/page-locale.js');
- assert.match(api,/'entryReceived'/); // The member dashboard reports receipt and review.
+ assert.match(api,/entryReviewKey/); // The member dashboard reports receipt and review.
  assert.doesNotMatch(api,/api\('mock-payment'/);
  assert.match(locale,/No real payment/);
  for(const lang of ['en','ne','zh'])assert.match(locale,new RegExp('"'+lang+'"\\s*:'));

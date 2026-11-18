@@ -90,9 +90,9 @@ test('previously simulated entries show the review state without a checkout cont
  });
  await page.goto('/member.html#login');
  await page.locator('[data-lang=en]').click();
- await expect(page.locator('#entries')).toContainText('TEST entry submitted');
+ await expect(page.locator('#entries')).toContainText('Submitted for organizer approval');
  await expect(page.getByRole('button',{name:/checkout|payment/i})).toHaveCount(0);
- await expect(page.locator('#test-completion')).toBeHidden();
+ await expect(page.locator('#test-completion')).toContainText('Submitted for organizer approval');
 });
 test('latest news remains short expandable cards (synthetic UI screenshot)',async({page})=>{
  await page.setViewportSize({width:390,height:844});

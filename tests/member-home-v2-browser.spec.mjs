@@ -114,7 +114,8 @@ test('member home shows two statuses, edit after simulated checkout and true rea
  await page.goto('/member.html#login');
  await expect(page.locator('#member-welcome-name')).toContainText('TEST Singer 001');
  await expect(page.locator('#member-state-data')).toContainText('測試資料已儲存');
- await expect(page.locator('#member-state-payment')).toContainText('模擬付款');
+ await expect(page.locator('#member-state-payment')).toHaveText('已送出測試報名');
+ await expect(page.locator('#member-state-payment')).toBeVisible();
  await expect(page.locator('#member-official-boundary')).toContainText('不代表正式報名成功');
  await expect(page.locator('#member-manage-edit')).toBeVisible();
  await expect(page.locator('#member-primary-actions')).toBeVisible();
