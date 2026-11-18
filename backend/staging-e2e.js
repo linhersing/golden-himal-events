@@ -12,6 +12,7 @@ import {parseLocation,entrantLocationsReady,entrantLocationFields,entrantLocatio
 import {parseFrontline2027,frontline2027Ready,insertFrontline2027,frontlineSelect,frontlineJoin} from './frontline-2027.js';
 import {MUSE_FIELDS,museHasFields,parseMuseAudition,museAuditionReady,insertMuseAudition,updateMuseAudition,attachMuseAudition} from './muse-audition.js';
 import {handleVideoSupplement,supplementColumns,supplementGuard,supplementJoin,videoSupplementsReady} from './test-video-supplement.js';
+import {handleAdminRegistration,managedEraseAvailable,drainRemovedMemberMedia} from './staging-admin-registration.js';
 import {handleCorrectionRoute} from './member-corrections.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
@@ -485,7 +486,7 @@ async function mediaUpload(request,env,a){
   const boundary=privateProof
    ?" AND phase='demo' AND status='submitted' AND payment_status='unpaid' AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=e2e_applications.id) AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=e2e_applications.id) AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=e2e_applications.id)"
    :"";
-  changed=await env.DB.prepare(`UPDATE e2e_applications SET ${column}=?,updated_at=? WHERE id=? AND account_id=?${boundary}${pendingGuard(approval,'e2e_applications')}`)
+  changed=await env.DB.prepare(`UPDATE e2e_applications SET ${column}=?,updated_at=? WHERE id=? AND account_id=? AND status<>'withdrawn'${boundary}${pendingGuard(approval,'e2e_applications')}`)
    .bind(key,NOW(),app.id,a.id).run();
   if((approval||privateProof)&&!changed.meta?.changes){
    await env.STAGING_MEDIA.delete(key);return deny('eligibility_upload_locked',409);
@@ -501,7 +502,7 @@ async function streamMedia(request,env,a){
  if(!['demo','eligibility','receipt'].includes(kind))return deny('not_found',404);
  const column=kind==='demo'?'media_key':kind==='eligibility'?'eligibility_key':'receipt_key';
  const reviewerGate=approvalRequired(env)&&a.role==='reviewer';
- const app=await env.DB.prepare(`SELECT p.id,p.account_id,p.${column} AS asset_key FROM e2e_applications p WHERE p.id=?${approvalGuard(reviewerGate,'p')}${reviewerGate?" AND p.payment_status='simulated_paid' AND p.status NOT IN ('withdrawn','rejected')":''}`).bind(url.searchParams.get('application')).first();
+ const app=await env.DB.prepare(`SELECT p.id,p.account_id,p.${column} AS asset_key FROM e2e_applications p WHERE p.id=?${approvalGuard(reviewerGate,'p')}${reviewerGate?" AND p.payment_status='simulated_paid'":''}${a.role==='reviewer'?" AND p.status NOT IN ('withdrawn','rejected')":''}`).bind(url.searchParams.get('application')).first();
  if(!app||!app.asset_key)return deny('not_found',404);
  if(app.account_id!==a.id&&a.role!=='organizer'&&!(a.role==='reviewer'&&kind==='demo'))return deny('not_found',404);
  const obj=await env.STAGING_MEDIA.get(app.asset_key);if(!obj)return deny('not_found',404);
@@ -532,6 +533,28 @@ async function eraseMember(env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const rows=await env.DB.prepare('SELECT media_key,eligibility_key,receipt_key FROM e2e_applications WHERE account_id=?').bind(a.id).all();
  if(rows.results?.some(x=>x.media_key||x.eligibility_key||x.receipt_key)&&!env.STAGING_MEDIA)return deny('r2_cleanup_unavailable',503);
+ if(await managedEraseAvailable(env.DB)){
+  const db=env.DB;
+  const mail=a.mailboxFingerprint||(a.email?await sign(env,'email:'+a.email):null);
+  try{
+   await db.batch([
+    db.prepare(`INSERT OR IGNORE INTO e2e_removed_member_media(object_key,queued_at) SELECT object_key,? FROM (
+     SELECT media_key AS object_key FROM e2e_applications WHERE account_id=?
+     UNION SELECT eligibility_key FROM e2e_applications WHERE account_id=?
+     UNION SELECT receipt_key FROM e2e_applications WHERE account_id=?
+    ) WHERE object_key IS NOT NULL`).bind(NOW(),a.id,a.id,a.id),
+    db.prepare("DELETE FROM e2e_email_challenges WHERE kind='member' AND email_fingerprint=?").bind(mail),
+    db.prepare('DELETE FROM e2e_accounts WHERE id=?').bind(a.id)
+   ]);
+  }catch(error){
+   if(String(error?.message).includes('managed_registration_preserved'))return deny('delete_locked',409);
+   throw error;
+  }
+  try{await drainRemovedMemberMedia(db,env.STAGING_MEDIA)}catch{
+   // D1 saved a durable cleanup task. The scheduled TEST job retries it.
+  }
+  return json({ok:true,deletedTestData:true},200,{'Set-Cookie':cookie('',0)});
+ }
  for(const row of rows.results||[])for(const key of [row.media_key,row.eligibility_key,row.receipt_key])if(key)await env.STAGING_MEDIA.delete(key);
  // Remove pending verification challenges too. Otherwise an unused emailed OTP
  // could recreate the just-deleted TEST member until its expiry.
@@ -570,6 +593,8 @@ export async function handleE2E(request,env){
   }
   if(pathname==='/api/e2e/logout'&&isPost)return await logout(request,env,a);
   if(pathname==='/api/e2e/switch-role'&&isPost)return await switchRole(request,env,a);
+  const admin=await handleAdminRegistration(request,env,a,{json,deny,bodyJSON,uuid,NOW});
+  if(admin)return admin;
   const corrections=await handleCorrectionRoute(request,env,a,{json,deny,bodyJSON,uuid,NOW});
   if(corrections)return corrections;
   const approval=approvalRequired(env);
