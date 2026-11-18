@@ -1588,3 +1588,129 @@ body[data-page="back"] .roster-pagination .btn{min-height:46px;font-size:1rem}
  body[data-page="back"] #judge-queue .btn-primary{width:100%}
  body[data-page="back"] .judge-demo-switcher .staff-demo-list>li{padding:13px 12px}
 }
+
+
+/* 2026-11-18 responsive judge acceptance: variable low-end Android devices. */
+body[data-page="back"]{
+ overflow-x:clip;
+}
+body[data-page="back"] .page-shell,
+body[data-page="back"] .panel,
+body[data-page="back"] .entry,
+body[data-page="back"] .roster-entry,
+body[data-page="back"] .roster-list,
+body[data-page="back"] .roster-entry-text,
+body[data-page="back"] .judge-demo-switcher,
+body[data-page="back"] .judge-demo-switcher .staff-demo-list,
+body[data-page="back"] .judge-demo-switcher .staff-demo-list>li{
+ min-width:0;max-width:100%;box-sizing:border-box;
+}
+body[data-page="back"] .roster-entry-text,
+body[data-page="back"] .roster-mini,
+body[data-page="back"] .judge-demo-chooser option,
+body[data-page="back"] .judge-demo-progress,
+body[data-page="back"] .judge-save-feedback,
+body[data-page="back"] .judge-saved-confirmation,
+body[data-page="back"] .staff-system-body{
+ overflow-wrap:anywhere;word-break:normal;
+}
+body[data-page="back"] #judge-roster-panel .roster-toolbar{
+ grid-template-columns:minmax(0,2fr) minmax(125px,1fr);
+}
+body[data-page="back"] .judge-score-form{
+ min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
+}
+body[data-page="back"] .judge-score-form>.check,
+body[data-page="back"] .judge-score-form>.judge-save-feedback,
+body[data-page="back"] .judge-score-form>.judge-score-submit{
+ grid-column:1/-1;
+}
+body[data-page="back"] .judge-score-form .field{min-width:0}
+body[data-page="back"] .judge-score-form input[type=number]{
+ display:block;width:100%;font-size:max(1rem,16px);min-height:56px;
+}
+body[data-page="back"] .judge-score-form .check{
+ display:flex;align-items:flex-start;gap:12px;
+ min-height:48px;line-height:1.45;
+}
+body[data-page="back"] .judge-score-form input[type=checkbox]{
+ flex:0 0 auto;width:24px;height:24px;margin-top:2px;
+}
+body[data-page="back"] .judge-score-submit{
+ min-height:56px;font-size:1.05rem;font-weight:800;white-space:normal;line-height:1.35;
+}
+body[data-page="back"] .judge-score-submit:disabled{opacity:.7;cursor:progress}
+body[data-page="back"] .judge-save-feedback{
+ margin:2px 0 0;font-size:1rem;line-height:1.55;
+}
+body[data-page="back"] .judge-save-feedback:empty{display:none}
+body[data-page="back"] .judge-save-feedback[data-state="error"]{
+ padding:10px 12px;border:1px solid #ac6b5a;background:#fff2e9;border-radius:10px;
+ color:#743c2d;font-weight:750;
+}
+body[data-page="back"] .judge-save-feedback[data-state="pending"]{
+ color:#583c2c;font-weight:700;
+}
+body[data-page="back"] .judge-saved-confirmation{
+ padding:12px;border-radius:11px;background:#e9f6ea;
+ color:#245b39;font-size:1.04rem;font-weight:800;line-height:1.5;
+}
+body[data-page="back"] .judge-optional-profile{
+ border:1px solid #e0d2c1;border-radius:10px;padding:0 10px;margin:10px 0;
+}
+body[data-page="back"] .judge-optional-profile>summary{
+ padding:12px 4px;min-height:46px;font-weight:700;cursor:pointer;
+}
+body[data-page="back"] .judge-demo-chooser select{font-size:max(1rem,16px)}
+body[data-page="back"] #judge-queue .field input[type=number],
+body[data-page="back"] #judge-queue .field select{
+ font-size:max(1rem,16px);max-width:100%;
+}
+body[data-page="back"] #judge-queue button,
+body[data-page="back"] #judge-back-list,
+body[data-page="back"] .organizer-roster-actions button,
+body[data-page="back"] .roster-pagination button{
+ touch-action:manipulation;min-height:48px;
+}
+@media(max-width:660px){
+ body[data-page="back"] #judge-roster-panel .roster-toolbar{grid-template-columns:1fr}
+ body[data-page="back"] .page-shell{
+  padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right));
+ }
+ body[data-page="back"] .judge-score-form{grid-template-columns:1fr}
+ body[data-page="back"] .judge-score-form>.field{grid-column:1/-1}
+ body[data-page="back"] .staff-mobile-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body[data-page="back"] .roster-pagination{flex-wrap:wrap;row-gap:8px}
+}
+@media(max-width:340px){
+ body[data-page="back"] .staff-mobile-summary{grid-template-columns:1fr;gap:7px}
+ body[data-page="back"] .organizer-roster-head{flex-direction:column;align-items:stretch}
+ body[data-page="back"] .organizer-roster-badges{max-width:none;justify-content:flex-start}
+ body[data-page="back"] #judge-list .roster-action{align-items:flex-start;flex-wrap:wrap}
+ body[data-page="back"] #judge-list .pill{max-width:100%;white-space:normal;line-height:1.4}
+ body[data-page="back"] .judge-demo-chooser select{font-size:1rem}
+ body[data-page="back"] .page-shell{padding-inline:10px}
+}
+@media(orientation:landscape) and (max-height:520px){
+ body[data-page="back"] #judge-roster-panel .roster-toolbar{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ body[data-page="back"] .judge-score-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body[data-page="back"] .judge-score-form>.field{grid-column:auto}
+ body[data-page="back"] .judge-demo-switcher .staff-demo-list>li{padding-block:10px}
+}
+/* Respect accessibility settings rather than forcing animations or text size. */
+@media(prefers-reduced-motion:reduce){
+ body[data-page="back"] *,
+ body[data-page="back"] *::before,
+ body[data-page="back"] *::after{
+  scroll-behavior:auto!important;
+  animation-duration:.01ms!important;transition-duration:.01ms!important;
+ }
+}
+@media(pointer:coarse){
+ body[data-page="back"] .judge-demo-chooser select,
+ body[data-page="back"] #judge-queue .btn,
+ body[data-page="back"] #judge-back-list,
+ body[data-page="back"] .organizer-filter-panel>summary{
+  min-height:54px;
+ }
+}
