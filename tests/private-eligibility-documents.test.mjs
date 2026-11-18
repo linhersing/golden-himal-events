@@ -20,7 +20,8 @@ function make(){
   async put(key,bytes){if(objects.has(key))return null;objects.set(key,bytes);return {size:bytes.byteLength};},
   async head(key){const value=objects.get(key);return value?{size:value.byteLength}:null;},
   async get(key){const value=objects.get(key);return value?{size:value.byteLength,body:value}:null;},
-  async delete(key){objects.delete(key);}
+  async delete(key){objects.delete(key);},
+  async list(){return {objects:Array.from(objects.keys(),key=>({key,uploaded:new Date()})),truncated:false};}
  };
  const env={...envVars,ELIGIBILITY_TEST_D1:db,ELIGIBILITY_TEST_R2:r2};
  return {sqlite,db,env,r2,objects,send:(path,options)=>worker.fetch(request(path,options),env)};
@@ -77,7 +78,7 @@ test('journal survives write/delete failures, retires old versions and expires f
   await cleanupEligibility(env,now+30);
   assert.ok(objects.size>=2);
   r2.delete=remove;
-  await cleanupEligibility(env,now+30);assert.equal(objects.size,1);
+  await cleanupEligibility(env,now+61);assert.equal(objects.size,1);
   const revoked=await send('',{method:'DELETE',revision:current.revision});
   assert.equal(revoked.status,200);assert.equal((await send('/download')).status,404);
   await cleanupEligibility(env,now+31);assert.equal(objects.size,0);
@@ -129,5 +130,54 @@ test('PDF active-content marker and a declared MIME mismatch stay outside D1 and
   assert.equal((await send('',{method:'PUT',body:png,type:'image/jpeg'})).status,415);
   assert.equal(objects.size,0);
   assert.equal(sqlite.prepare('SELECT count(*) AS n FROM e2e_private_eligibility_objects').get().n,0);
+ }finally{sqlite.close()}
+});
+
+test('withdrawal signals a conflict while the first upload is staged',async()=>{
+ const {sqlite,r2,send}=make();
+ let signal,release;
+ const started=new Promise(resolve=>{signal=resolve});
+ const proceed=new Promise(resolve=>{release=resolve});
+ const put=r2.put;
+ r2.put=async(...args)=>{signal();await proceed;return put(...args)};
+ const upload=send('',{method:'PUT',body:png});
+ try{
+  await started;
+  assert.equal((await send('',{method:'DELETE',revision:'none'})).status,409);
+ }finally{
+  release();
+  await upload;
+  sqlite.close();
+ }
+});
+
+test('cleanup makes progress behind failed deletions and removes aged untracked objects only',async()=>{
+ const {sqlite,env,r2,objects}=make();
+ try{
+  const now=Math.floor(Date.now()/1000);
+  const queue=sqlite.prepare(`INSERT INTO e2e_private_eligibility_objects
+   VALUES(?,?,?,'none',?,NULL,'image/png',?,'removed',0,0,?)`);
+  for(let i=0;i<51;i++){
+   const key='eligibility-private/fixture-'+i;
+   queue.run('row-'+i,applicationId,'request-'+i,key,png.length,i===50?1:0);
+   objects.set(key,png);
+  }
+  const orphan='eligibility-private/aged-orphan',fresh='eligibility-private/fresh';
+  objects.set(orphan,png);objects.set(fresh,png);
+  const del=r2.delete;
+  r2.delete=async key=>{if(key.includes('fixture-')&&!key.endsWith('-50'))throw Error('synthetic failure');await del(key);};
+  const list=r2.list;
+  r2.list=async()=>{
+   const results=await list();
+   for(const object of results.objects)if(object.key===orphan)object.uploaded=new Date((now-1801)*1000);
+   return results;
+  };
+  await cleanupEligibility(env,now);
+  assert.equal(objects.has(orphan),false);
+  assert.equal(objects.has(fresh),true);
+  assert.equal(objects.has('eligibility-private/fixture-50'),true);
+  await cleanupEligibility(env,now+1);
+  assert.equal(objects.has('eligibility-private/fixture-50'),false);
+  assert.equal(objects.has(fresh),true);
  }finally{sqlite.close()}
 });

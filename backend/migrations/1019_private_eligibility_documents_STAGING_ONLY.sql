@@ -37,3 +37,8 @@ CREATE TRIGGER IF NOT EXISTS e2e_private_eligibility_retire
    SET state='removed',delete_after=CASE WHEN state='staged' THEN lease_until ELSE 0 END,digest=NULL
    WHERE application_id=OLD.id AND state IN ('staged','current');
  END;
+-- One bounded bucket page per cleanup run.
+CREATE TABLE IF NOT EXISTS e2e_eligibility_sweep_cursor (
+ slot INTEGER PRIMARY KEY CHECK(slot=1),
+ cursor TEXT
+);

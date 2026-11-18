@@ -3,6 +3,9 @@ import {hasTestApproval} from './test-application-approval.js';
 const maxBytes=5*1024*1024;
 const leaseSeconds=300;
 const replayCleanupSeconds=900;
+const uploadTimeoutMs=30000;
+const garbageGraceSeconds=2*replayCleanupSeconds;
+const objectPrefix='eligibility-private/';
 const formats={'image/jpeg':'jpg','image/png':'png','application/pdf':'pdf'};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value);
 const headers={'Cache-Control':'private, no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Cross-Origin-Resource-Policy':'same-origin'};
@@ -25,6 +28,13 @@ export function syntheticReady(url,env){
   /^\d+$/.test(env.ELIGIBILITY_RETENTION_SECONDS||'')&&retention>=60&&retention<=86400;
 }
 
+async function withDeadline(promise,ms){
+ let timer;
+ try{
+  return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('deadline')),ms)})]);
+ }finally{clearTimeout(timer);}
+}
+
 function matchesSignature(bytes,mime){
  const has=(sequence,at=0)=>sequence.every((octet,index)=>bytes[at+index]===octet);
  if(mime==='image/jpeg')return bytes.length>=12&&has([255,216,255])&&has([255,217],bytes.length-2);
@@ -42,22 +52,25 @@ async function readUpload(request,type){
  if(!request.body)return {error:fail('invalid_file_signature',415)};
  const reader=request.body.getReader(),parts=[];
  let size=0;
+ const deadline=Date.now()+uploadTimeoutMs;
  try{
   while(true){
-   const {done,value}=await reader.read();
+   const left=deadline-Date.now();
+   if(left<=0)throw Error('deadline');
+   const {done,value}=await withDeadline(reader.read(),left);
    if(done)break;
    size+=value.byteLength;
-   if(size>maxBytes){await reader.cancel();return {error:fail('file_too_large',413)}}
+   if(size>maxBytes){void reader.cancel().catch(()=>{});return {error:fail('file_too_large',413)}}
    parts.push(value);
   }
- }catch{return {error:fail('upload_interrupted',400)}}
+ }catch{void reader.cancel().catch(()=>{});return {error:fail('upload_interrupted',400)}}
  const bytes=new Uint8Array(size);
  let offset=0;
  for(const part of parts){bytes.set(part,offset);offset+=part.byteLength;}
  return matchesSignature(bytes,type)?{bytes}:{error:fail('invalid_file_signature',415)};
 }
 
-async function storeDocument(request,env,app,actor,now,expected){
+async function storeDocument(request,env,app,actor,expected){
  const db=env.ELIGIBILITY_TEST_D1,bucket=env.ELIGIBILITY_TEST_R2;
  const type=(request.headers.get('content-type')||'').trim().toLowerCase();
  if(!Object.hasOwn(formats,type))return fail('unsupported_document_type',415);
@@ -66,10 +79,11 @@ async function storeDocument(request,env,app,actor,now,expected){
  const {bytes,error}=await readUpload(request,type);
  if(error)return error;
  const checksum=await crypto.subtle.digest('SHA-256',bytes),digest=hex(new Uint8Array(checksum));
- const objectValid=async row=>(await bucket.head(row.object_key))?.size===row.size;
+ const now=nowSeconds();
+ const objectValid=async row=>(await withDeadline(bucket.head(row.object_key),uploadTimeoutMs))?.size===row.size;
  let row=await requested(db,app.id,key);
  if(!row){
-  const id=crypto.randomUUID(),sealedKey='eligibility-private/'+crypto.randomUUID();
+  const id=crypto.randomUUID(),sealedKey=objectPrefix+crypto.randomUUID();
   await db.prepare(`INSERT INTO ${table}(id,application_id,request_id,expected_revision,object_key,digest,mime,size,state,expires_at,lease_until)
    SELECT ?,p.id,?,?,?,?,?,?,'staged',?,? FROM e2e_applications p
    WHERE p.id=? AND p.account_id=? AND ${eligible} AND COALESCE((
@@ -86,9 +100,11 @@ async function storeDocument(request,env,app,actor,now,expected){
   if(!await objectValid(row))return fail('document_storage_unavailable',503);
   return respond({ok:true,document:publicDocument(row),testOnly:true});
  }
- if(row.state!=='staged'||row.lease_until<=now)return fail('document_conflict',409);
- // Retry a disconnected PUT safely with the same scoped idempotency key and checksum.
- await bucket.put(row.object_key,bytes,{onlyIf:{etagDoesNotMatch:'*'},sha256:checksum});
+ const started=nowSeconds();
+ if(row.state!=='staged'||Math.min(row.lease_until,row.expires_at)<=started+Math.ceil(uploadTimeoutMs/1000))
+  return fail('document_conflict',409);
+ // A timed-out call can still land in R2. The durable journal and orphan scan both reconcile it.
+ await withDeadline(bucket.put(row.object_key,bytes,{onlyIf:{etagDoesNotMatch:'*'},sha256:checksum}),uploadTimeoutMs);
  if(!await objectValid(row))return fail('document_storage_unavailable',503);
  const at=nowSeconds();
  const changed=await db.prepare(`UPDATE ${table} SET state='current' WHERE id=? AND state='staged'
@@ -132,9 +148,12 @@ export async function handleEligibility(request,env,actor){
  }
  const expected=request.headers.get('if-match')?.match(/^"([^"]+)"$/)?.[1];
  if(expected!=='none'&&!uuid(expected))return fail('document_revision_required',428);
- if(request.method==='PUT')return app.eligible?storeDocument(request,env,app,actor,now,expected):fail('application_not_approved',409);
- const previous=await current(db,id,now);
- if(!previous)return respond({ok:true,document:null,testOnly:true});
+ if(request.method==='PUT')return app.eligible?storeDocument(request,env,app,actor,expected):fail('application_not_approved',409);
+ const pendingOrCurrent=await db.prepare(`SELECT state FROM ${table} WHERE application_id=? AND
+  ((state='current' AND expires_at>?) OR (state='staged' AND expected_revision='none' AND lease_until>?))
+  ORDER BY CASE state WHEN 'current' THEN 0 ELSE 1 END LIMIT 1`).bind(id,now,now).first();
+ if(!pendingOrCurrent)return respond({ok:true,document:null,testOnly:true});
+ if(pendingOrCurrent.state==='staged')return fail('document_conflict',409);
  const removed=await db.prepare(`UPDATE ${table} SET state='removed',delete_after=0,digest=NULL
   WHERE id=? AND application_id=? AND state='current' AND EXISTS(
    SELECT 1 FROM e2e_applications WHERE id=? AND account_id=?
@@ -149,9 +168,32 @@ export async function cleanupEligibility(env,now=nowSeconds()){
  const {results}=await db.prepare(`SELECT id,object_key,state FROM ${table}
   WHERE state IN ('removed','deleted') AND delete_after<=? ORDER BY delete_after LIMIT 50`).bind(now).all();
  for(const row of results){
-  try{await bucket.delete(row.object_key)}catch{continue}
+  try{await withDeadline(bucket.delete(row.object_key),uploadTimeoutMs)}catch{
+   await db.prepare(`UPDATE ${table} SET delete_after=? WHERE id=? AND state=? AND delete_after<=?`)
+    .bind(now+30,row.id,row.state,now).run();
+   continue;
+  }
   if(row.state==='removed'){
    await db.prepare(`UPDATE ${table} SET state='deleted',delete_after=? WHERE id=? AND state='removed'`).bind(now+replayCleanupSeconds,row.id).run();
   }else await db.prepare(`DELETE FROM ${table} WHERE id=? AND state='deleted' AND delete_after<=?`).bind(row.id,now).run();
  }
+ await reconcileOrphans(db,bucket,now);
+}
+
+async function reconcileOrphans(db,bucket,now){
+ const row=await db.prepare('SELECT cursor FROM e2e_eligibility_sweep_cursor WHERE slot=1').first();
+ let listed;
+ try{
+  listed=await withDeadline(bucket.list({prefix:objectPrefix,limit:100,...(row?.cursor?{cursor:row.cursor}:{})}),uploadTimeoutMs);
+ }catch{
+  await db.prepare('DELETE FROM e2e_eligibility_sweep_cursor WHERE slot=1').run();
+  return;
+ }
+ for(const object of listed.objects){
+  if(!object.uploaded||object.uploaded.getTime()>(now-garbageGraceSeconds)*1000)continue;
+  const record=await db.prepare(`SELECT id FROM ${table} WHERE object_key=?`).bind(object.key).first();
+  if(!record)try{await withDeadline(bucket.delete(object.key),uploadTimeoutMs)}catch{}
+ }
+ await db.prepare(`INSERT INTO e2e_eligibility_sweep_cursor(slot,cursor) VALUES(1,?)
+  ON CONFLICT(slot) DO UPDATE SET cursor=excluded.cursor`).bind(listed.truncated?listed.cursor:null).run();
 }
