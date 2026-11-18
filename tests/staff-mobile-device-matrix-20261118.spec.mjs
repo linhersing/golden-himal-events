@@ -123,3 +123,43 @@ test('failed or uncertain server response never erases entered scores or claims 
  await expect(page.locator('.judge-saved-confirmation')).toHaveCount(0);
  expect(attempts).toBe(1);
 });
+
+
+test('onsite qualifier scoring has four large controls and one confirmed submission',async({page})=>{
+ const posts=[];
+ await page.route('**/api/e2e/**',async route=>{
+  const key=new URL(route.request().url()).pathname.split('/').at(-1);
+  if(key==='me')return route.fulfill({json:{ok:true,account:{
+   id:'mobile-live-judge',role:'reviewer',available_roles:['reviewer']
+  }}});
+  if(key==='reviewer-queue')return route.fulfill({json:{ok:true,queue:[{
+   id:'FAKE-QUALIFIER-01',stage_name:'SYNTHETIC QUALIFIER',
+   song_title:'FAKE LIVE SONG',song_language:'Nepali',
+   round_code:'2027-02',category:'community',phase:'qualifier',
+   demo_url:'https://example.org/qa-live-song'
+  }]}});
+  if(key==='score'){posts.push(route.request().postDataJSON());return route.fulfill({json:{ok:true}});}
+  return route.fulfill({json:{ok:true}});
+ });
+ await page.setViewportSize({width:320,height:700});
+ await page.goto('/backoffice.html');
+ await page.locator('#judge-list .roster-entry').click();
+ const form=page.locator('#judge-queue form');
+ for(const [name,value] of [['technique','35'],['interpretation','25'],['stage_presence','16'],['appearance','7']]){
+  const input=form.locator('[name='+name+']');
+  await expect(input).toBeVisible();
+  expect(await input.evaluate(el=>el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(48);
+  await input.fill(value);
+ }
+ await form.locator('[name=conflict]').check();
+ const submit=form.locator('button[type=submit]');
+ expect(await submit.evaluate(el=>el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(48);
+ await submit.click();
+ await expect.poll(()=>posts.length).toBe(1);
+ expect(posts[0]).toMatchObject({
+  application_id:'FAKE-QUALIFIER-01',phase:'qualifier',no_conflict:true,
+  technique:35,interpretation:25,stage_presence:16,appearance:7
+ });
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth))
+  .toBeLessThanOrEqual(1);
+});
