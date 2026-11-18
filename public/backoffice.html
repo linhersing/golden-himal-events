@@ -33,6 +33,19 @@
 </section></section></div></section>
 
 
+<!-- Organizer records use one accessible, layered workspace instead of inline disclosure lists. -->
+<dialog id="organizer-entry-dialog" class="organizer-entry-dialog" aria-labelledby="organizer-entry-title" aria-modal="true">
+ <div class="organizer-dialog-shell">
+  <header class="organizer-dialog-head">
+   <button id="organizer-entry-back" class="btn btn-soft organizer-dialog-back" type="button">← 上一步</button>
+   <div class="organizer-dialog-heading"><p id="organizer-entry-step" class="organizer-step"></p><h2 id="organizer-entry-title">選手專屬資料</h2></div>
+   <button id="organizer-entry-close" class="btn btn-soft organizer-dialog-close" type="button" aria-label="關閉選手資料">關閉 ✕</button>
+  </header>
+  <div id="organizer-entry-content" class="organizer-dialog-content" tabindex="-1"></div>
+ </div>
+</dialog>
+
+
 <footer class="site-footer"><a href="./" class="small-link" data-t="home">返回前台</a><small data-t="adminFooter">需受邀身分授權；不是公開評分頁。</small></footer></main><script src="./simple.js" defer></script><section class="ghp-universal-footer-brand" aria-label="Golden Himal Palace official brand closing">
  <strong class="ghp-footer-full-name">GOLDEN HIMAL PALACE</strong>
  <p lang="en">The Best Wedding at Golden Himal.</p>
