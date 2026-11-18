@@ -1060,7 +1060,8 @@ function januaryScoreForm(application,demo,position,onSaved){
     // never claim it failed or automatically retry a non-idempotent action.
     feedback.textContent='無法確認是否儲存成功。已保留輸入內容；請先重新核對評分紀錄，勿連續送出。';
     feedback.dataset.state='error';
-    throw error;
+    // Keep feedback beside the active score instead of scrolling the judge to the page top.
+    return;
    }finally{
     submitting=false;button.disabled=false;
     button.textContent='儲存第 '+position+' 支評分';
@@ -1397,7 +1398,9 @@ async function renderJudge(){
      status('評分已儲存。');await renderJudge();
     }catch(error){
      feedback.textContent='儲存狀態無法確認，分數仍保留在畫面。請先查詢評分紀錄，勿連續送出。';
-     feedback.dataset.state='error';throw error;
+     feedback.dataset.state='error';
+     // Inline errors keep the score visible when connectivity is unstable.
+     return;
     }finally{saving=false;save.disabled=false;save.textContent='儲存我的評分';}
    });
   };
