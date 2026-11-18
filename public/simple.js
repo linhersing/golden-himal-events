@@ -923,10 +923,10 @@ function judgeDemoProgress(a){
  }
  return scoredByJudge(a)?'已評分':'待評分';
 }
-function staffDemoList(application,scoreForm){
+function staffDemoList(application,scoreForm,focusOne=false){
  const demos=application.demo_entries;
  if(!Array.isArray(demos)||!demos.length)return null;
- const focused=Boolean(scoreForm)&&demos.length>1;
+ const focused=focusOne&&demos.length>1;
  const list=node('ol',undefined,'staff-demo-list');
  list.setAttribute('aria-label','參賽 Demo');
  for(const [index,demo] of demos.entries()){
@@ -961,7 +961,7 @@ function staffDemoList(application,scoreForm){
  }
  function updateProgress(){
   const completed=demos.filter(work=>Boolean(work.my_score)).length;
-  progress.textContent='評分進度 '+completed+'／'+demos.length+' 首；請先看影片，再逐首儲存';
+  progress.textContent=scoreForm?'評分進度 '+completed+'／'+demos.length+' 首；請先看影片，再逐首儲存':'可逐首查看作品；目前未啟用逐支評分。';
   options.forEach((option,index)=>{
    const work=demos[index];
    option.textContent=(index+1)+'／'+demos.length+' · '+(work.song_title||'未命名曲目')+(work.my_score?'（已評）':'（待評）');
@@ -1294,7 +1294,7 @@ async function renderJudge(){
   box.append(node('p',(demo?'線上海選':phase==='qualifier'?'現場初賽':'決賽')+' · '+judgeDemoProgress(a),'minor'));
   const pictures=profileGallery(a);if(pictures)box.append(pictures);
   if(a.gender)box.append(node('p','參賽者填寫的性別：'+({male:'男',female:'女',other:'其他',prefer_not_say:'不願透露'}[a.gender]||'未提供'),'minor'));
-  const demos=staffDemoList(a,a.per_video_scoring?(work,position)=>januaryScoreForm(a,work,position,()=>status('已儲存本支 Demo 評分。')):null);
+  const demos=staffDemoList(a,a.per_video_scoring?(work,position)=>januaryScoreForm(a,work,position,()=>status('已儲存本支 Demo 評分。')):null,true);
   if(demos){
    box.append(demos);
    // Only warn on the way back if there really are unsaved score inputs.
