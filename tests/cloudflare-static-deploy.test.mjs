@@ -8,7 +8,7 @@ test('Cloudflare preview serves static assets and only isolated staging API',asy
   assert.equal(cfg.name,'golden-himal-voice-preview');
   assert.equal(cfg.assets.directory,'./dist');
   assert.equal(cfg.assets.binding,'ASSETS');
-  assert.deepEqual(cfg.assets.run_worker_first,['/api/staging/*','/api/e2e/*','/member','/member.html']);
+  assert.deepEqual(cfg.assets.run_worker_first,['/api/staging/*','/api/e2e/*','/member','/member.html','/backoffice','/backoffice.html']);
   assert.equal(cfg.vars.STAGING_E2E_ENABLED,undefined, 'E2E enable requires a separately provisioned Cloudflare secret');
   assert.equal(cfg.vars.STAGING_PUBLIC_SIGNUP_ENABLED,undefined,'Public test signup requires an explicit runtime opt-in');
   assert.equal(cfg.main,'./backend/staging-registration-worker.js');

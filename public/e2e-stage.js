@@ -375,6 +375,10 @@ async function requestVerification(button){
  const version=++requestVersion,email=$('email').value.trim();requestPending=true;
  button.disabled=true;updateResend();
  try{
+  if(role!=='member'&&(await api('staff-login-config')).required===true){
+   window.location.assign('./backoffice.html');
+   return;
+  }
   const result=await post('request-code',{email,role});
   if(version!==requestVersion)return;
   challenge=result.challenge_id;deliveryEmail=email;
