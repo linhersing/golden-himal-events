@@ -10,9 +10,9 @@ import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpser
 import {approvalRequired,approvalSchemaReady,approvalColumn,approvalGuard,pendingGuard} from './test-application-approval.js';
 import {parseLocation,entrantLocationsReady,entrantLocationFields,entrantLocationJoin,insertEntrantLocation,updateEntrantLocation} from './entrant-location.js';
 import {parseFrontline2027,frontline2027Ready,insertFrontline2027,frontlineSelect,frontlineJoin} from './frontline-2027.js';
-import {readMuseContact,MUSE_FIELDS,museHasFields,parseMuseAudition,museAuditionReady,insertMuseAudition,updateMuseAudition,attachMuseAudition} from './muse-audition.js';
+import {MUSE_FIELDS,museHasFields,parseMuseAudition,museAuditionReady,insertMuseAudition,updateMuseAudition,attachMuseAudition} from './muse-audition.js';
 import {handleVideoSupplement,supplementColumns,supplementGuard,supplementJoin,videoSupplementsReady} from './test-video-supplement.js';
-import {handleAdminRegistration,managedEraseAvailable,drainRemovedMemberMedia} from './staging-admin-registration.js';
+import {handleAdminRegistration,handleOrganizerContact,managedEraseAvailable,drainRemovedMemberMedia} from './staging-admin-registration.js';
 import {handleCorrectionRoute} from './member-corrections.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
@@ -592,14 +592,8 @@ export async function handleE2E(request,env){
    return json({ok:true,testOnly:true,...report,
     note:'TEST configuration only. Ready does not prove email delivery, login or official registration.'});
   }
-  if(pathname==='/api/e2e/organizer-contact'&&!isPost){
-   if(a.role!=='organizer')return deny('organizer_only',403);
-   if(!await museAuditionReady(env))return deny('contact_storage_unavailable',503);
-   const id=new URL(request.url).searchParams.get('id');
-   if(!/^[a-f0-9-]{36}$/i.test(id||''))return deny('invalid_application_id',422);
-   const contact=await readMuseContact(env.DB,id);
-   return contact?json({ok:true,contact,testOnly:true}):deny('contact_not_found',404);
-  }
+  if(pathname==='/api/e2e/organizer-contact'&&!isPost)
+   return await handleOrganizerContact(request,env,a,{json,deny,NOW,uuid});
   if(pathname==='/api/e2e/logout'&&isPost)return await logout(request,env,a);
   if(pathname==='/api/e2e/switch-role'&&isPost)return await switchRole(request,env,a);
   const admin=await handleAdminRegistration(request,env,a,{json,deny,bodyJSON,uuid,NOW});

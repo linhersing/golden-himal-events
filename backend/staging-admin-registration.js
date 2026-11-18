@@ -1,3 +1,5 @@
+import {MUSE_FIELDS,museAuditionReady,readMuseContact} from './muse-audition.js';
+
 const searchPath='/api/e2e/organizer-registrations';
 const actionPath='/api/e2e/organizer-registration-action';
 const auditPath='/api/e2e/organizer-registration-audit';
@@ -7,8 +9,8 @@ const results={conflict:409,missing:404,protected:409,invalid:422,failed:503};
 const validId=value=>typeof value==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value);
 const safeValue=value=>typeof value==='string'&&value.trim().length>0&&value.length<=120&&!/[\x00-\x1f\x7f]/.test(value);
 const writeEvent=(db,actor,entry)=>db.prepare(
- 'INSERT INTO e2e_staff_audit(id,actor_id,actor_role,target_id,action,result,occurred_at,diff) VALUES(?,?,?,?,?,?,?,NULL)'
-).bind(entry.id,actor.id,actor.role,entry.target,entry.action,entry.result,entry.time).run();
+ 'INSERT INTO e2e_staff_audit(id,actor_id,actor_role,target_id,action,result,occurred_at,diff) VALUES(?,?,?,?,?,?,?,?)'
+).bind(entry.id,actor.id,actor.role,entry.target,entry.action,entry.result,entry.time,entry.detail?JSON.stringify(entry.detail):null).run();
 
 export async function adminManagementReady(env){
  if(env.STAGING_ADMIN_MANAGEMENT_ENABLED!=='true'||env.STAGING_STAFF_TURNSTILE_REQUIRED!=='true')return false;
@@ -17,6 +19,51 @@ export async function adminManagementReady(env){
   await env.DB.prepare('SELECT id,actor_id,occurred_at FROM e2e_staff_audit LIMIT 0').all();
   return true;
  }catch{return false;}
+}
+
+
+const contactFields=new Map([
+ ['identity',['full_name']],
+ ['contact',['contact_phone','contact_email','contact_handle']],
+ ['address',['city','street_address']],
+ ['background',['educational_background','short_description','musical_training']],
+]);
+
+export async function handleOrganizerContact(request,env,actor,{json,deny,NOW,uuid}){
+ const params=new URL(request.url).searchParams;
+ const section=params.get('section'),audited=section!==null||env.STAGING_ADMIN_MANAGEMENT_ENABLED==='true';
+ const db=env.DB;
+ if(actor.role!=='organizer'){
+  const fields=contactFields.get(section);
+  if(audited&&(section===null||fields)&&await adminManagementReady(env)){
+   try{await writeEvent(db,actor,{
+    id:uuid(),target:null,time:NOW(),action:'audit_read',result:'denied',
+    detail:{access:'organizer_contact',section:section??'all'},
+   })}catch{} // Access is denied even if an audit of the attempt cannot be recorded.
+  }
+  return deny('organizer_only',403);
+ }
+ const id=params.get('id');
+ if(!validId(id))return deny('invalid_application_id',422);
+ const fields=section===null?MUSE_FIELDS:contactFields.get(section);
+ if(!fields)return deny('invalid_contact_section',422);
+ if(!await museAuditionReady(env))return deny('contact_storage_unavailable',503);
+ if(!audited){
+  const contact=await readMuseContact(db,id);
+  return contact?json({ok:true,contact,testOnly:true}):deny('contact_not_found',404);
+ }
+ if(!await adminManagementReady(env)||typeof db.batch!=='function')return deny('contact_audit_unavailable',503);
+ try{
+  const detail=JSON.stringify({access:'organizer_contact',section:section??'all'});
+  const event=db.prepare(`INSERT INTO e2e_staff_audit(id,actor_id,actor_role,target_id,action,result,occurred_at,diff)
+   VALUES(?,?,?,?,'audit_read',CASE WHEN EXISTS(SELECT 1 FROM e2e_muse_audition_details WHERE application_id=?)
+    THEN 'success' ELSE 'missing' END,?,?)`).bind(uuid(),actor.id,actor.role,id,id,NOW(),detail);
+  const read=db.prepare(`SELECT ${fields.join(',')} FROM e2e_muse_audition_details WHERE application_id=?`).bind(id);
+  const [recorded,selected]=await db.batch([event,read]);
+  if(recorded.meta?.changes!==1||!Array.isArray(selected.results))return deny('contact_audit_unavailable',503);
+  const contact=selected.results[0];
+  return contact?json({ok:true,contact,...(section===null?{}:{section}),testOnly:true}):deny('contact_not_found',404);
+ }catch{return deny('contact_audit_unavailable',503);}
 }
 
 async function changeRegistration(db,actor,body,event){
@@ -98,7 +145,7 @@ export async function handleAdminRegistration(request,env,actor,{json,deny,NOW,u
   const id=url.searchParams.get('id');
   if(!validId(id))return deny('invalid_registration_id',422);
   const rows=await db.prepare(`SELECT actor_id,actor_role,target_id,action,result,occurred_at,diff
-   FROM e2e_staff_audit WHERE target_id=? AND action<>'audit_read' ORDER BY occurred_at DESC,rowid DESC LIMIT 25`).bind(id).all();
+   FROM e2e_staff_audit WHERE target_id=? AND (action<>'audit_read' OR json_extract(diff,'$.access')='organizer_contact') ORDER BY occurred_at DESC,rowid DESC LIMIT 25`).bind(id).all();
   await writeEvent(db,actor,{...event,target:id,result:'success'});
   return json({ok:true,testOnly:true,events:rows.results.map(row=>({...row,diff:row.diff?JSON.parse(row.diff):null}))});
  }

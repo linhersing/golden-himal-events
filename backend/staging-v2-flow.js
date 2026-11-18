@@ -4,12 +4,17 @@ import {attachJanuaryScores,januaryDemoReady,januaryRoster,submitJanuaryScore} f
 import {attachFiveDemos,fiveDemoReady,fiveDemoRehearsal} from './demo-five-2027.js';
 import {approvalColumn,approvalGuard,approveTestApplication} from './test-application-approval.js';
 import {entrantLocationsReady,entrantLocationFields,entrantLocationJoin} from './entrant-location.js';
+import {frontline2027Ready,frontlineJoin} from './frontline-2027.js';
 import {supplementColumns,supplementGuard,supplementJoin} from './test-video-supplement.js';
+
+const workbenchRegionColumn=ready=>ready?',fr.competition_region':',NULL AS competition_region';
+const validApplicationId=id=>/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id||'');
 
 // Alan V2 competition logic, STAGING ONLY. Called only after verified session,
 // same-origin checks and configured() gate in staging-e2e.js.
 export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval=false,supplements=false}){
- const path=new URL(request.url).pathname,post=request.method==='POST';
+ const url=new URL(request.url),path=url.pathname,post=request.method==='POST';
+ const view=url.searchParams.get('view');
  const db=env.DB;
  // Explicit closed rehearsal: link evidence is not identity or payment verification.
  const links=env.STAGING_SUBMISSION_MODE==='links';
@@ -43,17 +48,22 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
  }
  if(path==='/api/e2e/reviewer-queue'&&!post){
   if(forbidden('reviewer'))return forbidden('reviewer');
+  const workbench=view==='workbench';
+  const id=workbench?url.searchParams.get('id'):null;
+  if(id!==null&&!validApplicationId(id))return deny('invalid_application_id',422);
+  const frontline=workbench&&await frontline2027Ready(db);
   const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.original_artist,p.demo_url,p.phase,
    p.media_key IS NOT NULL AS has_uploaded_file,p.status,p.payment_status,
    d.technique AS demo_technique,d.interpretation AS demo_interpretation,
-   l.technique AS live_technique,l.interpretation AS live_interpretation,l.stage_presence,l.appearance
-   FROM e2e_applications p
+   l.technique AS live_technique,l.interpretation AS live_interpretation,l.stage_presence,l.appearance${workbench?workbenchRegionColumn(frontline):''}
+   FROM e2e_applications p${frontlineJoin(frontline)}
    LEFT JOIN e2e_judge_scores d ON d.application_id=p.id AND d.reviewer_id=?
    LEFT JOIN e2e_live_scores l ON l.application_id=p.id AND l.reviewer_id=? AND l.stage=p.phase
    WHERE ${reviewablePayment} AND ${evidence}${approved}
-    AND p.status NOT IN ('withdrawn','rejected')
-   ORDER BY p.created_at DESC LIMIT 500`).bind(a.id,a.id).all();
-  const queue=await attachFiveDemos(env,await attachProfiles(env,r.results||[]));
+    AND p.status NOT IN ('withdrawn','rejected')${id?' AND p.id=?':''}
+   ORDER BY p.created_at DESC LIMIT 500`).bind(a.id,a.id,...(id?[id]:[])).all();
+  const entries=r.results||[];
+  const queue=await attachFiveDemos(env,workbench?entries:await attachProfiles(env,entries),workbench);
   return json({ok:true,queue:perVideo?await attachJanuaryScores(env,queue,a.id):queue,testOnly:true});
  }
  if(path==='/api/e2e/score'&&post){
@@ -87,17 +97,33 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
   if(forbidden('organizer'))return forbidden('organizer');
   const locations=await entrantLocationsReady(db);
   const registrationManagement=await adminManagementReady(env);
-  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.original_artist,p.demo_url,p.phase,p.status,p.payment_status,${entrantLocationFields(locations)},p.location_basis,
+  const workbench=view==='workbench';
+  const frontline=(workbench||view==='profile')&&await frontline2027Ready(db);
+  const active=registrationManagement
+   ? "NOT EXISTS(SELECT 1 FROM e2e_registration_controls c WHERE c.application_id=p.id AND c.state<>'active')"
+   : '1=1';
+  if(view==='profile'){
+   const id=url.searchParams.get('id');
+   if(!validApplicationId(id))return deny('invalid_application_id',422);
+   const entry=await db.prepare(`SELECT p.id,p.stage_name,p.round_code,p.category,${entrantLocationFields(locations,false)}${workbenchRegionColumn(frontline)}
+    FROM e2e_applications p${entrantLocationJoin(locations)}${frontlineJoin(frontline)} WHERE p.id=? AND ${active}`).bind(id).first();
+   if(!entry)return deny('application_not_found',404);
+   const [profile]=await attachProfiles(env,[entry]);
+   const {photo_url_1,photo_url_2,photo_url_3}=profile;
+   return json({ok:true,profile:{...entry,photo_url_1,photo_url_2,photo_url_3},testOnly:true});
+  }
+  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.original_artist,p.demo_url,p.phase,p.status,p.payment_status,${entrantLocationFields(locations,!workbench)},p.location_basis,
    p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,
    p.receipt_key IS NOT NULL AS has_receipt_file,
    (SELECT COUNT(*) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_judges,
    (SELECT ROUND(AVG(technique+interpretation),2) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_mean,
    (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_judges,
-   (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}${supplementColumns(supplements)}
-   FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)}
-   ${registrationManagement?"WHERE NOT EXISTS(SELECT 1 FROM e2e_registration_controls c WHERE c.application_id=p.id AND c.state<>'active')":''}
+   (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}${supplementColumns(supplements)}${workbench?workbenchRegionColumn(frontline):''}
+   FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)}${frontlineJoin(frontline)}
+   WHERE ${active}
    ORDER BY p.created_at ASC LIMIT 500`).all();
-  return json({ok:true,applications:await attachFiveDemos(env,await attachProfiles(env,r.results||[])),january_roster_enabled:perVideo,registration_management_enabled:registrationManagement,contact_storage_enabled:await museAuditionReady(env),testOnly:true});
+  const entries=r.results||[];
+  return json({ok:true,applications:await attachFiveDemos(env,workbench?entries:await attachProfiles(env,entries),workbench),january_roster_enabled:perVideo,registration_management_enabled:registrationManagement,contact_storage_enabled:await museAuditionReady(env),testOnly:true});
  }
  if(path==='/api/e2e/organizer-promote'&&post){
   if(forbidden('organizer'))return forbidden('organizer');

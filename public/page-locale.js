@@ -340,6 +340,9 @@ Object.assign(texts.ne,{"testNotice":"यो परीक्षण वेबस�
  Object.assign(texts.en,{contactRequired:'Reload and complete the contact and education fields for your invited TEST entry.',contactInvalid:'Complete all contact and education fields.',contactPhoneInvalid:'Enter a valid phone number.',contactEmailInvalid:'Enter a valid email address.',contactUnavailable:'Contact fields are unavailable for this account. Reload the page.'});
  Object.assign(texts.ne,{contactRequired:'पृष्ठ फेरि खोलेर परीक्षण आवेदनको सम्पर्क र शैक्षिक विवरण पूरा गर्नुहोस्।',contactInvalid:'सम्पर्क र शैक्षिक विवरण पूरा गर्नुहोस्।',contactPhoneInvalid:'मान्य फोन नम्बर राख्नुहोस्।',contactEmailInvalid:'मान्य इमेल राख्नुहोस्।',contactUnavailable:'यो खाताका लागि सम्पर्क विवरण उपलब्ध छैन। पृष्ठ फेरि खोल्नुहोस्।'});
  const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
+Object.assign(texts.zh,{museFullName:'真實姓名（供主辦核對）*',stageName:'演出名稱／藝名（評審名冊顯示）*',stagePlaceholder:'可與真實姓名不同'});
+Object.assign(texts.en,{museFullName:'Legal name (organizer identity check) *',stageName:'Stage name (shown on the judging roster) *',stagePlaceholder:'May differ from your legal name'});
+Object.assign(texts.ne,{museFullName:'कानुनी नाम (आयोजकको पहिचान जाँचका लागि) *',stageName:'मञ्चको नाम (निर्णायकको सूचीमा देखिने) *',stagePlaceholder:'कानुनी नामभन्दा फरक हुन सक्छ'});
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
  document.querySelectorAll('[data-l]').forEach(el=>{el.textContent=t(el.dataset.l)});
