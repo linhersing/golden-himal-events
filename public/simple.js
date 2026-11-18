@@ -1171,6 +1171,158 @@ async function renderOrganizer(){
  const holder=$('admin-apps'),pager=$('organizer-pagination'),summary=$('organizer-count');
  const search=$('organizer-search'),language=$('organizer-language'),category=$('organizer-category'),statusFilter=$('organizer-status');
  let pageNo=1;const perPage=12;
+
+ // One named entrant has one main row; all subviews replace, not extend, content.
+ const modal=$('organizer-entry-dialog'),panel=$('organizer-entry-content');
+ const modalTitle=$('organizer-entry-title'),modalStep=$('organizer-entry-step');
+ const backButton=$('organizer-entry-back'),closeButton=$('organizer-entry-close');
+ let selectedEntry=null,viewStack=[],entryTrigger=null;
+ function entryWorks(a){
+  if(Array.isArray(a.demo_entries)&&a.demo_entries.length)return a.demo_entries;
+  return a.song_title||safeLink(a.demo_url)?[{
+   position:1,song_title:a.song_title||'參賽作品',
+   song_language:a.song_language,original_artist:a.original_artist,
+   demo_url:a.demo_url
+  }]:[];
+ }
+ function recordButton(title,subtitle,action){
+  const b=node('button',undefined,'organizer-step-button');
+  b.type='button';b.append(node('strong',title));
+  if(subtitle)b.append(node('span',subtitle,'minor'));
+  b.append(node('span','›','organizer-step-arrow'));
+  b.onclick=action;return b;
+ }
+ function recordField(label,value){
+  const row=node('div',undefined,'organizer-record-field');
+  row.append(node('dt',label),node('dd',value===null||value===undefined||value===''?'尚未提供':String(value)));
+  return row;
+ }
+ function closeOrganizerRecord(){
+  if(!modal)return;
+  if(typeof modal.close==='function'&&modal.open&&!modal.classList.contains('organizer-dialog-fallback'))modal.close();
+  else{
+   modal.removeAttribute('open');modal.classList.remove('organizer-dialog-fallback');
+   modal.onclose?.();
+  }
+ }
+ function showRecordStep(){
+  if(!modal||!selectedEntry||!viewStack.length)return;
+  const {page,index}=viewStack[viewStack.length-1],a=selectedEntry,works=entryWorks(a);
+  const names={overview:'選手總覽',songs:'參賽歌曲',song:'歌曲詳情',profile:'基本資料',contact:'受控聯絡資料',review:'報名審核'};
+  modalStep.textContent='報名編號 · '+a.id+'　｜　'+viewStack.length+' / '+(page==='overview'?'1':'2+');
+  modalTitle.textContent=(a.stage_name||'選手')+' · '+names[page];
+  backButton.hidden=viewStack.length===1;
+  panel.replaceChildren();
+  if(page==='overview'){
+   panel.append(node('p','請選擇要查看的項目。其他選手的內容不會同時展開。','organizer-dialog-intro'));
+   const nav=node('nav',undefined,'organizer-record-menu');
+   nav.setAttribute('aria-label','選手詳細資料分類');
+   nav.append(
+    recordButton('歌曲與影片',works.length+' 首作品，逐首查看',()=>goRecordStep('songs')),
+    recordButton('基本資料與照片','報名梯次、組別、地區及公開照片',()=>goRecordStep('profile')),
+    recordButton('受控報名聯絡資料','僅限主辦授權查閱，不在名冊直接展開',()=>goRecordStep('contact')),
+    recordButton('報名審核與補件','核准狀態、補件及受控操作',()=>goRecordStep('review'))
+   );
+   panel.append(nav);
+  }else if(page==='songs'){
+   if(!works.length)panel.append(node('p','尚無可顯示的參賽作品。','minor'));
+   for(let i=0;i<works.length;i++){
+    const w=works[i];
+    panel.append(recordButton((i+1)+'／'+works.length+' · '+(w.song_title||'未命名歌曲'),[w.original_artist,w.song_language].filter(Boolean).join(' · '),()=>goRecordStep('song',i)));
+   }
+  }else if(page==='song'){
+   const w=works[index];
+   if(!w){panel.append(node('p','這首歌曲目前無法讀取。','minor'));return}
+   const dl=node('dl',undefined,'organizer-record-fields');
+   dl.append(recordField('歌曲',w.song_title),recordField('原唱',w.original_artist),recordField('歌曲語言',w.song_language),recordField('作品序號',(index+1)+' / '+works.length));
+   panel.append(dl);
+   const link=safeLink(w.demo_url);
+   if(link){
+    const watch=node('a','觀看這首歌曲的影片 ↗','btn btn-primary organizer-record-watch');
+    watch.href=link;watch.target='_blank';watch.rel='noopener noreferrer';
+    panel.append(watch);
+   }else panel.append(node('p','尚未提供可開啟的安全 HTTPS 影片網址。','minor'));
+  }else if(page==='profile'){
+   const dl=node('dl',undefined,'organizer-record-fields');
+   dl.append(
+    recordField('演出名稱',a.stage_name),recordField('報名編號',a.id),
+    recordField('賽程',a.round_code),
+    recordField('參賽組別',a.category==='university'?'大學組':a.category==='community'?'社會組':a.category),
+    recordField('地區',a.province),
+    recordField('歌曲數量',works.length+' 首')
+   );
+   panel.append(dl);
+   const photos=profileGallery(a);
+   if(photos){
+    panel.append(node('h3','報名照片','organizer-dialog-subtitle'));
+    panel.append(photos);
+   }
+   // No private address, contact phone, or legal-name fields are placed here.
+  }else if(page==='contact'){
+   const notice=node('section',undefined,'organizer-private-boundary');
+   notice.append(node('h3','受控聯絡資料｜需授權查詢'));
+   notice.append(node('p','目前這份主辦名冊 API 不提供完整私人聯絡資料。本畫面不會預先帶出真實姓名、手機、Email、住址或其他隱私內容。'));
+   notice.append(node('p','待主辦權限、私密資料查詢 API 及查閱稽核通過驗收後，才能在此獨立頁面按需載入；不得改成一次展開全部個資。','minor'));
+   panel.append(notice);
+  }else if(page==='review'){
+   const dl=node('dl',undefined,'organizer-record-fields');
+   dl.append(
+    recordField('報名狀態',a.approval_state==='approved'?'主辦已核准':a.approval_state==='pending'?'待主辦核准':'待核對'),
+    recordField('補件狀態',a.video_supplement_state||'尚無補件申請')
+   );panel.append(dl);
+   const actions=node('div',undefined,'organizer-roster-actions');
+   if(a.video_supplement_state==='pending')actions.append(node('small',supplementDeadline(a)));
+   if(a.approval_state==='pending'&&a.video_supplement_available){
+    const req=node('button','開放 48 小時補件','btn btn-soft');req.type='button';
+    req.onclick=()=>{
+     if(!confirm('請先聯絡選手。確認後開始計算 48 小時。網站不會代為發送通知。'))return;
+     run(async()=>{await api('request-video-supplement',{application_id:a.id});closeOrganizerRecord();await renderOrganizer();status('已開放補正。');});
+    };
+    actions.append(req);
+   }
+   if(a.approval_state==='pending'&&!['pending','expired'].includes(a.video_supplement_state)){
+    const approve=node('button','核准測試報名','btn btn-primary');approve.type='button';
+    approve.onclick=()=>{
+     if(!confirm('核准「'+(a.stage_name||'選手')+'」的測試報名？核准後會鎖定報名資料。'))return;
+     run(async()=>{
+      const result=await api('approve-test-application',{application_id:a.id});
+      if(result.approval_state!=='approved'||result.testOnly!==true)throw Error('approval_readback_failed');
+      closeOrganizerRecord();await renderOrganizer();status('已核准測試報名。');
+     });
+    };
+    actions.append(approve);
+   }
+   if(actions.childElementCount)panel.append(actions);
+  }
+  panel.scrollTop=0;
+  panel.focus({preventScroll:true});
+ }
+ function goRecordStep(page,index){
+  viewStack.push({page,index});showRecordStep();
+ }
+ function previousRecordStep(){
+  if(viewStack.length<=1){closeOrganizerRecord();return}
+  viewStack.pop();showRecordStep();
+ }
+ function openOrganizerRecord(a,trigger){
+  if(!modal)return;
+  selectedEntry=a;entryTrigger=trigger;viewStack=[{page:'overview'}];
+  showRecordStep();
+  document.body.classList.add('organizer-dialog-open');
+  if(typeof modal.showModal==='function'){if(!modal.open)modal.showModal();}
+  else {modal.setAttribute('open','');modal.classList.add('organizer-dialog-fallback');}
+  closeButton.focus({preventScroll:true});
+ }
+ if(modal){
+  closeButton.onclick=closeOrganizerRecord;
+  backButton.onclick=previousRecordStep;
+  modal.onclose=()=>{
+   document.body.classList.remove('organizer-dialog-open');
+   selectedEntry=null;viewStack=[];panel.replaceChildren();
+   if(entryTrigger?.isConnected)entryTrigger.focus({preventScroll:true});
+   entryTrigger=null;
+  };
+ }
  function paint(){
   const q=search.value.trim().toLowerCase(),lang=language.value,cat=category.value,st=statusFilter.value;
   const found=apps.filter(a=>{
@@ -1188,64 +1340,22 @@ async function renderOrganizer(){
   summary.textContent='符合 '+found.length+' 筆報名資料（目前全部為測試資料；正式付款 0 筆）';
   if(!found.length)holder.append(node('p','沒有符合條件的資料。'));
   for(const a of found.slice((pageNo-1)*perPage,pageNo*perPage)){
-   // One compact row per application, not one row per song.
-   // All videos/actions live in this single, closed-by-default disclosure.
    const works=Array.isArray(a.demo_entries)?a.demo_entries:[];
    const demoCount=works.length||(safeLink(a.demo_url)?1:0);
-   const judgeReplies=Number(a.demo_judges||0)+Number(a.live_judges||0);
-   const card=node('article',undefined,'roster-entry organizer-roster-entry');
-   const header=node('div',undefined,'organizer-roster-head');
-   const info=node('div',undefined,'roster-entry-text');
-   info.append(node('strong',a.stage_name||'選手'));
-   info.append(node('span',a.round_code+' · '+(a.category==='university'?'大學組':a.category==='community'?'社會組':'單一競賽組別')+' · '+demoCount+' 首作品 · 評審回覆 '+judgeReplies+' 筆','roster-mini'));
-   const badges=node('div',undefined,'organizer-roster-badges');
-   const approvalLabel=a.approval_state==='approved'?'主辦已核准':a.approval_state==='pending'?'待主辦核准':'待核對狀態';
-   badges.append(node('span',approvalLabel,'pill'+(a.approval_state==='approved'?' pill-pass':a.approval_state==='pending'?' pill-warn':'')));
-   if(a.video_supplement_state){
-    const supplementText={pending:'等待補件',expired:'補件逾期',submitted:'補件待複核'};
-    badges.append(node('span',supplementText[a.video_supplement_state]||'補件狀態待核對','pill pill-warn'));
-   }
-   header.append(info,badges);
-   const details=node('details',undefined,'organizer-roster-details');
-   const summaryLine=node('summary','查看 '+demoCount+' 首作品與報名審核');
-   summaryLine.setAttribute('aria-label','查看 '+(a.stage_name||'選手')+' 的 '+demoCount+' 首作品與報名審核');
-   const body=node('div',undefined,'organizer-roster-body');
-   body.append(node('p','報名編號：'+a.id+' · '+(a.song_language||'語言未填'),'minor'));
-   if(a.province)body.append(node('p',[a.province,a.location_detail].filter(Boolean).join(' · '),'minor'));
-   const demos=staffDemoList(a);
-   if(demos)body.append(demos);
-   const video=safeLink(a.demo_url);
-   if(!demos&&video){
-    const link=node('a','開啟參賽影片','btn btn-soft');
-    link.href=video;link.target='_blank';link.rel='noopener noreferrer';body.append(link);
-   }
-   const img=profileImage(a.photo_url_1);
-   if(img)body.prepend(img);
-   const actions=node('div',undefined,'organizer-roster-actions');
-   if(a.video_supplement_state==='pending')actions.append(node('small',supplementDeadline(a)));
-   if(a.approval_state==='pending'&&a.video_supplement_available){
-    const request=node('button','開放 48 小時補件','btn btn-soft');request.type='button';
-    request.onclick=()=>{
-     if(!confirm('請先聯絡選手。確認後開始計算 48 小時。網站不會代為發送通知。'))return;
-     run(async()=>{await api('request-video-supplement',{application_id:a.id});await renderOrganizer();status('已開放補正。');});
-    };
-    actions.append(request);
-   }
-   if(a.approval_state==='pending'&&!['pending','expired'].includes(a.video_supplement_state)){
-    const approve=node('button','核准測試報名','btn btn-soft');approve.type='button';
-    approve.onclick=()=>{
-     if(!confirm('核准「'+(a.stage_name||'選手')+'」的測試報名？核准後會鎖定報名資料。'))return;
-     run(async()=>{
-      const result=await api('approve-test-application',{application_id:a.id});
-      if(result.approval_state!=='approved'||result.testOnly!==true)throw Error('approval_readback_failed');
-      await renderOrganizer();status('已核准測試報名。');
-     });
-    };
-    actions.append(approve);
-   }
-   if(actions.childElementCount)body.append(actions);
-   details.append(summaryLine,body);
-   card.append(header,details);holder.append(card);
+   const replyCount=Number(a.demo_judges||0)+Number(a.live_judges||0);
+   const card=node('article',undefined,'roster-entry organizer-roster-entry organizer-record-row');
+   const open=node('button',undefined,'organizer-record-open');
+   open.type='button';
+   open.setAttribute('aria-label','查看選手 '+(a.stage_name||'未命名選手')+' 的專屬資料與 '+demoCount+' 首作品');
+   const info=node('span',undefined,'roster-entry-text');
+   info.append(node('strong',a.stage_name||'未命名選手'));
+   info.append(node('span',a.round_code+' · '+demoCount+' 首作品 · 評審回覆 '+replyCount+' 筆','roster-mini'));
+   open.append(info,node('span','查看資料 ›','organizer-record-arrow'));
+   open.onclick=()=>openOrganizerRecord(a,open);
+   const state=node('div',undefined,'organizer-record-status');
+   const approval=a.approval_state==='approved'?'主辦已核准':a.approval_state==='pending'?'待主辦核准':'待核對';
+   state.append(node('span',approval,'pill'+(a.approval_state==='approved'?' pill-pass':' pill-warn')));
+   card.append(open,state);holder.append(card);
   }
   makeRosterPager(pager,pageNo,pages,p=>{pageNo=p;paint()});
  }
