@@ -106,3 +106,57 @@ test('organizer filters language, category and scoring with 133 synthetic entrie
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
  await page.screenshot({path:'test-results/ghv-staff-roster/organizer-mobile-375.png',fullPage:true});
 });
+
+for(const [device,width] of [['desktop',1280],['mobile',375]]){
+ test('organizer can search, edit, disable, delete, restore and read audit on '+device,async({page})=>{
+  let row={id:'11111111-2222-4333-8444-555555555555',stage_name:'Fictional Singer',affiliation:'Fictional School',state:'active',version:0,updated_at:1,protected:0};
+  const events=[];
+  await page.setViewportSize({width,height:900});
+  page.on('dialog',dialog=>dialog.accept());
+  await page.route('**/api/e2e/**',route=>{
+   const url=new URL(route.request().url()),path=url.pathname.split('/').pop();
+   let json={ok:true};
+   if(path==='me')json={ok:true,account:{id:'organizer-fictional',role:'organizer',available_roles:['organizer']}};
+   if(path==='staff-login-config')json={ok:true,required:false};
+   if(path==='organizer-queue')json={ok:true,applications:[],registration_management_enabled:true};
+   if(path==='organizer-registrations'){
+    const filter=url.searchParams.get('state'),query=url.searchParams.get('q');
+    json={ok:true,registrations:(filter==='all'||filter===row.state)&&(!query||row.stage_name.includes(query))?[row]:[],next_offset:null};
+   }
+   if(path==='organizer-registration-action'){
+    const {action,version,updated_at,stage_name,affiliation}=route.request().postDataJSON();
+    expect(version).toBe(row.version);expect(updated_at).toBe(row.updated_at);
+    row={...row,version:version+1,updated_at:updated_at+1,state:{edit:'active',disable:'disabled',delete:'deleted',restore:'active'}[action]};
+    if(action==='edit')row={...row,stage_name,affiliation};
+    events.unshift({action,result:'success',actor_id:'organizer-fictional',occurred_at:1700000000,diff:action==='edit'?{stage_name:['[redacted]','[redacted]']}:{state:['active',row.state]}});
+    json={ok:true,audit_id:'test-'+version,registration:row};
+   }
+   if(path==='organizer-registration-audit')json={ok:true,events};
+   return route.fulfill({json});
+  });
+  await page.goto('/backoffice.html');
+  const panel=page.locator('#organizer-admin-registrations'),search=panel.getByRole('button',{name:'查詢'}),filter=panel.getByLabel('資料狀態');
+  const cards=panel.locator('#admin-registration-list');
+  await panel.locator('summary').first().click();
+  await expect(cards).toContainText('Fictional Singer');
+  await panel.getByLabel('搜尋姓名、曲目或編號').fill('Fictional');
+  await search.click();
+  await cards.getByText('修改報名資料',{exact:true}).click();
+  await cards.getByLabel('選手姓名').fill('Fictional Singer Edited');
+  await cards.getByLabel('學校／職業').fill('Fictional Studio');
+  await cards.getByRole('button',{name:'儲存修改'}).click();
+  await expect(cards).toContainText('Fictional Singer Edited');
+  await filter.selectOption('all');
+  await search.click();
+  await cards.getByRole('button',{name:'停用報名'}).click();
+  await expect(cards).toContainText('已停用');
+  await cards.getByRole('button',{name:'移至回收區'}).click();
+  await expect(cards).toContainText('已刪除，可復原');
+  await cards.getByRole('button',{name:'復原報名'}).click();
+  await expect(cards).toContainText('有效');
+  await cards.getByText('操作紀錄',{exact:true}).click();
+  await expect(cards).toContainText('organizer-fictional');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await panel.screenshot({path:'test-results/admin-security/'+device+'.png'});
+ });
+}

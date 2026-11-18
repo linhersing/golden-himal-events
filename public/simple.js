@@ -233,13 +233,16 @@ function friendlyError(e){
  return errors[e?.message]||mt('errUnknown');
  }
 
- const errors={staff_human_check_unavailable:'工作人員真人驗證暫時無法使用，請稍後重試。',human_check_required:'請重新完成真人驗證，再寄送驗證碼。',staff_reauthentication_required:'請先在工作人員入口重新驗證登入。',self_review_disallowed:'同一信箱不能評自己的參賽作品，請由其他獨立評審評分。',too_many_code_requests:'驗證信已達次數限制，請稍候再試；登入後切換已授權身分不必重新寄信。',e2e_not_configured:'目前尚未開通 Email 驗證服務，無法登入。正式系統需先完成寄信設定。',test_email_service_unavailable:'寄信服務目前不可使用，請稍後或確認平台設定。',not_on_test_allowlist:'此 Email 尚未獲授權，目前只接受受邀帳號。',expired_or_invalid_code:'驗證碼錯誤或已過期，請重新取得。',login_required:'請先登入。',organizer_only:'這個帳號不是主辦單位，無權查看管理資料。',reviewer_only:'這個帳號不是評審，無權打分。',member_only:'此帳號並非會員。',update_locked:'這筆資料已進入審核或模擬繳費階段，無法直接修改。',delete_locked:'這筆資料已進入評審或後續流程，無法直接刪除。',invalid_demo_url:'請輸入有效的公開作品連結。',annual_category_locked:'年度組別已鎖定。',already_scored_or_unavailable:'你已評過這位選手，不能重複給分。'};return errors[e?.message]||('目前無法完成操作（'+(e?.message||'連線失敗')+'）。')}
+ const errors={admin_registration_conflict:'這筆報名已有更新，請確認目前資料後再試。',admin_registration_protected:'已有評分或晉級紀錄，這筆報名已鎖定。',admin_registration_readback_unavailable:'無法確認是否已儲存，請先重新查詢。',staff_human_check_unavailable:'工作人員真人驗證暫時無法使用，請稍後重試。',human_check_required:'請重新完成真人驗證，再寄送驗證碼。',staff_reauthentication_required:'請先在工作人員入口重新驗證登入。',self_review_disallowed:'同一信箱不能評自己的參賽作品，請由其他獨立評審評分。',too_many_code_requests:'驗證信已達次數限制，請稍候再試；登入後切換已授權身分不必重新寄信。',e2e_not_configured:'目前尚未開通 Email 驗證服務，無法登入。正式系統需先完成寄信設定。',test_email_service_unavailable:'寄信服務目前不可使用，請稍後或確認平台設定。',not_on_test_allowlist:'此 Email 尚未獲授權，目前只接受受邀帳號。',expired_or_invalid_code:'驗證碼錯誤或已過期，請重新取得。',login_required:'請先登入。',organizer_only:'這個帳號不是主辦單位，無權查看管理資料。',reviewer_only:'這個帳號不是評審，無權打分。',member_only:'此帳號並非會員。',update_locked:'這筆資料已進入審核或模擬繳費階段，無法直接修改。',delete_locked:'這筆資料已進入評審或後續流程，無法直接刪除。',invalid_demo_url:'請輸入有效的公開作品連結。',annual_category_locked:'年度組別已鎖定。',already_scored_or_unavailable:'你已評過這位選手，不能重複給分。'};return errors[e?.message]||('目前無法完成操作（'+(e?.message||'連線失敗')+'）。')}
 async function api(path,body){const c=new AbortController(),timer=setTimeout(()=>c.abort(),18000);try{const r=await fetch('/api/e2e/'+path,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),credentials:'same-origin',cache:'no-store',signal:c.signal});const data=await r.json();if(!r.ok||data.ok!==true)throw new Error(data.error||('HTTP '+r.status));return data}finally{clearTimeout(timer)}}
 async function run(fn){if(busy)return;busy=true;document.body.classList.add('requesting');try{await fn()}catch(e){status(friendlyError(e),true)}finally{busy=false;document.body.classList.remove('requesting')}}
 function authUI(signedIn){
  (staff?$('back-signin'):$('signin-panel')).hidden=signedIn;
  $(prefix+'-dashboard')?.setAttribute('hidden','');
- if(staff)$('back-dashboard').hidden=!signedIn;
+ if(staff){
+  $('back-dashboard').hidden=!signedIn;
+  if(!signedIn)clearAdminRegistrations();
+ }
  else{
   $('member-panel').hidden=!signedIn;
   if(!signedIn){
@@ -513,7 +516,7 @@ codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
 const change=$(staff?'back-change':'change-mail');change?.addEventListener('click',()=>{authForms(true);challenge=null;challengeEmail=undefined;codeForm.reset();statusBox.hidden=true});
 $(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff)staffTabs();challenge=null;authForms(true);status(page==='member'?mt('signedOut'):'已登出。')}));
 }
-async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else await renderJudge()}else await renderMember()}
+async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else{clearAdminRegistrations();await renderJudge()}}else await renderMember()}
 function memberCanEdit(a){
  return a.can_edit===true||a.can_edit===1||a.can_edit==='1'||
   (a.can_edit===undefined&&a.payment_status==='unpaid'&&a.status==='submitted');
@@ -975,9 +978,99 @@ function januaryScoreForm(application,demo,position,onSaved){
  };
  return form;
 }
+const registrationStates={active:'有效',disabled:'已停用',deleted:'已刪除，可復原'};
+const registrationActions={search:'查詢',audit_read:'查看操作紀錄',edit:'修改報名資料',disable:'停用報名',delete:'移至回收區',restore:'復原報名'};
+const auditResults={success:'成功',conflict:'資料已更新或狀態不符',protected:'評分或晉級保護',missing:'找不到資料',invalid:'資料格式錯誤',failed:'暫時無法處理',denied:'權限拒絕'};
+function clearAdminRegistrations(){
+ const panel=$('organizer-admin-registrations');
+ if(!panel)return;
+ panel.hidden=true;panel.open=false;panel.ontoggle=null;
+ $('admin-registration-search').reset();
+ for(const id of ['admin-registration-results','admin-registration-list','admin-registration-pager'])$(id).replaceChildren();
+}
+function showAdminRegistrations(enabled){
+ const panel=$('organizer-admin-registrations');
+ if(!panel||!enabled){clearAdminRegistrations();return;}
+ panel.hidden=false;
+ const form=$('admin-registration-search'),list=$('admin-registration-list'),pager=$('admin-registration-pager');
+ let offset=0;
+ async function search(){
+  const query=new URLSearchParams({...formValues(form),offset:String(offset)});
+  const data=await api('organizer-registrations?'+query);
+  if(!account||role!=='organizer'||panel.hidden)return;
+  list.replaceChildren();pager.replaceChildren();
+  $('admin-registration-results').textContent=data.registrations.length?'本頁 '+data.registrations.length+' 筆':'沒有符合條件的資料。';
+  for(const registration of data.registrations)list.append(card(registration));
+  for(const [to,label] of [[offset>0?offset-25:null,'上一頁'],[data.next_offset,'下一頁']]){
+   if(to===null)continue;
+   const button=node('button',label,'btn btn-soft');button.type='button';
+   button.onclick=()=>run(async()=>{offset=to;await search()});pager.append(button);
+  }
+ }
+ async function mutate(row,action,fields={}){
+  try{
+   const result=await api('organizer-registration-action',{id:row.id,action,version:row.version,updated_at:row.updated_at,...fields});
+   if(!result.audit_id||result.registration?.id!==row.id)throw Error('admin_registration_readback_unavailable');
+   await renderOrganizer();
+   await search();
+   status('已儲存「'+registrationActions[action]+'」。');
+  }catch(error){
+   if(error.message==='admin_registration_conflict'||error.message==='admin_registration_protected')await search();
+   throw error;
+  }
+ }
+ function card(row){
+  const item=node('article',undefined,'roster-entry');
+  const info=node('div',undefined,'roster-entry-text');
+  info.append(node('strong',row.stage_name),node('p',row.id+' · '+registrationStates[row.state],'minor'));
+  if(row.protected)info.append(node('p','已有評分或晉級。這筆資料已鎖定。','minor'));
+  if(!row.protected&&row.state==='active'){
+   const edit=node('details');edit.append(node('summary',registrationActions.edit));
+   const fields=node('form');
+   for(const [name,label] of [['stage_name','選手姓名'],['affiliation','學校／職業']]){
+    const wrapper=node('label',label,'field'),input=node('input');
+    input.name=name;input.required=true;input.maxLength=120;input.value=row[name];
+    wrapper.append(input);fields.append(wrapper);
+   }
+   const save=node('button','儲存修改','btn btn-primary');save.type='submit';fields.append(save);
+   fields.onsubmit=event=>{event.preventDefault();run(()=>mutate(row,'edit',formValues(fields)))};
+   edit.append(fields);info.append(edit);
+  }
+  const side=node('div',undefined,'roster-entry-side');
+  if(!row.protected){
+   const actions=row.state==='active'?['disable','delete']:row.state==='disabled'?['delete','restore']:['restore'];
+   for(const action of actions){
+    const button=node('button',registrationActions[action],'btn btn-soft');button.type='button';
+    button.onclick=()=>{
+     if(confirm('確定'+registrationActions[action]+'？'))run(()=>mutate(row,action));
+    };
+    side.append(button);
+   }
+  }
+  const history=node('details'),events=node('ol');
+  history.append(node('summary','操作紀錄'),events);
+  history.ontoggle=()=>{
+   if(!history.open)return;
+   run(async()=>{
+    const result=await api('organizer-registration-audit?id='+encodeURIComponent(row.id));
+    events.replaceChildren();
+    for(const event of result.events){
+     const date=new Intl.DateTimeFormat('zh-TW',{dateStyle:'short',timeStyle:'short',timeZone:'Asia/Kathmandu'}).format(new Date(event.occurred_at*1000));
+     const change=Object.keys(event.diff||{}).map(key=>({stage_name:'選手姓名',affiliation:'學校／職業',state:'報名狀態',status:'流程狀態'})[key]).filter(Boolean);
+     events.append(node('li',[date,registrationActions[event.action],auditResults[event.result],event.actor_id,change.join('、')].filter(Boolean).join(' · ')));
+    }
+    if(!result.events.length)events.append(node('li','目前沒有操作紀錄。'));
+   });
+  };
+  info.append(history);item.append(info,side);return item;
+ }
+ panel.ontoggle=()=>{if(panel.open&&!list.childElementCount)run(search)};
+ form.onsubmit=event=>{event.preventDefault();offset=0;run(search)};
+}
 async function renderOrganizer(){
  $('organizer-dashboard').hidden=false;$('judge-dashboard').hidden=true;
  const v=await api('organizer-queue'),apps=v.applications||[];
+ showAdminRegistrations(v.registration_management_enabled===true);
  const january=$('january-test-roster');january.hidden=!v.january_roster_enabled;
  if(!january.hidden)await renderJanuaryRoster();
  $('pending-count').textContent=String(apps.length);
