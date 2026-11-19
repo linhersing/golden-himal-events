@@ -190,3 +190,70 @@ test('switching to reviewer clears loaded organizer management and audit DOM',as
  await expect(page.locator('#organizer-entry-content')).toBeEmpty();
  await expect(page.locator('#organizer-correction-list')).toBeEmpty();
 });
+
+
+test('approved mobile hierarchy keeps exactly four top-level cards, never stacks hidden sections',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ const {entries,requests}=await serveOrganizer(page);
+ const roster=page.locator('#admin-apps');
+ const workspace=page.locator('#organizer-entry-dialog');
+ const content=page.locator('#organizer-entry-content');
+ const search=page.locator('#organizer-search');
+ const filter=page.locator('.organizer-filter-panel');
+ await expect(roster.locator('.organizer-record-row')).toHaveCount(12);
+ await expect(filter).not.toHaveAttribute('open');
+ const opener=roster.locator('.organizer-record-open').nth(2);
+ await opener.click();
+ await expect(roster).toBeHidden();
+ const overview=content.locator('.organizer-step-button');
+ await expect(overview).toHaveCount(4);
+ const labels=await overview.locator('strong').allTextContents();
+ expect(labels).toEqual(['歌曲與影片','基本資料與照片','受控報名聯絡資料','報名審核與補件']);
+ // Re-rendering and phone rotation must never append duplicate section cards.
+ for(const width of [320,390,430,768]){
+  await page.setViewportSize({width,height:780});
+  await expect(overview).toHaveCount(4);
+  const geometry=await workspace.evaluate(el=>({
+   doc:document.documentElement.scrollWidth-document.documentElement.clientWidth,
+   card:el.scrollWidth-el.clientWidth,
+   buttonMinHeight:Math.min(...[...el.querySelectorAll('.organizer-step-button')].map(b=>b.getBoundingClientRect().height))
+  }));
+  expect(geometry.doc,'no horizontal scrolling @'+width).toBeLessThanOrEqual(1);
+  expect(geometry.card,'workspace fits @'+width).toBeLessThanOrEqual(1);
+  expect(geometry.buttonMinHeight,'48px minimum touch targets @'+width).toBeGreaterThanOrEqual(48);
+ }
+ await page.setViewportSize({width:390,height:844});
+ await overview.nth(0).click();
+ await expect(content.locator('.organizer-step-button')).toHaveCount(5);
+ await expect(content).not.toContainText('受控報名聯絡資料');
+ await content.locator('.organizer-step-button').last().click();
+ await expect(content.locator('.organizer-step-button')).toHaveCount(0);
+ await expect(content).toContainText('FICTIONAL SONG 003-5');
+ await expect(content).not.toContainText('FICTIONAL SONG 003-1');
+ await workspace.locator('#organizer-entry-back').click();
+ await expect(content.locator('.organizer-step-button')).toHaveCount(5);
+ await workspace.locator('#organizer-entry-back').click();
+ await expect(content.locator('.organizer-step-button')).toHaveCount(4);
+ await content.getByRole('button',{name:/基本資料與照片/}).click();
+ await expect(content.locator('.organizer-record-field')).toHaveCount(5);
+ await expect(content).toContainText(entries[2].id);
+ await expect(content.locator('.organizer-step-button')).toHaveCount(0);
+ const fieldRects=await content.locator('.organizer-record-field').evaluateAll(nodes=>nodes.map(x=>x.getBoundingClientRect()));
+ for(let i=1;i<fieldRects.length;i++)
+  expect(fieldRects[i].top,'one field card per row').toBeGreaterThan(fieldRects[i-1].top);
+ await workspace.locator('#organizer-entry-back').click();
+ await content.getByRole('button',{name:/受控(?:報名)?聯絡資料/}).click();
+ await expect(content.locator('.organizer-step-button')).toHaveCount(4);
+ expect(requests,'private data must not load until a specific section opens').toHaveLength(0);
+ await workspace.locator('#organizer-entry-back').click();
+ await content.getByRole('button',{name:/報名審核與補件/}).click();
+ await expect(content.locator('.organizer-record-fields')).toHaveCount(1);
+ await expect(content.locator('.organizer-step-button')).toHaveCount(0);
+ await workspace.locator('#organizer-entry-close').click();
+ await expect(workspace).toBeHidden();
+ await expect(roster).toBeVisible();
+ await expect(opener).toBeFocused();
+ await expect(search).toBeVisible();
+ await expect(filter).not.toHaveAttribute('open');
+ await expect(roster.locator('.organizer-record-row')).toHaveCount(12);
+});
