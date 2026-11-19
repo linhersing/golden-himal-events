@@ -100,15 +100,15 @@ async function account(request,env){
  if(!match)return null;
  const fingerprint=await sign(env,'session:'+match[1]);
  const staffFingerprint=env.STAGING_STAFF_TURNSTILE_REQUIRED==='true'?await sign(env,'staff-session:'+match[1]):fingerprint;
- const a=await env.DB.prepare('SELECT a.id,a.role,a.email_fingerprint,s.session_fingerprint FROM e2e_sessions s JOIN e2e_accounts a ON a.id=s.account_id WHERE s.session_fingerprint IN (?,?) AND s.expires_at>?').bind(fingerprint,staffFingerprint,NOW()).first();
+ const a=await env.DB.prepare('SELECT a.id,a.role,a.email_fingerprint,s.session_fingerprint,s.expires_at AS session_expires_at FROM e2e_sessions s JOIN e2e_accounts a ON a.id=s.account_id WHERE s.session_fingerprint IN (?,?) AND s.expires_at>?').bind(fingerprint,staffFingerprint,NOW()).first();
  if(!a||!ROLES.includes(a.role))return null;
  if(a.session_fingerprint!==(staffProtection(env,a.role)?staffFingerprint:fingerprint))return null;
  const email=await emailForFingerprint(env,a.email_fingerprint,a.role);
- if(email)return {id:a.id,role:a.role,email};
- if(a.role==='member'&&await passwordIdentity(env,a.id))return {id:a.id,role:'member',usernameAccount:true};
+ if(email)return {id:a.id,role:a.role,email,sessionExpiresAt:Number(a.session_expires_at)};
+ if(a.role==='member'&&await passwordIdentity(env,a.id))return {id:a.id,role:'member',usernameAccount:true,sessionExpiresAt:Number(a.session_expires_at)};
  if(a.role!=='member'||!await publicSignupReady(env))return null;
  const proof=await env.DB.prepare('SELECT mailbox_fingerprint FROM e2e_public_signup_accounts WHERE account_id=?').bind(a.id).first();
- return proof?{id:a.id,role:a.role,mailboxFingerprint:proof.mailbox_fingerprint}:null;
+ return proof?{id:a.id,role:a.role,mailboxFingerprint:proof.mailbox_fingerprint,sessionExpiresAt:Number(a.session_expires_at)}:null;
 }
 const sameOrigin=request=>request.headers.get('Origin')===new URL(request.url).origin;
 function requireRole(a,role){return a&&a.role===role}
@@ -608,7 +608,7 @@ export async function handleE2E(request,env){
   if(!a.email&&['/api/e2e/finalists','/api/e2e/test-vote'].includes(pathname))return deny('not_on_test_allowlist',403);
    const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval,supplements});
   if(v2)return v2;
-   if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),profile_enabled:await profileReady(env),testOnly:true,
+   if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),session_expires_at:a.sessionExpiresAt,profile_enabled:await profileReady(env),testOnly:true,
     ...(a.role==='member'&&await entrantLocationsReady(env.DB)?{nepal_locations_enabled:true}:{}),
     ...(a.role==='member'&&env.STAGING_FRONTLINE_2027_ENABLED==='true'&&await entrantLocationsReady(env.DB)&&await frontline2027Ready(env.DB)?{frontline_form_enabled:true}:{}),
     ...(await memberContactReady(env,a)?{muse_form_enabled:true}:{}),
