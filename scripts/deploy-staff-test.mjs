@@ -103,7 +103,9 @@ function assertSchema(path){
 
 try{
   await writeFile(path,JSON.stringify(config,null,2),{flag:'wx'});
-  const existing=d1Rows("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",path);
+  // Remote D1 creates _cf_KV before any application tables exist. Ignore only
+  // that known system table; unknown/user tables must still block bootstrap.
+  const existing=d1Rows("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name <> '_cf_KV'",path);
   if(existing.length!==1||!Number.isSafeInteger(Number(existing[0].n)))fail('unexpected isolated TEST D1 inventory');
   if(Number(existing[0].n)===0){
     for(const migration of migrations){
@@ -117,3 +119,4 @@ try{
 }finally{
   await unlink(path).catch(()=>{});
 }
+
