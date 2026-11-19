@@ -177,6 +177,51 @@ function songLanguageValue(select){
 const staff=page==='back',prefix=staff?'back':'member';
 let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,frontlineFormEnabled=false,museFormEnabled=false,fiveDemoEnabled=false,fiveDemoJanuaryOnly=false,eligibilityUploadEnabled=false;
 const statusBox=$(prefix+'-status');
+let staffSessionDeadline=0,staffSessionTimer=null;
+function resetStaffSessionTimer(){
+ if(staffSessionTimer!==null){clearInterval(staffSessionTimer);staffSessionTimer=null;}
+ staffSessionDeadline=0;
+ if(staff)$('staff-session-warning').hidden=true;
+}
+function updateStaffSessionReminder(){
+ if(!staff||!account||!staffSessionDeadline)return;
+ const seconds=Math.ceil((staffSessionDeadline-Date.now())/1000);
+ if(seconds<=0){expireStaffSession();return;}
+ const warning=$('staff-session-warning');
+ warning.hidden=seconds>600;
+ if(!warning.hidden){
+  const minutes=Math.max(1,Math.ceil(seconds/60));
+  $('staff-session-warning-text').textContent='目前登入約剩 '+minutes+' 分鐘。請先儲存評分或完成操作；逾時後需重新使用 Email 驗證碼登入。';
+ }
+}
+function trackStaffSession(session){
+ if(!staff)return;
+ resetStaffSessionTimer();
+ const seconds=Number(session?.session_expires_in_seconds);
+ if(!Number.isFinite(seconds)||seconds<=0)return;
+ staffSessionDeadline=Date.now()+seconds*1000;
+ $('staff-session-expired').hidden=true;
+ updateStaffSessionReminder();
+ staffSessionTimer=setInterval(updateStaffSessionReminder,30000);
+}
+function expireStaffSession(){
+ if(!staff||!account)return;
+ account=null;
+ resetStaffSessionTimer();
+ authUI(false);
+ staffTabs();
+ authForms(true);
+ const expired=$('staff-session-expired');
+ expired.hidden=false;
+ statusBox.hidden=true;
+ expired.scrollIntoView({block:'start',behavior:'auto'});
+ expired.querySelector('#staff-session-relogin')?.focus({preventScroll:true});
+}
+if(staff){
+ $('staff-session-relogin')?.addEventListener('click',()=>location.reload());
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateStaffSessionReminder()});
+ window.addEventListener('pageshow',updateStaffSessionReminder);
+}
 function permittedPhoto(url){const href=safeLink(url);if(!href)return null;try{const x=new URL(href);if(x.username||x.password||(x.port&&x.port!=='443')||x.hostname==='localhost'||x.hostname.endsWith('.local')||x.hostname.endsWith('.internal'))return null;return href}catch{return null}}
 function profileImage(url,large=false){
  const source=permittedPhoto(url);if(!source)return null;
@@ -266,15 +311,33 @@ function friendlyError(e){
  return errors[e?.message]||mt('errUnknown');
  }
 
- const errors={admin_registration_conflict:'這筆報名已有更新，請確認目前資料後再試。',admin_registration_protected:'已有評分或晉級紀錄，這筆報名已鎖定。',admin_registration_readback_unavailable:'無法確認是否已儲存，請先重新查詢。',staff_human_check_unavailable:'工作人員真人驗證暫時無法使用，請稍後重試。',human_check_required:'請重新完成真人驗證，再寄送驗證碼。',staff_reauthentication_required:'請先在工作人員入口重新驗證登入。',self_review_disallowed:'同一信箱不能評自己的參賽作品，請由其他獨立評審評分。',too_many_code_requests:'驗證信已達次數限制，請稍候再試；登入後切換已授權身分不必重新寄信。',e2e_not_configured:'目前尚未開通 Email 驗證服務，無法登入。正式系統需先完成寄信設定。',test_email_service_unavailable:'寄信服務目前不可使用，請稍後或確認平台設定。',not_on_test_allowlist:'此 Email 尚未獲授權，目前只接受受邀帳號。',expired_or_invalid_code:'驗證碼錯誤或已過期，請重新取得。',login_required:'請先登入。',organizer_only:'這個帳號不是主辦單位，無權查看管理資料。',reviewer_only:'這個帳號不是評審，無權打分。',member_only:'此帳號並非會員。',update_locked:'這筆資料已進入審核或模擬繳費階段，無法直接修改。',delete_locked:'這筆資料已進入評審或後續流程，無法直接刪除。',invalid_demo_url:'請輸入有效的公開作品連結。',annual_category_locked:'年度組別已鎖定。',already_scored_or_unavailable:'你已評過這位選手，不能重複給分。'};return errors[e?.message]||('目前無法完成操作（'+(e?.message||'連線失敗')+'）。')}
-async function api(path,body){const c=new AbortController(),timer=setTimeout(()=>c.abort(),18000);try{const r=await fetch('/api/e2e/'+path,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),credentials:'same-origin',cache:'no-store',signal:c.signal});const data=await r.json();if(!r.ok||data.ok!==true)throw new Error(data.error||('HTTP '+r.status));return data}finally{clearTimeout(timer)}}
+ const errors={admin_registration_conflict:'這筆報名已有更新，請確認目前資料後再試。',admin_registration_protected:'已有評分或晉級紀錄，這筆報名已鎖定。',admin_registration_readback_unavailable:'無法確認是否已儲存，請先重新查詢。',staff_human_check_unavailable:'工作人員真人驗證暫時無法使用，請稍後重試。',human_check_required:'請重新完成真人驗證，再寄送驗證碼。',staff_reauthentication_required:'請先在工作人員入口重新驗證登入。',self_review_disallowed:'同一信箱不能評自己的參賽作品，請由其他獨立評審評分。',too_many_code_requests:'驗證信已達次數限制，請稍候再試；登入後切換已授權身分不必重新寄信。',e2e_not_configured:'目前尚未開通 Email 驗證服務，無法登入。正式系統需先完成寄信設定。',test_email_service_unavailable:'寄信服務目前不可使用，請稍後或確認平台設定。',not_on_test_allowlist:'此 Email 尚未獲授權，目前只接受受邀帳號。',expired_or_invalid_code:'驗證碼錯誤或已過期，請重新取得。',login_required:'登入已逾時，請重新登入後台。',organizer_only:'這個帳號不是主辦單位，無權查看管理資料。',reviewer_only:'這個帳號不是評審，無權打分。',member_only:'此帳號並非會員。',update_locked:'這筆資料已進入審核或模擬繳費階段，無法直接修改。',delete_locked:'這筆資料已進入評審或後續流程，無法直接刪除。',invalid_demo_url:'請輸入有效的公開作品連結。',annual_category_locked:'年度組別已鎖定。',already_scored_or_unavailable:'你已評過這位選手，不能重複給分。'};return errors[e?.message]||('目前無法完成操作（'+(e?.message||'連線失敗')+'）。')}
+async function api(path,body){
+ const c=new AbortController(),timer=setTimeout(()=>c.abort(),18000);
+ try{
+  const r=await fetch('/api/e2e/'+path,{
+   method:body===undefined?'GET':'POST',
+   headers:body===undefined?{}:{'Content-Type':'application/json'},
+   body:body===undefined?undefined:JSON.stringify(body),
+   credentials:'same-origin',cache:'no-store',signal:c.signal
+  });
+  const data=await r.json();
+  if(!r.ok||data.ok!==true){
+   if(staff&&account&&(r.status===401||data.error==='login_required'||data.error==='staff_reauthentication_required')){
+    expireStaffSession();
+   }
+   throw new Error(data.error||('HTTP '+r.status));
+  }
+  return data;
+ }finally{clearTimeout(timer)}
+}
 async function run(fn){if(busy)return;busy=true;document.body.classList.add('requesting');try{await fn()}catch(e){status(friendlyError(e),true)}finally{busy=false;document.body.classList.remove('requesting')}}
 function clearStaffContact(){
  document.querySelectorAll('[data-staff-contact]').forEach(item=>item.remove());
 }
 function authUI(signedIn){
  if(staff)document.body.classList.toggle('staff-authenticated',signedIn);
- if(staff&&!signedIn){clearStaffContact();clearStaffWorkspace();}
+ if(staff&&!signedIn){resetStaffSessionTimer();clearStaffContact();clearStaffWorkspace();}
  (staff?$('back-signin'):$('signin-panel')).hidden=signedIn;
  $(prefix+'-dashboard')?.setAttribute('hidden','');
  if(staff){
@@ -395,10 +458,10 @@ async function loadSession(){try{
  if(!target||!granted.includes(target)){account=null;authUI(false);staffTabs();return;}
  if((staff&&!['organizer','reviewer'].includes(v.account.role))||(!staff&&v.account.role!=='member')){
   v=await api('switch-role',{role:target});
-  if(!staff)v=await api('me');
+  v=await api('me');
  }
  account=v.account;role=account.role;authUI(true);
- if(staff)staffTabs();else{
+ if(staff){trackStaffSession(v);staffTabs();}else{
   setupProfileFields(v.profile_enabled===true);
   setupFrontlineForm(v.frontline_form_enabled===true);
   setupMuseForm(v.muse_form_enabled===true);
@@ -565,7 +628,7 @@ codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  if(account)status(staff?'已登入。':mt('signedIn'));
 })});
 const change=$(staff?'back-change':'change-mail');change?.addEventListener('click',()=>{authForms(true);challenge=null;challengeEmail=undefined;codeForm.reset();statusBox.hidden=true});
-$(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff)staffTabs();challenge=null;authForms(true);status(page==='member'?mt('signedOut'):'已登出。')}));
+$(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff){staffTabs();$('staff-session-expired').hidden=true;}challenge=null;authForms(true);status(page==='member'?mt('signedOut'):'已登出。')}));
 }
 async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else{clearAdminRegistrations();await renderJudge()}}else await renderMember()}
 function memberCanEdit(a){
@@ -1709,7 +1772,7 @@ const application=$('application-form'),details=$('application-details'),start=$
  loadSession();
 }else if(page==='back'){
  window.addEventListener('ghv:languagechange',()=>{if(account)window.staffRelocalize?.()});
- setupAuth();staffTabs();document.querySelectorAll('[data-role-tab]').forEach(button=>button.addEventListener('click',()=>{const next=button.dataset.roleTab;if(next===role||!account)return;run(async()=>{const v=await api('switch-role',{role:next});account=v.account;role=account.role;staffTabs();await dashboard();status('已切換為'+(role==='organizer'?'主辦方':'評審')+'。')})}));loadSession();
+ setupAuth();staffTabs();document.querySelectorAll('[data-role-tab]').forEach(button=>button.addEventListener('click',()=>{const next=button.dataset.roleTab;if(next===role||!account)return;run(async()=>{const v=await api('switch-role',{role:next});const updated=await api('me');account=updated.account||v.account;role=account.role;trackStaffSession(updated);staffTabs();await dashboard();status('已切換為'+(role==='organizer'?'主辦方':'評審')+'。')})}));loadSession();
 }
 // Deep links to a rules topic should open it, rather than show a closed summary.
 if(page==='news'){
