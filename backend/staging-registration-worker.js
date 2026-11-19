@@ -1,7 +1,9 @@
 import {handlePractice,runPracticeSchedule} from './practice.js';
 import {handleManagement} from './management.js';
 import {architecturePreview} from './architecture-preview.js';
-import {mailProviderReady,mailSenderReady} from './staging-mail.js';
+import {mailProviderReady,mailSenderReady,emailAddress} from './staging-mail.js';
+import {staffLoginConfig} from './staging-staff-security.js';
+import {drainRemovedMemberMedia} from './staging-admin-registration.js';
 import {handleE2E} from './staging-e2e.js';
 /*
  * Golden Himal Voice — SAFE STAGING SMOKE TEST ONLY.
@@ -173,13 +175,47 @@ async function handleE2EReadiness(request,env){
    profileTableReady=row?.name==='e2e_application_profiles';
   }catch{profileTableReady=false}
  }
+ // Staff-only capability probe is read-only; never expose email addresses,
+ // challenge tokens, provider secrets, or permit an OTP request from this route.
+ const invitedEmails=name=>String(env[name]||'').split(',').map(value=>value.trim().toLowerCase()).filter(emailAddress);
+ const organizerEmails=invitedEmails('STAGING_ORGANIZER_EMAILS');
+ const reviewerEmails=invitedEmails('STAGING_REVIEWER_EMAILS');
+ const organizerInvites=organizerEmails.length>0;
+ const reviewerInvites=reviewerEmails.length>0;
+ // A user who requires both roles must occur on BOTH server-side lists.
+ // Expose only a Boolean: do not reveal or log any address.
+ const dualRoleInviteConfigured=organizerEmails.some(email=>reviewerEmails.includes(email));
+ let staffSchemaReady=false;
+ if(databaseBound){
+  try{
+   const row=await env.E2E_DB.prepare(
+    "SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN ('e2e_accounts','e2e_email_challenges','e2e_sessions','e2e_staff_auth_attempts','e2e_staff_audit','e2e_registration_controls')"
+   ).first();
+   staffSchemaReady=Number(row?.n)===6;
+  }catch{staffSchemaReady=false}
+ }
+ const staffHumanCheckEnabled=env.STAGING_STAFF_TURNSTILE_REQUIRED==='true';
+ let staffHumanCheckReady=false;
+ if(databaseBound&&staffSchemaReady&&staffHumanCheckEnabled){
+  try{
+   const config=await staffLoginConfig({...env,DB:env.E2E_DB});
+   staffHumanCheckReady=Boolean(config.required&&config.siteKey);
+  }catch{staffHumanCheckReady=false}
+ }
  const profileFeatureEnabled=env.STAGING_PROFILE_URLS_ENABLED==='true';
  const otpEnabled=env.STAGING_E2E_ENABLED==='true';
  const linkMode=env.STAGING_SUBMISSION_MODE==='links';
  const ready=databaseBound&&schemaReady&&(linkMode||mediaBound)&&emailConfigured&&senderSet&&allowlistSet&&secretSet&&otpEnabled;
+ const staffReady=databaseBound&&staffSchemaReady&&staffHumanCheckReady&&organizerInvites&&reviewerInvites&&emailConfigured&&senderSet&&secretSet&&otpEnabled;
+ const dualRoleReady=staffReady&&dualRoleInviteConfigured;
  return json({
   ok:true,testOnly:true,readiness:ready?'READY_FOR_INVITED_OTP_TEST':'BLOCKED',
   submissionMode:linkMode?'external_links':'private_uploads',privateMediaRequired:!linkMode,
+  staff:{readyForLoginTest:staffReady,dualRoleReadyForLoginTest:dualRoleReady,
+   dualRoleInviteConfigured,staffSchemaReady,organizerInviteListConfigured:organizerInvites,
+   reviewerInviteListConfigured:reviewerInvites,humanCheckEnabled:staffHumanCheckEnabled,humanCheckReady:staffHumanCheckReady,
+   emailProviderConfigured:emailConfigured,senderConfigured:senderSet,identitySecretConfigured:secretSet,
+   explicitTestModeEnabled:otpEnabled},
   resources:{databaseBound,schemaReady,privateMediaBound:mediaBound,emailBound,emailServiceConfigured:emailConfigured,
    senderConfigured:senderSet,memberAllowlistConfigured:allowlistSet,
    identitySecretConfigured:secretSet,explicitTestModeEnabled:otpEnabled,
@@ -188,7 +224,9 @@ async function handleE2EReadiness(request,env){
  });
 }
 export default {
-  async scheduled(controller,env,ctx){return runPracticeSchedule(env);},
+  async scheduled(controller,env,ctx){
+    await Promise.all([runPracticeSchedule(env),drainRemovedMemberMedia(env.E2E_DB,env.STAGING_MEDIA)]);
+  },
   async fetch(request,env,ctx) {
     const url=new URL(request.url);
     const {pathname}=url;
@@ -216,7 +254,10 @@ export default {
     if(pathname==='/api/staging/ci-read')return handleCiFixtureRead(request,env);
     if(pathname==='/api/staging/registration-test')return handleSampleRegistration(request,env);
     if(pathname.startsWith('/api/'))return failure('not_found',404);
-    if((env.STAGING_PUBLIC_SIGNUP_ENABLED!=='true'&&env.STAGING_PASSWORD_SIGNUP_ENABLED!=='true')||!['/member','/member.html'].includes(pathname))
+    const memberChallenge=['/member','/member.html'].includes(pathname)&&
+      (env.STAGING_PUBLIC_SIGNUP_ENABLED==='true'||env.STAGING_PASSWORD_SIGNUP_ENABLED==='true');
+    const staffChallenge=['/backoffice','/backoffice.html'].includes(pathname)&&env.STAGING_STAFF_TURNSTILE_REQUIRED==='true';
+    if(!memberChallenge&&!staffChallenge)
       return env.ASSETS.fetch(request);
     // The asset ETag identifies the HTML, not the flag-dependent CSP.
     const headers=new Headers(request.headers);

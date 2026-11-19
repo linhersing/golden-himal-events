@@ -21,7 +21,9 @@
       "/admin-center*",
       "/judge-stage*",
       "/organizer-stage*",
-      "/architecture-preview*"
+      "/architecture-preview*",
+      "/backoffice",
+      "/backoffice.html"
     ]
   },
   "d1_databases": [
@@ -43,7 +45,9 @@
     "STAGING_TEST_APPROVAL_ENABLED": "true",
     "STAGING_FRONTLINE_2027_ENABLED": "true",
     "STAGING_FIVE_DEMO_REHEARSAL": "true",
-    "STAGING_MUSE_AUDITION_ENABLED": "true"
+    "STAGING_MUSE_AUDITION_ENABLED": "true",
+    "STAGING_STAFF_TURNSTILE_REQUIRED": "true",
+    "STAGING_ADMIN_MANAGEMENT_ENABLED": "true"
   },
   "triggers": {"crons": ["*/5 * * * *"]},
   "observability": {

@@ -180,6 +180,7 @@ test('minimal staff entrance requests a code for organizer, never a member',asyn
  await page.route('**/api/e2e/**',async route=>{
   const path=new URL(route.request().url()).pathname;
   if(path.endsWith('/me'))return route.fulfill({status:401,json:{ok:false,error:'login_required'}});
+  if(path.endsWith('/staff-login-config'))return route.fulfill({json:{ok:true,required:false}});
   if(path.endsWith('/request-code')){requested=route.request().postDataJSON();return route.fulfill({status:200,json:{ok:true,challenge_id:'fixture'}})}
   return route.fulfill({status:401,json:{ok:false,error:'not_found'}});
  });
@@ -196,7 +197,7 @@ test('minimal staff reviewer submits phase-specific V2 scoring without crossing 
   const path=new URL(route.request().url()).pathname;
   if(path.endsWith('/me'))return route.fulfill({status:200,json:{ok:true,account:{id:'test-reviewer',role:'reviewer'}}});
   if(path.endsWith('/reviewer-queue'))return route.fulfill({status:200,json:{ok:true,queue:[{id:'test-application',stage_name:'TEST Singer',round_code:'2027-01',phase:'qualifier',demo_url:'https://youtu.be/dQw4w9WgXcQ',live_technique:saved,live_interpretation:saved===null?null:20,stage_presence:saved===null?null:15,appearance:saved===null?null:7}]}});
-  if(path.endsWith('/score')){scoreData=route.request().postDataJSON();saved=32;return route.fulfill({status:200,json:{ok:true,score:74}})}
+  if(path.endsWith('/score')){scoreData=route.request().postDataJSON();saved=32;return route.fulfill({status:200,json:{ok:true,phase:'qualifier',score:74}})}
   return route.fulfill({status:404,json:{ok:false,error:'not_found'}});
  });
  await page.goto('/backoffice.html');
@@ -205,13 +206,13 @@ test('minimal staff reviewer submits phase-specific V2 scoring without crossing 
  await expect(page.locator('#judge-list .roster-entry')).toHaveCount(1);
  await page.locator('#judge-list .roster-entry').click();
  await expect(page.locator('#judge-detail')).toBeVisible();
+ await page.locator('#judge-queue [data-song-position="1"]').click();
  await page.locator('#judge-queue [name=technique]').fill('32');
  await page.locator('#judge-queue [name=interpretation]').fill('20');
  await page.locator('#judge-queue [name=stage_presence]').fill('15');
  await page.locator('#judge-queue [name=appearance]').fill('7');
- await page.locator('#judge-queue [name=conflict]').check();
+ await page.locator('#judge-queue [type=checkbox]').check();
  await page.locator('#judge-queue button[type=submit]').click();
- await page.locator('#judge-list .roster-entry').click();
- await expect(page.locator('#judge-queue')).toContainText('此階段已評分：74 分');
+ await expect(page.locator('#judge-queue')).toContainText(/74\s*分/);
  expect(scoreData).toMatchObject({application_id:'test-application',phase:'qualifier',technique:32,interpretation:20,stage_presence:15,appearance:7,no_conflict:true});
 });

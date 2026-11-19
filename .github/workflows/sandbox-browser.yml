@@ -25,10 +25,16 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Install Chrome Playwright dependencies
-        run: pnpm exec playwright install --with-deps chrome
+      - name: Install Edge Playwright dependencies
+        run: pnpm exec playwright install --with-deps msedge
       - name: Full front/back sandbox browser run (desktop and mobile)
-        run: pnpm exec playwright test tests/senior-readable-20261114-browser.spec.mjs tests/brand-portal-20261113-browser.spec.mjs tests/lab-browser.spec.mjs tests/payment-browser.spec.mjs tests/member-browser.spec.mjs tests/member-login-browser.spec.mjs tests/i18n-member-entry-browser.spec.mjs tests/member-auth-truth-browser.spec.mjs tests/e2e-stage-browser.spec.mjs tests/practice-browser.spec.mjs tests/management-browser.spec.mjs tests/mobile-first-cloudflare-entry-browser.spec.mjs tests/print-visibility-privacy-browser.spec.mjs tests/simple-front-back-browser.spec.mjs tests/same-email-roles-browser.spec.mjs tests/staff-roster-browser.spec.mjs tests/five-demo-staff-browser.spec.mjs tests/entrant-profile-browser.spec.mjs tests/125-entrant-roster-browser.spec.mjs tests/member-home-v2-browser.spec.mjs tests/palace-unified-header-20261116-browser.spec.mjs
+        run: pnpm exec playwright test tests/senior-readable-20261114-browser.spec.mjs tests/brand-portal-20261113-browser.spec.mjs tests/lab-browser.spec.mjs tests/payment-browser.spec.mjs tests/member-browser.spec.mjs tests/member-login-browser.spec.mjs tests/i18n-member-entry-browser.spec.mjs tests/member-auth-truth-browser.spec.mjs tests/e2e-stage-browser.spec.mjs tests/practice-browser.spec.mjs tests/management-browser.spec.mjs tests/mobile-first-cloudflare-entry-browser.spec.mjs tests/print-visibility-privacy-browser.spec.mjs tests/simple-front-back-browser.spec.mjs tests/same-email-roles-browser.spec.mjs tests/staff-roster-browser.spec.mjs tests/five-demo-staff-browser.spec.mjs tests/entrant-profile-browser.spec.mjs tests/125-entrant-roster-browser.spec.mjs tests/member-home-v2-browser.spec.mjs tests/palace-unified-header-20261116-browser.spec.mjs tests/organizer-nested-record-browser.spec.mjs tests/staff-mobile-device-matrix-20261118.spec.mjs
+      - name: Prepare isolated Cloudflare runtime tools
+        run: npm install --prefix "$RUNNER_TEMP/ghv-staff-tools" wrangler@4.156.0
+      - name: Verify isolated workerd and D1 role and score readbacks
+        run: node scripts/staff-workspace-isolated-test.mjs "$RUNNER_TEMP/ghv-staff-tools" test-results/staff-d1-check.json
+      - name: Exercise Edge workspaces against disposable workerd and D1
+        run: node scripts/staff-workspace-edge-test.mjs "$RUNNER_TEMP/ghv-staff-tools" test-results/ghv-staff-workerd
       - name: Preserve visual evidence (QA screenshots, no private data)
         if: always()
         uses: actions/upload-artifact@v4
@@ -37,5 +43,6 @@ jobs:
           path: |
             test-results/**/*.png
             test-results/**/*.zip
+            test-results/**/*.json
           if-no-files-found: warn
           retention-days: 30

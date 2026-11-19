@@ -11,10 +11,12 @@ if(process.env.WORKERS_CI!=='1'||process.env.WORKERS_CI_BRANCH!=='codex/initial-
  const bookmark=value=>{if(value&&typeof value==='object'){if(typeof value.bookmark==='string')return value.bookmark;for(const x of Object.values(value)){const b=bookmark(x);if(b)return b}}return null;};
  const query=sql=>{const value=run(['d1','execute','E2E_DB','--remote','--command',sql,'--json']);const result=rows(value);if(!result?.length)throw Error('cloudflare_count_evidence_unavailable');return result[0]};
  const counts="SELECT (SELECT COUNT(*) FROM e2e_accounts) AS accounts,(SELECT COUNT(*) FROM e2e_applications) AS applications";
+ const competition="SELECT (SELECT COUNT(*) FROM e2e_demo_2027_videos) AS videos,(SELECT COUNT(*) FROM e2e_demo_2027_scores) AS video_scores,(SELECT COALESCE(SUM(technique+interpretation),0) FROM e2e_demo_2027_scores) AS video_points,(SELECT COUNT(*) FROM e2e_judge_scores) AS legacy_scores,(SELECT COALESCE(SUM(technique+interpretation),0) FROM e2e_judge_scores) AS legacy_points,(SELECT COUNT(*) FROM e2e_live_scores) AS live_scores";
  try{
   evidence.phase='bookmark';evidence.bookmark=bookmark(run(['d1','time-travel','info','E2E_DB','--json']));
   if(!evidence.bookmark)throw Error('restore_bookmark_unavailable');
   evidence.phase='before_counts';evidence.before=query(counts);
+  evidence.competition_before=query(competition);
   evidence.phase='additive_migration';
   for(const file of [
    '1002_private_practice_ONLY.sql',
@@ -26,7 +28,9 @@ if(process.env.WORKERS_CI!=='1'||process.env.WORKERS_CI_BRANCH!=='codex/initial-
    '1012_frontline_region_lock_STAGING_ONLY.sql',
    '1013_member_corrections_STAGING_ONLY.sql',
    '1014_demo_five_2027_STAGING_ONLY.sql',
-   '1016_january_demo_test_rosters_ONLY.sql'
+   '1016_january_demo_test_rosters_ONLY.sql',
+   '1017_staff_auth_limits_STAGING_ONLY.sql',
+   '1018_admin_registration_audit_STAGING_ONLY.sql'
   ])run(['d1','execute','E2E_DB','--remote','--file','backend/migrations/'+file,'--yes','--json']);
   evidence.phase='contact_preflight';
   const contactTable="SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name='e2e_muse_audition_details'";
@@ -52,6 +56,11 @@ if(process.env.WORKERS_CI!=='1'||process.env.WORKERS_CI_BRANCH!=='codex/initial-
   if(Number(evidence.five_demo_schema.tables)!==2)throw Error('five_demo_schema_readback_mismatch');
   evidence.january_roster_schema=query("SELECT COUNT(*) AS tables FROM sqlite_master WHERE type='table' AND name='e2e_january_demo_test_rosters'");
   if(Number(evidence.january_roster_schema.tables)!==1)throw Error('january_roster_schema_readback_mismatch');
+  evidence.staff_schema=query("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('e2e_staff_auth_attempts','e2e_staff_audit','e2e_registration_controls','e2e_removed_member_media')) AS tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='view' AND name='e2e_admin_registrations') AS views");
+  if(Number(evidence.staff_schema.tables)!==4||Number(evidence.staff_schema.views)!==1)throw Error('staff_schema_readback_mismatch');
+  query('SELECT COUNT(*) AS n FROM e2e_admin_registrations');
+  evidence.competition_after=query(competition);
+  if(JSON.stringify(evidence.competition_before)!==JSON.stringify(evidence.competition_after))throw Error('competition_preservation_readback_mismatch');
   evidence.status='PASS';evidence.phase='complete';
  }catch(e){evidence.reason=e.message;}
  mkdirSync('dist',{recursive:true});writeFileSync('dist/practice-build.json',JSON.stringify(evidence));

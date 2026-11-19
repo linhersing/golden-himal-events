@@ -1434,3 +1434,672 @@ body[data-page="member"] .eligibility-private-upload [role=status]{font-size:.9r
 .staff-demo-list{margin:12px 0;padding:0;list-style:none;overflow-wrap:anywhere}
 .staff-demo-list li{padding:8px 0;border-top:1px solid #e9dfd1}
 .staff-demo-list p{margin:3px 0}
+
+
+/* 2026-11-18 organizer: one compact record per entry; five Demos on demand. */
+body[data-page="back"] .organizer-roster-entry{
+ display:block;padding:11px 15px;min-width:0;
+}
+body[data-page="back"] .organizer-roster-head{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;
+}
+body[data-page="back"] .organizer-roster-head .roster-entry-text{flex:1;min-width:0;gap:3px}
+body[data-page="back"] .organizer-roster-badges{
+ display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:5px;max-width:45%;
+}
+body[data-page="back"] .organizer-roster-details{
+ margin-top:6px;border-top:1px solid #f0e5d6;min-width:0;
+}
+body[data-page="back"] .organizer-roster-details>summary{
+ cursor:pointer;padding:7px 0 3px;font-size:.82rem;font-weight:750;
+ color:#78502e;list-style-position:inside;min-height:36px;
+}
+body[data-page="back"] .organizer-roster-details>summary:focus-visible{
+ outline:2px solid #bd9157;outline-offset:3px;border-radius:6px;
+}
+body[data-page="back"] .organizer-roster-body{padding:9px 0 7px;min-width:0}
+body[data-page="back"] .organizer-roster-body .staff-demo-list{
+ margin:8px 0 12px;padding-left:20px;display:grid;gap:4px;
+}
+body[data-page="back"] .organizer-roster-body .staff-demo-list li{padding:9px 0}
+body[data-page="back"] .organizer-roster-actions{
+ display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap;
+ margin-top:13px;padding-top:11px;border-top:1px solid #f0e5d6;
+}
+body[data-page="back"] .organizer-roster-actions .btn{min-height:42px}
+@media(max-width:520px){
+ body[data-page="back"] .organizer-roster-entry{padding:11px 12px}
+ body[data-page="back"] .organizer-roster-head{align-items:flex-start;gap:8px}
+ body[data-page="back"] .organizer-roster-badges{max-width:45%;flex:0 1 auto}
+ body[data-page="back"] .organizer-roster-badges .pill{font-size:.68rem;padding:3px 7px}
+ body[data-page="back"] .organizer-roster-head .roster-mini{font-size:.75rem}
+ body[data-page="back"] .organizer-roster-actions{justify-content:stretch}
+ body[data-page="back"] .organizer-roster-actions button{flex:1 1 100%}
+}
+
+
+/* 2026-11-18 live-event staff UX: readable mobile scoring, compact organizer. */
+body[data-page="back"] .ghp-universal-footer-brand{display:none}
+body[data-page="back"] .page-shell{max-width:1050px}
+body[data-page="back"] .staff-mobile-summary{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0;
+}
+body[data-page="back"] .staff-mobile-summary .dash-stat{
+ min-width:0;padding:13px 16px;border-radius:15px;
+}
+body[data-page="back"] .staff-mobile-summary .dashboard-number{
+ font-size:clamp(1.8rem,5vw,2.35rem);line-height:1.12;margin-bottom:6px;
+}
+body[data-page="back"] .staff-mobile-summary small{font-size:.87rem;line-height:1.4}
+body[data-page="back"] .staff-system-note{
+ margin:8px 0 18px;border:1px solid #e7dac6;border-radius:12px;
+ background:#fcfaf5;padding:0 12px;
+}
+body[data-page="back"] .staff-system-note>summary{
+ padding:12px 4px;cursor:pointer;font-size:.92rem;font-weight:700;color:#6b503c;
+}
+body[data-page="back"] .staff-system-body{padding:4px 7px 12px;font-size:.9rem;color:#655447}
+body[data-page="back"] .staff-system-body strong{color:#5b382e}
+body[data-page="back"] .organizer-toolbar{
+ grid-template-columns:minmax(0,1fr);gap:8px;margin:12px 0;
+}
+body[data-page="back"] .organizer-toolbar>.roster-field{max-width:100%}
+body[data-page="back"] .organizer-filter-panel{
+ border:1px solid #e2d0b8;border-radius:11px;padding:0 12px;background:#fcfaf6;
+}
+body[data-page="back"] .organizer-filter-panel>summary{
+ min-height:45px;display:list-item;cursor:pointer;padding:12px 0;
+ font-size:.96rem;font-weight:750;color:#684734;
+}
+body[data-page="back"] .organizer-filter-grid{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:12px;padding:4px 0 14px;
+}
+body[data-page="back"] .roster-field{font-size:.94rem;gap:6px}
+body[data-page="back"] .roster-field input,
+body[data-page="back"] .roster-field select{
+ min-height:48px;font-size:1rem;border-color:#d5bfa4;
+}
+body[data-page="back"] .roster-count{font-size:.92rem;line-height:1.5}
+body[data-page="back"] .organizer-roster-head .roster-entry-text strong{font-size:1.08rem;line-height:1.4}
+body[data-page="back"] .organizer-roster-head .roster-mini{font-size:.88rem;line-height:1.5}
+body[data-page="back"] .organizer-roster-details>summary{
+ min-height:46px;padding:11px 0;display:list-item;
+ font-size:.99rem;color:#664127;
+}
+body[data-page="back"] .organizer-roster-details .staff-demo-list li{font-size:.97rem;line-height:1.5}
+body[data-page="back"] .organizer-roster-details .staff-demo-list strong{font-size:1.03rem}
+body[data-page="back"] .organizer-roster-actions .btn{min-height:48px;font-size:1rem}
+/* Judges see a short list, then one scoring workspace; not five forms on one screen. */
+body[data-page="back"] #judge-list .roster-action{min-height:74px;padding:14px 15px}
+body[data-page="back"] #judge-list .roster-entry-text strong{font-size:1.09rem;line-height:1.4}
+body[data-page="back"] #judge-list .roster-mini{font-size:.9rem;line-height:1.45}
+body[data-page="back"] #judge-list .pill{font-size:.84rem;white-space:nowrap}
+body[data-page="back"] #judge-detail{scroll-margin-top:15px}
+body[data-page="back"] #judge-back-list{min-height:48px;font-size:1rem}
+body[data-page="back"] #judge-queue .entry{min-width:0}
+body[data-page="back"] #judge-queue .entry h3{font-size:clamp(1.2rem,4vw,1.5rem)}
+body[data-page="back"] #judge-queue .field{font-size:1rem}
+body[data-page="back"] #judge-queue form input[type=number]{
+ min-height:52px;width:100%;box-sizing:border-box;font-size:1.15rem;font-weight:700;
+}
+body[data-page="back"] #judge-queue .check{font-size:1rem;line-height:1.5}
+body[data-page="back"] #judge-queue .btn-primary{min-height:54px;font-size:1.06rem;font-weight:800}
+body[data-page="back"] .judge-demo-switcher{min-width:0}
+body[data-page="back"] .judge-demo-chooser{display:grid;gap:7px;margin:10px 0}
+body[data-page="back"] .judge-demo-chooser>span{font-weight:800;font-size:1.01rem}
+body[data-page="back"] .judge-demo-chooser select{
+ min-height:53px;width:100%;max-width:100%;box-sizing:border-box;
+ padding:10px;border:2px solid #ba915c;border-radius:12px;
+ background:#fffdf8;color:#442f27;font-size:1.02rem;font-weight:700;
+}
+body[data-page="back"] .judge-demo-progress{
+ margin:8px 0 12px;color:#674c39;font-size:.98rem;font-weight:700;line-height:1.5;
+}
+body[data-page="back"] .judge-demo-switcher .staff-demo-list{
+ list-style:none;padding:0;margin:0;
+}
+body[data-page="back"] .judge-demo-switcher .staff-demo-list>li{
+ border:1px solid #e0cdb2;border-radius:15px;
+ background:#fffdf8;padding:14px 16px;margin:0;
+}
+body[data-page="back"] .judge-demo-switcher .staff-demo-list>li[hidden]{display:none!important}
+body[data-page="back"] .judge-demo-switcher .staff-demo-list>li>strong{font-size:1.12rem}
+body[data-page="back"] .judge-demo-switcher .small-link{
+ display:inline-flex;align-items:center;min-height:46px;
+ font-size:1rem;font-weight:750;
+}
+body[data-page="back"] .roster-pagination .btn{min-height:46px;font-size:1rem}
+@media(max-width:600px){
+ body[data-page="back"] .page-shell{padding-inline:14px}
+ body[data-page="back"] .page-top{gap:8px}
+ body[data-page="back"] .page-top h2{font-size:1.6rem}
+ body[data-page="back"] .page-top .btn{min-height:48px}
+ body[data-page="back"] .staff-mobile-summary{gap:9px}
+ body[data-page="back"] .staff-mobile-summary .dash-stat{padding:12px}
+ body[data-page="back"] .staff-mobile-summary .dashboard-number{font-size:1.95rem}
+ body[data-page="back"] .organizer-filter-grid{grid-template-columns:1fr;gap:10px}
+ body[data-page="back"] .organizer-roster-head{align-items:flex-start}
+ body[data-page="back"] .organizer-roster-badges{max-width:43%}
+ body[data-page="back"] .organizer-roster-head .roster-mini{font-size:.86rem}
+ body[data-page="back"] #judge-list .roster-action{gap:10px}
+ body[data-page="back"] #judge-list .roster-entry-text strong{font-size:1.06rem}
+ body[data-page="back"] #judge-queue .form-grid{grid-template-columns:1fr}
+ body[data-page="back"] #judge-queue .btn-primary{width:100%}
+ body[data-page="back"] .judge-demo-switcher .staff-demo-list>li{padding:13px 12px}
+}
+
+
+/* 2026-11-18 responsive judge acceptance: variable low-end Android devices. */
+body[data-page="back"] .page-shell,
+body[data-page="back"] .panel,
+body[data-page="back"] .entry,
+body[data-page="back"] .roster-entry,
+body[data-page="back"] .roster-list,
+body[data-page="back"] .roster-entry-text,
+body[data-page="back"] .judge-demo-switcher,
+body[data-page="back"] .judge-demo-switcher .staff-demo-list,
+body[data-page="back"] .judge-demo-switcher .staff-demo-list>li{
+ min-width:0;max-width:100%;box-sizing:border-box;
+}
+body[data-page="back"] .roster-entry-text,
+body[data-page="back"] .roster-mini,
+body[data-page="back"] .judge-demo-chooser option,
+body[data-page="back"] .judge-demo-progress,
+body[data-page="back"] .judge-save-feedback,
+body[data-page="back"] .judge-saved-confirmation,
+body[data-page="back"] .staff-system-body{
+ overflow-wrap:anywhere;word-break:normal;
+}
+body[data-page="back"] #judge-roster-panel .roster-toolbar{
+ grid-template-columns:minmax(0,2fr) minmax(125px,1fr);
+}
+body[data-page="back"] .judge-score-form{
+ min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
+}
+body[data-page="back"] .judge-score-form>.check,
+body[data-page="back"] .judge-score-form>.judge-save-feedback,
+body[data-page="back"] .judge-score-form>.judge-score-submit{
+ grid-column:1/-1;
+}
+body[data-page="back"] .judge-score-form .field{min-width:0}
+body[data-page="back"] .judge-score-form input[type=number]{
+ display:block;width:100%;font-size:max(1rem,16px);min-height:56px;
+}
+body[data-page="back"] .judge-score-form .check{
+ display:flex;align-items:flex-start;gap:12px;
+ min-height:48px;line-height:1.45;
+}
+body[data-page="back"] .judge-score-form input[type=checkbox]{
+ flex:0 0 auto;width:24px;height:24px;margin-top:2px;
+}
+body[data-page="back"] .judge-score-submit{
+ min-height:56px;font-size:1.05rem;font-weight:800;white-space:normal;line-height:1.35;
+}
+body[data-page="back"] .judge-score-submit:disabled{opacity:.7;cursor:progress}
+body[data-page="back"] .judge-save-feedback{
+ margin:2px 0 0;font-size:1rem;line-height:1.55;
+}
+body[data-page="back"] .judge-save-feedback:empty{display:none}
+body[data-page="back"] .judge-save-feedback[data-state="error"]{
+ padding:10px 12px;border:1px solid #ac6b5a;background:#fff2e9;border-radius:10px;
+ color:#743c2d;font-weight:750;
+}
+body[data-page="back"] .judge-save-feedback[data-state="pending"]{
+ color:#583c2c;font-weight:700;
+}
+body[data-page="back"] .judge-saved-confirmation{
+ padding:12px;border-radius:11px;background:#e9f6ea;
+ color:#245b39;font-size:1.04rem;font-weight:800;line-height:1.5;
+}
+body[data-page="back"] .judge-optional-profile{
+ border:1px solid #e0d2c1;border-radius:10px;padding:0 10px;margin:10px 0;
+}
+body[data-page="back"] .judge-optional-profile>summary{
+ padding:12px 4px;min-height:46px;font-weight:700;cursor:pointer;
+}
+body[data-page="back"] .judge-demo-chooser select{font-size:max(1rem,16px)}
+body[data-page="back"] #judge-queue .field input[type=number],
+body[data-page="back"] #judge-queue .field select{
+ font-size:max(1rem,16px);max-width:100%;
+}
+body[data-page="back"] #judge-queue button,
+body[data-page="back"] #judge-back-list,
+body[data-page="back"] .organizer-roster-actions button,
+body[data-page="back"] .roster-pagination button{
+ touch-action:manipulation;min-height:48px;
+}
+@media(max-width:660px){
+ body[data-page="back"] #judge-roster-panel .roster-toolbar{grid-template-columns:1fr}
+ body[data-page="back"] .page-shell{
+  padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right));
+ }
+ body[data-page="back"] .judge-score-form{grid-template-columns:1fr}
+ body[data-page="back"] .judge-score-form>.field{grid-column:1/-1}
+ body[data-page="back"] .staff-mobile-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body[data-page="back"] .roster-pagination{flex-wrap:wrap;row-gap:8px}
+}
+@media(max-width:340px){
+ body[data-page="back"] .staff-mobile-summary{grid-template-columns:1fr;gap:7px}
+ body[data-page="back"] .organizer-roster-head{flex-direction:column;align-items:stretch}
+ body[data-page="back"] .organizer-roster-badges{max-width:none;justify-content:flex-start}
+ body[data-page="back"] #judge-list .roster-action{align-items:flex-start;flex-wrap:wrap}
+ body[data-page="back"] #judge-list .pill{max-width:100%;white-space:normal;line-height:1.4}
+ body[data-page="back"] .judge-demo-chooser select{font-size:1rem}
+ body[data-page="back"] .page-shell{padding-inline:10px}
+}
+@media(orientation:landscape) and (max-height:520px){
+ body[data-page="back"] #judge-roster-panel .roster-toolbar{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ body[data-page="back"] .judge-score-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body[data-page="back"] .judge-score-form>.field{grid-column:auto}
+ body[data-page="back"] .judge-demo-switcher .staff-demo-list>li{padding-block:10px}
+}
+/* Respect accessibility settings rather than forcing animations or text size. */
+@media(prefers-reduced-motion:reduce){
+ body[data-page="back"] *,
+ body[data-page="back"] *::before,
+ body[data-page="back"] *::after{
+  scroll-behavior:auto!important;
+  animation-duration:.01ms!important;transition-duration:.01ms!important;
+ }
+}
+@media(pointer:coarse){
+ body[data-page="back"] .judge-demo-chooser select,
+ body[data-page="back"] #judge-queue .btn,
+ body[data-page="back"] #judge-back-list,
+ body[data-page="back"] .organizer-filter-panel>summary{
+  min-height:54px;
+ }
+}
+
+
+/* 2026-11-18 organizer 1 ID = 1 compact row; one modal with drill-down screens. */
+body[data-page="back"] .organizer-record-row{
+ display:flex;flex-direction:row;align-items:center;gap:8px;min-width:0;
+ padding:4px 10px;border-radius:13px;
+}
+body[data-page="back"] .organizer-record-open{
+ appearance:none;-webkit-appearance:none;border:0;background:transparent;color:inherit;
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+ flex:1;min-width:0;text-align:left;cursor:pointer;padding:11px 5px;
+ min-height:58px;touch-action:manipulation;
+}
+body[data-page="back"] .organizer-record-open .roster-entry-text{flex:1;min-width:0;gap:3px}
+body[data-page="back"] .organizer-record-open strong{font-size:1.04rem;line-height:1.4}
+body[data-page="back"] .organizer-record-open .roster-mini{
+ font-size:.86rem;line-height:1.4;overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-record-arrow{
+ flex:0 0 auto;color:#795232;font-weight:800;font-size:.94rem;white-space:nowrap;
+}
+body[data-page="back"] .organizer-record-status{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;
+ max-width:30%;min-width:0;
+}
+body[data-page="back"] .organizer-record-status .pill{white-space:normal;line-height:1.35;text-align:center}
+body[data-page="back"] .organizer-record-open:focus-visible,
+body[data-page="back"] .organizer-step-button:focus-visible{
+ outline:3px solid #b98947;outline-offset:2px;border-radius:9px;
+}
+body[data-page="back"] .organizer-dialog-shell{
+ display:flex;flex-direction:column;height:100%;min-height:0;min-width:0;
+}
+body[data-page="back"] .organizer-dialog-head{
+ display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+ align-items:center;gap:10px;
+ flex-shrink:0;padding:13px 17px;
+ border-bottom:1px solid #e5d6be;background:#f8f2e8;
+}
+body[data-page="back"] .organizer-dialog-heading{min-width:0}
+body[data-page="back"] .organizer-dialog-heading h2{
+ font-size:clamp(1.1rem,3.5vw,1.4rem);line-height:1.35;margin:0;
+ overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-step{
+ margin:0 0 3px;font-size:.76rem;color:#806e5d;line-height:1.3;
+ overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-dialog-back,
+body[data-page="back"] .organizer-dialog-close{
+ min-height:46px;font-size:.94rem;white-space:normal;line-height:1.25;
+}
+body[data-page="back"] .organizer-dialog-back[hidden]{display:none!important}
+body[data-page="back"] .organizer-dialog-content{
+ flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+ padding:18px 20px max(22px,env(safe-area-inset-bottom));
+ outline:0;scrollbar-gutter:stable;
+}
+body[data-page="back"] .organizer-dialog-intro{
+ margin:0 0 14px;font-size:1rem;line-height:1.55;
+}
+body[data-page="back"] .organizer-record-menu{display:grid;gap:10px}
+body[data-page="back"] .organizer-step-button{
+ appearance:none;border:1px solid #dac6aa;border-radius:12px;
+ background:#fffefa;color:#49352a;
+ display:grid;grid-template-columns:minmax(0,1fr) auto;
+ gap:4px 10px;align-items:center;
+ width:100%;min-height:74px;padding:14px 15px;
+ text-align:left;cursor:pointer;touch-action:manipulation;
+}
+body[data-page="back"] .organizer-step-button strong{
+ grid-column:1;line-height:1.4;font-size:1.06rem;overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-step-button .minor{
+ grid-column:1;font-size:.86rem;line-height:1.4;overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-step-arrow{
+ grid-column:2;grid-row:1/span 2;align-self:center;
+ color:#835531;font-size:1.35rem;font-weight:800;
+}
+body[data-page="back"] .organizer-record-fields{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+ margin:0 0 16px;
+}
+body[data-page="back"] .organizer-record-field{
+ min-width:0;padding:11px 12px;
+ border:1px solid #e6d7c1;border-radius:11px;background:#fffdf8;
+}
+body[data-page="back"] .organizer-record-field dt{
+ font-size:.78rem;font-weight:700;color:#806a58;margin:0 0 4px;
+}
+body[data-page="back"] .organizer-record-field dd{
+ font-size:1rem;line-height:1.5;color:#48362c;margin:0;
+ overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-dialog-subtitle{font-size:1.04rem}
+body[data-page="back"] .organizer-private-boundary{
+ background:#fffaf0;border:1px solid #d5b98c;border-radius:12px;
+ padding:17px;line-height:1.65;
+}
+body[data-page="back"] .organizer-private-boundary h3{margin:0 0 8px;font-size:1.1rem}
+body[data-page="back"] .organizer-roster-actions{
+ display:grid;grid-template-columns:1fr;justify-content:stretch;
+ gap:10px;
+}
+body[data-page="back"] .organizer-roster-actions button{
+ width:100%;min-height:54px;white-space:normal;
+}
+body[data-page="back"] .organizer-record-watch{
+ display:flex;align-items:center;justify-content:center;
+ min-height:54px;width:100%;box-sizing:border-box;
+}
+body[data-page="back"] .organizer-dialog-content .entrant-gallery{
+ max-width:100%;overflow-wrap:anywhere;
+}
+@media(max-width:600px){
+ body[data-page="back"] .organizer-dialog-head{
+  padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
+  gap:7px;grid-template-columns:auto minmax(0,1fr) auto;
+ }
+ body[data-page="back"] .organizer-dialog-back,
+ body[data-page="back"] .organizer-dialog-close{
+  min-height:48px;padding:8px 10px;font-size:.88rem;
+ }
+ body[data-page="back"] .organizer-dialog-heading h2{font-size:1.12rem}
+ body[data-page="back"] .organizer-dialog-content{
+  padding:14px 13px max(18px,env(safe-area-inset-bottom));
+  scrollbar-gutter:auto;
+ }
+ body[data-page="back"] .organizer-record-fields{grid-template-columns:1fr}
+ body[data-page="back"] .organizer-record-status{max-width:37%}
+ body[data-page="back"] .organizer-step-button{min-height:74px}
+}
+@media(max-width:340px){
+ body[data-page="back"] .organizer-record-row{flex-direction:column;align-items:stretch}
+ body[data-page="back"] .organizer-record-status{
+  max-width:none;justify-content:flex-start;padding:0 6px 8px;
+ }
+ body[data-page="back"] .organizer-dialog-head{grid-template-columns:auto minmax(0,1fr) auto}
+ body[data-page="back"] .organizer-dialog-back,
+ body[data-page="back"] .organizer-dialog-close{font-size:.78rem;padding:7px 6px}
+ body[data-page="back"] .organizer-dialog-heading h2{font-size:1rem}
+ body[data-page="back"] .organizer-step{font-size:.66rem}
+}
+
+/* Staff records are pages within the dashboard. Use the browser scroll surface. */
+body[data-page="back"]{min-width:0}
+body[data-page="back"] .page-shell{min-width:0}
+body[data-page="back"] .staff-languages{display:flex;flex-wrap:wrap;gap:.25rem;margin:0 0 .65rem}
+body[data-page="back"] .staff-languages button{
+ min-height:48px;padding:.5rem .75rem;border:1px solid #d6bd9c;border-radius:.55rem;
+ background:#fdfaf3;color:#49352a;font:inherit
+}
+body[data-page="back"] .staff-languages button[aria-pressed=true]{background:#653a2f;color:#fff}
+body.staff-record-open[data-page="back"] .staff-languages,
+body.staff-record-open[data-page="back"] .staff-boundary,
+body.staff-record-open[data-page="back"] .page-heading,
+body.staff-record-open[data-page="back"] .role-tabs,
+body.staff-record-open[data-page="back"] .masthead,
+body.staff-record-open[data-page="back"] .site-footer,
+body.staff-record-open[data-page="back"] #back-dashboard>.page-top{display:none}
+body[data-page="back"] .staff-record-workspace{
+ max-width:48rem;margin:0 auto 1rem;min-inline-size:0;
+ overflow-wrap:anywhere;border:1px solid #dac6aa;border-radius:1rem;
+ background:#fcfaf6;color:#47332a
+}
+body[data-page="back"] .organizer-dialog-content{
+ overflow:visible;padding:1rem;min-inline-size:0
+}
+body[data-page="back"] .organizer-dialog-head{
+ display:flex;flex-wrap:wrap;justify-content:space-between;
+ border-radius:.9rem .9rem 0 0
+}
+body[data-page="back"] .organizer-dialog-heading{order:2;flex:1 0 100%}
+body[data-page="back"] .staff-record-nav{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:space-between;margin:0 0 1rem}
+body[data-page="back"] .staff-record-content{min-inline-size:0;overflow-wrap:anywhere}
+body[data-page="back"] .organizer-step-button{min-height:48px;padding:.65rem .75rem}
+body[data-page="back"] .staff-roster .roster-entry, body[data-page="back"] #judge-list .roster-entry{
+ min-width:0;align-items:center
+}
+body[data-page="back"] .staff-entry-id{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+body[data-page="back"] .staff-roster .organizer-record-open,body[data-page="back"] #judge-list button,
+body[data-page="back"] .staff-record-nav button,body[data-page="back"] .staff-record-workspace button,
+body[data-page="back"] .staff-score-actions button,body[data-page="back"] .roster-pagination button{
+ min-height:48px;white-space:normal;overflow-wrap:anywhere
+}
+body[data-page="back"] .staff-score-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:.5rem}
+body[data-page="back"] .staff-score-actions>[hidden]{display:none}
+body[data-page="back"] .judge-score-form input[type=number]{font-size:1rem;min-height:48px}
+body[data-page="back"] .staff-secondary>summary{cursor:pointer;min-height:48px;padding:.5rem 0}
+body[data-page="back"] .staff-roster{margin-top:.75rem}
+@media(max-width:450px){
+ body[data-page="back"] .page-shell{width:auto;margin-inline:.625rem}
+ body[data-page="back"] .organizer-record-fields{grid-template-columns:minmax(0,1fr)}
+ body[data-page="back"] .organizer-record-status{max-width:none}
+ body[data-page="back"] .staff-roster .organizer-record-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.25rem}
+ body[data-page="back"] .staff-roster .organizer-record-arrow{font-size:.85rem}
+}
+@media(max-width:320px){
+ body[data-page="back"] .staff-roster .organizer-record-row,
+ body[data-page="back"] #judge-list .roster-entry{grid-template-columns:minmax(0,1fr)}
+ body[data-page="back"] .staff-roster .organizer-record-status{justify-content:flex-start}
+}
+
+body[data-page="back"] .ghp-universal-footer-brand{display:none!important}
+body.staff-authenticated[data-page="back"] .masthead,
+body.staff-authenticated[data-page="back"] .page-heading,
+body.staff-authenticated[data-page="back"] .staff-boundary,
+body.staff-authenticated[data-page="back"] #back-dashboard>.page-top h2{display:none}
+body[data-page="back"] .role-tabs{display:flex;gap:.5rem;margin:.25rem 0}
+body[data-page="back"] .role-tabs button{flex:0 1 auto;min-height:48px;padding:.5rem 1rem}
+body[data-page="back"] .staff-mobile-summary{
+ display:flex!important;flex-wrap:wrap;gap:.5rem;margin:.5rem 0
+}
+body[data-page="back"] .staff-mobile-summary .dash-stat{
+ display:flex;align-items:center;gap:.5rem;flex:1 1 7rem;
+ min-height:48px;padding:.5rem .75rem;border-radius:.5rem
+}
+body[data-page="back"] .staff-mobile-summary .dashboard-number{
+ font-size:1.35rem;line-height:1.2;margin:0
+}
+body[data-page="back"] .staff-mobile-summary small{font-size:.875rem}
+body[data-page="back"] .page-top{margin:.25rem 0}
+body[data-page="back"] .staff-languages{margin:0}
+body[data-page="back"] .page-shell{padding-top:.75rem}
+body[data-page="back"] .staff-tools{display:grid;gap:.5rem;margin-top:.75rem}
+body[data-page="back"] .staff-tools .panel{margin:0}
+body[data-page="back"] #back-dashboard>.page-top{justify-content:flex-end}
+
+@media(max-width:600px){
+ body[data-page="back"] .organizer-record-arrow{font-size:0!important;min-width:.75rem}
+ body[data-page="back"] .organizer-record-arrow::after{content:'›';font-size:1.5rem}
+}
+
+
+/* 2026-11-19 Pixel 10 Pro / low-width Android: density without tiny tap targets. */
+body[data-page="back"] .staff-session-warning,
+body[data-page="back"] .staff-session-expired{
+ margin:.5rem 0;padding:.7rem .8rem;border-radius:.65rem;
+ line-height:1.45;font-size:.93rem;
+}
+body[data-page="back"] .staff-session-warning{
+ border:1px solid #d6b778;background:#fff5dd;color:#674820;
+}
+body[data-page="back"] .staff-session-expired{
+ border:2px solid #ab684a;background:#fff1e9;color:#6e3327;
+}
+body[data-page="back"] .staff-session-warning p,
+body[data-page="back"] .staff-session-expired p{margin:.25rem 0 .6rem}
+body[data-page="back"] #staff-session-relogin{min-height:50px;width:100%;font-size:1rem}
+body[data-page="back"] .staff-mobile-summary{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:.45rem;margin:.35rem 0 .5rem;
+}
+body[data-page="back"] .staff-mobile-summary .dash-stat{
+ display:flex;align-items:center;gap:.4rem;flex:none;min-width:0;
+ grid-column:auto;
+ min-height:56px;padding:.48rem .58rem;border-radius:.6rem;
+}
+body[data-page="back"] .staff-mobile-summary .dashboard-number{
+ flex:0 0 auto;font-size:1.42rem;line-height:1.15;margin:0;
+}
+body[data-page="back"] .staff-mobile-summary small{
+ min-width:0;font-size:.82rem;line-height:1.25;overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-toolbar{
+ display:grid;grid-template-columns:minmax(0,1fr) auto;
+ align-items:end;gap:.5rem;margin:.45rem 0 .25rem;
+}
+body[data-page="back"] .organizer-toolbar>.roster-field{min-width:0;margin:0}
+body[data-page="back"] .organizer-toolbar>.roster-field>span{
+ font-size:.85rem;line-height:1.2;margin:0;
+}
+body[data-page="back"] .organizer-toolbar #organizer-search{
+ min-height:48px;width:100%;font-size:1rem;
+ padding:.55rem .65rem;border-radius:.65rem;
+}
+body[data-page="back"] .organizer-filter-panel{
+ width:auto;align-self:end;min-width:0;border-radius:.65rem;
+ padding:0 .65rem;background:#fdfaf4;
+}
+body[data-page="back"] .organizer-filter-panel>summary{
+ display:list-item;min-height:48px;padding:.72rem .2rem;
+ font-size:.92rem;line-height:1.4;white-space:nowrap;
+}
+body[data-page="back"] .organizer-filter-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:.55rem;padding:.35rem 0 .75rem;
+}
+body[data-page="back"] .organizer-filter-grid>.roster-field{
+ min-width:0;gap:.3rem;font-size:.83rem;
+}
+body[data-page="back"] .organizer-filter-grid select{
+ width:100%;min-width:0;min-height:48px;padding:.55rem .35rem;
+ font-size:1rem;border-radius:.55rem;
+}
+body[data-page="back"] .organizer-filter-grid>.roster-field:last-child{
+ grid-column:1 / -1;
+}
+body[data-page="back"] .organizer-filter-panel[open]{
+ grid-column:1 / -1;grid-row:2;width:100%;box-sizing:border-box;
+}
+body[data-page="back"] .organizer-filter-panel[open]>summary{
+ min-height:36px;padding:.45rem .2rem;
+}
+body[data-page="back"] .staff-roster{padding:.8rem!important}
+body[data-page="back"] .staff-roster>h2{
+ font-size:1.12rem;margin:0 0 .3rem;line-height:1.4;
+}
+body[data-page="back"] .staff-roster .roster-count{
+ margin:.25rem 0 .5rem;font-size:.82rem;line-height:1.4;
+}
+body[data-page="back"] .staff-roster .roster-list{gap:.4rem}
+body[data-page="back"] .staff-roster .organizer-record-row{
+ padding:.25rem .55rem;gap:.25rem;
+}
+body[data-page="back"] .staff-roster .organizer-record-open{
+ min-height:58px;padding:.45rem .25rem;
+}
+body[data-page="back"] .staff-roster .organizer-record-open strong{
+ font-size:1.02rem;line-height:1.33;
+}
+body[data-page="back"] .staff-roster .organizer-record-open .roster-mini{
+ font-size:.81rem;line-height:1.35;
+}
+body[data-page="back"] .staff-roster .organizer-record-status .pill{
+ font-size:.75rem;padding:.25rem .35rem;
+}
+body[data-page="back"] .staff-system-note{
+ margin:.4rem 0 .6rem;padding:0 .65rem;
+}
+body[data-page="back"] .staff-system-note>summary{
+ padding:.6rem .15rem;min-height:42px;
+}
+body[data-page="back"] .staff-secondary>summary{
+ min-height:44px;padding:.35rem 0;
+}
+@media(min-width:650px){
+ body[data-page="back"] .organizer-filter-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+ }
+ body[data-page="back"] .organizer-filter-grid>.roster-field:last-child{
+  grid-column:auto;
+ }
+ body[data-page="back"] .organizer-toolbar{grid-template-columns:minmax(0,1fr) auto}
+}
+@media(max-width:350px){
+ body[data-page="back"] .staff-roster{padding:.65rem!important}
+ body[data-page="back"] .staff-mobile-summary .dashboard-number{font-size:1.25rem}
+ body[data-page="back"] .staff-mobile-summary small{font-size:.76rem}
+ body[data-page="back"] .organizer-filter-panel{padding-inline:.45rem}
+ body[data-page="back"] .organizer-filter-panel>summary{font-size:.84rem}
+ body[data-page="back"] .organizer-toolbar #organizer-search{padding-inline:.45rem}
+}
+@media(max-width:299px){
+ body[data-page="back"] .organizer-filter-grid{grid-template-columns:1fr}
+ body[data-page="back"] .organizer-filter-grid>.roster-field:last-child{grid-column:auto}
+ body[data-page="back"] .staff-mobile-summary .dash-stat{padding:.35rem}
+}
+
+
+body[data-page="back"] .staff-otp-expiry{
+ padding:.55rem .7rem;margin:.4rem 0 .6rem;
+ font-size:.92rem;line-height:1.45;
+ border-radius:.6rem;border:1px solid #d6c4a4;
+ background:#faf5e8;color:#5d4531;
+}
+body[data-page="back"] .staff-otp-expiry[data-state="warning"]{
+ border-color:#c8a061;background:#fff4df;
+}
+body[data-page="back"] .staff-otp-expiry[data-state="error"]{
+ border-color:#bd6b4a;background:#fff0e9;color:#863b25;font-weight:700;
+}
+
+
+/* 2026-11-19 owner-approved mobile staff IA: four distinct section cards.
+   Do not collapse these into an expanded all-in-one artist page. */
+@media(max-width:600px){
+ body[data-page="back"] .staff-record-workspace .organizer-record-menu{
+  gap:10px;
+ }
+ body[data-page="back"] .staff-record-workspace .organizer-step-button{
+  width:100%;min-height:68px;padding:12px 13px;
+  border-radius:12px;border:1px solid #dac6aa;background:#fffefa;
+ }
+ body[data-page="back"] .staff-record-workspace .organizer-step-button strong{
+  font-size:1.03rem;line-height:1.45;
+ }
+ body[data-page="back"] .staff-record-workspace .organizer-dialog-content{
+  padding:14px 13px max(18px,env(safe-area-inset-bottom));
+ }
+}

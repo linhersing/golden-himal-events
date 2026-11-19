@@ -51,10 +51,11 @@ test('controlled contact write and readback stays with the entrant and organizer
   assert.equal((await call(path,'owner')).status,403);
   assert.equal((await call(path,'judge')).status,403);
   assert.equal((await call(path,null)).status,401);
+  // Unscoped legacy access formerly returned every private field without an audit.
+  // It is now blocked until the organizer uses a specific audited section.
   const organizer=await call(path,'organizer');
-  assert.equal(organizer.status,200);
-  assert.equal(organizer.headers.get('cache-control'),'no-store');
-  assert.deepEqual((await organizer.json()).contact,contact);
+  assert.equal(organizer.status,422);
+  assert.equal((await organizer.json()).contact,undefined);
   const summary=(await (await call('organizer-queue','organizer')).json()).applications[0];
   assert.ok(summary);
   for(const key of Object.keys(contact))assert.ok(!(key in summary),key);

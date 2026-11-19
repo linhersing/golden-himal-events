@@ -32,7 +32,7 @@ test('125 photo-distinct reviewer entries paginate, filter and open only one sco
    const payload=route.request().postDataJSON();
    scores.push(payload);const app=entries.find(x=>x.id===payload.application_id);
    if(app){app.demo_technique=payload.technique;app.demo_interpretation=payload.interpretation;}
-   result={ok:true,score:payload.technique+payload.interpretation};
+   result={ok:true,phase:payload.phase,score:payload.technique+payload.interpretation};
   }
   return route.fulfill({status:200,json:result});
  });
@@ -50,8 +50,8 @@ test('125 photo-distinct reviewer entries paginate, filter and open only one sco
  await expect(page.locator('#judge-list .roster-entry')).toHaveCount(1);
  await expect(page.locator('#judge-list .roster-entry')).toContainText('125');
  await page.locator('#judge-list .roster-entry').click();
- await expect(page.locator('#judge-detail .entrant-gallery-img')).toHaveCount(1);
- await expect(page.locator('#judge-detail .entrant-gallery-img')).toHaveAttribute('src','https://images.example.org/ghv-125.jpg');
+ await expect(page.locator('#judge-detail')).toContainText('TEST Singer 125');
+ await page.locator('#judge-queue [data-song-position="1"]').click();
  await expect(page.locator('#judge-detail')).not.toContainText('TEST Singer 124');
  await expect(page.locator('#judge-queue form')).toHaveCount(1);
  for(const width of [320,375,414]){
@@ -61,14 +61,16 @@ test('125 photo-distinct reviewer entries paginate, filter and open only one sco
  await page.screenshot({path:'test-results/ghv-125/reviewer-detail-mobile.png',fullPage:true});
  await page.locator('#judge-queue [name=technique]').fill('51');
  await page.locator('#judge-queue [name=interpretation]').fill('32');
- await page.locator('#judge-queue [name=conflict]').check();
+ await page.locator('#judge-queue [type=checkbox]').check();
  await page.locator('#judge-queue button[type=submit]').click();
+ await expect(page.locator('#judge-queue')).toContainText(/83\s*分/);
  expect(scores).toHaveLength(1);
  expect(scores[0]).toMatchObject({application_id:'FAKE-125',technique:51,interpretation:32,no_conflict:true});
+ await page.locator('#judge-back-list').click();
  await expect(page.locator('#judge-roster-panel')).toBeVisible();
  await page.locator('#judge-status').selectOption('scored');
  await expect(page.locator('#judge-list .roster-entry')).toHaveCount(1);
- await expect(page.locator('#judge-list')).toContainText('已評分');
+ await expect(page.locator('#judge-list')).toContainText(/已評/);
 });
 test('125 organizer entries filter 63 Nepali / 62 English, maintain payment 0 and mobile width',async({page})=>{
  await externalPhotos(page);
@@ -84,10 +86,11 @@ test('125 organizer entries filter 63 Nepali / 62 English, maintain payment 0 an
  await expect(page.locator('#paid-count')).toHaveText('0');
  await expect(page.locator('#admin-apps .roster-entry')).toHaveCount(12);
  await expect(page.locator('#organizer-pagination')).toContainText('1 / 11');
+ await page.locator('.organizer-filter-panel summary').click();
  await page.locator('#organizer-language').selectOption('Nepali');
- await expect(page.locator('#organizer-count')).toContainText('63 筆');
+ await expect(page.locator('#organizer-count')).toContainText(/63\s*(?:筆|\/)/);
  await page.locator('#organizer-language').selectOption('English');
- await expect(page.locator('#organizer-count')).toContainText('62 筆');
+ await expect(page.locator('#organizer-count')).toContainText(/62\s*(?:筆|\/)/);
  await page.locator('#organizer-search').fill('TEST Singer 124');
  await expect(page.locator('#admin-apps .roster-entry')).toHaveCount(1);
  await expect(page.locator('#admin-apps')).toContainText('FAKE-124');

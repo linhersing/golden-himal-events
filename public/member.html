@@ -105,7 +105,7 @@
 <legend id="muse-fields-title" data-l="museTitle">Registration details</legend>
 <p class="field-hint" data-l="museInfo">Enter contact and education details. Select your province separately in the location section below.</p>
 <p id="muse-fields-notice" class="helper-banner" data-l="musePending" role="status">Secure private storage is not yet approved. These controls are disabled; no personal details will be submitted or saved.</p>
-<div class="muse-fields-grid"><label class="field"><span data-l="museFullName">Full name *</span><input type="text" name="full_name" maxlength="120" autocomplete="off" required></label>
+<div class="muse-fields-grid"><label class="field"><span data-l="museFullName">Legal full name (as on ID) *</span><input type="text" name="full_name" maxlength="120" autocomplete="off" aria-describedby="legal-name-help" required><small class="field-hint" id="legal-name-help" data-l="museFullNameHelp">For organizer identity checks; not your performance name.</small></label>
 <label class="field"><span data-l="musePhone">Phone number *</span><input type="tel" name="contact_phone" maxlength="32" autocomplete="off" required></label>
 <label class="field"><span data-l="museEmail">Email address *</span><input type="email" name="contact_email" maxlength="180" autocomplete="off" required></label>
 <label class="field"><span data-l="museContact">常用聯絡帳號（WhatsApp／Viber／Messenger 等） *</span><input type="text" name="contact_handle" maxlength="160" autocomplete="off" required></label>
@@ -115,7 +115,7 @@
 <label class="field full"><span data-l="museDescription">Short description *</span><textarea name="short_description" rows="3" maxlength="500" required></textarea></label>
 <label class="field full"><span data-l="museTraining">Musical education / training experience *</span><textarea name="musical_training" rows="3" maxlength="400" required></textarea></label></div>
 </fieldset>
-<label class="field"><span data-l="stageName">Singer or stage name *</span><input name="stage_name" maxlength="60" required autocomplete="name" data-l-placeholder="stagePlaceholder" placeholder="Name shown to judges"></label>
+<label class="field"><span data-l="stageName">Performance name (real or stage name) *</span><input name="stage_name" maxlength="60" required autocomplete="off" aria-describedby="performance-name-help" data-l-placeholder="stagePlaceholder" placeholder="Your stage name or full name"><small class="field-hint" id="performance-name-help" data-l="stageNameHelp">Used by organizers and judges. No stage name? Enter your full name.</small></label>
 <fieldset id="entrant-profile-fields" class="full entrant-profile-fields" hidden>
 <legend data-l="profileHeading">選手照片與基本資料（選填）</legend>
 <p class="field-hint" data-l="profileExplainer">貼上公開的 HTTPS 圖片網址；IG、Facebook 或 YouTube 一般分享連結可能無法直接顯示照片。不會上傳圖片檔案。</p>

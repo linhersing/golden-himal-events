@@ -50,7 +50,8 @@ test('member and staff share server-issued identity but never fake official paym
  assert.match(member,/id="university-statement"/);
  assert.match(locale,/60–90 seconds/);
  assert.match(api,/mt\('delete'\)/);
- assert.match(api,/payment_status==='simulated_paid'/);
+ assert.match(api,/entryReviewKey/);
+ assert.match(api,/organizerState/);
  assert.match(api,/callout.hidden=hasEntries/);
  assert.match(member,/data-lang="zh"/);
  assert.match(member,/page-locale\.js/);
@@ -80,7 +81,8 @@ test('backoffice roster retains one guarded staff entry and one scoring workbenc
  assert.match(html,/data-page="back"/);
  assert.match(html,/data-role-tab="reviewer"/);
  assert.match(js,/if\(page==='back'\)/);
- assert.match(js,/api\('score',payload\)/);
+ assert.match(js,/api\(single\?'january-video-score':'score',payload\)/);
+ assert.match(js,/scoresEqual\(readStored\(row\),payload\)/);
  assert.doesNotMatch(js,/ghv_photo_url|ghv_gender/);
 });
 

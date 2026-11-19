@@ -50,14 +50,26 @@ test('organizer can inspect the audition link and open a notified 48-hour correc
  });
  await page.goto('/backoffice.html');
  const entryCard=page.locator('#admin-apps article');
- await expect(entryCard.getByRole('link',{name:'開啟參賽影片'})).toHaveAttribute('href',entry.demo_url);
+ await entryCard.locator('.organizer-record-open').click();
+ const detail=page.locator('#organizer-entry-dialog');
+ await detail.getByRole('button',{name:/歌曲與影片/}).click();
+ await detail.getByRole('button',{name:/TEST Song/}).click();
+ await expect(detail.locator('.organizer-record-watch')).toHaveAttribute('href',entry.demo_url);
+ await detail.locator('#organizer-entry-back').click();
+ await detail.locator('#organizer-entry-back').click();
+ await detail.getByRole('button',{name:/報名審核與補件/}).click();
  page.once('dialog',async dialog=>{
-  expect(dialog.message()).toContain('請先聯絡選手');
+  expect(dialog.message()).toContain('通知選手');
   await dialog.accept();
  });
- await entryCard.getByRole('button',{name:'開放 48 小時補件'}).click();
- await expect(entryCard).toContainText('等待選手補正資料');
- await expect(entryCard.getByRole('button',{name:'核准測試報名'})).toHaveCount(0);
+ await detail.getByRole('button',{name:'開放 48 小時補件'}).click();
+ await expect(page.locator('#back-status')).toContainText(/補正|補件/);
+ if(await detail.isHidden()){
+  await entryCard.locator('.organizer-record-open').click();
+  await detail.getByRole('button',{name:/報名審核與補件/}).click();
+ }
+ await expect(detail).toContainText(/待補件|等待選手補正資料/);
+ await expect(detail.getByRole('button',{name:'核准測試報名'})).toHaveCount(0);
  expect(requests).toEqual([{application_id:entry.id}]);
 });
 test('member can view own stored entry, edit and delete its unpaid data in guarded endpoints',async({page})=>{
