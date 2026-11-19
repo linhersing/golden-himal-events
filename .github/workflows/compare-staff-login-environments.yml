@@ -49,6 +49,16 @@ jobs:
               }
             }
           }
+          // A safe GET-only public signup mode probe; never send code or simulate a member.
+          const signupUrl='https://golden-himal-voice-preview.linhersing.workers.dev/api/e2e/signup-config';
+          try{
+            const r=await fetch(signupUrl,{signal:AbortSignal.timeout(12000),headers:{Accept:'application/json'}});
+            const data=r.headers.get('content-type')?.includes('application/json')?await r.json():{};
+            console.log('Preview member signup mode: HTTP '+r.status+' mode='+
+              (data?.mode==='public_test'?'PUBLIC_TEST_ANY_EMAIL_WITH_HUMAN_CHECK':
+                data?.mode==='invited'?'INVITED_EMAIL_ONLY':'UNKNOWN')+
+              ' publicSiteKeyPresent='+(typeof data?.siteKey==='string'&&!!data.siteKey));
+          }catch{console.log('Preview member signup mode: CHECK_UNAVAILABLE');}
           console.log('GET-only check. No real OTP, login or role switch performed.');
           EOF
       - name: Verify old isolated staff login is forwarded to ready preview
