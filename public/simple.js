@@ -191,7 +191,8 @@ function updateStaffSessionReminder(){
  warning.hidden=seconds>600;
  if(!warning.hidden){
   const minutes=Math.max(1,Math.ceil(seconds/60));
-  $('staff-session-warning-text').textContent='目前登入約剩 '+minutes+' 分鐘。請先儲存評分或完成操作；逾時後需重新使用 Email 驗證碼登入。';
+  const template='目前登入約剩 {minutes} 分鐘。請先儲存評分或完成操作；逾時後需重新使用 Email 驗證碼登入。';
+  $('staff-session-warning-text').textContent=(window.GHVStaffLocale?.(template)||template).replace('{minutes}',String(minutes));
  }
 }
 function trackStaffSession(session){
@@ -323,7 +324,7 @@ async function api(path,body){
   });
   const data=await r.json();
   if(!r.ok||data.ok!==true){
-   if(staff&&account&&(r.status===401||data.error==='login_required'||data.error==='staff_reauthentication_required')){
+   if(staff&&account&&(data.error==='login_required'||data.error==='staff_reauthentication_required'||(r.status===401&&!['request-code','verify-code'].includes(path)))){
     expireStaffSession();
    }
    throw new Error(data.error||('HTTP '+r.status));
