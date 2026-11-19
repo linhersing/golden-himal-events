@@ -131,12 +131,13 @@ test('guarded contact sections return only needed fields and append masked D1 au
   const unknown=await call(path(firstId,'constructor'),'organizer');
   assert.equal(unknown.status,422);
   const legacy=await call(path(firstId),'organizer');
-  assert.deepEqual((await legacy.json()).contact,Object.assign({},...Object.values(results)));
+  assert.equal(legacy.status,422); // Full-record reads are forbidden, even to organizer.
+  assert.equal((await legacy.json()).contact,undefined);
   const audit=await call('organizer-registration-audit?id='+firstId,'organizer');
   const events=(await audit.json()).events;
-  assert.equal(events.length,5);
+  assert.equal(events.length,4);
   assert.ok(events.every(x=>x.action==='audit_read'&&x.result==='success'&&x.actor_id==='organizer'&&x.target_id===firstId&&x.occurred_at>1));
-  assert.deepEqual(events.map(x=>x.diff.section).sort(),['address','all','background','contact','identity']);
+  assert.deepEqual(events.map(x=>x.diff.section).sort(),['address','background','contact','identity']);
   assert.doesNotMatch(JSON.stringify(events),/9800000001|example\.invalid|Private member|private chat|private street/i);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM e2e_staff_audit WHERE result='denied' AND target_id IS NULL").get().n,2);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM e2e_staff_audit WHERE result='missing' AND target_id=?").get(missingId).n,1);
@@ -159,15 +160,15 @@ test('guarded contact sections return only needed fields and append masked D1 au
   assert.equal((await call(organizerProfile,'oldReviewer')).status,403);
   assert.equal((await call('reviewer-queue?view=workbench','oldOrganizer')).status,403);
   assert.equal((await call(path(firstId,'identity'),'oldOrganizer')).status,503);
-  assert.equal((await call(path(firstId),'oldOrganizer')).status,503);
+  assert.equal((await call(path(firstId),'oldOrganizer')).status,422);
   env.STAGING_ADMIN_MANAGEMENT_ENABLED='false';
   assert.equal((await call(path(firstId,'identity'),'oldOrganizer')).status,503);
-  assert.equal((await call(path(firstId),'oldOrganizer')).status,200);
+  assert.equal((await call(path(firstId),'oldOrganizer')).status,422);
   env.STAGING_STAFF_TURNSTILE_REQUIRED='true';
   env.STAGING_ADMIN_MANAGEMENT_ENABLED='true';
 
   db.exec("CREATE TRIGGER block_contact_audit BEFORE INSERT ON e2e_staff_audit BEGIN SELECT RAISE(ABORT,'read fixture'); END");
-  for(const section of ['contact',undefined]){
+  for(const section of ['contact']){
    const blocked=await call(path(firstId,section),'organizer');
    assert.equal(blocked.status,503);
    assert.deepEqual(await blocked.json(),{ok:false,error:'contact_audit_unavailable'});
