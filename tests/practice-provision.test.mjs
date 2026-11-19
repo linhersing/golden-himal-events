@@ -14,12 +14,16 @@ test('successful SQL file import with progress output still verifies actual sche
  const root=mkdtempSync(join(tmpdir(),'ghv-provision-output-')),script=resolve('scripts/provision-practice.mjs');
  try{
   mkdirSync(join(root,'bin'));mkdirSync(join(root,'backend/migrations'),{recursive:true});
+  for(const file of ['1000_e2e_staging_acceptance_ONLY.sql','1017_staff_auth_limits_STAGING_ONLY.sql','1018_admin_registration_audit_STAGING_ONLY.sql'])
+   copyFileSync('backend/migrations/'+file,join(root,'backend/migrations',file));
   for(const file of ['1002_private_practice_ONLY.sql','1004_self_service_signup_STAGING_ONLY.sql','1007_test_application_approval_STAGING_ONLY.sql','1009_test_video_supplements_STAGING_ONLY.sql','1010_nepal_locations_STAGING_ONLY.sql','1011_frontline_2027_registration_STAGING_ONLY.sql','1012_frontline_region_lock_STAGING_ONLY.sql','1013_member_corrections_STAGING_ONLY.sql','1014_demo_five_2027_STAGING_ONLY.sql','1016_january_demo_test_rosters_ONLY.sql','1013_muse_audition_details_STAGING_ONLY.sql','1015_muse_contact_handle_STAGING_ONLY.sql'])
    copyFileSync('backend/migrations/'+file,join(root,'backend/migrations',file));
   const cli=`#!/usr/bin/env node
 import {DatabaseSync} from 'node:sqlite';import {readFileSync} from 'node:fs';
 const args=process.argv.slice(2),db=new DatabaseSync('service.db');
-db.exec("CREATE TABLE IF NOT EXISTS e2e_accounts(id TEXT PRIMARY KEY);CREATE TABLE IF NOT EXISTS e2e_applications(id TEXT PRIMARY KEY);INSERT OR IGNORE INTO e2e_accounts VALUES('existing-account');INSERT OR IGNORE INTO e2e_applications VALUES('existing-application');");
+db.exec(readFileSync('backend/migrations/1000_e2e_staging_acceptance_ONLY.sql','utf8'));
+db.exec(readFileSync('backend/migrations/1014_demo_five_2027_STAGING_ONLY.sql','utf8'));
+db.exec("INSERT OR IGNORE INTO e2e_accounts VALUES('existing-account','fixture-email','fictional','member',1,1);INSERT OR IGNORE INTO e2e_applications(id,account_id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,created_at,updated_at) VALUES('existing-application','existing-account','2027-01','community','bagmati','work','TEST','TEST','Song','Artist','English','C',1,1);");
 if(args.includes('time-travel'))console.log(JSON.stringify({bookmark:'TEST-RESTORE-BOOKMARK'}));
 else if(args.includes('--file')){db.exec(readFileSync(args[args.indexOf('--file')+1],'utf8'));console.log('Executing SQL file against remote database. Success.');}
 else{const sql=args[args.indexOf('--command')+1];console.log(JSON.stringify([{success:true,results:db.prepare(sql).all()}]));}
@@ -33,6 +37,8 @@ db.close();`;
   assert.deepEqual(evidence.location_schema,{tables:1});
   assert.equal(evidence.contact_schema_ready,true);
   assert.equal(evidence.contact_before,0);assert.equal(evidence.contact_after,0);
+  assert.deepEqual(evidence.staff_schema,{tables:4,views:1});
+  assert.deepEqual(evidence.competition_after,evidence.competition_before);
   const retry=invoke();
   assert.equal(retry.status,0,retry.stderr);
   const retried=JSON.parse(readFileSync(join(root,'dist/practice-build.json'),'utf8'));
