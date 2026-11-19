@@ -495,6 +495,37 @@ let challengeEmail,publicTest=false,staffHuman=false,humanToken,widgetId,widgetT
 const humanBox=$('signup-human-status'),retryButton=$('signup-human-retry');
 const sendButton=mailForm?.querySelector('button[type="submit"]');
 let widgetLoading=false;
+let otpValidUntil=0,otpReminderTimer=null;
+function stopOtpReminder(){
+ if(otpReminderTimer!==null){clearInterval(otpReminderTimer);otpReminderTimer=null}
+ otpValidUntil=0;
+ if(staff)$('staff-otp-expiry').hidden=true;
+}
+function tickOtpReminder(){
+ if(!staff||!otpValidUntil)return;
+ const message=$('staff-otp-expiry');
+ const submit=codeForm?.querySelector('button[type="submit"]');
+ const remaining=Math.ceil((otpValidUntil-Date.now())/1000);
+ if(remaining<=0){
+  message.textContent=window.GHVStaffLocale?.('驗證碼已過期，請更換 Email 後重新取得。')||'驗證碼已過期，請更換 Email 後重新取得。';
+  message.dataset.state='error';message.hidden=false;
+  if(submit)submit.disabled=true;
+ }else{
+  const minutes=Math.max(1,Math.ceil(remaining/60));
+  const template='驗證碼約剩 {minutes} 分鐘有效，逾時後請重新取得。';
+  message.textContent=(window.GHVStaffLocale?.(template)||template).replace('{minutes}',String(minutes));
+  message.dataset.state=remaining<=120?'warning':'info';message.hidden=false;
+  if(submit)submit.disabled=false;
+ }
+}
+function startOtpReminder(){
+ if(!staff)return;
+ stopOtpReminder();
+ otpValidUntil=Date.now()+600000;
+ tickOtpReminder();
+ otpReminderTimer=setInterval(tickOtpReminder,30000);
+}
+if(staff)document.addEventListener('visibilitychange',()=>{if(!document.hidden)tickOtpReminder()});
 const staffHumanCopy={signupHumanLoading:'正在載入真人驗證。',signupHumanPrompt:'請完成真人驗證後再寄送驗證碼。',signupHumanVerified:'真人驗證已完成。',signupHumanExpired:'真人驗證已過期，請重新驗證。',signupHumanBlocked:'真人驗證暫時無法使用，請重新載入。',signupHumanRequired:'請先完成真人驗證。'};
 const humanCopy=key=>staff?staffHumanCopy[key]:mt(key);
 function humanState(key,kind='pending'){
@@ -617,19 +648,22 @@ mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
   }
  }
  authForms(false);
+ if(staff)startOtpReminder();
  status(staff?'驗證信已要求寄送，請查看 Email（僅限受邀測試帳號）。':mt(publicTest?'signupCodeRequested':'otpRequested'));
  codeForm.querySelector('input').focus();
 })});
 codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
+ if(staff&&otpValidUntil&&Date.now()>=otpValidUntil){tickOtpReminder();return;}
  const code=String(formValues(codeForm).code||'').trim();
  await api('verify-code',{challenge_id:challenge,code,email:challengeEmail});
  challengeEmail=undefined;
+ stopOtpReminder();
  codeForm.reset();
  await loadSession();
  if(account)status(staff?'已登入。':mt('signedIn'));
 })});
-const change=$(staff?'back-change':'change-mail');change?.addEventListener('click',()=>{authForms(true);challenge=null;challengeEmail=undefined;codeForm.reset();statusBox.hidden=true});
-$(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff){staffTabs();$('staff-session-expired').hidden=true;}challenge=null;authForms(true);status(page==='member'?mt('signedOut'):'已登出。')}));
+const change=$(staff?'back-change':'change-mail');change?.addEventListener('click',()=>{stopOtpReminder();authForms(true);challenge=null;challengeEmail=undefined;codeForm.reset();statusBox.hidden=true});
+$(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff){staffTabs();$('staff-session-expired').hidden=true;}challenge=null;stopOtpReminder();authForms(true);status(page==='member'?mt('signedOut'):'已登出。')}));
 }
 async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else{clearAdminRegistrations();await renderJudge()}}else await renderMember()}
 function memberCanEdit(a){
