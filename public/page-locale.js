@@ -340,9 +340,9 @@ Object.assign(texts.ne,{"testNotice":"यो परीक्षण वेबस�
  Object.assign(texts.en,{contactRequired:'Reload and complete the contact and education fields for your invited TEST entry.',contactInvalid:'Complete all contact and education fields.',contactPhoneInvalid:'Enter a valid phone number.',contactEmailInvalid:'Enter a valid email address.',contactUnavailable:'Contact fields are unavailable for this account. Reload the page.'});
  Object.assign(texts.ne,{contactRequired:'पृष्ठ फेरि खोलेर परीक्षण आवेदनको सम्पर्क र शैक्षिक विवरण पूरा गर्नुहोस्।',contactInvalid:'सम्पर्क र शैक्षिक विवरण पूरा गर्नुहोस्।',contactPhoneInvalid:'मान्य फोन नम्बर राख्नुहोस्।',contactEmailInvalid:'मान्य इमेल राख्नुहोस्।',contactUnavailable:'यो खाताका लागि सम्पर्क विवरण उपलब्ध छैन। पृष्ठ फेरि खोल्नुहोस्।'});
  const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
-Object.assign(texts.zh,{museFullName:'真實姓名（供主辦核對）*',stageName:'演出名稱／藝名（評審名冊顯示）*',stagePlaceholder:'可與真實姓名不同'});
-Object.assign(texts.en,{museFullName:'Legal name (organizer identity check) *',stageName:'Stage name (shown on the judging roster) *',stagePlaceholder:'May differ from your legal name'});
-Object.assign(texts.ne,{museFullName:'कानुनी नाम (आयोजकको पहिचान जाँचका लागि) *',stageName:'मञ्चको नाम (निर्णायकको सूचीमा देखिने) *',stagePlaceholder:'कानुनी नामभन्दा फरक हुन सक्छ'});
+Object.assign(texts.zh,{museFullName:'真實姓名（與身分證明一致）*',museFullNameHelp:'僅供主辦單位核對身分與參賽資格，不是演出名稱。',stageName:'演出名稱（本名或藝名）*',stageNameHelp:'供主辦與評審辨識參賽作品；沒有藝名就填本名。',stagePlaceholder:'沒有藝名可直接填本名'});
+Object.assign(texts.en,{museFullName:'Legal full name (as on ID) *',museFullNameHelp:'For organizer identity and eligibility checks. This is not your performance name.',stageName:'Performance name (real or stage name) *',stageNameHelp:'Used by organizers and judges to identify your entry. No stage name? Enter your full name.',stagePlaceholder:'Your stage name or full name'});
+Object.assign(texts.ne,{museFullName:'परिचयपत्रमा भएको पूरा नाम *',museFullNameHelp:'आयोजकले पहिचान र योग्यता जाँच्न प्रयोग गर्छन्; यो प्रस्तुति नाम होइन।',stageName:'प्रस्तुति नाम (वास्तविक वा मञ्च नाम) *',stageNameHelp:'आयोजक र निर्णायकले तपाईंको आवेदन चिन्ने नाम। मञ्च नाम नभए पूरा नाम लेख्नुहोस्।',stagePlaceholder:'मञ्च नाम नभए पूरा नाम'});
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
  document.querySelectorAll('[data-l]').forEach(el=>{el.textContent=t(el.dataset.l)});
