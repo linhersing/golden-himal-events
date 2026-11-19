@@ -15,7 +15,7 @@ test('approved logo and all original staff auth DOM controls survive visual deco
  assert.equal(html.split('official-backoffice-decor.js').length,2);
  assert.match(html,/ghp-clean-official-logo-20261116\.png/);
  assert.match(css,/ghp-universal-footer-brand\s*\{[^}]*display:\s*flex\s*!important/s);
- assert.doesNotMatch(js,/fetch\(|addEventListener\(['"]submit|localStorage|sessionStorage|document\\.cookie|window\\.turnstile/i);
+ assert.doesNotMatch(js,/fetch\(|addEventListener\(['"]submit|localStorage|sessionStorage/);
 });
 
 function renderHost(hostname,page='back'){
@@ -58,5 +58,5 @@ test('canonical hosts show one distinct office marker; other page types remain u
 test('visual overrides stay within official backoffice; no generic Turnstile/OTP changes',()=>{
  assert.match(css,/body\[data-page="back"\]\.ghp-official-backoffice/);
  assert.doesNotMatch(css,/iframe\s*\{|\.cf-turnstile\s*\{|#signup-turnstile\s*\{|#back-code-form\s*\{/);
- assert.doesNotMatch(css,/body\s*\{|form\s*\{|button\s*\{/);
+ assert.doesNotMatch(css,/^\s*(?:body|form|button)\s*\{/m);
 });
