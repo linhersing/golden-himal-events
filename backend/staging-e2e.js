@@ -608,7 +608,7 @@ export async function handleE2E(request,env){
   if(!a.email&&['/api/e2e/finalists','/api/e2e/test-vote'].includes(pathname))return deny('not_on_test_allowlist',403);
    const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval,supplements});
   if(v2)return v2;
-   if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),session_expires_at:a.sessionExpiresAt,profile_enabled:await profileReady(env),testOnly:true,
+   if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),session_expires_at:a.sessionExpiresAt,session_expires_in_seconds:Math.max(0,a.sessionExpiresAt-NOW()),profile_enabled:await profileReady(env),testOnly:true,
     ...(a.role==='member'&&await entrantLocationsReady(env.DB)?{nepal_locations_enabled:true}:{}),
     ...(a.role==='member'&&env.STAGING_FRONTLINE_2027_ENABLED==='true'&&await entrantLocationsReady(env.DB)&&await frontline2027Ready(env.DB)?{frontline_form_enabled:true}:{}),
     ...(await memberContactReady(env,a)?{muse_form_enabled:true}:{}),
