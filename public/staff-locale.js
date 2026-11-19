@@ -151,6 +151,8 @@ const words={
  '登入已逾時，請重新驗證':['Session expired — sign in again','लगइन समय सकियो — फेरि प्रमाणीकरण गर्नुहोस्'],
  '這是登入有效時間結束，不代表選手資料遺失。為保護參賽者資料，請重新完成真人驗證及 Email 驗證碼。尚未儲存的評分不會自動送出，重新登入後請先核對評分紀錄。':['Your staff session expired; contestant records were not deleted. Sign in again with human verification and an email code. Unsaved scores were not submitted; check the record after signing in.','कर्मचारी लगइन समय सकिएको हो; प्रतियोगीको विवरण मेटिएको छैन। मानव प्रमाणीकरण र इमेल कोड प्रयोग गरेर फेरि लगइन गर्नुहोस्। सुरक्षित नगरिएको अङ्क पठाइएको छैन; पुनः लगइनपछि विवरण जाँच्नुहोस्।'],
  '重新登入後台':['Sign in again','फेरि लगइन गर्नुहोस्'],
+ '驗證碼約剩 {minutes} 分鐘有效，逾時後請重新取得。':['Code valid for about {minutes} more minutes. Request a new code after expiry.','कोड करिब {minutes} मिनेट मान्य छ। समय सकिएपछि नयाँ कोड माग्नुहोस्।'],
+ '驗證碼已過期，請更換 Email 後重新取得。':['Your code expired. Choose Change email to request a new code.','कोडको म्याद सकियो। इमेल बदल्नुहोस् र नयाँ कोड माग्नुहोस्।'],
  '正式金流停用':['Payments paused','भुक्तानी रोकिएको छ']
 };
 function t(key){
