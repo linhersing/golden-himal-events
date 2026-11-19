@@ -1,4 +1,4 @@
-import {MUSE_FIELDS,museAuditionReady,readMuseContact} from './muse-audition.js';
+import {museAuditionReady} from './muse-audition.js';
 
 const searchPath='/api/e2e/organizer-registrations';
 const actionPath='/api/e2e/organizer-registration-action';
@@ -31,30 +31,28 @@ const contactFields=new Map([
 
 export async function handleOrganizerContact(request,env,actor,{json,deny,NOW,uuid}){
  const params=new URL(request.url).searchParams;
- const section=params.get('section'),audited=section!==null||env.STAGING_ADMIN_MANAGEMENT_ENABLED==='true';
+ const section=params.get('section');
  const db=env.DB;
  if(actor.role!=='organizer'){
   const fields=contactFields.get(section);
-  if(audited&&(section===null||fields)&&await adminManagementReady(env)){
+  if(fields&&await adminManagementReady(env)){
    try{await writeEvent(db,actor,{
     id:uuid(),target:null,time:NOW(),action:'audit_read',result:'denied',
-    detail:{access:'organizer_contact',section:section??'all'},
+    detail:{access:'organizer_contact',section},
    })}catch{} // Access is denied even if an audit of the attempt cannot be recorded.
   }
   return deny('organizer_only',403);
  }
  const id=params.get('id');
  if(!validId(id))return deny('invalid_application_id',422);
- const fields=section===null?MUSE_FIELDS:contactFields.get(section);
+ // A legacy unscoped request must never export the entire private record.
+ // Require the caller to choose one explicit, audited section.
+ const fields=contactFields.get(section);
  if(!fields)return deny('invalid_contact_section',422);
  if(!await museAuditionReady(env))return deny('contact_storage_unavailable',503);
- if(!audited){
-  const contact=await readMuseContact(db,id);
-  return contact?json({ok:true,contact,testOnly:true}):deny('contact_not_found',404);
- }
  if(!await adminManagementReady(env)||typeof db.batch!=='function')return deny('contact_audit_unavailable',503);
  try{
-  const detail=JSON.stringify({access:'organizer_contact',section:section??'all'});
+  const detail=JSON.stringify({access:'organizer_contact',section});
   const event=db.prepare(`INSERT INTO e2e_staff_audit(id,actor_id,actor_role,target_id,action,result,occurred_at,diff)
    VALUES(?,?,?,?,'audit_read',CASE WHEN EXISTS(SELECT 1 FROM e2e_muse_audition_details WHERE application_id=?)
     THEN 'success' ELSE 'missing' END,?,?)`).bind(uuid(),actor.id,actor.role,id,id,NOW(),detail);
@@ -62,7 +60,7 @@ export async function handleOrganizerContact(request,env,actor,{json,deny,NOW,uu
   const [recorded,selected]=await db.batch([event,read]);
   if(recorded.meta?.changes!==1||!Array.isArray(selected.results))return deny('contact_audit_unavailable',503);
   const contact=selected.results[0];
-  return contact?json({ok:true,contact,...(section===null?{}:{section}),testOnly:true}):deny('contact_not_found',404);
+  return contact?json({ok:true,contact,section,testOnly:true}):deny('contact_not_found',404);
  }catch{return deny('contact_audit_unavailable',503);}
 }
 
