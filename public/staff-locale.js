@@ -144,6 +144,13 @@ const words={
  '我的評分狀態':['My scoring status','मेरो मूल्याङ्कन अवस्था'],
  '全部':['All','सबै'],
  '賽事工作人員':['Competition staff','प्रतियोगिता कर्मचारी'],
+ '篩選':['Filters','फिल्टर'],
+ '登入即將逾時':['Session ending soon','लगइन समय सकिन लागेको छ'],
+ '工作人員登入將在約 10 分鐘後失效，請先完成評分或其他尚未儲存的操作。':['Your staff session will expire in about 10 minutes. Save any pending scores before it ends.','कर्मचारी लगइन करिब १० मिनेटमा समाप्त हुन्छ। बाँकी अङ्क समयमै सुरक्षित गर्नुहोस्।'],
+ '目前登入約剩 {minutes} 分鐘。請先儲存評分或完成操作；逾時後需重新使用 Email 驗證碼登入。':['Your session has about {minutes} minutes left. Save your work. You will need a new email code after expiry.','लगइन सकिन करिब {minutes} मिनेट बाँकी छ। काम सुरक्षित गर्नुहोस्। समय सकिएपछि नयाँ इमेल कोड आवश्यक पर्छ।'],
+ '登入已逾時，請重新驗證':['Session expired — sign in again','लगइन समय सकियो — फेरि प्रमाणीकरण गर्नुहोस्'],
+ '這是登入有效時間結束，不代表選手資料遺失。為保護參賽者資料，請重新完成真人驗證及 Email 驗證碼。尚未儲存的評分不會自動送出，重新登入後請先核對評分紀錄。':['Your staff session expired; contestant records were not deleted. Sign in again with human verification and an email code. Unsaved scores were not submitted; check the record after signing in.','कर्मचारी लगइन समय सकिएको हो; प्रतियोगीको विवरण मेटिएको छैन। मानव प्रमाणीकरण र इमेल कोड प्रयोग गरेर फेरि लगइन गर्नुहोस्। सुरक्षित नगरिएको अङ्क पठाइएको छैन; पुनः लगइनपछि विवरण जाँच्नुहोस्।'],
+ '重新登入後台':['Sign in again','फेरि लगइन गर्नुहोस्'],
  '正式金流停用':['Payments paused','भुक्तानी रोकिएको छ']
 };
 function t(key){
