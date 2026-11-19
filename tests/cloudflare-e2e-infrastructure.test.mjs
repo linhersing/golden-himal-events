@@ -148,3 +148,28 @@ test('staff-only readiness reports safe capability flags without granting access
  assert.equal(noTables.staff.readyForLoginTest,false);
  assert.equal(noTables.staff.staffSchemaReady,false);
 });
+
+
+test('canonical staff redirect is limited to the isolated login pages and never bypasses protected APIs',async()=>{
+ const origin='https://ghv-staff-test-20261119.linhersing.workers.dev';
+ const preview='https://golden-himal-voice-preview.linhersing.workers.dev';
+ const env={
+  STAGING_STAFF_LOGIN_CANONICAL_REDIRECT:'true',
+  ASSETS:{fetch:async()=>new Response('local asset', {status:200})}
+ };
+ for(const page of ['/backoffice','/backoffice.html']){
+  const response=await worker.fetch(new Request(origin+page),env);
+  assert.equal(response.status,302);
+  assert.equal(response.headers.get('location'),preview+'/backoffice');
+  assert.match(response.headers.get('cache-control'),/no-store/);
+ }
+ const noRedirect=await worker.fetch(new Request(origin+'/backoffice'),{
+  ...env,STAGING_STAFF_LOGIN_CANONICAL_REDIRECT:'false'
+ });
+ assert.equal(noRedirect.status,200);
+ const mainUnaffected=await worker.fetch(new Request(preview+'/backoffice'),env);
+ assert.equal(mainUnaffected.status,200);
+ const apiUnaffected=await worker.fetch(new Request(origin+'/api/staging/e2e-readiness'),env);
+ assert.equal(apiUnaffected.status,200);
+ assert.equal((await apiUnaffected.json()).staff.readyForLoginTest,false);
+});
