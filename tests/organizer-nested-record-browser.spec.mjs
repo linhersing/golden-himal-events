@@ -204,7 +204,7 @@ test('approved mobile hierarchy keeps exactly four top-level cards, never stacks
  await expect(filter).not.toHaveAttribute('open');
  const opener=roster.locator('.organizer-record-open').nth(2);
  await opener.click();
- await expect(roster).toBeHidden();
+ await expect(page.locator('#organizer-dashboard')).toBeHidden();
  const overview=content.locator('.organizer-step-button');
  await expect(overview).toHaveCount(4);
  const labels=await overview.locator('strong').allTextContents();
@@ -238,7 +238,7 @@ test('approved mobile hierarchy keeps exactly four top-level cards, never stacks
  await expect(content.locator('.organizer-record-field')).toHaveCount(5);
  await expect(content).toContainText(entries[2].id);
  await expect(content.locator('.organizer-step-button')).toHaveCount(0);
- const fieldRects=await content.locator('.organizer-record-field').evaluateAll(nodes=>nodes.map(x=>x.getBoundingClientRect()));
+ const fieldRects=await content.locator('.organizer-record-field').evaluateAll(nodes=>nodes.map(x=>({top:x.getBoundingClientRect().top})));
  for(let i=1;i<fieldRects.length;i++)
   expect(fieldRects[i].top,'one field card per row').toBeGreaterThan(fieldRects[i-1].top);
  await workspace.locator('#organizer-entry-back').click();
