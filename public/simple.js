@@ -1114,7 +1114,7 @@ function showAdminRegistrations(enabled){
    await staffManageChanged?.();
    await search();
    staffManageNavigate?.({...row,...result.registration},true);
-   status('已儲存「'+registrationActions[action]+'」。');
+   status(sw('已儲存')+' '+sw(registrationActions[action]));
   }catch(error){
    if(error.message==='admin_registration_conflict'||error.message==='admin_registration_protected')await search();
    throw error;
@@ -1124,23 +1124,23 @@ function showAdminRegistrations(enabled){
   if(!expanded){
    const button=staffButton(undefined,'roster-entry roster-action',()=>staffManageNavigate?.(row));
    const text=node('span',undefined,'roster-entry-text');
-   text.append(node('strong',row.stage_name),node('span',row.id+' · '+registrationStates[row.state],'minor'));
+   text.append(node('strong',row.stage_name),node('span',row.id+' · '+sw(registrationStates[row.state]),'minor'));
    button.append(text,node('span',sw('查看選手')+' ›'));
    return button;
   }
   const item=node('article',undefined,'roster-entry');
   const info=node('div',undefined,'roster-entry-text');
-  info.append(node('strong',row.stage_name),node('p',row.id+' · '+registrationStates[row.state],'minor'));
-  if(row.protected)info.append(node('p','已有評分或晉級。這筆資料已鎖定。','minor'));
+  info.append(node('strong',row.stage_name),node('p',row.id+' · '+sw(registrationStates[row.state]),'minor'));
+  if(row.protected)info.append(node('p',sw('已有評分或晉級。這筆資料已鎖定。'),'minor'));
   if(!row.protected&&row.state==='active'){
-   const edit=node('details');edit.append(node('summary',registrationActions.edit));
+   const edit=node('details');edit.append(node('summary',sw(registrationActions.edit)));
    const fields=node('form');
-   for(const [name,label] of [['stage_name','選手姓名'],['affiliation','學校／職業']]){
-    const wrapper=node('label',label,'field'),input=node('input');
+   for(const [name,label] of [['stage_name','演出名稱／藝名'],['affiliation','學校／職業']]){
+    const wrapper=node('label',sw(label),'field'),input=node('input');
     input.name=name;input.required=true;input.maxLength=120;input.value=row[name];
     wrapper.append(input);fields.append(wrapper);
    }
-   const save=node('button','儲存修改','btn btn-primary');save.type='submit';fields.append(save);
+   const save=node('button',sw('儲存修改'),'btn btn-primary');save.type='submit';fields.append(save);
    fields.onsubmit=event=>{event.preventDefault();run(()=>mutate(row,'edit',formValues(fields)))};
    edit.append(fields);info.append(edit);
   }
@@ -1148,15 +1148,15 @@ function showAdminRegistrations(enabled){
   if(!row.protected){
    const actions=row.state==='active'?['disable','delete']:row.state==='disabled'?['delete','restore']:['restore'];
    for(const action of actions){
-    const button=node('button',registrationActions[action],'btn btn-soft');button.type='button';
+    const button=node('button',sw(registrationActions[action]),'btn btn-soft');button.type='button';
     button.onclick=()=>{
-     if(confirm('確定'+registrationActions[action]+'？'))run(()=>mutate(row,action));
+     if(confirm(sw('確認這項操作？')+' '+sw(registrationActions[action])))run(()=>mutate(row,action));
     };
     side.append(button);
    }
   }
   const history=node('details'),events=node('ol');
-  history.append(node('summary','操作紀錄'),events);
+  history.append(node('summary',sw('操作紀錄')),events);
   history.ontoggle=()=>{
    if(!history.open)return;
    run(async()=>{
@@ -1165,9 +1165,9 @@ function showAdminRegistrations(enabled){
     for(const event of result.events){
      const date=new Intl.DateTimeFormat('zh-TW',{dateStyle:'short',timeStyle:'short',timeZone:'Asia/Kathmandu'}).format(new Date(event.occurred_at*1000));
      const change=Object.keys(event.diff||{}).map(key=>({stage_name:'選手姓名',affiliation:'學校／職業',state:'報名狀態',status:'流程狀態'})[key]).filter(Boolean);
-     events.append(node('li',[date,registrationActions[event.action],auditResults[event.result],event.actor_id,change.join('、')].filter(Boolean).join(' · ')));
+     events.append(node('li',[date,sw(registrationActions[event.action]),sw(auditResults[event.result]),event.actor_id,change.join('、')].filter(Boolean).join(' · ')));
     }
-    if(!result.events.length)events.append(node('li','目前沒有操作紀錄。'));
+    if(!result.events.length)events.append(node('li',sw('目前沒有操作紀錄。')));
    });
   };
   info.append(history);item.append(info,side);return item;

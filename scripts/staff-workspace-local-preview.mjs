@@ -45,7 +45,10 @@ const server=createServer(async(request,response)=>{
   }
   if(request.method!=='GET'){response.writeHead(405,headers);response.end();return;}
   const result=await fetch(runtime.origin+url.pathname+url.search);
-  response.writeHead(result.status,{...Object.fromEntries(result.headers),...headers});
+  response.writeHead(result.status,{
+   ...headers,'Content-Type':result.headers.get('Content-Type')||'application/octet-stream',
+   'X-Frame-Options':'DENY',
+  });
   response.end(Buffer.from(await result.arrayBuffer()));
  }catch{response.writeHead(503,{'Cache-Control':'no-store'});response.end('Local TEST unavailable');}
 });

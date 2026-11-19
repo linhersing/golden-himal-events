@@ -237,7 +237,7 @@ for(const [device,width] of [['desktop',1280],['mobile',375]]){
   const record=page.locator('#organizer-entry-content');
   await expect(panel).toBeHidden();
   await record.getByText('修改報名資料',{exact:true}).click();
-  await record.getByLabel('選手姓名').fill('Fictional Singer Edited');
+  await record.getByLabel('演出名稱／藝名').fill('Fictional Singer Edited');
   await record.getByLabel('學校／職業').fill('Fictional Studio');
   await record.getByRole('button',{name:'儲存修改'}).click();
   await expect(record).toContainText('Fictional Singer Edited');
