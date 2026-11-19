@@ -2069,3 +2069,17 @@ body[data-page="back"] .staff-secondary>summary{
  body[data-page="back"] .organizer-filter-grid>.roster-field:last-child{grid-column:auto}
  body[data-page="back"] .staff-mobile-summary .dash-stat{padding:.35rem}
 }
+
+
+body[data-page="back"] .staff-otp-expiry{
+ padding:.55rem .7rem;margin:.4rem 0 .6rem;
+ font-size:.92rem;line-height:1.45;
+ border-radius:.6rem;border:1px solid #d6c4a4;
+ background:#faf5e8;color:#5d4531;
+}
+body[data-page="back"] .staff-otp-expiry[data-state="warning"]{
+ border-color:#c8a061;background:#fff4df;
+}
+body[data-page="back"] .staff-otp-expiry[data-state="error"]{
+ border-color:#bd6b4a;background:#fff0e9;color:#863b25;font-weight:700;
+}
