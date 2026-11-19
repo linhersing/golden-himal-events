@@ -116,7 +116,11 @@ export async function checkCore(runtime){
  for(const n of [1,3,5])assert(sizes[n]>0);
  const demo=fixtures[2],qualifier=fixtures[18],final=fixtures[19],contactPath='/api/e2e/organizer-contact?id='+demo.id;
  for(const [role,status] of [['reviewer',403],['member',403],['guest',401]])assert.equal((await fetchFor(role,contactPath)).status,status);
- const contact=await fetchFor('organizer',contactPath);
+ // The old no-section route cannot return all personal fields without a section.
+ const unscoped=await fetchFor('organizer',contactPath);
+ assert.equal(unscoped.status,422);
+ assert.equal(unscoped.data.contact,undefined);
+ const contact=await fetchFor('organizer',contactPath+'&section=identity');
  assert.equal(contact.status,200);
  assert.match(contact.cache,/no-store/);
  assert.equal(contact.data.contact.full_name,'TEST Legal Name 3');
