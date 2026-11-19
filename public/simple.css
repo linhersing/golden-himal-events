@@ -2084,3 +2084,22 @@ body[data-page="back"] .staff-otp-expiry[data-state="warning"]{
 body[data-page="back"] .staff-otp-expiry[data-state="error"]{
  border-color:#bd6b4a;background:#fff0e9;color:#863b25;font-weight:700;
 }
+
+
+/* 2026-11-19 owner-approved mobile staff IA: four distinct section cards.
+   Do not collapse these into an expanded all-in-one artist page. */
+@media(max-width:600px){
+ body[data-page="back"] .staff-record-workspace .organizer-record-menu{
+  gap:10px;
+ }
+ body[data-page="back"] .staff-record-workspace .organizer-step-button{
+  width:100%;min-height:68px;padding:12px 13px;
+  border-radius:12px;border:1px solid #dac6aa;background:#fffefa;
+ }
+ body[data-page="back"] .staff-record-workspace .organizer-step-button strong{
+  font-size:1.03rem;line-height:1.45;
+ }
+ body[data-page="back"] .staff-record-workspace .organizer-dialog-content{
+  padding:14px 13px max(18px,env(safe-area-inset-bottom));
+ }
+}
