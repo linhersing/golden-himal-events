@@ -10,18 +10,27 @@ const fields=[
 ];
 let result;
 try{
- const response=await fetch(ENDPOINT,{
-  method:'GET',redirect:'error',headers:{Accept:'application/json'},
-  signal:AbortSignal.timeout(12000)
- });
- if(!response.ok)throw Error('HTTP_'+response.status);
- const body=await response.json();
- if(body?.ok!==true||body.testOnly!==true||!body.staff||typeof body.staff!=='object')
-  throw Error('STAFF_DIAGNOSTICS_NOT_DEPLOYED');
- const staff=body.staff;
+ // Cloudflare Workers Builds may deploy after this GitHub job starts.
+ // Poll for the known sanitized schema instead of treating the previous Worker
+ // version as a failed OTP/role configuration.
+ let staff;
+ let lastReason='STAFF_DIAGNOSTICS_NOT_DEPLOYED';
+ for(let attempt=0;attempt<12;attempt++){
+  const response=await fetch(ENDPOINT,{
+   method:'GET',redirect:'error',headers:{Accept:'application/json'},
+   signal:AbortSignal.timeout(12000)
+  });
+  if(!response.ok)throw Error('HTTP_'+response.status);
+  const body=await response.json();
+  if(body?.ok!==true||body.testOnly!==true||!body.staff||typeof body.staff!=='object')
+   lastReason='STAFF_DIAGNOSTICS_NOT_DEPLOYED';
+  else if(fields.some(key=>typeof body.staff[key]!=='boolean'))
+   lastReason='STAFF_FLAGS_MISSING_OR_INVALID';
+  else {staff=body.staff;break;}
+  if(attempt<11)await new Promise(resolve=>setTimeout(resolve,10000));
+ }
+ if(!staff)throw Error(lastReason);
  // Only explicit known Boolean flags are copied; ignore any future private fields.
- if(fields.some(key=>typeof staff[key]!=='boolean'))
-  throw Error('STAFF_FLAGS_MISSING_OR_INVALID');
  result=Object.fromEntries(fields.map(key=>[key,staff[key]]));
  const blocked=fields.filter(key=>!result[key]);
  console.log('TEST Staff dual-role readiness: '+(result.dualRoleReadyForLoginTest?'READY_FOR_LIVE_OTP_TEST':'BLOCKED'));
