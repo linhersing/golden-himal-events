@@ -1,0 +1,62 @@
+name: Verify official backoffice visual identity
+on:
+  push:
+    branches: [codex/initial-site]
+    paths:
+      - 'public/backoffice.html'
+      - 'public/official-backoffice-decor.css'
+      - 'public/official-backoffice-decor.js'
+      - 'tests/official-backoffice-skin.test.mjs'
+      - '.github/workflows/official-backoffice-visual-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  official-backoffice-style:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify visual scope without sending email or changing auth
+        run: node --test tests/official-backoffice-skin.test.mjs
+      - name: Wait for official hostname to serve the new design, read-only
+        shell: bash
+        run: |
+          node --input-type=module <<'EOF'
+          const host='https://goldenhimalpalace.com';
+          const wait=ms=>new Promise(done=>setTimeout(done,ms));
+          let ok=false;
+          for(let i=0;i<25;i++){
+            const assets={};
+            for(const path of ['/backoffice','/official-backoffice-decor.css','/official-backoffice-decor.js']){
+              try{
+                const response=await fetch(host+path,{cache:'no-store',signal:AbortSignal.timeout(14000)});
+                assets[path]={status:response.status,content:response.ok?await response.text():''};
+              }catch{assets[path]={status:0,content:''};}
+            }
+            const html=assets['/backoffice'].content;
+            const css=assets['/official-backoffice-decor.css'].content;
+            const script=assets['/official-backoffice-decor.js'].content;
+            const htmlLive=assets['/backoffice'].status===200&&
+              html.includes('official-backoffice-decor.css')&&
+              html.includes('official-backoffice-decor.js')&&
+              html.includes('id="signup-turnstile"')&&
+              html.includes('id="back-code-form"')&&
+              html.includes('ghp-clean-official-logo-20261116.png');
+            const cssLive=assets['/official-backoffice-decor.css'].status===200&&
+              css.includes('ghp-official-backoffice')&&css.includes('ghp-universal-footer-brand');
+            const jsLive=assets['/official-backoffice-decor.js'].status===200&&
+              script.includes("'goldenhimalpalace.com'")&&
+              script.includes('ghp-official-site-tag');
+            if(htmlLive&&cssLive&&jsLive){
+              console.log('PASS official domain serves the distinctive staff skin and preserved auth controls');
+              ok=true;break;
+            }
+            console.log('Official visual deploy pending: attempt '+(i+1)+
+              '; HTTP HTML/CSS/JS='+[assets['/backoffice'].status,assets['/official-backoffice-decor.css'].status,assets['/official-backoffice-decor.js'].status].join('/')+
+              ', link='+htmlLive+', skin='+cssLive+', marker='+jsLive);
+            if(i<24)await wait(10000);
+          }
+          if(!ok){console.error('BLOCKED: official domain has not served the new backoffice design. Do not claim deployed.');process.exitCode=1;}
+          else console.log('This is a GET-only asset check; no OTP, login, D1, or payments were triggered.');
+          EOF
