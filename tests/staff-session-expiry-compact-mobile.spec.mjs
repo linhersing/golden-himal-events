@@ -59,3 +59,28 @@ test('mobile organizer preview packs search and filters into one line and two-co
   await filters.evaluate(el=>{el.open=false});
  }
 });
+
+
+test('staff OTP waits up to ten minutes then clearly asks for a fresh code',async({page})=>{
+ await page.clock.install();
+ await page.route('**/api/e2e/**',route=>{
+  const endpoint=new URL(route.request().url()).pathname.split('/').at(-1);
+  if(endpoint==='me')return route.fulfill({status:401,json:{ok:false,error:'login_required'}});
+  if(endpoint==='staff-login-config')return route.fulfill({json:{ok:true,required:false}});
+  if(endpoint==='request-code')return route.fulfill({json:{ok:true,challenge_id:'synthetic-otp',resend_after:60,message:'Code expires in 10 minutes'}});
+  return route.fulfill({status:200,json:{ok:true}});
+ });
+ await page.goto('/backoffice.html');
+ await page.locator('#back-email-form [name=email]').fill('staff-qa@example.invalid');
+ await page.locator('#back-email-form [type=submit]').click();
+ const note=page.locator('#staff-otp-expiry');
+ await expect(note).toBeVisible();
+ await expect(note).toContainText('10 分鐘');
+ await expect(page.locator('#back-code-form')).toBeVisible();
+ await page.clock.fastForward(601000);
+ await expect(note).toContainText('驗證碼已過期');
+ await expect(page.locator('#back-code-form [type=submit]')).toBeDisabled();
+ await page.locator('#back-change').click();
+ await expect(page.locator('#back-email-form')).toBeVisible();
+ await expect(note).toBeHidden();
+});
