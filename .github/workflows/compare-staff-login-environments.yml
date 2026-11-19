@@ -51,3 +51,23 @@ jobs:
           }
           console.log('GET-only check. No real OTP, login or role switch performed.');
           EOF
+      - name: Verify old isolated staff login is forwarded to ready preview
+        shell: bash
+        run: |
+          node --input-type=module <<'EOF'
+          const old='https://ghv-staff-test-20261119.linhersing.workers.dev/backoffice';
+          const target='https://golden-himal-voice-preview.linhersing.workers.dev/backoffice';
+          let passed=false;
+          for(let n=0;n<18;n++){
+            try{
+              const response=await fetch(old,{redirect:'manual',signal:AbortSignal.timeout(12000)});
+              if(response.status===302&&response.headers.get('location')===target){
+                passed=true;break;
+              }
+              console.log('Waiting for isolated TEST deploy (HTTP '+response.status+'), attempt '+(n+1));
+            }catch{console.log('Waiting for TEST deployment, attempt '+(n+1));}
+            if(n<17)await new Promise(resolve=>setTimeout(resolve,8000));
+          }
+          if(!passed){console.error('FAIL: legacy login was not forwarded');process.exitCode=1;}
+          else console.log('PASS: stale isolated TEST login now safely redirects to configured preview. No OTP or API calls.');
+          EOF
