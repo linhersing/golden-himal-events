@@ -1,5 +1,17 @@
 # Golden Himal Voice — design preview
 
+> [!IMPORTANT]
+> **Current QA / frontline URL — user-approved on 2026-11-19:** https://goldenhimalpalace.com/
+>
+> This is the **only URL to give Alan, Muse, contestants, reviewers, organizers, or other frontline testers** for current website testing (registration, email verification, staff login and mobile UX). Navigate from the current website rather than guessing subpaths.
+>
+> Previously used `*.workers.dev` preview / isolated TEST links and `linhersing.github.io/golden-himal-events/` are **historical engineering artifacts only**, NOT valid user-facing QA entrypoints. A PASS or BLOCKED result on those endpoints must **never** be reported as the current canonical site's status.
+>
+> Preserve those historical references in logs, CI scripts, and technical audit evidence; do not blanket-replace internal Cloudflare URLs, move D1 bindings, disable Turnstile, modify secrets, or open payments merely because the canonical URL changed.
+>
+> The legacy development-preview notes below describe an earlier project stage; the current user-approved testing instructions above take precedence. Any code change affecting currently working contestant signup or reviewer human verification must pass regression checks on the canonical site before being released.
+
+
 This repository contains a public **design preview**, not an operational event registration or voting service.
 
 ## Preview
