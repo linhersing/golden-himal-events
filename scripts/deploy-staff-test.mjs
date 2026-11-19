@@ -59,8 +59,59 @@ const config={
 };
 if(!config.assets?.directory||!config.assets?.binding)fail('assets configuration missing');
 const path=resolve('.ghv-staff-test.deploy.json');
+
+// Isolated empty D1 bootstrap, matching the already-reviewed disposable workerd
+// fixture order. Never run against either existing preview/production D1.
+const migrations=[
+ '1000_e2e_staging_acceptance_ONLY.sql',
+ '1003_entrant_profile_optin_STAGING_ONLY.sql',
+ '1004_self_service_signup_STAGING_ONLY.sql',
+ '1005_password_members_STAGING_ONLY.sql',
+ '1007_test_application_approval_STAGING_ONLY.sql',
+ '1009_test_video_supplements_STAGING_ONLY.sql',
+ '1010_nepal_locations_STAGING_ONLY.sql',
+ '1011_frontline_2027_registration_STAGING_ONLY.sql',
+ '1012_frontline_region_lock_STAGING_ONLY.sql',
+ '1013_member_corrections_STAGING_ONLY.sql',
+ '1013_muse_audition_details_STAGING_ONLY.sql',
+ '1014_demo_five_2027_STAGING_ONLY.sql',
+ '1015_muse_contact_handle_STAGING_ONLY.sql',
+ '1016_january_demo_test_rosters_ONLY.sql',
+ '1017_staff_auth_limits_STAGING_ONLY.sql',
+ '1018_admin_registration_audit_STAGING_ONLY.sql'
+];
+function d1Rows(sql,path){
+ let payload;
+ try{
+  const stdout=wrangler(['d1','execute',DATABASE,'--remote','--command',sql,'--json','--config',path,'--yes']);
+  payload=JSON.parse(stdout);
+ }catch{fail('failed to read isolated TEST D1 schema')}
+ const entries=Array.isArray(payload)?payload:[payload];
+ const rows=entries.flatMap(entry=>Array.isArray(entry?.results)?entry.results:[]);
+ if(!rows.length)fail('isolated D1 query returned no result');
+ return rows;
+}
+function assertSchema(path){
+ const required=['e2e_accounts','e2e_email_challenges','e2e_sessions',
+  'e2e_staff_auth_attempts','e2e_staff_audit','e2e_registration_controls',
+  'e2e_muse_audition_details','e2e_demo_2027_scores','e2e_january_demo_test_rosters'];
+ const found=d1Rows("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'e2e_%'",path).map(row=>row.name);
+ if(required.some(name=>!found.includes(name)))fail('isolated TEST schema incomplete; inspect migrations; deployment withheld');
+ const col=d1Rows("SELECT name FROM pragma_table_info('e2e_muse_audition_details') WHERE name='contact_handle'",path);
+ if(col.length!==1)fail('staff contact schema missing');
+}
+
 try{
   await writeFile(path,JSON.stringify(config,null,2),{flag:'wx'});
+  const existing=d1Rows("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",path);
+  if(existing.length!==1||!Number.isSafeInteger(Number(existing[0].n)))fail('unexpected isolated TEST D1 inventory');
+  if(Number(existing[0].n)===0){
+    for(const migration of migrations){
+      wrangler(['d1','execute',DATABASE,'--remote','--file','backend/migrations/'+migration,'--yes','--json','--config',path]);
+    }
+    console.log('Fresh isolated TEST D1 migrations applied: '+migrations.length);
+  }
+  assertSchema(path);
   wrangler(['deploy','--config',path]);
   console.log('Isolated staff TEST deployed: '+WORKER+' (no production routes or databases)');
 }finally{
