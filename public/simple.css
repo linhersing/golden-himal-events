@@ -1967,6 +1967,7 @@ body[data-page="back"] .staff-mobile-summary{
 }
 body[data-page="back"] .staff-mobile-summary .dash-stat{
  display:flex;align-items:center;gap:.4rem;flex:none;min-width:0;
+ grid-column:auto;
  min-height:56px;padding:.48rem .58rem;border-radius:.6rem;
 }
 body[data-page="back"] .staff-mobile-summary .dashboard-number{
