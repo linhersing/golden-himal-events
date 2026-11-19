@@ -230,6 +230,19 @@ export default {
   async fetch(request,env,ctx) {
     const url=new URL(request.url);
     const {pathname}=url;
+    // TEST-only legacy staff login alias. The isolated test Worker deliberately
+    // has no live OTP service; send browsers to the already configured preview
+    // Worker. Never redirect API calls, copy tokens, or change production hosts.
+    if(env.STAGING_STAFF_LOGIN_CANONICAL_REDIRECT==='true'&&
+       url.hostname==='ghv-staff-test-20261119.linhersing.workers.dev'&&
+       (request.method==='GET'||request.method==='HEAD')&&
+       (pathname==='/backoffice'||pathname==='/backoffice.html')){
+      return new Response(null,{status:302,headers:{
+        Location:'https://golden-himal-voice-preview.linhersing.workers.dev/backoffice',
+        'Cache-Control':'no-store, max-age=0',
+        'Referrer-Policy':'no-referrer'
+      }});
+    }
     const brand=['goldenhimalpalace.com','www.goldenhimalpalace.com'].includes(url.hostname);
     const alias=pathname.replace(/^\/+|\/+$/g,'').replace(/\.html$/,'');
     if(brand&&['member-login','member-portal','e2e-stage','payment-lab','test-lab','practice','admin-center'].includes(alias))
