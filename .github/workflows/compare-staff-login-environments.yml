@@ -1,0 +1,53 @@
+name: Compare two Cloudflare staff login environments safely
+on:
+  push:
+    branches:
+      - codex/staff-workspace-20261118
+    paths:
+      - '.github/workflows/compare-staff-login-environments.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare-staff-login:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read only, do not request OTP or reveal keys
+        shell: bash
+        run: |
+          node --input-type=module <<'EOF'
+          const hosts={
+            preview:'golden-himal-voice-preview.linhersing.workers.dev',
+            isolated:'ghv-staff-test-20261119.linhersing.workers.dev'
+          };
+          for(const [label,host] of Object.entries(hosts)){
+            console.log('Environment: '+label);
+            for(const route of ['/backoffice','/api/staging/e2e-readiness','/api/e2e/staff-login-config']){
+              const url='https://'+host+route;
+              try{
+                const response=await fetch(url,{redirect:'manual',headers:{Accept:'application/json'},signal:AbortSignal.timeout(12000)});
+                const data=(route.startsWith('/api/')&&response.headers.get('content-type')?.includes('application/json'))?await response.json():{};
+                const flags=route.endsWith('e2e-readiness')?{
+                  memberReadiness:data?.readiness||'UNAVAILABLE',
+                  staffReady:data?.staff?.readyForLoginTest===true,
+                  dualRoleReady:data?.staff?.dualRoleReadyForLoginTest===true,
+                  overlappingRoles:data?.staff?.dualRoleInviteConfigured===true,
+                  schema:data?.staff?.staffSchemaReady===true,
+                  human:data?.staff?.humanCheckReady===true,
+                  provider:data?.staff?.emailProviderConfigured===true,
+                  sender:data?.staff?.senderConfigured===true,
+                  identity:data?.staff?.identitySecretConfigured===true
+                }:route.endsWith('staff-login-config')?{
+                  configured:data?.ok===true,
+                  turnstileRequired:data?.required===true,
+                  siteKeyProvided:typeof data?.siteKey==='string'
+                }:{};
+                console.log(route+' HTTP '+response.status+' '+JSON.stringify(flags));
+              }catch(e){
+                console.log(route+' CHECK_UNAVAILABLE '+(e?.name==='TimeoutError'?'TIMEOUT':'NETWORK'));
+              }
+            }
+          }
+          console.log('GET-only check. No real OTP, login or role switch performed.');
+          EOF
