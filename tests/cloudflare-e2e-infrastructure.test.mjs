@@ -117,6 +117,8 @@ test('staff-only readiness reports safe capability flags without granting access
  const ready=await check(fixture);
  assert.equal(ready.readiness,'BLOCKED'); // Member allowlist is deliberately absent.
  assert.equal(ready.staff.readyForLoginTest,true);
+ assert.equal(ready.staff.dualRoleInviteConfigured,true);
+ assert.equal(ready.staff.dualRoleReadyForLoginTest,true);
  assert.equal(ready.staff.staffSchemaReady,true);
  assert.equal(ready.staff.humanCheckReady,true);
  assert.equal(ready.staff.organizerInviteListConfigured,true);
@@ -128,6 +130,12 @@ test('staff-only readiness reports safe capability flags without granting access
  const noReviewers=await check({...fixture,STAGING_REVIEWER_EMAILS:''});
  assert.equal(noReviewers.staff.readyForLoginTest,false);
  assert.equal(noReviewers.staff.reviewerInviteListConfigured,false);
+ assert.equal(noReviewers.staff.dualRoleReadyForLoginTest,false);
+ const disjoint=await check({...fixture,STAGING_REVIEWER_EMAILS:'different-invite@example.org'});
+ assert.equal(disjoint.staff.readyForLoginTest,true);
+ assert.equal(disjoint.staff.dualRoleInviteConfigured,false);
+ assert.equal(disjoint.staff.dualRoleReadyForLoginTest,false);
+ assert(!JSON.stringify(disjoint).includes('different-invite@example.org'));
  const noHumanCheck=await check({...fixture,STAGING_TURNSTILE_SECRET_KEY:undefined});
  assert.equal(noHumanCheck.staff.readyForLoginTest,false);
  assert.equal(noHumanCheck.staff.humanCheckReady,false);
