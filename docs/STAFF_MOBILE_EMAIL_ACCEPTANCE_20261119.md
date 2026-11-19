@@ -1,4 +1,7 @@
 # Golden Himal Voice | Staff mobile UI and Alan dual-role OTP acceptance gate
+
+> **OVERRIDING TEST URL RULE (user-confirmed 2026-11-19 18:31 and 18:35 Asia/Taipei):** All current user and frontline QA—including contestant signup, human verification, organizer/reviewer login and reporting—MUST start at **https://goldenhimalpalace.com/**. Never share legacy Workers.dev / GitHub Pages links as the current test entrypoint. The Worker-specific URLs, TEST Worker only notes, instructions to use old backoffice URLs and PR #184 Draft status below are **historical technical context**, not current frontline instructions. Preserve them for reproducibility; never interpret their historic readiness as current main-domain status. Do not change runtime secrets, live DB, Turnstile, allowed roles or payments solely to change the documented URL. The currently working contestant signup and reviewer verification flows are protected regression baselines. Verify the real-domain route and user journey before calling any new release ready.
+
 Date: 2026-11-19 (Asia/Taipei) — **TEST Worker only**.
 
 ## Owner-approved mobile IA — preserve the supplied 390px screenshots
