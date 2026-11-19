@@ -177,8 +177,14 @@ async function handleE2EReadiness(request,env){
  }
  // Staff-only capability probe is read-only; never expose email addresses,
  // challenge tokens, provider secrets, or permit an OTP request from this route.
- const organizerInvites=String(env.STAGING_ORGANIZER_EMAILS||'').split(',').some(value=>emailAddress(value.trim()));
- const reviewerInvites=String(env.STAGING_REVIEWER_EMAILS||'').split(',').some(value=>emailAddress(value.trim()));
+ const invitedEmails=name=>String(env[name]||'').split(',').map(value=>value.trim().toLowerCase()).filter(emailAddress);
+ const organizerEmails=invitedEmails('STAGING_ORGANIZER_EMAILS');
+ const reviewerEmails=invitedEmails('STAGING_REVIEWER_EMAILS');
+ const organizerInvites=organizerEmails.length>0;
+ const reviewerInvites=reviewerEmails.length>0;
+ // A user who requires both roles must occur on BOTH server-side lists.
+ // Expose only a Boolean: do not reveal or log any address.
+ const dualRoleInviteConfigured=organizerEmails.some(email=>reviewerEmails.includes(email));
  let staffSchemaReady=false;
  if(databaseBound){
   try{
@@ -201,10 +207,12 @@ async function handleE2EReadiness(request,env){
  const linkMode=env.STAGING_SUBMISSION_MODE==='links';
  const ready=databaseBound&&schemaReady&&(linkMode||mediaBound)&&emailConfigured&&senderSet&&allowlistSet&&secretSet&&otpEnabled;
  const staffReady=databaseBound&&staffSchemaReady&&staffHumanCheckReady&&organizerInvites&&reviewerInvites&&emailConfigured&&senderSet&&secretSet&&otpEnabled;
+ const dualRoleReady=staffReady&&dualRoleInviteConfigured;
  return json({
   ok:true,testOnly:true,readiness:ready?'READY_FOR_INVITED_OTP_TEST':'BLOCKED',
   submissionMode:linkMode?'external_links':'private_uploads',privateMediaRequired:!linkMode,
-  staff:{readyForLoginTest:staffReady,staffSchemaReady,organizerInviteListConfigured:organizerInvites,
+  staff:{readyForLoginTest:staffReady,dualRoleReadyForLoginTest:dualRoleReady,
+   dualRoleInviteConfigured,staffSchemaReady,organizerInviteListConfigured:organizerInvites,
    reviewerInviteListConfigured:reviewerInvites,humanCheckEnabled:staffHumanCheckEnabled,humanCheckReady:staffHumanCheckReady,
    emailProviderConfigured:emailConfigured,senderConfigured:senderSet,identitySecretConfigured:secretSet,
    explicitTestModeEnabled:otpEnabled},
