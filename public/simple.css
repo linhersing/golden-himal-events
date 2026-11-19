@@ -1944,3 +1944,128 @@ body[data-page="back"] #back-dashboard>.page-top{justify-content:flex-end}
  body[data-page="back"] .organizer-record-arrow{font-size:0!important;min-width:.75rem}
  body[data-page="back"] .organizer-record-arrow::after{content:'›';font-size:1.5rem}
 }
+
+
+/* 2026-11-19 Pixel 10 Pro / low-width Android: density without tiny tap targets. */
+body[data-page="back"] .staff-session-warning,
+body[data-page="back"] .staff-session-expired{
+ margin:.5rem 0;padding:.7rem .8rem;border-radius:.65rem;
+ line-height:1.45;font-size:.93rem;
+}
+body[data-page="back"] .staff-session-warning{
+ border:1px solid #d6b778;background:#fff5dd;color:#674820;
+}
+body[data-page="back"] .staff-session-expired{
+ border:2px solid #ab684a;background:#fff1e9;color:#6e3327;
+}
+body[data-page="back"] .staff-session-warning p,
+body[data-page="back"] .staff-session-expired p{margin:.25rem 0 .6rem}
+body[data-page="back"] #staff-session-relogin{min-height:50px;width:100%;font-size:1rem}
+body[data-page="back"] .staff-mobile-summary{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:.45rem;margin:.35rem 0 .5rem;
+}
+body[data-page="back"] .staff-mobile-summary .dash-stat{
+ display:flex;align-items:center;gap:.4rem;flex:none;min-width:0;
+ min-height:56px;padding:.48rem .58rem;border-radius:.6rem;
+}
+body[data-page="back"] .staff-mobile-summary .dashboard-number{
+ flex:0 0 auto;font-size:1.42rem;line-height:1.15;margin:0;
+}
+body[data-page="back"] .staff-mobile-summary small{
+ min-width:0;font-size:.82rem;line-height:1.25;overflow-wrap:anywhere;
+}
+body[data-page="back"] .organizer-toolbar{
+ display:grid;grid-template-columns:minmax(0,1fr) auto;
+ align-items:end;gap:.5rem;margin:.45rem 0 .25rem;
+}
+body[data-page="back"] .organizer-toolbar>.roster-field{min-width:0;margin:0}
+body[data-page="back"] .organizer-toolbar>.roster-field>span{
+ font-size:.85rem;line-height:1.2;margin:0;
+}
+body[data-page="back"] .organizer-toolbar #organizer-search{
+ min-height:48px;width:100%;font-size:1rem;
+ padding:.55rem .65rem;border-radius:.65rem;
+}
+body[data-page="back"] .organizer-filter-panel{
+ width:auto;align-self:end;min-width:0;border-radius:.65rem;
+ padding:0 .65rem;background:#fdfaf4;
+}
+body[data-page="back"] .organizer-filter-panel>summary{
+ display:list-item;min-height:48px;padding:.72rem .2rem;
+ font-size:.92rem;line-height:1.4;white-space:nowrap;
+}
+body[data-page="back"] .organizer-filter-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:.55rem;padding:.35rem 0 .75rem;
+}
+body[data-page="back"] .organizer-filter-grid>.roster-field{
+ min-width:0;gap:.3rem;font-size:.83rem;
+}
+body[data-page="back"] .organizer-filter-grid select{
+ width:100%;min-width:0;min-height:48px;padding:.55rem .35rem;
+ font-size:1rem;border-radius:.55rem;
+}
+body[data-page="back"] .organizer-filter-grid>.roster-field:last-child{
+ grid-column:1 / -1;
+}
+body[data-page="back"] .organizer-filter-panel[open]{
+ grid-column:1 / -1;grid-row:2;width:100%;box-sizing:border-box;
+}
+body[data-page="back"] .organizer-filter-panel[open]>summary{
+ min-height:36px;padding:.45rem .2rem;
+}
+body[data-page="back"] .staff-roster{padding:.8rem!important}
+body[data-page="back"] .staff-roster>h2{
+ font-size:1.12rem;margin:0 0 .3rem;line-height:1.4;
+}
+body[data-page="back"] .staff-roster .roster-count{
+ margin:.25rem 0 .5rem;font-size:.82rem;line-height:1.4;
+}
+body[data-page="back"] .staff-roster .roster-list{gap:.4rem}
+body[data-page="back"] .staff-roster .organizer-record-row{
+ padding:.25rem .55rem;gap:.25rem;
+}
+body[data-page="back"] .staff-roster .organizer-record-open{
+ min-height:58px;padding:.45rem .25rem;
+}
+body[data-page="back"] .staff-roster .organizer-record-open strong{
+ font-size:1.02rem;line-height:1.33;
+}
+body[data-page="back"] .staff-roster .organizer-record-open .roster-mini{
+ font-size:.81rem;line-height:1.35;
+}
+body[data-page="back"] .staff-roster .organizer-record-status .pill{
+ font-size:.75rem;padding:.25rem .35rem;
+}
+body[data-page="back"] .staff-system-note{
+ margin:.4rem 0 .6rem;padding:0 .65rem;
+}
+body[data-page="back"] .staff-system-note>summary{
+ padding:.6rem .15rem;min-height:42px;
+}
+body[data-page="back"] .staff-secondary>summary{
+ min-height:44px;padding:.35rem 0;
+}
+@media(min-width:650px){
+ body[data-page="back"] .organizer-filter-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+ }
+ body[data-page="back"] .organizer-filter-grid>.roster-field:last-child{
+  grid-column:auto;
+ }
+ body[data-page="back"] .organizer-toolbar{grid-template-columns:minmax(0,1fr) auto}
+}
+@media(max-width:350px){
+ body[data-page="back"] .staff-roster{padding:.65rem!important}
+ body[data-page="back"] .staff-mobile-summary .dashboard-number{font-size:1.25rem}
+ body[data-page="back"] .staff-mobile-summary small{font-size:.76rem}
+ body[data-page="back"] .organizer-filter-panel{padding-inline:.45rem}
+ body[data-page="back"] .organizer-filter-panel>summary{font-size:.84rem}
+ body[data-page="back"] .organizer-toolbar #organizer-search{padding-inline:.45rem}
+}
+@media(max-width:299px){
+ body[data-page="back"] .organizer-filter-grid{grid-template-columns:1fr}
+ body[data-page="back"] .organizer-filter-grid>.roster-field:last-child{grid-column:auto}
+ body[data-page="back"] .staff-mobile-summary .dash-stat{padding:.35rem}
+}
