@@ -2103,3 +2103,13 @@ body[data-page="back"] .staff-otp-expiry[data-state="error"]{
   padding:14px 13px max(18px,env(safe-area-inset-bottom));
  }
 }
+/* Separate TEST recycle workspace: no contacts, scores, or persistent browser data. */
+.staff-bulk-workspace{min-width:0;overflow-wrap:anywhere}
+.staff-bulk-workspace .btn{white-space:normal;overflow-wrap:anywhere;max-width:100%;min-height:48px}
+.staff-bulk-confirm{display:grid;gap:12px;margin-block:18px;max-width:34rem}
+.staff-bulk-confirm input{min-width:0}
+.staff-bulk-workspace section{margin-top:24px}
+.staff-bulk-counts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0}
+.staff-bulk-counts>div{padding:10px;border:1px solid #e7dac9;border-radius:10px;min-width:0}
+.staff-bulk-counts dt{font-size:.87rem;color:#76655b}
+.staff-bulk-counts dd{margin:4px 0 0;font-weight:750;font-size:1.05rem}

@@ -3,6 +3,7 @@ import {createRequire} from 'node:module';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {fixtures,isolatedStaffRuntime} from '../tests/fixtures/staff-workerd.mjs';
+import {checkRecycle} from '../tests/fixtures/registration-recycle-browser.mjs';
 
 const [dependencies,evidence,assets]=process.argv.slice(2);
 const repo=process.cwd();
@@ -136,6 +137,7 @@ try {
  const audit=(await runtime.db.prepare("SELECT COUNT(*) AS n FROM e2e_staff_audit WHERE json_extract(diff,'$.access')='organizer_contact' AND target_id=? AND result='success'").bind(sample.id).first()).n;
  assert.equal(audit,2);
  checks.organizerRoutes.auditCount=audit;
+ checks.registrationRecycle=await checkRecycle(runtime,browser,evidence,expect);
  const json=JSON.stringify(checks,null,2)+'\n';
  await writeFile(join(evidence,'staff-edge-workerd-evidence.json'),json);
  console.log(json);
