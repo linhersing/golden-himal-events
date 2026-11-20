@@ -270,9 +270,37 @@ function setupProfileFields(ready){
 function status(text,bad=false){if(!statusBox)return;statusBox.hidden=false;statusBox.className='feedback'+(bad?' error':' success');statusBox.textContent=text;statusBox.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function friendlyError(e){
  if(page==='member'){
+ if(e?.name==='AbortError')return mt('submitUncertain');
  const common={"e2e_not_configured":"errNoEmail","test_email_service_unavailable":"errMail","not_on_test_allowlist":"errAllow","expired_or_invalid_code":"errInvalid","login_required":"errLogin","human_check_required":"signupHumanRequired","too_many_code_requests":"signupLimited"};
  if(common[e?.message])return mt(common[e.message]);
  const errors={
+ invalid_demo_count:mt('submitDemoCount'),
+ invalid_demo_fields:mt('submitDemoFields'),
+ duplicate_demo_url:mt('submitDuplicateVideo'),
+ demo_first_mismatch:mt('submitDemoMismatch'),
+ missing_song_or_identity_test_fields:mt('submitRequiredFields'),
+ invalid_audition_window:mt('submitWindow'),
+ frontline_round_unavailable:mt('submitWindow'),
+ second_audition_not_open:mt('submitWindow'),
+ january_entry_required:mt('submitJanuaryFirst'),
+ invalid_competition_region:mt('submitRegion'),
+ competition_region_locked:mt('submitRegionLocked'),
+ invalid_eligibility_basis:mt('submitEligibility'),
+ legacy_eligibility_mismatch:mt('submitEligibility'),
+ invalid_province:mt('submitLocation'),
+ invalid_location_basis:mt('submitLocation'),
+ invalid_category:mt('submitEligibility'),
+ video_self_recording_confirmation_required:mt('submitVideoConfirm'),
+ song_policy_declaration_required:mt('submitSongConfirm'),
+ five_demo_not_enabled:mt('submitStorageUnavailable'),
+ five_demo_round_unavailable:mt('submitWindow'),
+ frontline_2027_registration_unavailable:mt('submitStorageUnavailable'),
+ frontline_transaction_unavailable:mt('submitStorageUnavailable'),
+ frontline_database_error:mt('submitStorageFailed'),
+ temporary_service_error:mt('submitStorageFailed'),
+ already_finalist:mt('submitFinalist'),
+ invalid_json:mt('submitInvalidRequest'),
+ origin_not_allowed:mt('submitReload'),
  muse_profile_missing:mt('contactRequired'),
  muse_profile_invalid:mt('contactInvalid'),
  muse_phone_invalid:mt('contactPhoneInvalid'),

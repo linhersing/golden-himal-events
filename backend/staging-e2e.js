@@ -284,7 +284,9 @@ async function submitApplication(request,env,a){
  if(Object.hasOwn(b,'video_confirmed')&&b.video_confirmed!==true)return deny('video_self_recording_confirmation_required',422);
  const fields=['stage_name','affiliation','song_title','original_artist','song_language','song_key'];
  const values=fields.map(k=>String(b[k]||'').trim());
- if(values.some(x=>x.length<1||x.length>100)||values[0].length<2)return deny('missing_song_or_identity_test_fields',422);
+ // A performance name may legitimately be one character. It is a display name,
+ // not a credential; the verified member session determines ownership.
+ if(values.some(x=>x.length<1||x.length>100))return deny('missing_song_or_identity_test_fields',422);
  if(!validSongLanguage(values[4]))return deny('invalid_song_language',422);
  const url=String(b.demo_url||'').trim();
  if((env.STAGING_SUBMISSION_MODE==='links'&&!url)||(url&&!validPerformanceLink(url)))return deny('invalid_demo_url',422);
@@ -336,7 +338,7 @@ async function updateApplication(request,env,a,supplements){
  if(Object.keys(b).some(k=>!allowed.includes(k)))return deny('update_fields_only',422);
  const id=String(b.application_id||'');
  const values=['stage_name','song_title','original_artist','demo_url'].map(k=>typeof b[k]==='string'?b[k].trim():'');
- if(values.some((v,i)=>!v||v.length>(i===3?1000:100))||values[0].length<2||!validPerformanceLink(values[3]))
+ if(values.some((v,i)=>!v||v.length>(i===3?1000:100))||!validPerformanceLink(values[3]))
    return deny('invalid_demo_url_or_fields',422);
  const fiveEditing=Object.hasOwn(b,'demo_entries');
  const five=fiveEditing?parseFiveDemos(b,validPerformanceLink):{entries:null};
@@ -617,7 +619,15 @@ export async function handleE2E(request,env){
     ...(a.role==='member'&&env.STAGING_ELIGIBILITY_UPLOAD_ENABLED==='true'&&Boolean(env.STAGING_MEDIA)?{eligibility_upload_enabled:true}:{}),
     ...(approval?{approval_enabled:true}:{})});
   if(pathname==='/api/e2e/applications'&&!isPost)return await applications(a,env,supplements);
-  if(pathname==='/api/e2e/applications'&&isPost)return await submitApplication(request,env,a);
+  if(pathname==='/api/e2e/applications'&&isPost){
+   const response=await submitApplication(request,env,a);
+   if(!response.ok){
+    // Server-defined codes only: never log request bodies, identity, links or contacts.
+    const {error}=await response.clone().json();
+    console.info(JSON.stringify({event:'staging_application_rejected',status:response.status,error}));
+   }
+   return response;
+  }
     if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a,supplements);
     if(pathname==='/api/e2e/delete-application'&&isPost)return await deleteApplication(request,env,a,supplements);
   if(pathname==='/api/e2e/mock-payment'&&isPost)return await mockPayment(request,env,a);
