@@ -49,6 +49,7 @@ for(const width of [390,1280])test('public member real handler stores browser fo
   await page.locator('#application-form [type=submit]').click();
   const response=await responsePromise;
   expect(response.status(),JSON.stringify(await response.json())+' payload '+response.request().postData()).toBe(201);
+  await expect(page.locator('#member-status')).toContainText('等待主辦方核准');
   await expect(page.locator('#entries')).toContainText(name);
   await expect(page.locator('#entries')).toContainText('等待主辦方核准');
   expect(db.sqlite.prepare('SELECT COUNT(*) AS n FROM e2e_applications').get().n).toBe(1);

@@ -366,6 +366,9 @@ Object.assign(texts.ne,{"testNotice":"यो परीक्षण वेबस�
  submitStorageUnavailable:'आवेदन सुरक्षित गर्ने सेवा तयार छैन। यस पृष्ठमा विवरण बाँकी छ। पछि प्रयास गर्नुहोस् वा आयोजकलाई सम्पर्क गर्नुहोस्।',submitStorageFailed:'सर्भरले आवेदन सुरक्षित भएको पुष्टि गर्न सकेन। फेरि लगइन गरी आफ्नो आवेदन जाँचेर मात्र पुनः पेस गर्नुहोस्।',
  submitFinalist:'तपाईं फाइनलमा छनोट भइसक्नुभएको छ, अर्को अडिसनमा आवेदन दिन मिल्दैन।',submitInvalidRequest:'आवेदनको ढाँचा र लम्बाइ जाँच्नुहोस्। यस पृष्ठमा विवरण बाँकी छ।',submitReload:'यो पृष्ठबाट सुरक्षित रूपमा पेस गर्न सकिएन। आधिकारिक वेबसाइटबाट फेरि लगइन गर्नुहोस्।',submitUncertain:'नेटवर्कको समय सकियो। पुनः प्रयास गर्नुअघि आफ्नो आवेदन जाँच्नुहोस्; यस पृष्ठमा विवरण बाँकी छ।'
  });
+ Object.assign(texts.zh,{saved:'測試報名資料已儲存，等待主辦方核准。'});
+ Object.assign(texts.en,{saved:'Your TEST entry was saved and is awaiting organizer approval.'});
+ Object.assign(texts.ne,{saved:'परीक्षण आवेदन सुरक्षित भयो। अब आयोजकको स्वीकृति पर्खनुहोस्।'});
  const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 Object.assign(texts.zh,{museFullName:'真實姓名（與身分證明一致）*',museFullNameHelp:'僅供主辦單位核對身分與參賽資格，不是演出名稱。',stageName:'演出名稱（本名或藝名）*',stageNameHelp:'供主辦與評審辨識參賽作品；沒有藝名就填本名。',stagePlaceholder:'沒有藝名可直接填本名'});
 Object.assign(texts.en,{museFullName:'Legal full name (as on ID) *',museFullNameHelp:'For organizer identity and eligibility checks. This is not your performance name.',stageName:'Performance name (real or stage name) *',stageNameHelp:'Used by organizers and judges to identify your entry. No stage name? Enter your full name.',stagePlaceholder:'Your stage name or full name'});
