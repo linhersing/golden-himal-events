@@ -270,10 +270,10 @@ function setupProfileFields(ready){
 function status(text,bad=false){if(!statusBox)return;statusBox.hidden=false;statusBox.className='feedback'+(bad?' error':' success');statusBox.textContent=text;statusBox.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function friendlyError(e){
  if(page==='member'){
- if(e?.name==='AbortError')return mt('submitUncertain');
  const common={"e2e_not_configured":"errNoEmail","test_email_service_unavailable":"errMail","not_on_test_allowlist":"errAllow","expired_or_invalid_code":"errInvalid","login_required":"errLogin","human_check_required":"signupHumanRequired","too_many_code_requests":"signupLimited"};
  if(common[e?.message])return mt(common[e.message]);
  const errors={
+ application_submit_timeout:mt('submitUncertain'),
  invalid_demo_count:mt('submitDemoCount'),
  invalid_demo_fields:mt('submitDemoFields'),
  duplicate_demo_url:mt('submitDuplicateVideo'),
@@ -358,6 +358,9 @@ async function api(path,body){
    throw new Error(data.error||('HTTP '+r.status));
   }
   return data;
+ }catch(error){
+  if(error?.name==='AbortError'&&path==='applications'&&body!==undefined)throw new Error('application_submit_timeout');
+  throw error;
  }finally{clearTimeout(timer)}
 }
 async function run(fn){if(busy)return;busy=true;document.body.classList.add('requesting');try{await fn()}catch(e){status(friendlyError(e),true)}finally{busy=false;document.body.classList.remove('requesting')}}

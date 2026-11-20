@@ -45,4 +45,7 @@ test('registration validation errors explain the required action rather than an 
  for(const error of ['invalid_demo_count','invalid_demo_fields','duplicate_demo_url','demo_first_mismatch','missing_song_or_identity_test_fields','frontline_database_error','temporary_service_error','frontline_round_unavailable','competition_region_locked','invalid_competition_region','invalid_eligibility_basis','legacy_eligibility_mismatch','video_self_recording_confirmation_required','song_policy_declaration_required','five_demo_not_enabled','five_demo_round_unavailable']){
   assert.notEqual(explain(new Error(error)),'errUnknown',error);
  }
+ const aborted=new Error('Aborted');aborted.name='AbortError';
+ assert.notEqual(explain(aborted),'submitUncertain','OTP and other operations must not suggest a saved entry');
+ assert.equal(explain(new Error('application_submit_timeout')),'submitUncertain');
 });
