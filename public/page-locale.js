@@ -339,6 +339,33 @@ Object.assign(texts.ne,{"testNotice":"यो परीक्षण वेबस�
  Object.assign(texts.zh,{contactRequired:'請重新整理後填寫受邀測試報名的聯絡與學歷欄位。',contactInvalid:'請確認所有聯絡與學歷欄位皆已填妥。',contactPhoneInvalid:'請輸入有效的聯絡電話。',contactEmailInvalid:'請輸入有效的電子郵件。',contactUnavailable:'此帳號的聯絡資料欄位尚未開放。請重新整理。'});
  Object.assign(texts.en,{contactRequired:'Reload and complete the contact and education fields for your invited TEST entry.',contactInvalid:'Complete all contact and education fields.',contactPhoneInvalid:'Enter a valid phone number.',contactEmailInvalid:'Enter a valid email address.',contactUnavailable:'Contact fields are unavailable for this account. Reload the page.'});
  Object.assign(texts.ne,{contactRequired:'पृष्ठ फेरि खोलेर परीक्षण आवेदनको सम्पर्क र शैक्षिक विवरण पूरा गर्नुहोस्।',contactInvalid:'सम्पर्क र शैक्षिक विवरण पूरा गर्नुहोस्।',contactPhoneInvalid:'मान्य फोन नम्बर राख्नुहोस्।',contactEmailInvalid:'मान्य इमेल राख्नुहोस्।',contactUnavailable:'यो खाताका लागि सम्पर्क विवरण उपलब्ध छैन। पृष्ठ फेरि खोल्नुहोस्।'});
+ Object.assign(texts.zh,{
+ submitDemoCount:'請保留 1 至 5 支 Demo，再送出報名。',submitDemoFields:'請檢查每一支 Demo 的歌曲名稱、原唱、語言與 HTTPS 影片連結，名稱及原唱各限 100 字。',
+ submitDuplicateVideo:'Demo 影片連結重複了。每支 Demo 請使用不同的影片連結，或移除重複的 Demo。',submitDemoMismatch:'第一支 Demo 的資料不一致。請重新檢查第一首歌曲與影片連結後送出。',
+ submitRequiredFields:'請檢查演出名稱、學校／職業、歌曲名稱、原唱、語言與調性，各欄限 100 字。',submitWindow:'目前只開放 2027 年 1 月的測試海選，請選擇目前開放的梯次。',
+ submitJanuaryFirst:'請先完成 1 月海選報名，再參加後續梯次。',submitRegion:'請選擇 A 區 Lumbini 或 B 區 Bagmati。',submitRegionLocked:'你已選定參賽區域，不能改報另一區；如需更正請聯絡主辦方。',
+ submitEligibility:'請重新選擇目前在學或大專以上畢業資格。',submitLocation:'請檢查省份與居住、就學或工作地區的選項。',submitVideoConfirm:'請勾選本人連續演唱影片的確認聲明。',submitSongConfirm:'請勾選參賽曲目政策的確認聲明。',
+ submitStorageUnavailable:'報名儲存服務尚未就緒。已保留填寫內容，請稍後再試或聯絡主辦方。',submitStorageFailed:'伺服器未能確認報名儲存結果。請先重新登入查看「我的資料」，確認是否已建立，避免重複送出。',
+ submitFinalist:'你已有決賽資格，不能重複報名海選。',submitInvalidRequest:'報名內容格式或長度不符。已保留填寫內容，請檢查各欄後再試。',submitReload:'目前頁面無法安全送出。請從官網重新登入後再試。',submitUncertain:'網路逾時，尚無法確認是否儲存。請先查看「我的資料」，確認後再操作；填寫內容仍保留。'
+ });
+ Object.assign(texts.en,{
+ submitDemoCount:'Keep between 1 and 5 demos before submitting.',submitDemoFields:'Check every demo: song title, original artist, language and HTTPS video link. Titles and artist names must be 100 characters or fewer.',
+ submitDuplicateVideo:'A video link is repeated. Use a different video for each demo or remove the duplicate demo.',submitDemoMismatch:'The first demo does not match the main song details. Check its title, artist, language and video link.',
+ submitRequiredFields:'Check your performance name, school/occupation, song title, artist, language and key. Each field is limited to 100 characters.',submitWindow:'Only the January 2027 test audition is open. Select an available audition window.',
+ submitJanuaryFirst:'Complete a January entry before applying in a later window.',submitRegion:'Select region A (Lumbini) or B (Bagmati).',submitRegionLocked:'Your competition region is already selected. Contact the organizer if it needs correction.',
+ submitEligibility:'Select current college enrollment or college graduation again.',submitLocation:'Check your province and residence, study or work eligibility.',submitVideoConfirm:'Confirm the continuous recording of your own singing.',submitSongConfirm:'Confirm the song policy declaration.',
+ submitStorageUnavailable:'Application storage is not ready. Your input is kept on this page. Try later or contact the organizer.',submitStorageFailed:'The server could not confirm the saved entry. Sign in again and check My entry before submitting again.',
+ submitFinalist:'You already have finalist eligibility and cannot enter another audition.',submitInvalidRequest:'Check the format and length of your application fields. Your input is kept on this page.',submitReload:'This page cannot submit securely. Sign in again from the official website.',submitUncertain:'The request timed out. Check My entry before trying again; your input is kept on this page.'
+ });
+ Object.assign(texts.ne,{
+ submitDemoCount:'पेस गर्नुअघि १ देखि ५ वटा Demo राख्नुहोस्।',submitDemoFields:'हरेक Demo को गीतको नाम, मूल गायक, भाषा र HTTPS भिडियो लिंक जाँच्नुहोस्। नाम र गायकको विवरण बढीमा १०० अक्षरको हुनुपर्छ।',
+ submitDuplicateVideo:'भिडियो लिंक दोहोरिएको छ। हरेक Demo मा फरक भिडियो राख्नुहोस् वा दोहोरिएको Demo हटाउनुहोस्।',submitDemoMismatch:'पहिलो Demo र मुख्य गीतको विवरण मिलेन। नाम, गायक, भाषा र लिंक जाँच्नुहोस्।',
+ submitRequiredFields:'मञ्चको नाम भर्नुहोस्। विद्यालय/पेसा, गीत, मूल गायक, भाषा र सुर जाँच्नुहोस्; हरेक विवरण बढीमा १०० अक्षर।',submitWindow:'अहिले जनवरी २०२७ को परीक्षण अडिसन मात्र खुला छ। खुला चरण छान्नुहोस्।',
+ submitJanuaryFirst:'पछिल्लो चरणमा जानुअघि जनवरीको आवेदन पूरा गर्नुहोस्।',submitRegion:'A क्षेत्र Lumbini वा B क्षेत्र Bagmati छान्नुहोस्।',submitRegionLocked:'तपाईंको प्रतियोगिता क्षेत्र तय भइसकेको छ। सच्याउन आयोजकलाई सम्पर्क गर्नुहोस्।',
+ submitEligibility:'हाल कलेजमा अध्ययनरत वा कलेज उत्तीर्ण योग्यता फेरि छान्नुहोस्।',submitLocation:'प्रदेश र बसोबास, अध्ययन वा कामको आधार जाँच्नुहोस्।',submitVideoConfirm:'आफ्नै निरन्तर गायनको भिडियो भएको पुष्टि गर्नुहोस्।',submitSongConfirm:'गीतसम्बन्धी नियमको घोषणा पुष्टि गर्नुहोस्।',
+ submitStorageUnavailable:'आवेदन सुरक्षित गर्ने सेवा तयार छैन। यस पृष्ठमा विवरण बाँकी छ। पछि प्रयास गर्नुहोस् वा आयोजकलाई सम्पर्क गर्नुहोस्।',submitStorageFailed:'सर्भरले आवेदन सुरक्षित भएको पुष्टि गर्न सकेन। फेरि लगइन गरी आफ्नो आवेदन जाँचेर मात्र पुनः पेस गर्नुहोस्।',
+ submitFinalist:'तपाईं फाइनलमा छनोट भइसक्नुभएको छ, अर्को अडिसनमा आवेदन दिन मिल्दैन।',submitInvalidRequest:'आवेदनको ढाँचा र लम्बाइ जाँच्नुहोस्। यस पृष्ठमा विवरण बाँकी छ।',submitReload:'यो पृष्ठबाट सुरक्षित रूपमा पेस गर्न सकिएन। आधिकारिक वेबसाइटबाट फेरि लगइन गर्नुहोस्।',submitUncertain:'नेटवर्कको समय सकियो। पुनः प्रयास गर्नुअघि आफ्नो आवेदन जाँच्नुहोस्; यस पृष्ठमा विवरण बाँकी छ।'
+ });
  const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 Object.assign(texts.zh,{museFullName:'真實姓名（與身分證明一致）*',museFullNameHelp:'僅供主辦單位核對身分與參賽資格，不是演出名稱。',stageName:'演出名稱（本名或藝名）*',stageNameHelp:'供主辦與評審辨識參賽作品；沒有藝名就填本名。',stagePlaceholder:'沒有藝名可直接填本名'});
 Object.assign(texts.en,{museFullName:'Legal full name (as on ID) *',museFullNameHelp:'For organizer identity and eligibility checks. This is not your performance name.',stageName:'Performance name (real or stage name) *',stageNameHelp:'Used by organizers and judges to identify your entry. No stage name? Enter your full name.',stagePlaceholder:'Your stage name or full name'});
