@@ -1,9 +1,11 @@
 import {museAuditionReady} from './muse-audition.js';
+import {handleRegistrationBulk} from './staging-registration-bulk.js';
 
 const searchPath='/api/e2e/organizer-registrations';
 const actionPath='/api/e2e/organizer-registration-action';
 const auditPath='/api/e2e/organizer-registration-audit';
-const routes=new Map([[searchPath,'search'],[actionPath,'edit'],[auditPath,'audit_read']]);
+const bulkPath='/api/e2e/organizer-registration-bulk';
+const routes=new Map([[searchPath,'search'],[actionPath,'edit'],[auditPath,'audit_read'],[bulkPath,'search']]);
 const transitions={disable:'disabled',delete:'deleted',restore:'active',edit:'active'};
 const results={conflict:409,missing:404,protected:409,invalid:422,failed:503};
 const validId=value=>typeof value==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value);
@@ -118,7 +120,7 @@ async function changeRegistration(db,actor,body,event){
 export async function handleAdminRegistration(request,env,actor,{json,deny,NOW,uuid,bodyJSON}){
  const url=new URL(request.url),path=url.pathname;
  if(!routes.has(path))return null;
- const mutating=path===actionPath;
+ const mutating=path===actionPath||path===bulkPath;
  if(request.method!==(mutating?'POST':'GET'))return deny('method_not_allowed',405);
  const enabled=await adminManagementReady(env);
  if(!enabled)return deny('admin_registration_unavailable',503);
@@ -128,6 +130,7 @@ export async function handleAdminRegistration(request,env,actor,{json,deny,NOW,u
   await writeEvent(db,actor,{...event,result:'denied'});
   return deny('organizer_only',403);
  }
+ if(path===bulkPath)return handleRegistrationBulk(request,env,actor,{json,deny,NOW,uuid,bodyJSON,writeEvent,changeRegistration});
  if(path===searchPath){
   const search=(url.searchParams.get('q')||'').trim(),state=url.searchParams.get('state')||'active';
   const offset=Number(url.searchParams.get('offset')||0);

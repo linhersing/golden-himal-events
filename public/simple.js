@@ -1210,13 +1210,14 @@ const registrationStates={active:'有效',disabled:'已停用',deleted:'已刪�
 const registrationActions={search:'查詢',audit_read:'查看操作紀錄',edit:'修改報名資料',disable:'停用報名',delete:'移至回收區',restore:'復原報名'};
 const auditResults={success:'成功',conflict:'資料已更新或狀態不符',protected:'評分或晉級保護',missing:'找不到資料',invalid:'資料格式錯誤',failed:'暫時無法處理',denied:'權限拒絕'};
 function clearAdminRegistrations(){
+ staffBulk?.clear();
  const panel=$('organizer-admin-registrations');
  if(!panel)return;
  panel.hidden=true;panel.open=false;panel.ontoggle=null;
  $('admin-registration-search').reset();
  for(const id of ['admin-registration-results','admin-registration-list','admin-registration-pager'])$(id).replaceChildren();
 }
-let staffManageNavigate=null,staffManageCard=null,staffManageChanged=null;
+let staffManageNavigate=null,staffManageCard=null,staffManageChanged=null,staffBulk=null;
 function showAdminRegistrations(enabled){
  const panel=$('organizer-admin-registrations');
  if(!panel||!enabled){clearAdminRegistrations();return;}
@@ -1349,22 +1350,27 @@ async function renderOrganizer(){
  management.before(managementAnchor);
  const managementRows=new Map();
  const nav=createStaffWorkspace('organizer',dashboard,workspace,panel,showRecord);
+ staffBulk?.clear();
+ staffBulk=window.GHVRegistrationBulk.create({api,t:sw,isAllowed:()=>Boolean(account&&role==='organizer'&&staffRoute===nav),onChanged:()=>staffManageChanged?.()});
  showRecord.cleanup=()=>{
   managementAnchor.after(management);management.hidden=true;
  };
  const oldDispose=nav.dispose;
- nav.dispose=()=>{oldDispose();managementAnchor.remove();staffManageNavigate=null;staffManageChanged=null;};
+ nav.dispose=()=>{oldDispose();managementAnchor.remove();staffBulk?.clear();staffManageNavigate=null;staffManageChanged=null;};
  staffManageNavigate=(row,replace=false)=>{
   managementRows.set(row.id,row);
   if(replace)nav.replace('management-entry',row.id);else nav.go('management-entry',row.id);
  };
  staffManageChanged=async()=>{
   const fresh=await api('organizer-queue?view=workbench');
+  if(!account||role!=='organizer'||staffRoute!==nav)return;
+  $('admin-registration-list').replaceChildren();$('admin-registration-pager').replaceChildren();
   apps.splice(0,apps.length,...fresh.applications||[]);paint();
  };
  const tools=$('staff-management-open');
  tools.hidden=!v.registration_management_enabled;
  tools.onclick=()=>nav.open({id:'_management'},tools);
+ $('admin-registration-bulk-open').onclick=()=>nav.go('management-bulk');
  management.hidden=true;
  back.onclick=nav.back;close.onclick=nav.close;
  function fields(container,rows){
@@ -1389,8 +1395,14 @@ async function renderOrganizer(){
    $('organizer-entry-step').textContent=sw('測試資料');
    back.hidden=false;
    if(route.view==='management-entry'){
-    const row=managementRows.get(route.detail);
-    if(row&&staffManageCard)panel.append(staffManageCard(row));
+    const record=node('div');panel.append(record);
+    loadSection(record,'organizer-registrations?'+new URLSearchParams({q:route.detail,state:'all'}),data=>{
+     const row=data.registrations?.find(row=>row.id===route.detail);
+     if(row&&staffManageCard)record.append(staffManageCard(row));
+     else record.append(node('p',sw('沒有符合條件的資料。')));
+    });
+   }else if(route.view==='management-bulk'){
+    panel.append(staffBulk.render());
    }else{
     panel.append(management);management.hidden=false;
     management.open=true;management.ontoggle?.();
