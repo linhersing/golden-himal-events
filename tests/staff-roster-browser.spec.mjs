@@ -6,7 +6,7 @@ test('organizer explicitly approves a test entry and member sees pending until a
   round_code:'2027-01',category:'community',payment_status:'simulated_paid',status:'under_review'};
  await page.route('**/api/e2e/**',async route=>{
   const path=new URL(route.request().url()).pathname.split('/').at(-1);
-  if(path==='me')return route.fulfill({json:{ok:true,account:{role,available_roles:[role]},approval_enabled:true}});
+  if(path==='me')return route.fulfill({json:{ok:true,judging_policy:{mode:'all_stages_test'},account:{role,available_roles:[role]},approval_enabled:true}});
   if(path==='applications'||path==='organizer-queue')return route.fulfill({json:{ok:true,applications:[{...entry,approval_state:approval,can_edit:approval==='pending'}]}});
   if(path==='approve-test-application'){
    expect(role).toBe('organizer');expect(route.request().postDataJSON()).toEqual({application_id:entry.id});
@@ -44,7 +44,7 @@ test('reviewer can page through 135 synthetic entries, open one form and score o
  await page.route('**/api/e2e/**',async route=>{
   const key=new URL(route.request().url()).pathname.split('/').pop();
   let response={ok:true};
-  if(key==='me')response={ok:true,account:{id:'reviewer-1',role:'reviewer',available_roles:['reviewer']}};
+  if(key==='me')response={ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'reviewer-1',role:'reviewer',available_roles:['reviewer']}};
   else if(key==='reviewer-queue')response={ok:true,queue:entries};
   else if(key==='score'){const data=route.request().postDataJSON();posts.push(data);const a=entries.find(x=>x.id===data.application_id);a.demo_technique=data.technique;a.demo_interpretation=data.interpretation;response={ok:true,phase:data.phase,score:data.technique+data.interpretation};}
   await route.fulfill({status:200,json:response});
@@ -93,7 +93,7 @@ test('organizer filters language, category and scoring with 133 synthetic entrie
  }));
  await page.route('**/api/e2e/**',async route=>{
   const key=new URL(route.request().url()).pathname.split('/').pop();
-  const data=key==='me'?{ok:true,account:{id:'organizer-1',role:'organizer',available_roles:['organizer']}}:
+  const data=key==='me'?{ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'organizer-1',role:'organizer',available_roles:['organizer']}}:
   key==='organizer-queue'?{ok:true,applications:entries}:{ok:true};
   await route.fulfill({status:200,json:data});
  });
@@ -133,7 +133,7 @@ test('organizer five-demo rows remain compact until expanded, with song-level se
  await page.route('**/api/e2e/**',async route=>{
   const p=new URL(route.request().url()).pathname.split('/').at(-1);
   const json=p==='me'
-   ?{ok:true,account:{id:'synthetic-organizer',role:'organizer',available_roles:['organizer']}}
+   ?{ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'synthetic-organizer',role:'organizer',available_roles:['organizer']}}
    :p==='organizer-queue'
     ?{ok:true,applications:[application],registration_management_enabled:false}
     :{ok:true};
@@ -183,7 +183,7 @@ test('staff dashboard shows two concise totals and hides payment info and advanc
  await page.route('**/api/e2e/**',async route=>{
   const p=new URL(route.request().url()).pathname.split('/').at(-1);
   await route.fulfill({status:200,json:p==='me'?
-   {ok:true,account:{id:'staff-synthetic',role:'organizer',available_roles:['organizer']}}
+   {ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'staff-synthetic',role:'organizer',available_roles:['organizer']}}
    :p==='organizer-queue'?{ok:true,applications:[]}:{ok:true}});
  });
  await page.setViewportSize({width:375,height:812});
@@ -207,7 +207,7 @@ for(const [device,width] of [['desktop',1280],['mobile',375]]){
   await page.route('**/api/e2e/**',route=>{
    const url=new URL(route.request().url()),path=url.pathname.split('/').pop();
    let json={ok:true};
-   if(path==='me')json={ok:true,account:{id:'organizer-fictional',role:'organizer',available_roles:['organizer']}};
+   if(path==='me')json={ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'organizer-fictional',role:'organizer',available_roles:['organizer']}};
    if(path==='staff-login-config')json={ok:true,required:false};
    if(path==='organizer-queue')json={ok:true,applications:[],registration_management_enabled:true};
    if(path==='organizer-registrations'){

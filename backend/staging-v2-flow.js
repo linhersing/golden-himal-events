@@ -6,6 +6,7 @@ import {approvalColumn,approvalGuard,approveTestApplication} from './test-applic
 import {entrantLocationsReady,entrantLocationFields,entrantLocationJoin} from './entrant-location.js';
 import {frontline2027Ready,frontlineJoin} from './frontline-2027.js';
 import {supplementColumns,supplementGuard,supplementJoin} from './test-video-supplement.js';
+import {onlineJudgingPolicy,earlierOnlineJudging,onlineStageAllowed,judgingPhaseGuard} from './online-judging-policy.js';
 
 const workbenchRegionColumn=ready=>ready?',fr.competition_region':',NULL AS competition_region';
 const validApplicationId=id=>/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id||'');
@@ -27,11 +28,13 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
  const context={json,deny,NOW,bodyJSON,ownsApplication};
  if(path==='/api/e2e/january-video-score'&&post){
   if(forbidden('reviewer'))return forbidden('reviewer');
+  if(!earlierOnlineJudging(env))return deny('online_judging_frontline_managed',403);
   if(!perVideo)return deny('january_video_scoring_unavailable',503);
   return submitJanuaryScore(request,env,a,context);
  }
  if(path==='/api/e2e/january-test-roster'){
   if(forbidden('organizer'))return forbidden('organizer');
+  if(!earlierOnlineJudging(env))return deny('frontline_results_required',409);
   if(!perVideo)return deny('january_video_scoring_unavailable',503);
   return januaryRoster(request,env,a,context);
  }
@@ -60,11 +63,11 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    LEFT JOIN e2e_judge_scores d ON d.application_id=p.id AND d.reviewer_id=?
    LEFT JOIN e2e_live_scores l ON l.application_id=p.id AND l.reviewer_id=? AND l.stage=p.phase
    WHERE ${reviewablePayment} AND ${evidence}${approved}
-    AND p.status NOT IN ('withdrawn','rejected')${id?' AND p.id=?':''}
+    AND p.status NOT IN ('withdrawn','rejected')${judgingPhaseGuard(env)}${id?' AND p.id=?':''}
    ORDER BY p.created_at DESC LIMIT 500`).bind(a.id,a.id,...(id?[id]:[])).all();
   const entries=r.results||[];
   const queue=await attachFiveDemos(env,workbench?entries:await attachProfiles(env,entries),workbench);
-  return json({ok:true,queue:perVideo?await attachJanuaryScores(env,queue,a.id):queue,testOnly:true});
+  return json({ok:true,queue:perVideo?await attachJanuaryScores(env,queue,a.id):queue,judging_policy:onlineJudgingPolicy(env),testOnly:true});
  }
  if(path==='/api/e2e/score'&&post){
   if(forbidden('reviewer'))return forbidden('reviewer');
@@ -74,6 +77,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    AND ${reviewablePayment} AND ${evidence}${approved}
    AND p.status NOT IN ('withdrawn','rejected')`).bind(b.application_id).first();
   if(!app)return deny('not_reviewable',409);
+  if(!onlineStageAllowed(env,app.phase))return deny('online_judging_frontline_managed',403);
   if(await ownsApplication(env,a,app.account_id))return deny('self_review_disallowed',403);
   if(app.phase==='demo'&&await fiveDemoReady(env)){
    const videos=await db.prepare('SELECT COUNT(*) AS n FROM e2e_demo_2027_videos WHERE application_id=?').bind(app.id).first();
@@ -123,10 +127,11 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    WHERE ${active}
    ORDER BY p.created_at ASC LIMIT 500`).all();
   const entries=r.results||[];
-  return json({ok:true,applications:await attachFiveDemos(env,workbench?entries:await attachProfiles(env,entries),workbench),january_roster_enabled:perVideo,registration_management_enabled:registrationManagement,contact_storage_enabled:await museAuditionReady(env),testOnly:true});
+  return json({ok:true,applications:await attachFiveDemos(env,workbench?entries:await attachProfiles(env,entries),workbench),judging_policy:onlineJudgingPolicy(env),january_roster_enabled:perVideo&&earlierOnlineJudging(env),registration_management_enabled:registrationManagement,contact_storage_enabled:await museAuditionReady(env),testOnly:true});
  }
  if(path==='/api/e2e/organizer-promote'&&post){
   if(forbidden('organizer'))return forbidden('organizer');
+  if(!earlierOnlineJudging(env))return deny('frontline_results_required',409);
   const b=await bodyJSON(request);if(!b)return deny('invalid_json');
   const app=await db.prepare(`SELECT p.id,p.phase,p.round_code,p.category,p.payment_status${approvalColumn(approval)} FROM e2e_applications p WHERE p.id=?`).bind(b.application_id).first();
   if(!app)return deny('application_not_found',404);

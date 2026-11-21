@@ -1,6 +1,6 @@
 import {isolatedStaffRuntime,checkCore} from '../tests/fixtures/staff-workerd.mjs';
 import {writeFile} from 'node:fs/promises';
-const runtime=await isolatedStaffRuntime(process.cwd(),process.argv[2]);
+const runtime=await isolatedStaffRuntime(process.cwd(),process.argv[2],undefined,{judgingMode:'all_stages_test'});
 try {
  const result=await checkCore(runtime);
  const evidence=JSON.stringify(result,null,2)+'\n';

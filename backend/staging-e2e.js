@@ -6,6 +6,7 @@ import {validPerformanceLink} from '../public/performance-link.js';
 import {parseFiveDemos,fiveDemoReady,insertFiveDemos,replaceFiveDemos,attachFiveDemos,fiveDemoRehearsal} from './demo-five-2027.js';
 import {validSongLanguage} from './song-language.js';
 import {handleV2Route} from './staging-v2-flow.js';
+import {onlineJudgingPolicy,earlierOnlineJudging,judgingPhaseGuard} from './online-judging-policy.js';
 import {parseProfileInput,profileReady,attachProfiles,profileInsert,profileUpsert} from './entrant-profile.js';
 import {approvalRequired,approvalSchemaReady,approvalColumn,approvalGuard,pendingGuard} from './test-application-approval.js';
 import {parseLocation,entrantLocationsReady,entrantLocationFields,entrantLocationJoin,insertEntrantLocation,updateEntrantLocation} from './entrant-location.js';
@@ -41,7 +42,10 @@ function emailAllowed(email,env,role){
 }
 const ROLES=['member','reviewer','organizer'];
 function grantedRoles(email,env){return ROLES.filter(role=>emailAllowed(email,env,role))}
-const memberContactReady=(env,actor)=>actor.role==='member'&&Boolean(actor.email)&&emailAllowed(actor.email,env,'member')&&museAuditionReady(env);
+// account() has already verified the server session and member identity proof.
+// Public/password members deliberately have no recovered allowlisted email.
+// Their own private form uses the same storage gate, never the staff invite list.
+const memberContactReady=(env,actor)=>actor.role==='member'&&museAuditionReady(env);
 async function emailForFingerprint(env,fingerprint,role){
  const list=emails(env,role==='organizer'?'STAGING_ORGANIZER_EMAILS':role==='reviewer'?'STAGING_REVIEWER_EMAILS':'STAGING_ALLOWED_EMAILS');
  for(const email of list){
@@ -506,7 +510,7 @@ async function streamMedia(request,env,a){
  if(!['demo','eligibility','receipt'].includes(kind))return deny('not_found',404);
  const column=kind==='demo'?'media_key':kind==='eligibility'?'eligibility_key':'receipt_key';
  const reviewerGate=approvalRequired(env)&&a.role==='reviewer';
- const app=await env.DB.prepare(`SELECT p.id,p.account_id,p.${column} AS asset_key FROM e2e_applications p WHERE p.id=?${approvalGuard(reviewerGate,'p')}${reviewerGate?" AND p.payment_status='simulated_paid'":''}${a.role==='reviewer'?" AND p.status NOT IN ('withdrawn','rejected')":''}`).bind(url.searchParams.get('application')).first();
+ const app=await env.DB.prepare(`SELECT p.id,p.account_id,p.${column} AS asset_key FROM e2e_applications p WHERE p.id=?${approvalGuard(reviewerGate,'p')}${reviewerGate?" AND p.payment_status='simulated_paid'":''}${a.role==='reviewer'?" AND p.status NOT IN ('withdrawn','rejected')"+judgingPhaseGuard(env):''}`).bind(url.searchParams.get('application')).first();
  if(!app||!app.asset_key)return deny('not_found',404);
  if(app.account_id!==a.id&&a.role!=='organizer'&&!(a.role==='reviewer'&&kind==='demo'))return deny('not_found',404);
  const obj=await env.STAGING_MEDIA.get(app.asset_key);if(!obj)return deny('not_found',404);
@@ -514,11 +518,12 @@ async function streamMedia(request,env,a){
 }
 async function judgeQueue(env,a){
  if(!requireRole(a,'reviewer'))return deny('reviewer_only',403);
- const rows=await env.DB.prepare("SELECT p.id,p.round_code,p.category,p.stage_name,p.demo_url,p.media_key IS NOT NULL AS has_uploaded_file,p.status,p.payment_status,s.technique,s.interpretation FROM e2e_applications p LEFT JOIN e2e_judge_scores s ON s.application_id=p.id AND s.reviewer_id=? WHERE p.payment_status='simulated_paid' AND p.status<>'withdrawn' ORDER BY p.created_at DESC LIMIT 100").bind(a.id).all();
- return json({ok:true,queue:rows.results||[],role:'reviewer',testOnly:true});
+ const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.demo_url,p.media_key IS NOT NULL AS has_uploaded_file,p.status,p.payment_status,s.technique,s.interpretation FROM e2e_applications p LEFT JOIN e2e_judge_scores s ON s.application_id=p.id AND s.reviewer_id=? WHERE p.payment_status='simulated_paid' AND p.status<>'withdrawn'${judgingPhaseGuard(env)} ORDER BY p.created_at DESC LIMIT 100`).bind(a.id).all();
+ return json({ok:true,queue:rows.results||[],role:'reviewer',judging_policy:onlineJudgingPolicy(env),testOnly:true});
 }
 async function submitScore(request,env,a){
  if(!requireRole(a,'reviewer'))return deny('reviewer_only',403);
+ if(!earlierOnlineJudging(env))return deny('online_judging_frontline_managed',403);
  const b=await bodyJSON(request);if(!b)return deny('invalid_json');
  if(!Number.isInteger(b.technique)||b.technique<0||b.technique>60||
     !Number.isInteger(b.interpretation)||b.interpretation<0||b.interpretation>40||
@@ -611,7 +616,7 @@ export async function handleE2E(request,env){
   if(!a.email&&['/api/e2e/finalists','/api/e2e/test-vote'].includes(pathname))return deny('not_on_test_allowlist',403);
    const v2=await handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval,supplements});
   if(v2)return v2;
-   if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),session_expires_at:a.sessionExpiresAt,session_expires_in_seconds:Math.max(0,a.sessionExpiresAt-NOW()),profile_enabled:await profileReady(env),testOnly:true,
+   if(pathname==='/api/e2e/me'&&!isPost)return json({ok:true,account:publicAccount(a,env),judging_policy:onlineJudgingPolicy(env),session_expires_at:a.sessionExpiresAt,session_expires_in_seconds:Math.max(0,a.sessionExpiresAt-NOW()),profile_enabled:await profileReady(env),testOnly:true,
     ...(a.role==='member'&&await entrantLocationsReady(env.DB)?{nepal_locations_enabled:true}:{}),
     ...(a.role==='member'&&env.STAGING_FRONTLINE_2027_ENABLED==='true'&&await entrantLocationsReady(env.DB)&&await frontline2027Ready(env.DB)?{frontline_form_enabled:true}:{}),
     ...(await memberContactReady(env,a)?{muse_form_enabled:true}:{}),

@@ -26,7 +26,7 @@ async function fixture(t,{enabled=true,migrated=true,supplements=false}={}){
   db.prepare('INSERT INTO e2e_sessions VALUES(?,?,?,?)').run(fingerprint('session:'+token),id,9999999999,1);
   cookies[id]='__Host-ghv-e2e='+token;
  }
- const env={STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',STAGING_IDENTITY_SECRET:secret,
+ const env={STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',STAGING_SUBMISSION_MODE:'links',STAGING_IDENTITY_SECRET:secret,
   STAGING_ALLOWED_EMAILS:'owner@example.invalid',STAGING_REVIEWER_EMAILS:'owner@example.invalid,judge@example.invalid',
   STAGING_ORGANIZER_EMAILS:'org@example.invalid',STAGING_FROM_EMAIL:'test@example.invalid',EMAIL:{async send(){}},
   ...(enabled?{STAGING_TEST_APPROVAL_ENABLED:'true'}:{}),DB:{prepare(sql){let args=[];return {

@@ -11,7 +11,7 @@ const repo=process.cwd();
 if(!dependencies||!evidence)throw Error('Usage: node scripts/staff-workspace-edge-test.mjs <runtime tools root> <evidence directory> [assets directory]');
 const require=createRequire(join(repo,'package.json'));
 const {chromium,expect}=require('@playwright/test');
-const runtime=await isolatedStaffRuntime(repo,dependencies,assets);
+const runtime=await isolatedStaffRuntime(repo,dependencies,assets,{judgingMode:'all_stages_test'});
 const browser=await chromium.launch({channel:'msedge',headless:true});
 const desktop={viewport:{width:1440,height:960},locale:'zh-TW'};
 const mobile={viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:1,locale:'zh-TW'};
@@ -156,3 +156,11 @@ assert.equal(stages.status,0,stages.error?.message||'Isolated stage rehearsal fa
 const votes=spawnSync(process.execPath,['scripts/final-vote-isolated-test.mjs',dependencies,join(evidence,'final-vote')],{cwd:repo,encoding:'utf8',timeout:180000});
 process.stdout.write(votes.stdout||'');process.stderr.write(votes.stderr||'');
 assert.equal(votes.status,0,votes.error?.message||'Isolated final-vote rehearsal failed');
+
+const finalOnly=spawnSync(process.execPath,['scripts/final-only-judging-isolated-test.mjs',dependencies,join(evidence,'final-only')],{cwd:repo,encoding:'utf8',timeout:180000});
+process.stdout.write(finalOnly.stdout||'');process.stderr.write(finalOnly.stderr||'');
+assert.equal(finalOnly.status,0,finalOnly.error?.message||'Current final-only judging policy failed');
+
+const publicContact=spawnSync(process.execPath,['scripts/public-member-contact-isolated-test.mjs',dependencies,join(evidence,'public-member-contact')],{cwd:repo,encoding:'utf8',timeout:180000});
+process.stdout.write(publicContact.stdout||'');process.stderr.write(publicContact.stderr||'');
+assert.equal(publicContact.status,0,publicContact.error?.message||'Public member private contact regression failed');
