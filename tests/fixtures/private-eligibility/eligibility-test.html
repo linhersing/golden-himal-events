@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><title>私有資格文件測試｜Golden Himal Voice</title>
+<link rel="stylesheet" href="/eligibility-test.css"><script defer src="/eligibility-test.js"></script></head><body>
+<main>
+ <nav aria-label="Language"><button type="button" data-lang="zh" aria-pressed="true">中文</button><button type="button" data-lang="en" aria-pressed="false">English</button><button type="button" data-lang="ne" aria-pressed="false">नेपाली</button></nav>
+ <h1 data-copy="title">私有資格文件測試</h1>
+ <p class="warning" data-copy="warning">僅供本機測試。請勿選取或上傳真實證件。</p>
+ <p id="status" role="status" aria-live="polite"></p>
+ <form id="upload" hidden>
+  <label for="file" data-copy="choose">選擇一張照片或 PDF</label>
+  <input id="file" type="file" accept="image/jpeg,image/png,application/pdf" aria-describedby="formats" required>
+  <p id="formats" data-copy="formats">JPG、PNG 或 PDF，最多 5 MiB。僅限合成測試檔。</p>
+  <label class="consent"><input id="consent" type="checkbox" required><span data-copy="consent">我確認所選檔案是合成測試檔。</span></label>
+  <button type="submit" data-copy="upload">上傳測試檔</button>
+ </form>
+ <section id="saved" hidden><p data-copy="saved">測試檔已儲存在私有空間。</p>
+  <a id="download" data-copy="download">下載測試檔</a><button type="button" id="remove" data-copy="remove" hidden>撤回文件</button>
+ </section>
+</main></body></html>
