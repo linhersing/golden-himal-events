@@ -1,7 +1,7 @@
 // Public, read-only Cloudflare staff TEST readiness audit.
 // No credentials, email addresses, OTPs, POSTs, secrets, or live data mutations.
 import {appendFileSync} from 'node:fs';
-const ENDPOINT='https://ghv-staff-test-20261119.linhersing.workers.dev/api/staging/e2e-readiness';
+const ENDPOINT='https://goldenhimalpalace.com/api/staging/e2e-readiness';
 const fields=[
  'readyForLoginTest','dualRoleReadyForLoginTest','dualRoleInviteConfigured',
  'staffSchemaReady','organizerInviteListConfigured','reviewerInviteListConfigured',
@@ -39,7 +39,7 @@ try{
  console.log('Note: readiness never proves OTP delivery, authenticated role switching, or scoring.');
  if(process.env.GITHUB_STEP_SUMMARY){
   appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-   '### Golden Himal Voice — isolated staff TEST (read-only)\n\n'+
+   '### Golden Himal Voice — main-domain TEST staff configuration (read-only)\n\n'+
    '**Dual-role configuration:** '+(result.dualRoleReadyForLoginTest?'READY for manual OTP validation':'BLOCKED')+'\n\n'+
    '| Check | Ready |\n|---|---|\n'+fields.map(key=>'| `'+key+'` | '+(result[key]?'Yes':'No')+' |').join('\n')+
    '\n\nNo actual mail was sent. No login or scoring was attempted.\n');

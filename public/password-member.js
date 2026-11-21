@@ -46,6 +46,12 @@ async function submit(path,form){if(busy)return;const t=translation(),button=for
 }catch(e){
  const key=e?.message||'unknown';message(key==='mismatch'?t.mismatch:t.errors[key]||t.unknown,true);
 }finally{busy=false;button.disabled=false;if(path==='password-register'&&widgetId!==undefined){challengeToken=undefined;try{window.turnstile.reset(widgetId)}catch{}}}}
+function passwordHumanError(code){
+ challengeToken=undefined;
+ const failure=window.GHVHumanVerification?.humanVerificationError(code);
+ const copy=failure?window.GHVLocale?.t(failure.key):null;
+ message((copy||translation().errors.human_check_required)+(failure?.code?' (CF '+failure.code+')':''),true);
+}
 async function init(){
  apply();
  email.open=true;
@@ -56,8 +62,9 @@ async function init(){
  }
  ready=true;apply();portal.hidden=false;screen.hidden=false;disclaimer.hidden=false;email.open=false;
  const script=document.createElement('script');script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';script.async=true;
- script.onload=()=>{try{window.turnstile.ready(()=>{widgetId=window.turnstile.render(byId('password-turnstile'),{sitekey:conf.siteKey,size:'compact',action:'ghv_signup','response-field':false,callback:token=>{challengeToken=token},'expired-callback':()=>{challengeToken=undefined},'error-callback':()=>{challengeToken=undefined}})})}catch{message(translation().errors.human_check_required,true)}};
- script.onerror=()=>message(translation().errors.human_check_required,true);
+ // An async Turnstile script exposes render at its load event; ready() rejects this mode.
+ script.onload=()=>{try{widgetId=window.turnstile.render(byId('password-turnstile'),{sitekey:conf.siteKey,size:'compact',action:'ghv_signup','response-field':false,callback:token=>{challengeToken=token},'expired-callback':()=>{challengeToken=undefined},'error-callback':code=>passwordHumanError(code)})}catch{passwordHumanError()}};
+ script.onerror=()=>passwordHumanError();
  document.head.append(script);
  panel('login');
 }
