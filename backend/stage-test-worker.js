@@ -11,8 +11,30 @@ export default {async fetch(request,env){
  try{
   if(!await env.E2E_DB.prepare("SELECT scope FROM stage_test_scope WHERE scope='FICTIONAL_STAGE_TEST_ONLY'").first())return json({ok:false,error:'isolated_test_unavailable'},404);
  }catch{return json({ok:false,error:'isolated_test_unavailable'},404)}
+ // Only session establishment/inspection is bridged. Never expose the brand's
+ // registration, promotion, payment or legacy vote endpoints in this Worker.
+ if(url.pathname.startsWith('/api/e2e/')){
+  const method={
+   '/api/e2e/staff-login-config':'GET','/api/e2e/me':'GET',
+   '/api/e2e/request-code':'POST','/api/e2e/verify-code':'POST',
+   '/api/e2e/logout':'POST','/api/e2e/switch-role':'POST'
+  }[url.pathname];
+  if(!method)return json({ok:false,error:'not_found'},404);
+  if(request.method!==method)return json({ok:false,error:'method_not_allowed'},405);
+  if(env.STAGING_STAFF_TURNSTILE_REQUIRED!=='true')return json({ok:false,error:'staff_human_check_unavailable'},503);
+  return handleE2E(request,{...env,DB:env.E2E_DB});
+ }
  if(url.pathname==='/api/vote-test')return handleVoteTest(request,env);
- if(url.pathname!=='/api/stage-test')return env.ASSETS.fetch(request);
+ if(url.pathname!=='/api/stage-test'){
+  const response=await env.ASSETS.fetch(request);
+  if(!['/staff-login.html','/staff-login.js','/staff-login.css'].includes(url.pathname))return response;
+  const headers=new Headers(response.headers);
+  headers.set('Cache-Control','no-store');
+  headers.set('Referrer-Policy','no-referrer');
+  headers.set('X-Content-Type-Options','nosniff');
+  headers.set('Content-Security-Policy',"default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self' https://challenges.cloudflare.com; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
+  return new Response(response.body,{status:response.status,headers});
+ }
  if(!['GET','POST'].includes(request.method))return json({ok:false,error:'method_not_allowed'},405);
  if(request.method==='POST'&&request.headers.get('Origin')!==url.origin)return json({ok:false,error:'origin_not_allowed'},403);
  // Validate the SAME staff/member cookie namespaces and invited roles as the

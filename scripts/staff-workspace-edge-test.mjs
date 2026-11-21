@@ -164,3 +164,7 @@ assert.equal(finalOnly.status,0,finalOnly.error?.message||'Current final-only ju
 const publicContact=spawnSync(process.execPath,['scripts/public-member-contact-isolated-test.mjs',dependencies,join(evidence,'public-member-contact')],{cwd:repo,encoding:'utf8',timeout:180000});
 process.stdout.write(publicContact.stdout||'');process.stderr.write(publicContact.stderr||'');
 assert.equal(publicContact.status,0,publicContact.error?.message||'Public member private contact regression failed');
+
+const staffLogin=spawnSync(process.execPath,['scripts/stage-staff-login-isolated-test.mjs',dependencies,join(evidence,'stage-staff-login')],{cwd:repo,encoding:'utf8',timeout:120000});
+process.stdout.write(staffLogin.stdout||'');process.stderr.write(staffLogin.stderr||'');
+assert.equal(staffLogin.status,0,staffLogin.error?.message||'Isolated staff OTP login failed');

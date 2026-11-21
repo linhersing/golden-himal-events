@@ -31,6 +31,7 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
   await rm(state,{recursive:true,force:true,maxRetries:3,retryDelay:100});
  };
  const identity=randomBytes(32).toString('hex'),tokens=Object.fromEntries([...fixtureRole,...(options.stageRehearsal?['reviewer-three']:[]),...(options.publicMember?['public-member']:[])].map(role=>[role,randomBytes(32).toString('hex')]));
+ const mailbox=[];let staffProof={success:true,hostname:'127.0.0.1',action:'ghv_staff_login'};
  const hmac=value=>createHmac('sha256',identity).update(value).digest('hex');
  const dist=resolve(assets);
  const mf=new Miniflare(convertV4MiniflareOptions({host:'127.0.0.1',resourcePersistencePath:state,enableDevRegistry:false,workers:[{
@@ -43,8 +44,9 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
    STAGING_REVIEWER_EMAILS:[mail('reviewer'),mail('reviewer-two'),...(options.stageRehearsal?[mail('reviewer-three')]:[])].join(','),
    ...(options.publicMember?{STAGING_PUBLIC_SIGNUP_ENABLED:'true',STAGING_EMAIL_PROVIDER:'resend',
     STAGING_RESEND_API_KEY:'re_'+'x'.repeat(32),STAGING_FROM_EMAIL:'verify@mail.example.invalid',STAGING_RESEND_VERIFIED_DOMAIN:'mail.example.invalid'}:{}),
+   ...(options.staffLogin?{STAGING_EMAIL_PROVIDER:'resend',STAGING_RESEND_API_KEY:'re_'+'x'.repeat(32),STAGING_FROM_EMAIL:'verify@mail.example.invalid',STAGING_RESEND_VERIFIED_DOMAIN:'mail.example.invalid'}:{}),
    STAGING_TURNSTILE_SITE_KEY:'0xfictionalstaffchallenge',STAGING_TURNSTILE_SECRET_KEY:'0xfictionalstaffsecret'},
-  outboundService:async request=>{if(options.voteRehearsal&&request.url==='https://challenges.cloudflare.com/turnstile/v0/siteverify'){const proof=new URLSearchParams(await request.text());return Response.json({success:proof.get('response')==='fictional-proof',action:'ghv_final_vote',hostname:'127.0.0.1'})}return new Response(null,{status:403})},
+  outboundService:async request=>{if(options.staffLogin&&request.url==='https://api.resend.com/emails'){mailbox.push(await request.json());return Response.json({id:'fictional-mail-queue'})}if(options.staffLogin&&request.url==='https://challenges.cloudflare.com/turnstile/v0/siteverify'&&request.headers.get('content-type')?.includes('application/json')){const proof=await request.json();return Response.json({...staffProof,success:staffProof.success&&proof.response==='fictional-staff-proof'})}if(options.voteRehearsal&&request.url==='https://challenges.cloudflare.com/turnstile/v0/siteverify'){const proof=new URLSearchParams(await request.text());return Response.json({success:proof.get('response')==='fictional-proof',action:'ghv_final_vote',hostname:'127.0.0.1'})}return new Response(null,{status:403})},
   serviceBindings:{ASSETS:async request=>{
    const path=new URL(request.url).pathname;
    const item=path==='/'?'/index.html':!extname(path)?path+'.html':path;
@@ -115,7 +117,7 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
    await context.route('**/*',route=>route.request().url().startsWith(origin+'/')?route.continue():route.abort());
    return context;
   }
-  return {origin,db,fetchFor,injectContext,migrations:names,reviewer,publicMemberId,close:async()=>{await mf.dispose();await removeState()}};
+  return {origin,db,fetchFor,injectContext,mailbox,setStaffProof:value=>{staffProof=value},migrations:names,reviewer,publicMemberId,close:async()=>{await mf.dispose();await removeState()}};
  }catch(error){await mf.dispose();await removeState();throw error;}
 }
 
