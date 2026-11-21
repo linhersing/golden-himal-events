@@ -70,7 +70,7 @@ test('staff login requires its own human challenge before OTP; mobile has no hor
  const button=page.locator('#back-email-form button[type=submit]');
  await expect(page.locator('#signup-turnstile')).toContainText('TEST HUMAN');
  await expect(button).toBeDisabled();
- await expect(page.locator('#signup-human-status')).toContainText('請完成真人驗證');
+ await expect(page.locator('#signup-human-status')).toHaveText(await page.evaluate(()=>window.GHVLocale.t('signupHumanPrompt')));
  await page.screenshot({path:'test-results/staff-security/mobile.png',fullPage:true});
  expect(await page.evaluate(()=>window.__staffChallengeAction)).toBe('ghv_staff_login');
  await page.locator('#back-email-form [name=email]').fill('boss@example.invalid');
@@ -91,7 +91,7 @@ test('staff Turnstile script unavailable fails closed with retry',async({page})=
  await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',r=>r.abort());
  await page.goto('/backoffice.html');
  await expect(page.locator('#signup-human-retry')).toBeVisible();
- await expect(page.locator('#signup-human-status')).toContainText('真人驗證暫時無法使用');
+ await expect(page.locator('#signup-human-status')).toHaveText(await page.evaluate(()=>window.GHVLocale.t('signupHumanBlocked')));
  await page.screenshot({path:'test-results/staff-security/desktop.png',fullPage:true});
  await expect(page.locator('#back-email-form button[type=submit]')).toBeDisabled();
  expect(sends).toHaveLength(0);

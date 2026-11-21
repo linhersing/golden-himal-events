@@ -43,9 +43,10 @@ test('mobile organizer preview packs search and filters into one line and two-co
  for(const width of [280,320,375,390,430,768]){
   await page.setViewportSize({width,height:760});
   const summary=page.locator('.staff-mobile-summary');
-  await expect(summary.locator('.dash-stat')).toHaveCount(2);
-  const cards=await summary.locator('.dash-stat').evaluateAll(els=>els.map(el=>el.getBoundingClientRect()));
-  expect(Math.abs(cards[0].top-cards[1].top),'stats side by side at '+width).toBeLessThan(2);
+  await expect(summary.locator('.dash-stat:visible')).toHaveCount(1);
+  await expect(page.locator('#scores-count').locator('..')).toBeHidden();
+  await expect(page.locator('#organizer-status option[value=scored]')).toHaveAttribute('hidden','');
+  expect(await page.locator('#organizer-status option[value=scored]').evaluate(el=>el.disabled)).toBe(true);
   const search=page.locator('#organizer-search');
   const filters=page.locator('.organizer-filter-panel');
   await expect(search).toBeVisible();await expect(filters).toBeVisible();
