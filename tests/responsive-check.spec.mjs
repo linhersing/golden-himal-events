@@ -10,39 +10,34 @@ for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:144
  });
 }
 
-test('filter announcements',async({page})=>{
-  await page.goto('/');
-  await page.locator('[data-filter="shortlist"]').click();
-  await expect(page.locator('.news-card:not([hidden])')).toHaveCount(1);
-  await page.locator('[data-filter="all"]').click();
-  await expect(page.locator('.news-card:not([hidden])')).toHaveCount(3);
+test('announcements have an honest empty state and a working rules entry',async({page})=>{
+  await page.goto('/announcements.html');
+  await page.locator('[data-lang=zh]').click();
+  await expect(page.locator('.announcement-empty')).toContainText('尚未公布入選名單');
+  await expect(page.locator('[data-filter="shortlist"], .news-card')).toHaveCount(0);
+  await page.locator('.announcement-rules-link').click();
+  await expect(page).toHaveURL(/\/news\.html$/);
+  await expect(page.locator('#rules-eligibility')).toBeAttached();
 });
 
-test('sample registration never sends a form request',async({page})=>{
-  await page.goto('/');
+test('homepage uses the real member entry and never simulates a saved registration',async({page})=>{
   const writes=[];
   page.on('request',request=>{if(!['GET','HEAD'].includes(request.method())) writes.push(request.url())});
-  await page.locator('#sample-fill').click();
-  await page.locator('#registration-form button[type="submit"]').click();
-  await expect(page.locator('#review-panel')).toBeVisible();
-  await page.locator('#sample-submit').click();
-  await expect(page.locator('#success-panel')).toBeVisible();
+  await page.goto('/');
+  await expect(page.locator('#sample-fill,#sample-submit,#success-panel,#registration-form')).toHaveCount(0);
+  await page.locator('#home-competition').click();
+  await expect(page).toHaveURL(/\/voice\.html$/);
+  await expect(page.locator('a[href*="member"]')).not.toHaveCount(0);
   expect(writes).toEqual([]);
 });
 
-test('demo vote and reset work without real persistence',async({page})=>{
-  await page.goto('/');
-  await page.locator('[data-vote="02"]').click();
-  await page.locator('#voter-demo-code').fill('000000');
-  await page.locator('#confirm-vote').click();
-  await expect(page.locator('#voter-demo-error')).toBeVisible();
-  await expect(page.locator('#vote-count-02')).toHaveText('0');
-  await page.locator('#voter-demo-code').fill('246810');
-  await page.locator('#confirm-vote').click();
-  await expect(page.locator('#vote-count-02')).toHaveText('1');
-  await expect(page.locator('[data-vote="01"]')).toBeDisabled();
-  await page.locator('#reset-votes').click();
-  await expect(page.locator('#vote-count-02')).toHaveText('0');
+test('public visitor pages expose no operational vote or reset controls',async({page})=>{
+  const writes=[];page.on('request',r=>{if(!['GET','HEAD'].includes(r.method()))writes.push(r.url())});
+  for(const path of ['/','/voice.html','/news.html']){
+   await page.goto(path);
+   await expect(page.locator('[data-vote],#confirm-vote,#reset-votes,#voter-demo-code')).toHaveCount(0);
+  }
+  expect(writes).toEqual([]);
 });
 
 test('Nepali and Chinese can be selected',async({page})=>{
@@ -53,25 +48,12 @@ test('Nepali and Chinese can be selected',async({page})=>{
   await expect(page.locator('html')).toHaveAttribute('lang','zh-Hant');
 });
 
-test('separate D1 staging test never transmits typed form data',async({page})=>{
-  await page.goto('/');
-  const captured=[];
-  await page.route('**/api/staging/health',route=>route.fulfill({
-    status:200,contentType:'application/json',
-    body:JSON.stringify({ok:true,testOnly:true,tableReady:true,canWrite:true})
-  }));
-  await page.route('**/api/staging/registration-test',route=>{
-    captured.push(JSON.parse(route.request().postData()));
-    return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
-      ok:true,testOnly:true,stored:{id:2,display_name:'TEST-SINGER-API-001',status:'pending'}
-    })});
-  });
-  await page.locator('#sample-fill').click();
-  await page.locator('#registration-form button[type="submit"]').click();
-  await page.locator('#sample-submit').click();
-  await page.locator('#d1-health-check').click();
-  await expect(page.locator('#d1-send-test')).toBeEnabled();
-  await page.locator('#d1-send-test').click();
-  await expect(page.locator('#d1-staging-status')).toContainText('TEST-SINGER-API-001');
-  expect(captured).toEqual([{sample:'TEST-SINGER-API-001'}]);
+test('the public journey has no D1 test controls or staging writes',async({page})=>{
+  const writes=[];page.on('request',r=>{if(!['GET','HEAD'].includes(r.method())&&r.url().includes('/api/staging/'))writes.push(r.url())});
+  for(const path of ['/','/voice.html','/announcements.html','/news.html']){
+   await page.goto(path);
+   await expect(page.locator('#d1-health-check,#d1-send-test,#d1-staging-status')).toHaveCount(0);
+   await expect(page.locator('a[href*="test-lab"],a[href*="e2e-stage"]')).toHaveCount(0);
+  }
+  expect(writes).toEqual([]);
 });

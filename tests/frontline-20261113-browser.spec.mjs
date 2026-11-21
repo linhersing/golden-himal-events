@@ -12,7 +12,7 @@ test('frontline organizers and purpose appear in the second-layer Voice home',as
   const footer=page.locator('footer .test-site-footer');
   await expect(footer).toContainText('TEST MODE');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-  await expect(page.locator('.masthead + .event-credits')).toBeVisible();
+  await expect(page.locator('.event-credits')).toBeVisible();
  }
 });
 
@@ -22,15 +22,15 @@ test('frontline schedule stays readable with English, Nepali and Chinese; April 
  await expect(page.locator('.news-row').first()).not.toHaveAttribute('open','');
  await expect(page.locator('.news-schedule li')).toHaveCount(5);
  await expect(page.locator('.news-schedule')).toContainText('2027年1月1日至1月31日');
- await expect(page.locator('.news-schedule')).toContainText('2027年4月1日至4月30日');
+ await expect(page.locator('.news-schedule')).toContainText('2027年4月14日');
  await expect(page.locator('.test-site-footer')).toBeVisible();
  await expect(page.locator('.news-board a[href*="2027-04"]')).toHaveCount(0);
  await page.locator('[data-lang=en]').click();
- await expect(page.locator('.news-schedule')).toContainText('January 1–31, 2027');
+ await expect(page.locator('.news-schedule')).toContainText('Jan 1–31, 2027');
  await page.locator('[data-lang=ne]').click();
  await expect(page.locator('.news-schedule')).toContainText('जनवरी');
  await page.locator('[data-lang=zh]').click();
- await expect(page.locator('.news-schedule')).toContainText('海選一');
+ await expect(page.locator('.news-schedule')).toContainText('線上海選');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });
 
@@ -39,7 +39,6 @@ test('qualification requirements are informational and cannot leak identity docu
  await page.goto('/member.html#register');
  await expect(page.locator('.test-site-footer')).toContainText('TEST MODE');
  await expect(page.locator('.evidence-plan')).toBeAttached();
- await page.locator('.evidence-plan summary').click();
  await expect(page.locator('.evidence-plan')).toContainText('有效學生證');
  await expect(page.locator('.evidence-plan')).toContainText('安全');
  await expect(page.locator('.evidence-plan input[type=file]')).toHaveCount(0);
@@ -55,18 +54,19 @@ test('frontline awards and quick rules are clear, actionable and mobile-readable
   const award=page.locator('#rules-awards');
   await expect(award).toHaveAttribute('open','');
   await expect(page.locator('.news-quick-grid a')).toHaveCount(5);
-  await expect(award.locator('.award-overview')).toContainText('每組9人，共18人');
-  await expect(award.locator('.award-overview')).toContainText('每位');
+  await expect(award.locator('.award-overview')).toContainText('共10位入圍者');
+  await expect(award.locator('.award-overview')).toContainText('每人均獲入圍獎金');
   const rows=award.locator('.prize-table [role=listitem]');
   await expect(rows).toHaveCount(3);
-  await expect(rows.nth(0)).toContainText('NPR 45,000');
-  await expect(rows.nth(1)).toContainText('NPR 22,000');
-  await expect(rows.nth(2)).toContainText('NPR 11,000');
+  await expect(rows.nth(0)).toContainText('NPR 50,000');
+  await expect(rows.nth(1)).toContainText('NPR 30,000');
+  await expect(rows.nth(2)).toContainText('NPR 15,000');
   for(let i=0;i<3;i++)await expect(rows.nth(i)).toContainText('每位');
-  await expect(award.locator('.voucher-heading')).toContainText('不是現金獎金');
-  await expect(award.locator('.voucher-notice')).toContainText('NPR 10,000');
+  await expect(award.locator('.award-overview')).toContainText('NPR 20,000');
+  await expect(award.locator('.award-overview')).toContainText('NPR 415,000');
   await expect(award.locator('.award-faq-list>div')).toHaveCount(3);
-  await expect(award.locator('.award-faq-list')).toContainText('NPR 300');
+  await expect(award.locator('.award-faq-list')).toContainText('由主辦方正式公告');
+  await expect(award.locator('.award-faq-list')).not.toContainText('NPR 300');
   await expect(award.locator('.news-fineprint')).toContainText('尚未開放');
   await expect(page.locator('.news-quick-grid a[href="#rules-awards"]')).toHaveCount(1);
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
@@ -79,11 +79,12 @@ test('frontline awards and quick rules are clear, actionable and mobile-readable
  await page.goto('/news.html#rules-awards');
  await page.locator('[data-lang=en]').click();
  await expect(page.locator('.news-quick-guide h2')).toHaveText('Five things to know before entering');
- await expect(page.locator('#rules-awards .award-overview')).toContainText('18 total');
- await expect(page.locator('#rules-awards .voucher-heading')).toContainText('not cash');
+ await expect(page.locator('#rules-awards .award-overview')).toContainText('10 finalists');
+ await expect(page.locator('#rules-awards .award-overview')).toContainText('NPR 415,000');
  await page.locator('[data-lang=ne]').click();
  await expect(page.locator('.news-quick-guide h2')).toContainText('भाग लिनुअघि');
- await expect(page.locator('#rules-awards .award-faq-list')).toContainText('NPR ३००');
+ await expect(page.locator('#rules-awards .award-faq-list')).not.toContainText('NPR ३००');
+ await expect(page.locator('#rules-awards .award-overview')).toContainText('NPR 415,000');
  await expect(page.locator('.news-quick-grid a[href="#rules-registration"]')).toHaveAttribute('href','#rules-registration');
 });
 
@@ -111,8 +112,11 @@ test('public printable summary explains participation without exposing team-only
   await page.goto('/print-brief.html');
   await expect(page.locator('h1')).toContainText('參賽資訊一頁看懂');
   await expect(page.locator('.feature')).toHaveCount(4);
-  await expect(page.locator('.points')).toContainText('NPR 45,000');
-  await expect(page.locator('.points')).toContainText('NPR 10,000');
+  await expect(page.locator('.points')).toContainText('NPR 50,000');
+  await expect(page.locator('.points')).toContainText('NPR 20,000');
+  await expect(page.locator('.points')).toContainText('NPR 415,000');
+  await expect(page.locator('.grid')).toContainText('4月14日');
+  await expect(page.locator('.feature').first()).toContainText('單一競賽組別');
   await expect(page.locator('.state')).toContainText('尚未開放正式報名');
   await expect(page.locator('.toolbar a[href="./"]')).toBeVisible();
   const content=await page.locator('body').innerText();
@@ -160,13 +164,13 @@ test('2027 rules use five full-width vertically scanned links, aligned down arro
 });
 
 
-test('entrant guide title, fee section and readable action survive three-language switching',async({page})=>{
+test('entrant guide title, entry preparation and readable action survive three-language switching',async({page})=>{
  await page.setViewportSize({width:375,height:820});
  await page.goto('/news.html');
  for(const [locale,title,fee] of [
-  ['zh','2027 比賽規則與報名須知','報名費與報名方式'],
-  ['en','2027 Competition Rules & Entry Guide','Entry fees and registration'],
-  ['ne','२०२७ गायन प्रतियोगिता','दर्ता र शुल्क']
+  ['zh','2027 比賽規則與報名須知','報名方式與資料準備'],
+  ['en','2027 Competition Rules & Entry Guide','Entry information and preparation'],
+  ['ne','२०२७ प्रतियोगिता नियम तथा आवेदन मार्गदर्शन','दर्ता र आवश्यक तयारी']
  ]){
   await page.locator('[data-lang='+locale+']').click();
   await expect(page.locator('h1')).toContainText(title);
@@ -227,7 +231,7 @@ test('2027 rules require reading and updates stay separate, without fictional se
   await page.locator('[data-lang=zh]').click();
   await expect(page.locator('h1')).toContainText('比賽規則與報名須知');
   await expect(page.locator('.contest-section-nav a[aria-current="page"]')).toContainText('比賽規則');
-  await expect(page.locator('.news-heading .page-intro')).toContainText('報名前請仔細閱讀');
+  await expect(page.locator('.news-heading .page-intro')).toContainText('報名前請先了解賽程、資格、Demo影片、評審方式與獎項。');
   await expect(page.locator('.news-row')).toHaveCount(8);
   await page.locator('.contest-section-nav a[href="./announcements.html"]').click();
   await expect(page).toHaveURL(/\/announcements\.html$/);

@@ -118,7 +118,8 @@ if(page==='home'){
  })();
  return;
 }
-if(page==='news'||page==='announcements')return;
+if(page==='news'){setupRuleNavigation();return;}
+if(page==='announcements')return;
 const node=(tag,txt,cls)=>{const x=document.createElement(tag);if(txt!==undefined&&txt!==null)x.textContent=String(txt);if(cls)x.className=cls;return x};
 const safeLink=(url)=>{try{const u=new URL(url);return u.protocol==='https:'?u.href:null}catch{return null}};
 const formValues=form=>Object.fromEntries(new FormData(form));
@@ -534,7 +535,7 @@ const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
 let challengeEmail,publicTest=false,staffHuman=false,humanToken,widgetId,widgetTimer,widgetScript;
 const humanBox=$('signup-human-status'),retryButton=$('signup-human-retry');
 const sendButton=mailForm?.querySelector('button[type="submit"]');
-let widgetLoading=false;
+let widgetLoading=false,humanFailure=null;
 let otpValidUntil=0,otpReminderTimer=null;
 function stopOtpReminder(){
  if(otpReminderTimer!==null){clearInterval(otpReminderTimer);otpReminderTimer=null}
@@ -567,9 +568,10 @@ function startOtpReminder(){
 }
 if(staff)document.addEventListener('visibilitychange',()=>{if(!document.hidden)tickOtpReminder()});
 const staffHumanCopy={signupHumanLoading:'正在載入真人驗證。',signupHumanPrompt:'請完成真人驗證後再寄送驗證碼。',signupHumanVerified:'真人驗證已完成。',signupHumanExpired:'真人驗證已過期，請重新驗證。',signupHumanBlocked:'真人驗證暫時無法使用，請重新載入。',signupHumanRequired:'請先完成真人驗證。'};
-const humanCopy=key=>staff?staffHumanCopy[key]:mt(key);
+const humanCopy=key=>{const translated=mt(key);return translated!==key?translated:(staffHumanCopy[key]||key)};
 function humanState(key,kind='pending'){
  if(!humanBox)return;
+ if(kind!=='error')humanFailure=null;
  humanBox.hidden=false;
  humanBox.dataset.l=key;
  humanBox.dataset.state=kind;
@@ -580,10 +582,17 @@ function humanState(key,kind='pending'){
 function clearHumanToken(){humanToken=undefined;if((publicTest||staffHuman)&&sendButton)sendButton.disabled=true}
 function humanError(code){
  clearTimeout(widgetTimer);widgetLoading=false;clearHumanToken();
- humanState('signupHumanBlocked','error');
+ humanFailure=window.GHVHumanVerification?.humanVerificationError(code)||{key:'signupHumanBlocked',code:'',retryable:true};
+ humanState(humanFailure.key,'error');
  // A public Cloudflare error code helps diagnosis; do not log the widget token or keys.
- if(code&&/^\d{4,7}$/.test(String(code)))humanBox.textContent+=' (CF '+code+')';
+ if(humanFailure.code)humanBox.textContent+=' (CF '+humanFailure.code+')';
+ if(retryButton)retryButton.hidden=!humanFailure.retryable;
 }
+window.addEventListener('ghv:languagechange',()=>{
+ if(!humanFailure||!humanBox)return;
+ humanBox.textContent=humanCopy(humanFailure.key)+(humanFailure.code?' (CF '+humanFailure.code+')':'');
+ if(retryButton)retryButton.hidden=!humanFailure.retryable;
+});
 function renderHumanWidget(siteKey){
  const widget=$('signup-turnstile');
  try{
@@ -1866,9 +1875,9 @@ const application=$('application-form'),details=$('application-details'),start=$
  setupAuth();staffTabs();document.querySelectorAll('[data-role-tab]').forEach(button=>button.addEventListener('click',()=>{const next=button.dataset.roleTab;if(next===role||!account)return;run(async()=>{const v=await api('switch-role',{role:next});const updated=await api('me');account=updated.account||v.account;role=account.role;trackStaffSession(updated);staffTabs();await dashboard();status('已切換為'+(role==='organizer'?'主辦方':'評審')+'。')})}));loadSession();
 }
 // Deep links to a rules topic should open it, rather than show a closed summary.
-if(page==='news'){
+function setupRuleNavigation(){
  const openRuleFromHash=(fromClick=false)=>{
-  const id=decodeURIComponent(location.hash.slice(1));
+  let id;try{id=decodeURIComponent(location.hash.slice(1))}catch{return;}
   const row=id?document.getElementById(id):null;
   if(!row||!row.matches('details.news-row'))return;
   row.open=true;
