@@ -152,3 +152,7 @@ try {
 const stages=spawnSync(process.execPath,['scripts/stage-ledger-isolated-test.mjs',dependencies,join(evidence,'stage-ledger')],{cwd:repo,encoding:'utf8',timeout:180000});
 process.stdout.write(stages.stdout||'');process.stderr.write(stages.stderr||'');
 assert.equal(stages.status,0,stages.error?.message||'Isolated stage rehearsal failed');
+
+const votes=spawnSync(process.execPath,['scripts/final-vote-isolated-test.mjs',dependencies,join(evidence,'final-vote')],{cwd:repo,encoding:'utf8',timeout:180000});
+process.stdout.write(votes.stdout||'');process.stderr.write(votes.stderr||'');
+assert.equal(votes.status,0,votes.error?.message||'Isolated final-vote rehearsal failed');

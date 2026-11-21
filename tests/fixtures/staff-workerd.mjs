@@ -35,14 +35,14 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
  const dist=resolve(assets);
  const mf=new Miniflare(convertV4MiniflareOptions({host:'127.0.0.1',resourcePersistencePath:state,enableDevRegistry:false,workers:[{
   modules:true,script,compatibilityDate:'2026-10-28',d1Databases:{E2E_DB:'staff-workspace-fictional-only'},
-  bindings:{STAGING_STAGE_REHEARSAL_ENABLED:options.stageRehearsal?'true':'false',STAGING_IDENTITY_SECRET:identity,STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
+  bindings:{STAGING_FINAL_VOTE_REHEARSAL_ENABLED:options.voteRehearsal?'true':'false',FINAL_VOTE_TURNSTILE_SITE_KEY:'1x00000000000000000000AA',FINAL_VOTE_CREDENTIAL_SECRET:identity,FINAL_VOTE_TURNSTILE_SECRET:'fictional-turnstile-secret-over-32-characters',STAGING_STAGE_REHEARSAL_ENABLED:options.stageRehearsal?'true':'false',STAGING_IDENTITY_SECRET:identity,STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
    STAGING_PASSWORD_SIGNUP_ENABLED:'true',STAGING_STAFF_TURNSTILE_REQUIRED:'true',STAGING_ADMIN_MANAGEMENT_ENABLED:'true',
    STAGING_TEST_APPROVAL_ENABLED:'true',STAGING_FRONTLINE_2027_ENABLED:'true',STAGING_FIVE_DEMO_REHEARSAL:'true',
    STAGING_MUSE_AUDITION_ENABLED:'true',STAGING_PROFILE_URLS_ENABLED:'true',
    STAGING_ALLOWED_EMAILS:fixtures.map(row=>row.email).join(','),STAGING_ORGANIZER_EMAILS:mail('organizer'),
    STAGING_REVIEWER_EMAILS:[mail('reviewer'),mail('reviewer-two'),...(options.stageRehearsal?[mail('reviewer-three')]:[])].join(','),
    STAGING_TURNSTILE_SITE_KEY:'0xfictionalstaffchallenge',STAGING_TURNSTILE_SECRET_KEY:'0xfictionalstaffsecret'},
-  outboundService:()=>new Response(null,{status:403}),
+  outboundService:async request=>{if(options.voteRehearsal&&request.url==='https://challenges.cloudflare.com/turnstile/v0/siteverify'){const proof=new URLSearchParams(await request.text());return Response.json({success:proof.get('response')==='fictional-proof',action:'ghv_final_vote',hostname:'127.0.0.1'})}return new Response(null,{status:403})},
   serviceBindings:{ASSETS:async request=>{
    const path=new URL(request.url).pathname;
    const item=path==='/'?'/index.html':!extname(path)?path+'.html':path;
@@ -57,6 +57,7 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
   const migrations=join(repo,'backend','migrations');
   const names=(await readdir(migrations)).filter(name=>/^10(?:00|03|04|05|07|09|10|11|12|13|14|15|16|17|18|19)_.*\.sql$/.test(name)).sort();
   if(options.stageRehearsal)names.push('1020_stage_ledger_ISOLATED_TEST_ONLY.sql');
+  if(options.voteRehearsal)names.push('1021_final_vote_ISOLATED_TEST_ONLY.sql');
   for(const name of names){
    const statements=unstable_splitSqlQuery(await readFile(join(migrations,name),'utf8'));
    await db.batch(statements.map(sql=>db.prepare(sql)));
@@ -91,7 +92,7 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
    db.prepare('INSERT INTO e2e_sessions VALUES(?,?,?,?)').bind(hmac((isStaff?'staff-session:':'session:')+tokens[key]),id,now+5400,now)));
   const origin=(await mf.ready).origin;
   async function fetchFor(role,path,body){
-   const headers={Origin:origin};
+   const headers={Origin:origin,...(options.voteRehearsal?{'CF-Connecting-IP':'192.0.2.44'}:{})};
    if(tokens[role])headers.Cookie='__Host-ghv-e2e='+tokens[role];
    if(body)headers['Content-Type']='application/json';
    const result=await fetch(origin+path,{headers,method:body?'POST':'GET',body:body?JSON.stringify(body):undefined});

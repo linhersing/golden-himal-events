@@ -2,6 +2,7 @@
 // staging-registration-worker.js, not deployed by the brand build configuration.
 import {handleE2E,account,ownsApplication} from './staging-e2e.js';
 import {stageLedger} from './stage-test-ledger.js';
+import {handleVoteTest} from './final-vote-test-http.js';
 const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const permittedHost=host=>['127.0.0.1','localhost'].includes(host)||/^ghv-stage-test-[a-z0-9-]+\.linhersing\.workers\.dev$/.test(host);
 export default {async fetch(request,env){
@@ -10,6 +11,7 @@ export default {async fetch(request,env){
  try{
   if(!await env.E2E_DB.prepare("SELECT scope FROM stage_test_scope WHERE scope='FICTIONAL_STAGE_TEST_ONLY'").first())return json({ok:false,error:'isolated_test_unavailable'},404);
  }catch{return json({ok:false,error:'isolated_test_unavailable'},404)}
+ if(url.pathname==='/api/vote-test')return handleVoteTest(request,env);
  if(url.pathname!=='/api/stage-test')return env.ASSETS.fetch(request);
  if(!['GET','POST'].includes(request.method))return json({ok:false,error:'method_not_allowed'},405);
  if(request.method==='POST'&&request.headers.get('Origin')!==url.origin)return json({ok:false,error:'origin_not_allowed'},403);
