@@ -42,3 +42,29 @@ node tests/private-eligibility-isolated.mjs <wrangler-node_modules> [evidence-fo
 | F01 | workerd/D1/R2 是本機證據。正式 Cloudflare、Edge 真機及真人收件未驗。 |
 
 正式母檔的勾選和狀態維持原值。
+
+## 2026-11-21｜OTP 登入後的私有文件演練（新草稿，未部署）
+
+新分支以 PR178 的 `4fb23d0` 為基礎，合入當時主線 `dbdd5ee`，保留主線決賽 TEST／前線自行評選政策。原 PR178 分支不改寫。
+
+獨立 Worker 僅新增 `signup-config`、`staff-login-config`、`request-code`、`verify-code`、`me`、`logout` 的精確方法／路徑。其他 E2E 路由仍404，方法錯誤405。登入要求既有 synthetic／loopback／專用 D1/R2 條件，另要求明確關閉 public signup 並開啟既有 staff CAPTCHA 保護。只接受明確的 member／organizer；reviewer 與 switch-role 不經此橋接開放。JSON 在解析前以2600 bytes串流限制，拒絕跨來源及非JSON請求。
+
+邀請會員在既有 handleE2E 中原本不會執行 CAPTCHA，因此這個隔離橋接先核對會員邀請與設定，再以伺服器 Siteverify 驗證 `ghv_signup` 的成功、action、hostname；主辦方沿用原有 `ghv_staff_login`。錯誤／缺少 token、CF來源、action、hostname、不在邀請名單或不支援角色，不能建立會員 OTP／session 或寄信。驗證碼仍由原 handleE2E 做單次使用、期限、邀請與角色核對；驗證前另拒絕 reviewer challenge。沒有測試用登入捷徑、session header 或瀏覽器注入 cookie。
+
+執行方式（既有 Wrangler4.156.0 工具的 node_modules）：
+
+```text
+node --test tests/private-eligibility-login.test.mjs tests/private-eligibility-documents.test.mjs
+node tests/private-eligibility-login-isolated.mjs <wrangler-node_modules> <evidence-folder>
+node tests/private-eligibility-isolated.mjs <wrangler-node_modules> <lifecycle-evidence-folder>
+```
+
+新 Edge/workerd 測試從零 session 開始，mock伺服器Siteverify和Resend，從捕捉的虛構郵件取出OTP，再由真實verify-code回應的HttpOnly/Secure cookie登入。沒有真實外寄或真實文件。核對本人上傳／讀回／第二次登入讀回、主辦唯讀、其他會員404、評審登入403、匿名401、錯誤CAPTCHA／OTP／重放拒絕、回應遺失後同鍵重試、撤回清除、登出及過期401。320／390／1280px三語狀態畫面沒有顯示文件內容或OTP。原文件角色回歸仍驗證受邀reviewer不能讀取文件；原備份還原演練保留。
+
+檔案上限由實際UI拒絕大於5MiB的合成檔，確認沒有PUT；伺服器413由既有Node測試驗證。曾嘗試以Edge直接繞過UI傳送5MiB+1bytes，local workerd傳輸回報fetch失敗，沒有取得可斷言的413；不把這次實驗寫成瀏覽器伺服器413驗收。真實UI的超限阻擋與伺服器Node上限回歸均通過，遠端傳輸仍待驗。
+
+既有 `scripts/staff-workspace-edge-test.mjs` 最後依序呼叫上述兩個隔離文件測試，證據放在既有 evidence 目錄內的 `private-document-login/otp` 與 `private-document-login/lifecycle`，由原 sandbox workflow 上傳合成截圖與JSON；未新增workflow或部署腳本。本機證據：`ghv-evidence/private-document-login-20261121`，含兩輪RED、focused綠燈、完整Node結果、OTP協定JSON和Edge截圖。
+
+本機驗證：focused Node11/11PASS；完整Node287項、286PASS、0FAIL、1項既有Windows略過（POSIX npx fixture，Linux CI執行）；build成功，既有Vite公開資源警語保留，部署provisioning未執行。完整staff Edge入口（主辦／評審／回收／決賽政策／公開會員聯絡資料／新增OTP文件／原R2生命週期與備份還原）exit0。所有workerd使用隨機port，未占用4173。
+
+尚未完成：遠端私有bucket／D1／實體裝置與真人OTP驗收、掃描／收件與保存政策。沒有遠端遷移、全域旗標變更、主線合併或正式發布。雲端總紀錄由本次主協作者補登與回讀後才可標示整批完成。

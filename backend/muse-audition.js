@@ -48,3 +48,8 @@ export async function attachMuseAudition(env,rows){
  }
  return rows;
 }
+
+export async function readMuseContact(db,applicationId){
+ return db.prepare(`SELECT ${MUSE_FIELDS.join(',')} FROM e2e_muse_audition_details WHERE application_id=?`)
+  .bind(applicationId).first();
+}

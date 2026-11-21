@@ -1,0 +1,19 @@
+name: Inspect isolated TEST staff readiness (read-only)
+on:
+  pull_request:
+    branches:
+      - codex/initial-site
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  staff-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Check Cloudflare TEST runtime readiness without secrets or mutations
+        run: node scripts/staff-test-remote-readiness.mjs

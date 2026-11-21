@@ -95,3 +95,56 @@ test('photo profile readiness distinguishes migration missing, gate off and oper
  assert.equal(missing.resources.profileUsable,false);
  assert(!JSON.stringify(missing).includes('test@test.invalid'));
 });
+
+
+test('staff-only readiness reports safe capability flags without granting access or revealing invite emails',async()=>{
+ const fixture={
+  E2E_DB:{prepare(sql){return {
+   async first(){return {n:sql.includes('e2e_staff_auth_attempts')?6:9}},
+   async all(){return {results:[]}}
+  }}},
+  STAGING_SUBMISSION_MODE:'links',
+  STAGING_E2E_ENABLED:'true',
+  STAGING_FROM_EMAIL:'approved-sender@example.org',
+  STAGING_IDENTITY_SECRET:'identity-private-'.repeat(3),
+  STAGING_ORGANIZER_EMAILS:'staff-invited@example.org',
+  STAGING_REVIEWER_EMAILS:'staff-invited@example.org',
+  STAGING_STAFF_TURNSTILE_REQUIRED:'true',
+  STAGING_TURNSTILE_SITE_KEY:'0x4AAAAapprovedsitekey123',
+  STAGING_TURNSTILE_SECRET_KEY:'0x4AAAAprivatechallengekey123',
+  EMAIL:{async send(){}}
+ };
+ const ready=await check(fixture);
+ assert.equal(ready.readiness,'BLOCKED'); // Member allowlist is deliberately absent.
+ assert.equal(ready.staff.readyForLoginTest,true);
+ assert.equal(ready.staff.dualRoleInviteConfigured,true);
+ assert.equal(ready.staff.dualRoleReadyForLoginTest,true);
+ assert.equal(ready.staff.staffSchemaReady,true);
+ assert.equal(ready.staff.humanCheckReady,true);
+ assert.equal(ready.staff.organizerInviteListConfigured,true);
+ assert.equal(ready.staff.reviewerInviteListConfigured,true);
+ const serialized=JSON.stringify(ready);
+ for(const sensitive of ['staff-invited@example.org','approved-sender@example.org',
+  fixture.STAGING_IDENTITY_SECRET,fixture.STAGING_TURNSTILE_SECRET_KEY,fixture.STAGING_TURNSTILE_SITE_KEY])
+  assert(!serialized.includes(sensitive));
+ const noReviewers=await check({...fixture,STAGING_REVIEWER_EMAILS:''});
+ assert.equal(noReviewers.staff.readyForLoginTest,false);
+ assert.equal(noReviewers.staff.reviewerInviteListConfigured,false);
+ assert.equal(noReviewers.staff.dualRoleReadyForLoginTest,false);
+ const disjoint=await check({...fixture,STAGING_REVIEWER_EMAILS:'different-invite@example.org'});
+ assert.equal(disjoint.staff.readyForLoginTest,true);
+ assert.equal(disjoint.staff.dualRoleInviteConfigured,false);
+ assert.equal(disjoint.staff.dualRoleReadyForLoginTest,false);
+ assert(!JSON.stringify(disjoint).includes('different-invite@example.org'));
+ const noHumanCheck=await check({...fixture,STAGING_TURNSTILE_SECRET_KEY:undefined});
+ assert.equal(noHumanCheck.staff.readyForLoginTest,false);
+ assert.equal(noHumanCheck.staff.humanCheckReady,false);
+ const noEmail=await check({...fixture,EMAIL:undefined});
+ assert.equal(noEmail.staff.readyForLoginTest,false);
+ assert.equal(noEmail.staff.emailProviderConfigured,false);
+ const noTables=await check({...fixture,E2E_DB:{prepare(){return {
+  async first(){return {n:0}},async all(){return {results:[]}}
+ }}}});
+ assert.equal(noTables.staff.readyForLoginTest,false);
+ assert.equal(noTables.staff.staffSchemaReady,false);
+});

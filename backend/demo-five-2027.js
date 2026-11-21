@@ -70,18 +70,18 @@ export function replaceFiveDemos(db,id,owner,rows,now,guard=''){
  }
  return statements;
 }
-export async function attachFiveDemos(env,rows){
+export async function attachFiveDemos(env,rows,includePosition=false){
  if(!rows.length||!await fiveDemoReady(env))return rows;
  const byId=new Map(rows.map(row=>[row.id,row]));
  for(let i=0;i<rows.length;i+=75){
   const ids=rows.slice(i,i+75).map(row=>row.id);
   const links=await env.DB.prepare(
-   'SELECT application_id,song_title,original_artist,song_language,demo_url FROM e2e_demo_2027_videos WHERE application_id IN ('+
+   'SELECT application_id,position,song_title,original_artist,song_language,demo_url FROM e2e_demo_2027_videos WHERE application_id IN ('+
    ids.map(()=>'?').join(',')+') ORDER BY application_id,position'
   ).bind(...ids).all();
-  for(const {application_id,...demo} of links.results||[]){
+  for(const {application_id,position,...demo} of links.results||[]){
    const row=byId.get(application_id);
-   (row.demo_entries??=[]).push(demo);
+   (row.demo_entries??=[]).push(includePosition?{position,...demo}:demo);
   }
  }
  return rows;

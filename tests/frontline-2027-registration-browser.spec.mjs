@@ -17,7 +17,7 @@ test('frontline TEST form shows one group with distinct A/B competition region w
  await page.locator('[name=competition_region]').selectOption('B');
  await page.locator('[name=eligibility_basis]').selectOption('graduated');
  await expect(page.locator('#category')).toHaveValue('community');
- await expect(page.locator('[data-l=frontlineEnabledNotice]')).toContainText('仍只可儲存1支Demo');
+ await expect(page.locator('[data-l=frontlineEnabledNotice]')).toContainText('A/B 賽區');
  await page.locator('[name=stage_name]').fill('TEST Singer');
  await page.locator('[name=province]').selectOption('lumbini');
  await page.locator('[name=location_detail]').fill('Sample Municipality');
@@ -28,7 +28,7 @@ test('frontline TEST form shows one group with distinct A/B competition region w
  await page.locator('[name=song_key]').selectOption('Unknown');
  await page.locator('[name=demo_url]').fill('https://youtu.be/dQw4w9WgXcQ');
  await page.locator('[name=video_confirmed]').check();
- await page.locator('[name=adult_confirmed]').check();
+ await expect(page.locator('[name=adult_confirmed]')).toBeHidden();
  await page.locator('[name=no_exclusive_contract]').check();
  await page.locator('[name=nonreligious_song_ack]').check();
  await page.locator('#application-form button[type=submit]').click();
