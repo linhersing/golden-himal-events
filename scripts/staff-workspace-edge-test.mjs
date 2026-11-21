@@ -154,3 +154,11 @@ assert.equal(finalOnly.status,0,finalOnly.error?.message||'Current final-only ju
 const publicContact=spawnSync(process.execPath,['scripts/public-member-contact-isolated-test.mjs',dependencies,join(evidence,'public-member-contact')],{cwd:repo,encoding:'utf8',timeout:180000});
 process.stdout.write(publicContact.stdout||'');process.stderr.write(publicContact.stderr||'');
 assert.equal(publicContact.status,0,publicContact.error?.message||'Public member private contact regression failed');
+
+// Separate document worker, random workerd port and synthetic D1/R2 only.
+// Reuse the existing workflow's artifact collection; never deploy this worker.
+for(const [script,folder] of [['private-eligibility-login-isolated.mjs','otp'],['private-eligibility-isolated.mjs','lifecycle']]){
+ const documentTest=spawnSync(process.execPath,['tests/'+script,join(dependencies,'node_modules'),join(evidence,'private-document-login',folder)],{cwd:repo,encoding:'utf8',timeout:180000});
+ process.stdout.write(documentTest.stdout||'');process.stderr.write(documentTest.stderr||'');
+ assert.equal(documentTest.status,0,documentTest.error?.message||'Isolated private document '+folder+' regression failed');
+}
