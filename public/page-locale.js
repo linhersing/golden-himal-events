@@ -259,8 +259,8 @@ Object.assign(texts.ne,{formTitle:'दर्ता फाराम',goToForm:'�
 /* 2026-11-17 front-line audition rules: 2027-01-01—2027-01-31 Nepal local. */
 Object.assign(texts.zh,{
  entryPeriodTitle:"2027 海選收件日期",entryPeriodDates:"2027年1月1日至1月31日｜尼泊爾當地時間",entryPeriodHelp:"海選與第一次初選免費；確切開放及截止時刻、地點以主辦單位官網公告為準。目前仍是測試網站。",
- demoFirstTitle:"Demo 1｜必填歌曲與影片",demoMultiTitle:"海選 Demo｜每人最多五支",demoMultiRules:"每人提交1至5支影片，每支60–90秒，必須本人連續實際演唱；每支都需歌曲名稱、原唱、語言及連結。評審逐支評分，只取最高分的一支。",
- demoMultiPending:"第2–5支已提供試填介面；安全儲存及逐支評分尚未啟用。請勿提交真人影片或認為已完成多支報名。",
+ demoFirstTitle:"Demo 1｜必填歌曲與影片",demoMultiTitle:"海選 Demo｜每人最多五支",demoMultiRules:"每人提交1至5支影片，每支60–90秒，必須本人連續實際演唱；每支都需歌曲名稱、原唱、語言及連結。由前線自行評選，平台負責收件；只取最高分的一支。",
+ demoMultiPending:"第2–5支已提供試填介面；安全儲存尚未啟用。請勿提交真人影片或認為已完成多支報名。",
  demoMultiEnabled:"受控測試已開通多支Demo存取（僅測試）；正式報名仍須前線核准。",
  demoAdd:"＋ 增加一支 Demo（最多5支）",demoRemove:"移除這支 Demo",
  demoLimit:"每人最多五支 Demo。",demoMultiCannotSave:"目前只支援儲存第一支測試Demo；你新增的第2–5支尚未啟用安全儲存，請移除新增支數後再送出。正式多支報名仍待開通。",
@@ -271,8 +271,8 @@ Object.assign(texts.zh,{
 });
 Object.assign(texts.en,{
  entryPeriodTitle:"2027 audition submission window",entryPeriodDates:"January 1–31, 2027 · Nepal local time",entryPeriodHelp:"The audition and first qualifier are free. Exact opening/closing times and locations are subject to organizer announcement. This remains a TEST site.",
- demoFirstTitle:"Demo 1 · Required song and video",demoMultiTitle:"Audition demos · Up to five per singer",demoMultiRules:"Submit 1–5 continuous 60–90-second videos of your own singing. Each video needs its own song title, original artist, language and link. Only the highest-scoring video counts.",
- demoMultiPending:"Additional demo fields are a TEST preview. Secure multi-demo storage and per-video judging are not enabled. Do not submit real entries.",
+ demoFirstTitle:"Demo 1 · Required song and video",demoMultiTitle:"Audition demos · Up to five per singer",demoMultiRules:"Submit 1–5 continuous 60–90-second videos of your own singing. Each video needs its own song title, original artist, language and link. The frontline reviews entries outside the platform; only the highest-scoring video counts.",
+ demoMultiPending:"Additional demo fields are a TEST preview. Secure multi-demo storage is not enabled. Do not submit real entries.",
  demoMultiEnabled:"Controlled TEST storage for multiple videos is enabled. Official entries remain closed.",
  demoAdd:"+ Add another demo (maximum five)",demoRemove:"Remove this demo",
  demoLimit:"Up to five demo videos per singer.",demoMultiCannotSave:"Only one TEST demo can currently be saved. Remove additional preview demos before saving; multi-video registration is not yet enabled.",
@@ -283,8 +283,8 @@ Object.assign(texts.en,{
 });
 Object.assign(texts.ne,{
  entryPeriodTitle:"२०२७ अडिसन दर्ता अवधि",entryPeriodDates:"सन् २०२७ जनवरी १–३१ · नेपालको स्थानीय समय",entryPeriodHelp:"अडिसन र पहिलो छनोट निःशुल्क छन्। ठ्याक्कै समय र स्थान आयोजकले घोषणा गर्नेछन्। यो परीक्षण साइट हो।",
- demoFirstTitle:"डेमो १ · अनिवार्य गीत र भिडियो",demoMultiTitle:"अडिसन डेमो · प्रति गायक बढीमा पाँच",demoMultiRules:"आफ्नो लगातार गाएको ६०–९० सेकेन्डको १ देखि ५ भिडियो; हरेकको गीत, मूल गायक, भाषा र लिंक चाहिन्छ। सबैभन्दा बढी अंक पाएको एउटा भिडियोको अंक लिइन्छ।",
- demoMultiPending:"थप डेमो परीक्षणका लागि मात्र हुन्। सुरक्षित भण्डारण र छुट्टाछुट्टै मूल्याङ्कन सुरु भएको छैन। वास्तविक भिडियो नराख्नुहोस्।",
+ demoFirstTitle:"डेमो १ · अनिवार्य गीत र भिडियो",demoMultiTitle:"अडिसन डेमो · प्रति गायक बढीमा पाँच",demoMultiRules:"आफ्नो लगातार गाएको ६०–९० सेकेन्डको १ देखि ५ भिडियो; हरेकको गीत, मूल गायक, भाषा र लिंक चाहिन्छ। स्थानीय टोलीले प्लेटफर्म बाहिर मूल्याङ्कन गर्छ; सबैभन्दा बढी अङ्क पाएको एउटा भिडियोको अङ्क लिइन्छ।",
+ demoMultiPending:"थप डेमो परीक्षणका लागि मात्र हुन्। सुरक्षित भण्डारण सुरु भएको छैन। वास्तविक भिडियो नराख्नुहोस्।",
  demoMultiEnabled:"नियन्त्रित बहु-डेमो परीक्षण सक्रिय छ; आधिकारिक दर्ता खुलेको छैन।",
  demoAdd:"+ अर्को डेमो थप्नुहोस् (बढीमा पाँच)",demoRemove:"यो डेमो हटाउनुहोस्",
  demoLimit:"प्रति व्यक्ति बढीमा पाँच डेमो।",demoMultiCannotSave:"अहिले एउटा परीक्षण डेमो मात्र सुरक्षित हुन्छ। थप परीक्षण डेमो हटाएर मात्र पुरानो परीक्षण दर्ता पठाउनुहोस्।",
@@ -369,6 +369,9 @@ Object.assign(texts.ne,{"testNotice":"यो परीक्षण वेबस�
  Object.assign(texts.zh,{saved:'測試報名資料已儲存，等待主辦方核准。'});
  Object.assign(texts.en,{saved:'Your TEST entry was saved and is awaiting organizer approval.'});
  Object.assign(texts.ne,{saved:'परीक्षण आवेदन सुरक्षित भयो। अब आयोजकको स्वीकृति पर्खनुहोस्।'});
+ Object.assign(texts.zh,{signupHumanDomain:'此網站尚未獲得真人驗證授權，請通知主辦方修正。',signupHumanConfiguration:'網站的真人驗證設定暫時異常，請通知主辦方。',signupHumanFailed:'真人驗證未通過，請重新驗證；若仍失敗，請用一般瀏覽器開啟本站或聯絡主辦方。',signupHumanClock:'請確認裝置日期與時間正確，重新整理後再驗證。'});
+ Object.assign(texts.en,{signupHumanDomain:'Human verification is not authorized for this website. Please notify the organizer.',signupHumanConfiguration:'This website has a human-verification configuration problem. Please notify the organizer.',signupHumanFailed:'Human verification did not pass. Try again; if it still fails, open this site in a regular browser or contact the organizer.',signupHumanClock:'Check your device date and time, then refresh the page and verify again.'});
+ Object.assign(texts.ne,{signupHumanDomain:'यस वेबसाइटका लागि मानव प्रमाणीकरणको अनुमति छैन। कृपया आयोजकलाई जानकारी दिनुहोस्।',signupHumanConfiguration:'वेबसाइटको मानव प्रमाणीकरण सेटिङमा समस्या छ। कृपया आयोजकलाई जानकारी दिनुहोस्।',signupHumanFailed:'मानव प्रमाणीकरण सफल भएन। फेरि प्रयास गर्नुहोस्; समस्या रहे सामान्य ब्राउजरमा वेबसाइट खोल्नुहोस् वा आयोजकलाई सम्पर्क गर्नुहोस्।',signupHumanClock:'उपकरणको मिति र समय सही छ कि जाँच्नुहोस्, पृष्ठ पुनः लोड गरी फेरि प्रमाणीकरण गर्नुहोस्।'});
  const t=k=>(texts[lang]&&texts[lang][k])||texts.en[k]||k;
 Object.assign(texts.zh,{museFullName:'真實姓名（與身分證明一致）*',museFullNameHelp:'僅供主辦單位核對身分與參賽資格，不是演出名稱。',stageName:'演出名稱（本名或藝名）*',stageNameHelp:'供主辦與評審辨識參賽作品；沒有藝名就填本名。',stagePlaceholder:'沒有藝名可直接填本名'});
 Object.assign(texts.en,{museFullName:'Legal full name (as on ID) *',museFullNameHelp:'For organizer identity and eligibility checks. This is not your performance name.',stageName:'Performance name (real or stage name) *',stageNameHelp:'Used by organizers and judges to identify your entry. No stage name? Enter your full name.',stagePlaceholder:'Your stage name or full name'});

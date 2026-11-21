@@ -26,7 +26,7 @@ test('125 photo-distinct reviewer entries paginate, filter and open only one sco
  await page.route('**/api/e2e/**',route=>{
   const action=new URL(route.request().url()).pathname.split('/').pop();
   let result={ok:true};
-  if(action==='me')result={ok:true,account:{id:'FICTIONAL-JUDGE',role:'reviewer',available_roles:['reviewer']}};
+  if(action==='me')result={ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'FICTIONAL-JUDGE',role:'reviewer',available_roles:['reviewer']}};
   if(action==='reviewer-queue')result={ok:true,queue:entries};
   if(action==='score'){
    const payload=route.request().postDataJSON();
@@ -76,7 +76,7 @@ test('125 organizer entries filter 63 Nepali / 62 English, maintain payment 0 an
  await externalPhotos(page);
  await page.route('**/api/e2e/**',route=>{
   const action=new URL(route.request().url()).pathname.split('/').pop();
-  const result=action==='me'?{ok:true,account:{id:'FICTIONAL-ORG',role:'organizer',available_roles:['organizer']}}:
+  const result=action==='me'?{ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'FICTIONAL-ORG',role:'organizer',available_roles:['organizer']}}:
    action==='organizer-queue'?{ok:true,applications:entries}:{ok:true};
   return route.fulfill({status:200,json:result});
  });

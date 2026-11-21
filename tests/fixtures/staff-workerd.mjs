@@ -30,19 +30,23 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
   if(!state.startsWith(prefix))throw Error('Disposable database path is outside the TEST directory.');
   await rm(state,{recursive:true,force:true,maxRetries:3,retryDelay:100});
  };
- const identity=randomBytes(32).toString('hex'),tokens=Object.fromEntries([...fixtureRole,...(options.stageRehearsal?['reviewer-three']:[])].map(role=>[role,randomBytes(32).toString('hex')]));
+ const identity=randomBytes(32).toString('hex'),tokens=Object.fromEntries([...fixtureRole,...(options.stageRehearsal?['reviewer-three']:[]),...(options.publicMember?['public-member']:[])].map(role=>[role,randomBytes(32).toString('hex')]));
+ const mailbox=[];let staffProof={success:true,hostname:'127.0.0.1',action:'ghv_staff_login'};
  const hmac=value=>createHmac('sha256',identity).update(value).digest('hex');
  const dist=resolve(assets);
  const mf=new Miniflare(convertV4MiniflareOptions({host:'127.0.0.1',resourcePersistencePath:state,enableDevRegistry:false,workers:[{
   modules:true,script,compatibilityDate:'2026-10-28',d1Databases:{E2E_DB:'staff-workspace-fictional-only'},
-  bindings:{STAGING_FINAL_VOTE_REHEARSAL_ENABLED:options.voteRehearsal?'true':'false',FINAL_VOTE_TURNSTILE_SITE_KEY:'1x00000000000000000000AA',FINAL_VOTE_CREDENTIAL_SECRET:identity,FINAL_VOTE_TURNSTILE_SECRET:'fictional-turnstile-secret-over-32-characters',STAGING_STAGE_REHEARSAL_ENABLED:options.stageRehearsal?'true':'false',STAGING_IDENTITY_SECRET:identity,STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
+  bindings:{STAGING_ONLINE_JUDGING_MODE:options.judgingMode||'final_only',STAGING_FINAL_VOTE_REHEARSAL_ENABLED:options.voteRehearsal?'true':'false',FINAL_VOTE_TURNSTILE_SITE_KEY:'1x00000000000000000000AA',FINAL_VOTE_CREDENTIAL_SECRET:identity,FINAL_VOTE_TURNSTILE_SECRET:'fictional-turnstile-secret-over-32-characters',STAGING_STAGE_REHEARSAL_ENABLED:options.stageRehearsal?'true':'false',STAGING_IDENTITY_SECRET:identity,STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
    STAGING_PASSWORD_SIGNUP_ENABLED:'true',STAGING_STAFF_TURNSTILE_REQUIRED:'true',STAGING_ADMIN_MANAGEMENT_ENABLED:'true',
    STAGING_TEST_APPROVAL_ENABLED:'true',STAGING_FRONTLINE_2027_ENABLED:'true',STAGING_FIVE_DEMO_REHEARSAL:'true',
    STAGING_MUSE_AUDITION_ENABLED:'true',STAGING_PROFILE_URLS_ENABLED:'true',
    STAGING_ALLOWED_EMAILS:fixtures.map(row=>row.email).join(','),STAGING_ORGANIZER_EMAILS:mail('organizer'),
    STAGING_REVIEWER_EMAILS:[mail('reviewer'),mail('reviewer-two'),...(options.stageRehearsal?[mail('reviewer-three')]:[])].join(','),
+   ...(options.publicMember?{STAGING_PUBLIC_SIGNUP_ENABLED:'true',STAGING_EMAIL_PROVIDER:'resend',
+    STAGING_RESEND_API_KEY:'re_'+'x'.repeat(32),STAGING_FROM_EMAIL:'verify@mail.example.invalid',STAGING_RESEND_VERIFIED_DOMAIN:'mail.example.invalid'}:{}),
+   ...(options.staffLogin?{STAGING_EMAIL_PROVIDER:'resend',STAGING_RESEND_API_KEY:'re_'+'x'.repeat(32),STAGING_FROM_EMAIL:'verify@mail.example.invalid',STAGING_RESEND_VERIFIED_DOMAIN:'mail.example.invalid'}:{}),
    STAGING_TURNSTILE_SITE_KEY:'0xfictionalstaffchallenge',STAGING_TURNSTILE_SECRET_KEY:'0xfictionalstaffsecret'},
-  outboundService:async request=>{if(options.voteRehearsal&&request.url==='https://challenges.cloudflare.com/turnstile/v0/siteverify'){const proof=new URLSearchParams(await request.text());return Response.json({success:proof.get('response')==='fictional-proof',action:'ghv_final_vote',hostname:'127.0.0.1'})}return new Response(null,{status:403})},
+  outboundService:async request=>{if(options.staffLogin&&request.url==='https://api.resend.com/emails'){mailbox.push(await request.json());return Response.json({id:'fictional-mail-queue'})}if(options.staffLogin&&request.url==='https://challenges.cloudflare.com/turnstile/v0/siteverify'&&request.headers.get('content-type')?.includes('application/json')){const proof=await request.json();return Response.json({...staffProof,success:staffProof.success&&proof.response==='fictional-staff-proof'})}if(options.voteRehearsal&&request.url==='https://challenges.cloudflare.com/turnstile/v0/siteverify'){const proof=new URLSearchParams(await request.text());return Response.json({success:proof.get('response')==='fictional-proof',action:'ghv_final_vote',hostname:'127.0.0.1'})}return new Response(null,{status:403})},
   serviceBindings:{ASSETS:async request=>{
    const path=new URL(request.url).pathname;
    const item=path==='/'?'/index.html':!extname(path)?path+'.html':path;
@@ -90,6 +94,14 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
   if(options.stageRehearsal&&options.seedStage!==false){const {seedStageFixture}=await import('./stage-seed.mjs');await seedStageFixture(db,fixtures,staff.filter(row=>row[2]==='reviewer').map(row=>row[0]));}
   await db.batch([...staff.map(([id,key])=>[id,key,true]),[fixtures[0].memberId,'member',false]].map(([id,key,isStaff])=>
    db.prepare('INSERT INTO e2e_sessions VALUES(?,?,?,?)').bind(hmac((isStaff?'staff-session:':'session:')+tokens[key]),id,now+5400,now)));
+  // A verified public member is intentionally NOT in STAGING_ALLOWED_EMAILS.
+  // Seed only its identity proof/session, never a CAPTCHA or OTP bypass route.
+  const publicMemberId=numericId('9000',21);
+  if(options.publicMember)await db.batch([
+   account(publicMemberId,mail('public-member'),'member'),
+   db.prepare('INSERT INTO e2e_public_signup_accounts VALUES(?,?)').bind(publicMemberId,hmac('mailbox:'+mail('public-member'))),
+   db.prepare('INSERT INTO e2e_sessions VALUES(?,?,?,?)').bind(hmac('session:'+tokens['public-member']),publicMemberId,now+5400,now)
+  ]);
   const origin=(await mf.ready).origin;
   async function fetchFor(role,path,body){
    const headers={Origin:origin,...(options.voteRehearsal?{'CF-Connecting-IP':'192.0.2.44'}:{})};
@@ -105,7 +117,7 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
    await context.route('**/*',route=>route.request().url().startsWith(origin+'/')?route.continue():route.abort());
    return context;
   }
-  return {origin,db,fetchFor,injectContext,migrations:names,reviewer,close:async()=>{await mf.dispose();await removeState()}};
+  return {origin,db,fetchFor,injectContext,mailbox,setStaffProof:value=>{staffProof=value},migrations:names,reviewer,publicMemberId,close:async()=>{await mf.dispose();await removeState()}};
  }catch(error){await mf.dispose();await removeState();throw error;}
 }
 

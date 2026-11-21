@@ -197,6 +197,7 @@ const recoveryCopy={
 for(const l of ['en','ne','zh'])Object.assign(dict[l],recoveryCopy[l]);
 
 let lang='en';try{const p=localStorage.getItem('ghv_ui_language_v1');if(dict[p])lang=p}catch{}
+let historicalJudging=false;
 let challenge='',challengeRef='',deliveryEmail='',requestVersion=0,requestPending=false,resendUntil=0,resendTimer=null,account=null,statusMessage={key:'checking',bad:false,detail:''};
 const t=k=>dict[lang][k]||dict.en[k]||k;
 const node=(tag,value,cls)=>{const a=document.createElement(tag);if(value!==undefined)a.textContent=String(value);if(cls)a.className=cls;return a};
@@ -219,6 +220,7 @@ async function api(path,options={}){
  const response=await fetch('/api/e2e/'+path,{credentials:'same-origin',cache:'no-store',...options});
  let data;try{data=await response.json()}catch{throw Error('invalid_response')}
  if(!response.ok||!data.ok)throw Error(data.error||String(response.status));
+ if(data.judging_policy)historicalJudging=data.judging_policy.mode==='all_stages_test';
  return data;
 }
 const post=(path,obj)=>api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
@@ -278,10 +280,12 @@ async function applications(){
   }
  }catch(err){message('failed',true,err.message)}
 }
+function reviewPolicyCopy(){return ({zh:{title:'決賽評審（TEST）',note:'海選、初選一、初選二與晉級賽由前線自行評選，平台不要求線上打分。決賽功能僅供受邀測試，正式使用待確認。'},en:{title:'Final judging (TEST)',note:'The frontline handles audition, first/second selection and advancement judging outside the platform. Final scoring is invited TEST only; official use awaits confirmation.'},ne:{title:'फाइनल मूल्याङ्कन (परीक्षण)',note:'अडिसन, पहिलो/दोस्रो छनोट र क्षेत्रीय चरणको मूल्याङ्कन स्थानीय टोलीले प्लेटफर्म बाहिर गर्छ। फाइनल आमन्त्रित परीक्षण मात्र हो; आधिकारिक प्रयोग पुष्टि हुन बाँकी छ।'}})[lang]}
+function applyReviewPolicy(){if(historicalJudging)return;const copy=reviewPolicyCopy();for(const key of ['reviewIntro','organizerReviewIntro']){const el=document.querySelector('[data-i18n='+key+']');if(el)el.textContent=copy.note}const heading=document.querySelector('[data-i18n=reviewTitle]');if(heading)heading.textContent=copy.title;}
 async function judging(){
  const view=$('queue');view.replaceChildren();
  try{
-  const {queue}=await api('reviewer-queue');
+  const data=await api('reviewer-queue'),queue=(data.queue||[]).filter(a=>historicalJudging||a.phase==='final');applyReviewPolicy();
   if(!queue.length){view.append(node('p',t('reviewNone')));return}
   for(const a of queue){
    const card=node('article',undefined,'entry');
@@ -331,15 +335,15 @@ async function organizer(){
  const apps=$('admin-apps'),board=$('standings');if(!apps||!board)return;
  apps.replaceChildren();board.replaceChildren();
  try{
-  const {applications:items}=await api('organizer-queue');
+  const {applications:items}=await api('organizer-queue');applyReviewPolicy();
   if(!items.length)apps.append(node('p',t('noOrganizer')));
   for(const a of items){
    const box=node('article',undefined,'entry');box.append(node('h3',a.stage_name+' · '+a.round_code+' · '+a.category));
    box.append(node('p',a.phase+' · '+a.status+' · '+a.payment_status));
    if(a.demo_url)box.append(workLink(a.demo_url));
    box.append(node('p',t('documentsPending'),'micro'));
-   box.append(node('p','Demo '+a.demo_judges+'/3 (avg '+(a.demo_mean??'—')+') · Live '+a.live_judges+'/3 (avg '+(a.live_mean??'—')+')'));
-   if(a.phase!=='final'&&a.payment_status==='simulated_paid'){
+   if(historicalJudging)box.append(node('p','Demo '+a.demo_judges+'/3 (avg '+(a.demo_mean??'—')+') · Live '+a.live_judges+'/3 (avg '+(a.live_mean??'—')+')'));
+   if(historicalJudging&&a.phase!=='final'&&a.payment_status==='simulated_paid'){
     const next=a.phase==='demo'?'qualifier':'final',b=node('button',t('promote')+' '+next,'secondary');b.type='button';
     b.disabled=(a.phase==='demo'?a.demo_judges:a.live_judges)<3;
     b.onclick=async()=>{b.disabled=true;try{await post('organizer-promote',{application_id:a.id,to_phase:next});message('saved');await organizer()}

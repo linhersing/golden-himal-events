@@ -6,11 +6,11 @@ test('one staff OTP shows only server-granted roles and switches without another
  await page.route('**/api/e2e/**',async route=>{
   const path=new URL(route.request().url()).pathname.split('/').pop();
   let result={ok:true},status=200;
-  if(path==='me'){if(!role){status=401;result={ok:false,error:'login_required'}}else result={ok:true,account:{id:'test-'+role,role,available_roles}}}
+  if(path==='me'){if(!role){status=401;result={ok:false,error:'login_required'}}else result={ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'test-'+role,role,available_roles}}}
   else if(path==='staff-login-config')result={ok:true,required:false};
   else if(path==='request-code'){expect(route.request().postDataJSON().role).toBe('staff');emails++;result={ok:true,challenge_id:'fictional-qa'}}
   else if(path==='verify-code'){role='organizer'}
-  else if(path==='switch-role'){role=route.request().postDataJSON().role;result={ok:true,account:{id:'test-'+role,role,available_roles}}}
+  else if(path==='switch-role'){role=route.request().postDataJSON().role;result={ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'test-'+role,role,available_roles}}}
   else if(path==='organizer-queue')result={ok:true,applications:[],testOnly:true};
   else if(path==='reviewer-queue')result={ok:true,queue:[],testOnly:true};
   else if(path==='applications')result={ok:true,applications:[],testOnly:true};
@@ -37,7 +37,7 @@ test('one staff OTP shows only server-granted roles and switches without another
 });
 
 test('reviewer-only login hides organizer controls',async({page})=>{
- await page.route('**/api/e2e/**',route=>route.fulfill({status:200,json:new URL(route.request().url()).pathname.endsWith('/me')?{ok:true,account:{id:'judge',role:'reviewer',available_roles:['reviewer']}}:{ok:true,queue:[]}}));
+ await page.route('**/api/e2e/**',route=>route.fulfill({status:200,json:new URL(route.request().url()).pathname.endsWith('/me')?{ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'judge',role:'reviewer',available_roles:['reviewer']}}:{ok:true,queue:[]}}));
  await page.goto('/backoffice.html');await expect(page.locator('#judge-dashboard')).toBeVisible();
  await expect(page.locator('[data-role-tab=organizer]')).toBeHidden();
  await expect(page.locator('#organizer-dashboard')).toBeHidden();
@@ -70,7 +70,7 @@ test('staff login requires its own human challenge before OTP; mobile has no hor
  const button=page.locator('#back-email-form button[type=submit]');
  await expect(page.locator('#signup-turnstile')).toContainText('TEST HUMAN');
  await expect(button).toBeDisabled();
- await expect(page.locator('#signup-human-status')).toContainText('請完成真人驗證');
+ await expect(page.locator('#signup-human-status')).toHaveText(await page.evaluate(()=>window.GHVLocale.t('signupHumanPrompt')));
  await page.screenshot({path:'test-results/staff-security/mobile.png',fullPage:true});
  expect(await page.evaluate(()=>window.__staffChallengeAction)).toBe('ghv_staff_login');
  await page.locator('#back-email-form [name=email]').fill('boss@example.invalid');
@@ -91,7 +91,7 @@ test('staff Turnstile script unavailable fails closed with retry',async({page})=
  await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',r=>r.abort());
  await page.goto('/backoffice.html');
  await expect(page.locator('#signup-human-retry')).toBeVisible();
- await expect(page.locator('#signup-human-status')).toContainText('真人驗證暫時無法使用');
+ await expect(page.locator('#signup-human-status')).toHaveText(await page.evaluate(()=>window.GHVLocale.t('signupHumanBlocked')));
  await page.screenshot({path:'test-results/staff-security/desktop.png',fullPage:true});
  await expect(page.locator('#back-email-form button[type=submit]')).toBeDisabled();
  expect(sends).toHaveLength(0);

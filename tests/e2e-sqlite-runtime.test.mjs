@@ -22,7 +22,7 @@ for (const mode of ['uploads','links']) test(`Alan V2 ${mode}: persisted auditio
  const db=new DatabaseSync(':memory:');
  db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
  const inbox=[],r2=new Map(),env={
-  STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:mode,STAGING_IDENTITY_SECRET:'G'.repeat(64),
+  STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',STAGING_SUBMISSION_MODE:mode,STAGING_IDENTITY_SECRET:'G'.repeat(64),
   STAGING_ALLOWED_EMAILS:'singer@test.invalid,voter@test.invalid',
   STAGING_REVIEWER_EMAILS:'judge1@test.invalid,judge2@test.invalid,judge3@test.invalid',
   STAGING_ORGANIZER_EMAILS:'organizer@test.invalid',
@@ -166,7 +166,7 @@ for (const mode of ['uploads','links']) test(`Alan V2 ${mode}: persisted auditio
 });
 test('expired and over-attempted emailed codes are rejected',async()=>{
  const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
- let sent;const env={STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'B'.repeat(64),
+ let sent;const env={STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',STAGING_IDENTITY_SECRET:'B'.repeat(64),
  STAGING_ALLOWED_EMAILS:'member@test.invalid',STAGING_FROM_EMAIL:'tester@test.invalid',
  DB:adapter(db),EMAIL:{async send(x){sent=x}}};
  try{
@@ -181,7 +181,7 @@ test('expired and over-attempted emailed codes are rejected',async()=>{
 
 test('one Gmail inbox can exercise separate invited test roles and concurrent OTP requests stay distinct',async()=>{
  const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
- const inbox=[],env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'Z'.repeat(64),
+ const inbox=[],env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',STAGING_IDENTITY_SECRET:'Z'.repeat(64),
   STAGING_FROM_EMAIL:'sender@test.invalid',STAGING_ALLOWED_EMAILS:'qa+ghv-member@gmail.com',
   STAGING_REVIEWER_EMAILS:'qa+ghv-judge1@gmail.com,qa+ghv-judge2@gmail.com,qa+ghv-judge3@gmail.com',
   STAGING_ORGANIZER_EMAILS:'qa+ghv-admin@gmail.com',EMAIL:{async send(m){inbox.push(m)}}};
@@ -214,7 +214,7 @@ test('one Gmail inbox can exercise separate invited test roles and concurrent OT
 
 test('email send failure never claims sent or leaves a usable failed challenge',async()=>{
  const db=new DatabaseSync(':memory:');db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
- let failedCode;const env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'F'.repeat(64),STAGING_FROM_EMAIL:'test@example.invalid',
+ let failedCode;const env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',STAGING_IDENTITY_SECRET:'F'.repeat(64),STAGING_FROM_EMAIL:'test@example.invalid',
   STAGING_ALLOWED_EMAILS:'member@test.invalid',EMAIL:{async send(m){failedCode=m.text.match(/\b\d{6}\b/)[0];throw Error('private provider message')}}};
  try{
   const r=await handleE2E(req('/api/e2e/request-code',{email:'member@test.invalid',role:'member'}),env);
@@ -231,7 +231,7 @@ test('the actual OTP route can use Mailgun without an EMAIL binding and keeps co
   assert.equal(url,'https://api.mailgun.net/v3/sandboxabc123.mailgun.org/messages');
   mailText=init.body.get('text');return Response.json({id:'unit-message-id',message:'Queued. Thank you.'});
  });
- const env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:'M'.repeat(64),
+ const env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',STAGING_IDENTITY_SECRET:'M'.repeat(64),
   STAGING_ALLOWED_EMAILS:'qa+ghv-member@gmail.com',STAGING_EMAIL_PROVIDER:'mailgun',
   STAGING_MAILGUN_DOMAIN:'sandboxabc123.mailgun.org',STAGING_MAILGUN_API_KEY:'test-only-key-'.repeat(5),STAGING_FROM_EMAIL:'test@sandboxabc123.mailgun.org'};
  try{
@@ -249,7 +249,7 @@ test('public TEST signup requires a verified sender and Turnstile, and keeps sin
  db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
  const inbox=[],tokens=new Set(),hostname=new URL(host).hostname;
  const env={
-  DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
+  DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',STAGING_SUBMISSION_MODE:'links',
   STAGING_IDENTITY_SECRET:'G'.repeat(64),STAGING_ALLOWED_EMAILS:'owner@test.invalid',
   STAGING_REVIEWER_EMAILS:'first@test.invalid',
   STAGING_EMAIL_PROVIDER:'resend',STAGING_FROM_EMAIL:'onboarding@resend.dev',

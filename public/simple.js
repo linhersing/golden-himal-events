@@ -118,7 +118,8 @@ if(page==='home'){
  })();
  return;
 }
-if(page==='news'||page==='announcements')return;
+if(page==='news'){setupRuleNavigation();return;}
+if(page==='announcements')return;
 const node=(tag,txt,cls)=>{const x=document.createElement(tag);if(txt!==undefined&&txt!==null)x.textContent=String(txt);if(cls)x.className=cls;return x};
 const safeLink=(url)=>{try{const u=new URL(url);return u.protocol==='https:'?u.href:null}catch{return null}};
 const formValues=form=>Object.fromEntries(new FormData(form));
@@ -176,6 +177,7 @@ function songLanguageValue(select){
 
 const staff=page==='back',prefix=staff?'back':'member';
 let busy=false,challenge=null,role=staff?'organizer':'member',account=null,profileEnabled=false,frontlineFormEnabled=false,museFormEnabled=false,fiveDemoEnabled=false,fiveDemoJanuaryOnly=false,eligibilityUploadEnabled=false;
+let staffJudgingPolicy={mode:'final_only'};
 const statusBox=$(prefix+'-status');
 let staffSessionDeadline=0,staffSessionTimer=null;
 function resetStaffSessionTimer(){
@@ -340,7 +342,7 @@ function friendlyError(e){
  return errors[e?.message]||mt('errUnknown');
  }
 
- const errors={admin_registration_conflict:'這筆報名已有更新，請確認目前資料後再試。',admin_registration_protected:'已有評分或晉級紀錄，這筆報名已鎖定。',admin_registration_readback_unavailable:'無法確認是否已儲存，請先重新查詢。',staff_human_check_unavailable:'工作人員真人驗證暫時無法使用，請稍後重試。',human_check_required:'請重新完成真人驗證，再寄送驗證碼。',staff_reauthentication_required:'請先在工作人員入口重新驗證登入。',self_review_disallowed:'同一信箱不能評自己的參賽作品，請由其他獨立評審評分。',too_many_code_requests:'驗證信已達次數限制，請稍候再試；登入後切換已授權身分不必重新寄信。',e2e_not_configured:'目前尚未開通 Email 驗證服務，無法登入。正式系統需先完成寄信設定。',test_email_service_unavailable:'寄信服務目前不可使用，請稍後或確認平台設定。',not_on_test_allowlist:'此 Email 尚未獲授權，目前只接受受邀帳號。',expired_or_invalid_code:'驗證碼錯誤或已過期，請重新取得。',login_required:'登入已逾時，請重新登入後台。',organizer_only:'這個帳號不是主辦單位，無權查看管理資料。',reviewer_only:'這個帳號不是評審，無權打分。',member_only:'此帳號並非會員。',update_locked:'這筆資料已進入審核或模擬繳費階段，無法直接修改。',delete_locked:'這筆資料已進入評審或後續流程，無法直接刪除。',invalid_demo_url:'請輸入有效的公開作品連結。',annual_category_locked:'年度組別已鎖定。',already_scored_or_unavailable:'你已評過這位選手，不能重複給分。'};return errors[e?.message]||('目前無法完成操作（'+(e?.message||'連線失敗')+'）。')}
+ const errors={online_judging_frontline_managed:'本關由前線自行評選，不使用線上評分。',frontline_results_required:'本關由前線提供晉級結果，平台不再要求線上評分。',admin_registration_conflict:'這筆報名已有更新，請確認目前資料後再試。',admin_registration_protected:'已有評分或晉級紀錄，這筆報名已鎖定。',admin_registration_readback_unavailable:'無法確認是否已儲存，請先重新查詢。',staff_human_check_unavailable:'工作人員真人驗證暫時無法使用，請稍後重試。',human_check_required:'請重新完成真人驗證，再寄送驗證碼。',staff_reauthentication_required:'請先在工作人員入口重新驗證登入。',self_review_disallowed:'同一信箱不能評自己的參賽作品，請由其他獨立評審評分。',too_many_code_requests:'驗證信已達次數限制，請稍候再試；登入後切換已授權身分不必重新寄信。',e2e_not_configured:'目前尚未開通 Email 驗證服務，無法登入。正式系統需先完成寄信設定。',test_email_service_unavailable:'寄信服務目前不可使用，請稍後或確認平台設定。',not_on_test_allowlist:'此 Email 尚未獲授權，目前只接受受邀帳號。',expired_or_invalid_code:'驗證碼錯誤或已過期，請重新取得。',login_required:'登入已逾時，請重新登入後台。',organizer_only:'這個帳號不是主辦單位，無權查看管理資料。',reviewer_only:'這個帳號不是評審，無權打分。',member_only:'此帳號並非會員。',update_locked:'這筆資料已進入審核或模擬繳費階段，無法直接修改。',delete_locked:'這筆資料已進入評審或後續流程，無法直接刪除。',invalid_demo_url:'請輸入有效的公開作品連結。',annual_category_locked:'年度組別已鎖定。',already_scored_or_unavailable:'你已評過這位選手，不能重複給分。'};return errors[e?.message]||('目前無法完成操作（'+(e?.message||'連線失敗')+'）。')}
 async function api(path,body){
  const c=new AbortController(),timer=setTimeout(()=>c.abort(),18000);
  try{
@@ -478,10 +480,18 @@ function setupFrontlineForm(enabled){
   next.querySelector('[name=eligibility_basis]').onchange=sync;sync();
  }
 }
+function applyStaffJudgingPolicy(value){
+ if(value?.judging_policy)staffJudgingPolicy=value.judging_policy.mode==='all_stages_test'?{mode:'all_stages_test'}:{mode:'final_only'};
+ const legacy=staffJudgingPolicy.mode==='all_stages_test',notice=$('staff-judging-notice');
+ if(notice){notice.dataset.staffText=legacy?'全關卡評審復原模式，僅供隔離測試。':'海選、初選與晉級賽由前線自行評選，平台不要求線上打分。決賽評分僅供受邀測試，正式使用待確認。';notice.textContent=sw(notice.dataset.staffText)}
+ const stat=$('scores-count')?.closest('.dash-stat');if(stat)stat.hidden=!legacy;
+ for(const option of $('organizer-status')?.options||[])if(['scored','unscored'].includes(option.value)){option.hidden=!legacy;option.disabled=!legacy;if(!legacy&&option.selected)$('organizer-status').value=''}
+ const heading=$('judge-roster-panel')?.querySelector('h2');if(heading){heading.removeAttribute('data-t');heading.dataset.staffText=legacy?'評審名冊':'決賽評審名冊（TEST）';heading.textContent=sw(heading.dataset.staffText)}
+}
 function staffTabs(){
  const roles=account?.available_roles||[account?.role];
  document.querySelector('.role-tabs')?.toggleAttribute('hidden',!account);
- document.querySelectorAll('[data-role-tab]').forEach(b=>{b.hidden=!roles.includes(b.dataset.roleTab);b.classList.toggle('active',b.dataset.roleTab===role)});
+ document.querySelectorAll('[data-role-tab]').forEach(b=>{b.hidden=!roles.includes(b.dataset.roleTab);b.classList.toggle('active',b.dataset.roleTab===role);if(b.dataset.roleTab==='reviewer'){b.removeAttribute('data-t');b.dataset.staffText=staffJudgingPolicy.mode==='all_stages_test'?'評審':'決賽評審（TEST）';b.textContent=sw(b.dataset.staffText)}});
 }
 async function loadSession(){try{
  let v=await api('me');
@@ -492,7 +502,7 @@ async function loadSession(){try{
   v=await api('switch-role',{role:target});
   v=await api('me');
  }
- account=v.account;role=account.role;authUI(true);
+ account=v.account;role=account.role;if(staff){staffJudgingPolicy={mode:'final_only'};applyStaffJudgingPolicy(v);}authUI(true);
  if(staff){trackStaffSession(v);staffTabs();}else{
   setupProfileFields(v.profile_enabled===true);
   setupFrontlineForm(v.frontline_form_enabled===true);
@@ -525,7 +535,7 @@ const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
 let challengeEmail,publicTest=false,staffHuman=false,humanToken,widgetId,widgetTimer,widgetScript;
 const humanBox=$('signup-human-status'),retryButton=$('signup-human-retry');
 const sendButton=mailForm?.querySelector('button[type="submit"]');
-let widgetLoading=false;
+let widgetLoading=false,humanFailure=null;
 let otpValidUntil=0,otpReminderTimer=null;
 function stopOtpReminder(){
  if(otpReminderTimer!==null){clearInterval(otpReminderTimer);otpReminderTimer=null}
@@ -558,9 +568,10 @@ function startOtpReminder(){
 }
 if(staff)document.addEventListener('visibilitychange',()=>{if(!document.hidden)tickOtpReminder()});
 const staffHumanCopy={signupHumanLoading:'正在載入真人驗證。',signupHumanPrompt:'請完成真人驗證後再寄送驗證碼。',signupHumanVerified:'真人驗證已完成。',signupHumanExpired:'真人驗證已過期，請重新驗證。',signupHumanBlocked:'真人驗證暫時無法使用，請重新載入。',signupHumanRequired:'請先完成真人驗證。'};
-const humanCopy=key=>staff?staffHumanCopy[key]:mt(key);
+const humanCopy=key=>{const translated=mt(key);return translated!==key?translated:(staffHumanCopy[key]||key)};
 function humanState(key,kind='pending'){
  if(!humanBox)return;
+ if(kind!=='error')humanFailure=null;
  humanBox.hidden=false;
  humanBox.dataset.l=key;
  humanBox.dataset.state=kind;
@@ -571,10 +582,17 @@ function humanState(key,kind='pending'){
 function clearHumanToken(){humanToken=undefined;if((publicTest||staffHuman)&&sendButton)sendButton.disabled=true}
 function humanError(code){
  clearTimeout(widgetTimer);widgetLoading=false;clearHumanToken();
- humanState('signupHumanBlocked','error');
+ humanFailure=window.GHVHumanVerification?.humanVerificationError(code)||{key:'signupHumanBlocked',code:'',retryable:true};
+ humanState(humanFailure.key,'error');
  // A public Cloudflare error code helps diagnosis; do not log the widget token or keys.
- if(code&&/^\d{4,7}$/.test(String(code)))humanBox.textContent+=' (CF '+code+')';
+ if(humanFailure.code)humanBox.textContent+=' (CF '+humanFailure.code+')';
+ if(retryButton)retryButton.hidden=!humanFailure.retryable;
 }
+window.addEventListener('ghv:languagechange',()=>{
+ if(!humanFailure||!humanBox)return;
+ humanBox.textContent=humanCopy(humanFailure.key)+(humanFailure.code?' (CF '+humanFailure.code+')':'');
+ if(retryButton)retryButton.hidden=!humanFailure.retryable;
+});
 function renderHumanWidget(siteKey){
  const widget=$('signup-turnstile');
  try{
@@ -1184,6 +1202,7 @@ function createStaffWorkspace(staffRole,list,workspace,content,render){
 
 
 async function renderJanuaryRoster(){
+ if(staffJudgingPolicy.mode!=='all_stages_test')return;
  const panel=$('january-test-roster');
  const data=await api('january-test-roster');
  panel.replaceChildren(node('h2','1 月海選晉級名冊（TEST）'));
@@ -1323,9 +1342,10 @@ async function renderOrganizer(){
  dashboard.hidden=false;$('judge-dashboard').hidden=true;
  const v=await api('organizer-queue?view=workbench'),apps=v.applications||[];
  if(!account||role!=='organizer')return;
+ applyStaffJudgingPolicy(v);staffTabs();
  showAdminRegistrations(v.registration_management_enabled===true);
  const january=$('january-roster-tools');
- january.hidden=!v.january_roster_enabled;
+ january.hidden=staffJudgingPolicy.mode!=='all_stages_test'||!v.january_roster_enabled;
  if(!january.hidden){
   january.ontoggle=()=>{if(january.open)run(renderJanuaryRoster)};
  }
@@ -1570,7 +1590,9 @@ async function renderJudge(){
  clearStaffWorkspace();clearStaffContact();clearAdminRegistrations();
  $('organizer-correction-list').replaceChildren();
  $('organizer-dashboard').hidden=true;$('judge-dashboard').hidden=false;
- const v=await api('reviewer-queue?view=workbench'),queue=v.queue||[];
+ const v=await api('reviewer-queue?view=workbench');
+ applyStaffJudgingPolicy(v);staffTabs();
+ const queue=(v.queue||[]).filter(entry=>staffJudgingPolicy.mode==='all_stages_test'||entry.phase==='final');
  if(!account||role!=='reviewer')return;
  const list=$('judge-list'),pager=$('judge-pagination'),summary=$('judge-count');
  const search=$('judge-search'),filter=$('judge-status');
@@ -1849,13 +1871,13 @@ const application=$('application-form'),details=$('application-details'),start=$
  // The #register deep link is handled by the same always-visible registration section.
  loadSession();
 }else if(page==='back'){
- window.addEventListener('ghv:languagechange',()=>{if(account)window.staffRelocalize?.()});
+ window.addEventListener('ghv:languagechange',()=>{applyStaffJudgingPolicy();staffTabs();if(account)window.staffRelocalize?.()});
  setupAuth();staffTabs();document.querySelectorAll('[data-role-tab]').forEach(button=>button.addEventListener('click',()=>{const next=button.dataset.roleTab;if(next===role||!account)return;run(async()=>{const v=await api('switch-role',{role:next});const updated=await api('me');account=updated.account||v.account;role=account.role;trackStaffSession(updated);staffTabs();await dashboard();status('已切換為'+(role==='organizer'?'主辦方':'評審')+'。')})}));loadSession();
 }
 // Deep links to a rules topic should open it, rather than show a closed summary.
-if(page==='news'){
+function setupRuleNavigation(){
  const openRuleFromHash=(fromClick=false)=>{
-  const id=decodeURIComponent(location.hash.slice(1));
+  let id;try{id=decodeURIComponent(location.hash.slice(1))}catch{return;}
   const row=id?document.getElementById(id):null;
   if(!row||!row.matches('details.news-row'))return;
   row.open=true;
