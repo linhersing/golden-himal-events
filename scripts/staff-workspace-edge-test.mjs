@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -145,3 +146,9 @@ try {
  await browser.close();
  await runtime.close();
 }
+
+// Existing CI entrypoint also verifies the independent stage rehearsal; it never
+// binds the brand database or copies the rehearsal assets into dist.
+const stages=spawnSync(process.execPath,['scripts/stage-ledger-isolated-test.mjs',dependencies,join(evidence,'stage-ledger')],{cwd:repo,encoding:'utf8',timeout:180000});
+process.stdout.write(stages.stdout||'');process.stderr.write(stages.stderr||'');
+assert.equal(stages.status,0,stages.error?.message||'Isolated stage rehearsal failed');
