@@ -150,3 +150,7 @@ try {
 const finalOnly=spawnSync(process.execPath,['scripts/final-only-judging-isolated-test.mjs',dependencies,join(evidence,'final-only')],{cwd:repo,encoding:'utf8',timeout:180000});
 process.stdout.write(finalOnly.stdout||'');process.stderr.write(finalOnly.stderr||'');
 assert.equal(finalOnly.status,0,finalOnly.error?.message||'Current final-only judging policy failed');
+
+const publicContact=spawnSync(process.execPath,['scripts/public-member-contact-isolated-test.mjs',dependencies,join(evidence,'public-member-contact')],{cwd:repo,encoding:'utf8',timeout:180000});
+process.stdout.write(publicContact.stdout||'');process.stderr.write(publicContact.stderr||'');
+assert.equal(publicContact.status,0,publicContact.error?.message||'Public member private contact regression failed');

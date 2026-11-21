@@ -42,7 +42,10 @@ function emailAllowed(email,env,role){
 }
 const ROLES=['member','reviewer','organizer'];
 function grantedRoles(email,env){return ROLES.filter(role=>emailAllowed(email,env,role))}
-const memberContactReady=(env,actor)=>actor.role==='member'&&Boolean(actor.email)&&emailAllowed(actor.email,env,'member')&&museAuditionReady(env);
+// account() has already verified the server session and member identity proof.
+// Public/password members deliberately have no recovered allowlisted email.
+// Their own private form uses the same storage gate, never the staff invite list.
+const memberContactReady=(env,actor)=>actor.role==='member'&&museAuditionReady(env);
 async function emailForFingerprint(env,fingerprint,role){
  const list=emails(env,role==='organizer'?'STAGING_ORGANIZER_EMAILS':role==='reviewer'?'STAGING_REVIEWER_EMAILS':'STAGING_ALLOWED_EMAILS');
  for(const email of list){
