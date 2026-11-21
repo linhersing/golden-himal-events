@@ -26,7 +26,7 @@ test('125 fictional contestants in isolated D1: photos, three roles, search, ant
  try{
   db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
   db.exec(await readFile(new URL('../backend/migrations/1003_entrant_profile_optin_STAGING_ONLY.sql',import.meta.url),'utf8'));
-  const env={STAGING_E2E_ENABLED:'true',STAGING_PROFILE_URLS_ENABLED:'true',
+  const env={STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',STAGING_PROFILE_URLS_ENABLED:'true',
    STAGING_SUBMISSION_MODE:'links',STAGING_IDENTITY_SECRET:'Q'.repeat(64),
    STAGING_ALLOWED_EMAILS:'owner@test.invalid',STAGING_REVIEWER_EMAILS:'owner@test.invalid',
    STAGING_ORGANIZER_EMAILS:'owner@test.invalid',STAGING_FROM_EMAIL:'test@example.invalid',

@@ -39,7 +39,7 @@ test('guarded contact sections return only needed fields and append masked D1 au
    '1018_admin_registration_audit_STAGING_ONLY.sql']){
    db.exec(readFileSync(new URL('../backend/migrations/'+file,import.meta.url),'utf8'));
   }
-  const env={DB:sqliteAdapter(db),STAGING_E2E_ENABLED:'true',STAGING_IDENTITY_SECRET:secret,STAGING_PASSWORD_SIGNUP_ENABLED:'true',
+  const env={DB:sqliteAdapter(db),STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',STAGING_IDENTITY_SECRET:secret,STAGING_PASSWORD_SIGNUP_ENABLED:'true',
    STAGING_ADMIN_MANAGEMENT_ENABLED:'true',STAGING_STAFF_TURNSTILE_REQUIRED:'true',STAGING_MUSE_AUDITION_ENABLED:'true',
    STAGING_PROFILE_URLS_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
    STAGING_ALLOWED_EMAILS:'member@example.invalid,other@example.invalid',

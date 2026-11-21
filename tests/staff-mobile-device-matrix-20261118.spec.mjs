@@ -21,7 +21,7 @@ async function mockJudge(page,{entry=sampleEntry(),otherEntries=[],action}={}){
  const posts=[],readback={count:0},privacyRequests=[];
  await page.route('**/api/e2e/**',async route=>{
   const key=new URL(route.request().url()).pathname.split('/').at(-1);
-  if(key==='me')return route.fulfill({json:{ok:true,account:reviewer}});
+  if(key==='me')return route.fulfill({json:{ok:true,judging_policy:{mode:'all_stages_test'},account:reviewer}});
   if(key==='reviewer-queue'){
    readback.count++;
    return route.fulfill({json:{ok:true,queue:[entry,...otherEntries]}});
@@ -257,4 +257,25 @@ test('judge roster and current score action read in Chinese, English and Nepali'
   await page.locator('#judge-back-list').click();
   await expect(page.locator('#judge-roster-panel')).toBeVisible();
  }
+});
+
+// Current policy acceptance is independent of the explicit legacy restoration cases above.
+async function finalOnlyPolicy(page,role='reviewer'){
+ const entries=Array.from({length:20},(_,i)=>({id:'POLICY-'+i,stage_name:'TEST Policy Singer '+i,round_code:i===19?'2027-04':'2027-01',phase:i===19?'final':i===18?'qualifier':'demo',category:'single',status:'submitted',approval_state:'approved',demo_judges:0,live_judges:0,demo_url:'https://example.invalid/TEST/video'+i,song_title:'TEST Track '+i,original_artist:'TEST Artist',song_language:'Nepali'})),policy={mode:'final_only',earlier_stages:'frontline_managed',official:false};
+ await page.route('**/api/e2e/**',route=>{const key=new URL(route.request().url()).pathname.split('/').at(-1);return route.fulfill({json:key==='me'?{ok:true,account:{id:role,role,available_roles:[role]},judging_policy:policy}:key==='reviewer-queue'?{ok:true,queue:entries,judging_policy:policy}:key==='organizer-queue'?{ok:true,applications:entries,judging_policy:policy,january_roster_enabled:true}:key==='organizer-corrections'?{ok:true,enabled:false}:{ok:true}})});
+ return entries;
+}
+test('current final-only policy hides all earlier scorecards and preserves the final desktop/mobile workspace',async({page})=>{
+ await finalOnlyPolicy(page);for(const width of [390,1440]){
+  await page.setViewportSize({width,height:900});await page.goto('/backoffice.html');await expect(page.locator('#staff-judging-notice')).toContainText('由前線自行評選');await expect(page.locator('#judge-list .roster-entry')).toHaveCount(1);await expect(page.locator('#judge-list')).toContainText('TEST Policy Singer 19');await expect(page.locator('[data-role-tab=reviewer]')).toHaveText('決賽評審（TEST）');
+  await page.locator('#judge-list .roster-entry').click();await page.locator('#judge-queue [data-song-position]').click();await expect(page.locator('#judge-queue input[type=number]')).toHaveCount(4);await expect(page.locator('#judge-queue [name=technique]')).toHaveAttribute('max','40');
+  await page.screenshot({path:'test-results/ghv-final-only/reviewer-final-'+width+'.png',fullPage:true});
+ }
+});
+test('current organizer policy keeps20registrations and takes down score-driven January tools and filters',async({page})=>{
+ await finalOnlyPolicy(page,'organizer');await page.setViewportSize({width:390,height:844});await page.goto('/backoffice.html');await expect(page.locator('#organizer-count')).toContainText('20');await expect(page.locator('#january-roster-tools')).toBeHidden();await expect(page.locator('#scores-count').locator('..')).toBeHidden();await expect(page.locator('#organizer-status option[value=scored]')).toHaveJSProperty('disabled',true);await expect(page.locator('#admin-apps .organizer-record-open')).toHaveCount(12);
+ await page.locator('.staff-languages [data-lang=en]').click();await expect(page.locator('#staff-judging-notice')).toContainText('frontline');await page.locator('.staff-languages [data-lang=ne]').click();await expect(page.locator('#staff-judging-notice')).toContainText('प्लेटफर्म बाहिर');await page.screenshot({path:'test-results/ghv-final-only/organizer-mobile.png',fullPage:true});
+});
+test('old reviewer URL follows final-only policy instead of displaying earlier-stage scorecards',async({page})=>{
+ await finalOnlyPolicy(page);await page.goto('/judge-stage.html');await expect(page.locator('#queue .entry')).toHaveCount(1);await expect(page.locator('#queue')).toContainText('TEST Policy Singer 19');await expect(page.locator('[data-i18n=reviewIntro]')).toContainText('outside the platform');
 });

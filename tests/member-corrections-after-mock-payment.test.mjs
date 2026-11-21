@@ -23,7 +23,7 @@ test('mock-paid member may correct owned song before judging, then scores lock a
  const db=new DatabaseSync(':memory:');
  const inbox=[];
  db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
- const env={DB:dbAdapter(db),STAGING_E2E_ENABLED:'true',
+ const env={DB:dbAdapter(db),STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',
   STAGING_IDENTITY_SECRET:'J'.repeat(64),STAGING_SUBMISSION_MODE:'links',
   STAGING_ALLOWED_EMAILS:'singer@example.invalid,other@example.invalid',
   STAGING_REVIEWER_EMAILS:'judge@example.invalid',

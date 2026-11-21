@@ -40,7 +40,7 @@ test('two independent singers keep distinct D1 URLs, authenticated readers and a
  db.exec(await readFile(new URL('../backend/migrations/1003_entrant_profile_optin_STAGING_ONLY.sql',import.meta.url),'utf8'));
  const emails=[];
  const env={
-  DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_PROFILE_URLS_ENABLED:'true',
+  DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',STAGING_PROFILE_URLS_ENABLED:'true',
   STAGING_SUBMISSION_MODE:'links',STAGING_IDENTITY_SECRET:'X'.repeat(64),
   STAGING_ALLOWED_EMAILS:'a@test.invalid,b@test.invalid',
   STAGING_REVIEWER_EMAILS:'judge@test.invalid',STAGING_ORGANIZER_EMAILS:'organizer@test.invalid',
@@ -109,7 +109,7 @@ test('profile schema is fail-closed when not enabled; old entries can still be s
  const db=new DatabaseSync(':memory:');
  db.exec(await readFile(new URL('../backend/migrations/1000_e2e_staging_acceptance_ONLY.sql',import.meta.url),'utf8'));
  const emails=[];
- const env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_PROFILE_URLS_ENABLED:'true',
+ const env={DB:adapter(db),STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',STAGING_PROFILE_URLS_ENABLED:'true',
   STAGING_SUBMISSION_MODE:'links',STAGING_IDENTITY_SECRET:'T'.repeat(64),
   STAGING_ALLOWED_EMAILS:'member@test.invalid',STAGING_FROM_EMAIL:'test@example.invalid',
   EMAIL:{async send(m){emails.push(m)}}};

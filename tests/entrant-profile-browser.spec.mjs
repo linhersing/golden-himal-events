@@ -4,7 +4,7 @@ const mockPhoto=page=>page.route('https://images.example.org/**',r=>r.fulfill({s
 
 test('member profile form is opt-in and appears only when D1 profile feature is ready',async({page})=>{
  await mockPhoto(page);
- const member={ok:true,account:{id:'test-member',role:'member',available_roles:['member']},profile_enabled:true};
+ const member={ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'test-member',role:'member',available_roles:['member']},profile_enabled:true};
  await page.route('**/api/e2e/**',async route=>{
   const p=new URL(route.request().url()).pathname.split('/').pop();
   const payload=p==='me'?member:p==='applications'?{ok:true,applications:[]}:{ok:true};
@@ -28,7 +28,7 @@ test('member profile form is opt-in and appears only when D1 profile feature is 
 test('profile form stays hidden when profile D1 schema/flag has not been enabled',async({page})=>{
  await page.route('**/api/e2e/**',async route=>{
   const p=new URL(route.request().url()).pathname.split('/').pop();
-  await route.fulfill({status:200,json:p==='me'?{ok:true,account:{id:'test-member',role:'member'},profile_enabled:false}:{ok:true,applications:[]}});
+  await route.fulfill({status:200,json:p==='me'?{ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'test-member',role:'member'},profile_enabled:false}:{ok:true,applications:[]}});
  });
  await page.goto('/member.html#register');
  await page.locator('#start-application').click();
@@ -50,7 +50,7 @@ test('organizer loads only the selected entrant photo; reviewer workspace omits 
  await page.route('**/api/e2e/**',async route=>{
   const url=new URL(route.request().url()),p=url.pathname.split('/').pop();
   let value={ok:true};
-  if(p==='me')value={ok:true,account:{id:role,role,available_roles:[role]}};
+  if(p==='me')value={ok:true,judging_policy:{mode:'all_stages_test'},account:{id:role,role,available_roles:[role]}};
   if(p==='organizer-queue'&&url.searchParams.get('view')==='profile'){
    const id=url.searchParams.get('id');
    profileReads.push({id,role});
