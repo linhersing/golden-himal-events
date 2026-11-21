@@ -18,7 +18,7 @@ export const fixtures=Array.from({length:20},(_,index)=>{
   language:count>=19?'Nepali':(index%2?'Mandarin':'Nepali'),number:count,phase,demos,
   region:index%2?'B':'A',approved:count%7!==0,submittedStatus:count%7===0?'needs_info':'submitted'};
 });
-export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'dist')){
+export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'dist'),options={}){
  const require=createRequire(join(dependencies,'staff-local-loader.cjs'));
  const {build}=require('esbuild');
  const {Miniflare,Response,convertV4MiniflareOptions}=require('miniflare');
@@ -35,7 +35,7 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
  const dist=resolve(assets);
  const mf=new Miniflare(convertV4MiniflareOptions({host:'127.0.0.1',resourcePersistencePath:state,enableDevRegistry:false,workers:[{
   modules:true,script,compatibilityDate:'2026-10-28',d1Databases:{E2E_DB:'staff-workspace-fictional-only'},
-  bindings:{STAGING_IDENTITY_SECRET:identity,STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
+  bindings:{STAGING_ONLINE_JUDGING_MODE:options.judgingMode||'final_only',STAGING_IDENTITY_SECRET:identity,STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
    STAGING_PASSWORD_SIGNUP_ENABLED:'true',STAGING_STAFF_TURNSTILE_REQUIRED:'true',STAGING_ADMIN_MANAGEMENT_ENABLED:'true',
    STAGING_TEST_APPROVAL_ENABLED:'true',STAGING_FRONTLINE_2027_ENABLED:'true',STAGING_FIVE_DEMO_REHEARSAL:'true',
    STAGING_MUSE_AUDITION_ENABLED:'true',STAGING_PROFILE_URLS_ENABLED:'true',

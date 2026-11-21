@@ -1,4 +1,5 @@
 import {hasTestApproval} from './test-application-approval.js';
+import {earlierOnlineJudging} from './online-judging-policy.js';
 
 const limitFor = (env,region) => {
  const raw=env['STAGING_JANUARY_TEST_SEATS_'+region];
@@ -34,6 +35,7 @@ export async function attachJanuaryScores(env,rows,reviewerId){
 }
 export async function submitJanuaryScore(request,env,reviewer,context){
  const {json,deny,NOW,bodyJSON,ownsApplication}=context;
+ if(!earlierOnlineJudging(env))return deny('online_judging_frontline_managed',403);
  const b=await bodyJSON(request);
  if(!b||typeof b.application_id!=='string'||b.application_id.length>100||!Number.isInteger(b.position)||b.position<1||b.position>5||
     b.no_conflict!==true||!Number.isInteger(b.technique)||b.technique<0||b.technique>60||
@@ -82,6 +84,7 @@ function rank(rows,panel){
  return {ranked:[...bestByAccount.values()].sort(compare),incomplete};
 }
 export async function januaryRoster(request,env,organizer,context){
+ if(!earlierOnlineJudging(env))return context.deny('frontline_results_required',409);
  const {json,deny,NOW,bodyJSON}=context;
  const post=request.method==='POST',db=env.DB;
  const body=post?await bodyJSON(request):null;

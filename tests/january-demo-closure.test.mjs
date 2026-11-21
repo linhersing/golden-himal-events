@@ -39,7 +39,7 @@ test('January TEST closure uses five immutable scorecards and a single best work
  const sign=value=>createHmac('sha256',secret).update(value).digest('hex');
  const memberIds=['singer','rival'],staff=['organizer'],judges=['judge1','judge2','judge3','judge4'];
  const addresses=ids=>ids.map(id=>id+'@example.invalid').join(',');
- const env={DB,STAGING_IDENTITY_SECRET:secret,STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
+ const env={DB,STAGING_IDENTITY_SECRET:secret,STAGING_E2E_ENABLED:'true',STAGING_ONLINE_JUDGING_MODE:'all_stages_test',STAGING_SUBMISSION_MODE:'links',
   STAGING_TEST_APPROVAL_ENABLED:'true',STAGING_FIVE_DEMO_REHEARSAL:'true',STAGING_FRONTLINE_2027_ENABLED:'true',
   STAGING_ALLOWED_EMAILS:addresses(memberIds),STAGING_ORGANIZER_EMAILS:addresses(staff),STAGING_REVIEWER_EMAILS:addresses(judges),
   STAGING_FROM_EMAIL:'test@example.invalid',EMAIL:{async send(){}}};

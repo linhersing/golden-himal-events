@@ -55,7 +55,7 @@ test('link-only participant entry has required URL guidance and no raw file cont
  const url='https://drive.google.com/file/d/test-performance/view?usp=sharing';
  await page.route('**/api/e2e/**',async route=>{
   const path=new URL(route.request().url()).pathname;
-  const data=path.endsWith('/me')?{ok:true,account:{id:'test-link-member',role:'member'}}:
+  const data=path.endsWith('/me')?{ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'test-link-member',role:'member'}}:
    path.endsWith('/applications')?{ok:true,applications:[{id:'test-app',stage_name:'TEST LINK',round_code:'2027-01',phase:'demo',category:'community',status:'submitted',payment_status:'unpaid',song_title:'TEST SONG',original_artist:'TEST ARTIST',demo_url:url}]}:{ok:true,finalists:[]};
   await route.fulfill({contentType:'application/json',body:JSON.stringify(data)});
  });
@@ -195,7 +195,7 @@ test('minimal staff reviewer submits phase-specific V2 scoring without crossing 
  let saved=null,scoreData=null;
  await page.route('**/api/e2e/**',async route=>{
   const path=new URL(route.request().url()).pathname;
-  if(path.endsWith('/me'))return route.fulfill({status:200,json:{ok:true,account:{id:'test-reviewer',role:'reviewer'}}});
+  if(path.endsWith('/me'))return route.fulfill({status:200,json:{ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'test-reviewer',role:'reviewer'}}});
   if(path.endsWith('/reviewer-queue'))return route.fulfill({status:200,json:{ok:true,queue:[{id:'test-application',stage_name:'TEST Singer',round_code:'2027-01',phase:'qualifier',demo_url:'https://youtu.be/dQw4w9WgXcQ',live_technique:saved,live_interpretation:saved===null?null:20,stage_presence:saved===null?null:15,appearance:saved===null?null:7}]}});
   if(path.endsWith('/score')){scoreData=route.request().postDataJSON();saved=32;return route.fulfill({status:200,json:{ok:true,phase:'qualifier',score:74}})}
   return route.fulfill({status:404,json:{ok:false,error:'not_found'}});

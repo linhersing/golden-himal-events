@@ -6,7 +6,7 @@ test('staff see all five works after approval, reload and signing in again',asyn
  const app={id:'TEST-5-DEMO',stage_name:'TEST Singer',round_code:'2027-01',category:'community',phase:'demo',payment_status:'unpaid',...demos[0],demo_entries:demos};
  await page.route('**/api/e2e/**',async route=>{
   const path=new URL(route.request().url()).pathname.split('/').pop();
-  if(path==='me')return route.fulfill(signed?{json:{ok:true,account:{role,available_roles:[role]}}}:{status:401,json:{ok:false,error:'login_required'}});
+  if(path==='me')return route.fulfill(signed?{json:{ok:true,judging_policy:{mode:'all_stages_test'},account:{role,available_roles:[role]}}}:{status:401,json:{ok:false,error:'login_required'}});
   if(path==='organizer-queue')return route.fulfill({json:{ok:true,applications:[{...app,approval_state:approved?'approved':'pending'}],january_roster_enabled:true}});
   if(path==='reviewer-queue')return route.fulfill({json:{ok:true,queue:approved?[{...app,per_video_scoring:true,demo_entries:demos.map((d,i)=>i===0&&score?{...d,my_score:score}:d)}]:[]}});
   if(path==='january-test-roster')return route.fulfill({json:{ok:true,regions:[{region:'A',blocker:'seat_limit_pending',ranked:[]},{region:'B',blocker:'seat_limit_pending',ranked:[]}]}});

@@ -1,6 +1,11 @@
 
 (()=>{'use strict';
 const words={
+ '海選、初選與晉級賽由前線自行評選，平台不要求線上打分。決賽評分僅供受邀測試，正式使用待確認。':['The frontline manages audition, first/second selection and advancement judging offline. Final scoring is invited TEST only; official use awaits confirmation.','अनलाइन छनोट, पहिलो/दोस्रो छनोट र क्षेत्रीय चरणको मूल्याङ्कन स्थानीय टोलीले प्लेटफर्म बाहिर गर्छ। फाइनल अङ्क आमन्त्रित परीक्षण मात्र हो; आधिकारिक प्रयोग पुष्टि हुन बाँकी छ।'],
+ '全關卡評審復原模式，僅供隔離測試。':['All-stage judging restored for isolated TEST only.','सबै चरणको मूल्याङ्कन छुट्टै परीक्षणका लागि मात्र पुनःसक्रिय छ।'],
+ '決賽評審（TEST）':['Final judge (TEST)','फाइनल निर्णायक (परीक्षण)'],
+ '決賽評審名冊（TEST）':['Final judging roster (TEST)','फाइनल मूल्याङ्कन सूची (परीक्षण)'],
+
 
  '報名管理與稽核':['Registration management and audit','आवेदन व्यवस्थापन र लेखापरीक्षण'],
  '管理測試報名與操作紀錄':['Manage test entries','परीक्षण आवेदन व्यवस्थापन'],

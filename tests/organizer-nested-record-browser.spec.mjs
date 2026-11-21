@@ -35,7 +35,7 @@ async function serveOrganizer(page,{lookup}={}){
    });
   }
   const json=path==='me'?
-   {ok:true,account:{id:'organizer-qa',role:'organizer',available_roles:['organizer']}}
+   {ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'organizer-qa',role:'organizer',available_roles:['organizer']}}
    :path==='organizer-queue'?{ok:true,applications:entries,registration_management_enabled:false,contact_storage_enabled:true}:{ok:true};
   return route.fulfill({status:200,json});
  });
@@ -170,8 +170,8 @@ test('switching to reviewer clears loaded organizer management and audit DOM',as
   const path=new URL(route.request().url()).pathname.split('/').at(-1);
   let data={ok:true};
   const account=()=>({id:'dual-fixture',role:current,available_roles:['organizer','reviewer']});
-  if(path==='me')data={ok:true,account:account()};
-  if(path==='switch-role'){current=route.request().postDataJSON().role;data={ok:true,account:account()};}
+  if(path==='me')data={ok:true,judging_policy:{mode:'all_stages_test'},account:account()};
+  if(path==='switch-role'){current=route.request().postDataJSON().role;data={ok:true,judging_policy:{mode:'all_stages_test'},account:account()};}
   if(path==='organizer-queue')data={ok:true,applications:[],registration_management_enabled:true};
   if(path==='organizer-registrations')data={ok:true,registrations:[row],next_offset:null};
   if(path==='organizer-registration-audit')data={ok:true,events:[{occurred_at:1700000000,action:'edit',result:'success',actor_id:'FICTIONAL AUDIT ACTOR',diff:{}}]};
