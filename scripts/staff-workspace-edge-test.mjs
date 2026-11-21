@@ -151,6 +151,14 @@ const finalOnly=spawnSync(process.execPath,['scripts/final-only-judging-isolated
 process.stdout.write(finalOnly.stdout||'');process.stderr.write(finalOnly.stderr||'');
 assert.equal(finalOnly.status,0,finalOnly.error?.message||'Current final-only judging policy failed');
 
+const supplement=spawnSync(process.execPath,['scripts/five-demo-supplement-isolated-test.mjs',dependencies,join(evidence,'five-demo-supplement')],{cwd:repo,encoding:'utf8',timeout:180000});
+process.stdout.write(supplement.stdout||'');process.stderr.write(supplement.stderr||'');
+assert.equal(supplement.status,0,supplement.error?.message||'Five-demo supplement D1 consistency failed');
+
 const publicContact=spawnSync(process.execPath,['scripts/public-member-contact-isolated-test.mjs',dependencies,join(evidence,'public-member-contact')],{cwd:repo,encoding:'utf8',timeout:180000});
 process.stdout.write(publicContact.stdout||'');process.stderr.write(publicContact.stderr||'');
 assert.equal(publicContact.status,0,publicContact.error?.message||'Public member private contact regression failed');
+
+const additional=spawnSync(process.execPath,['scripts/remaining-browser-regressions.mjs'],{cwd:repo,encoding:'utf8',timeout:330000});
+process.stdout.write(additional.stdout||'');process.stderr.write(additional.stderr||'');
+assert.equal(additional.status,0,additional.error?.message||'Additional browser regression suite failed');
