@@ -75,7 +75,7 @@ async function newSession(env,a){
  return token;
 }
 function publicAccount(a,env){return {id:a.id,role:a.role,available_roles:a.email?grantedRoles(a.email,env):['member']}}
-async function ownsApplication(env,a,ownerId){
+export async function ownsApplication(env,a,ownerId){
  if(a.usernameAccount)return a.id===ownerId;
  const owner=await env.DB.prepare('SELECT email_fingerprint FROM e2e_accounts WHERE id=?').bind(ownerId).first();
  if(!owner)return false;
@@ -96,7 +96,7 @@ async function bodyJSON(request,max=2600){
  const raw=await request.text();if(raw.length>max)return null;
  try{const value=JSON.parse(raw);return value&&typeof value==='object'&&!Array.isArray(value)?value:null}catch{return null}
 }
-async function account(request,env){
+export async function account(request,env){
  const match=request.headers.get('cookie')?.match(new RegExp('(?:^|;\\s*)'+COOKIE+'=([a-f0-9]{64})(?:;|$)'));
  if(!match)return null;
  const fingerprint=await sign(env,'session:'+match[1]);

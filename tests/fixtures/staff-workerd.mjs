@@ -18,29 +18,29 @@ export const fixtures=Array.from({length:20},(_,index)=>{
   language:count>=19?'Nepali':(index%2?'Mandarin':'Nepali'),number:count,phase,demos,
   region:index%2?'B':'A',approved:count%7!==0,submittedStatus:count%7===0?'needs_info':'submitted'};
 });
-export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'dist')){
+export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'dist'),options={}){
  const require=createRequire(join(dependencies,'staff-local-loader.cjs'));
  const {build}=require('esbuild');
  const {Miniflare,Response,convertV4MiniflareOptions}=require('miniflare');
  const {unstable_splitSqlQuery}=require('wrangler');
- const [{text:script}]=(await build({absWorkingDir:repo,entryPoints:['backend/staging-registration-worker.js'],bundle:true,platform:'neutral',format:'esm',write:false})).outputFiles;
+ const [{text:script}]=(await build({absWorkingDir:repo,entryPoints:[options.stageRehearsal?'backend/stage-test-worker.js':'backend/staging-registration-worker.js'],bundle:true,platform:'neutral',format:'esm',write:false})).outputFiles;
  const state=await mkdtemp(join(tmpdir(),'ghv-staff-d1-'));
  const removeState=async()=>{
   const prefix=join(resolve(tmpdir()),'ghv-staff-d1-');
   if(!state.startsWith(prefix))throw Error('Disposable database path is outside the TEST directory.');
   await rm(state,{recursive:true,force:true,maxRetries:3,retryDelay:100});
  };
- const identity=randomBytes(32).toString('hex'),tokens=Object.fromEntries(fixtureRole.map(role=>[role,randomBytes(32).toString('hex')]));
+ const identity=randomBytes(32).toString('hex'),tokens=Object.fromEntries([...fixtureRole,...(options.stageRehearsal?['reviewer-three']:[])].map(role=>[role,randomBytes(32).toString('hex')]));
  const hmac=value=>createHmac('sha256',identity).update(value).digest('hex');
  const dist=resolve(assets);
  const mf=new Miniflare(convertV4MiniflareOptions({host:'127.0.0.1',resourcePersistencePath:state,enableDevRegistry:false,workers:[{
   modules:true,script,compatibilityDate:'2026-10-28',d1Databases:{E2E_DB:'staff-workspace-fictional-only'},
-  bindings:{STAGING_IDENTITY_SECRET:identity,STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
+  bindings:{STAGING_STAGE_REHEARSAL_ENABLED:options.stageRehearsal?'true':'false',STAGING_IDENTITY_SECRET:identity,STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
    STAGING_PASSWORD_SIGNUP_ENABLED:'true',STAGING_STAFF_TURNSTILE_REQUIRED:'true',STAGING_ADMIN_MANAGEMENT_ENABLED:'true',
    STAGING_TEST_APPROVAL_ENABLED:'true',STAGING_FRONTLINE_2027_ENABLED:'true',STAGING_FIVE_DEMO_REHEARSAL:'true',
    STAGING_MUSE_AUDITION_ENABLED:'true',STAGING_PROFILE_URLS_ENABLED:'true',
    STAGING_ALLOWED_EMAILS:fixtures.map(row=>row.email).join(','),STAGING_ORGANIZER_EMAILS:mail('organizer'),
-   STAGING_REVIEWER_EMAILS:[mail('reviewer'),mail('reviewer-two')].join(','),
+   STAGING_REVIEWER_EMAILS:[mail('reviewer'),mail('reviewer-two'),...(options.stageRehearsal?[mail('reviewer-three')]:[])].join(','),
    STAGING_TURNSTILE_SITE_KEY:'0xfictionalstaffchallenge',STAGING_TURNSTILE_SECRET_KEY:'0xfictionalstaffsecret'},
   outboundService:()=>new Response(null,{status:403}),
   serviceBindings:{ASSETS:async request=>{
@@ -56,6 +56,7 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
   const db=await mf.getD1Database('E2E_DB');
   const migrations=join(repo,'backend','migrations');
   const names=(await readdir(migrations)).filter(name=>/^10(?:00|03|04|05|07|09|10|11|12|13|14|15|16|17|18|19)_.*\.sql$/.test(name)).sort();
+  if(options.stageRehearsal)names.push('1020_stage_ledger_ISOLATED_TEST_ONLY.sql');
   for(const name of names){
    const statements=unstable_splitSqlQuery(await readFile(join(migrations,name),'utf8'));
    await db.batch(statements.map(sql=>db.prepare(sql)));
@@ -65,6 +66,7 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
    .bind(id,hmac('email:'+email),'fictional-testing',role,now,now);
   const organizer=numericId('a000',1),reviewer=numericId('a000',2),reviewerTwo=numericId('a000',3);
   const staff=[[organizer,'organizer','organizer'],[reviewer,'reviewer','reviewer'],[reviewerTwo,'reviewer-two','reviewer']];
+  if(options.stageRehearsal)staff.push([numericId('a000',4),'reviewer-three','reviewer']);
   await db.batch(staff.map(([id,key,role])=>account(id,mail(key),role)));
   for(const item of fixtures){
    const {id,number,region,email,memberId,stageName,phase,demos,language,approved,submittedStatus}=item;
@@ -84,6 +86,7 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
    }
    await db.batch(rows);
   }
+  if(options.stageRehearsal&&options.seedStage!==false){const {seedStageFixture}=await import('./stage-seed.mjs');await seedStageFixture(db,fixtures,staff.filter(row=>row[2]==='reviewer').map(row=>row[0]));}
   await db.batch([...staff.map(([id,key])=>[id,key,true]),[fixtures[0].memberId,'member',false]].map(([id,key,isStaff])=>
    db.prepare('INSERT INTO e2e_sessions VALUES(?,?,?,?)').bind(hmac((isStaff?'staff-session:':'session:')+tokens[key]),id,now+5400,now)));
   const origin=(await mf.ready).origin;
