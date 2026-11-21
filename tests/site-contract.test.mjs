@@ -38,8 +38,8 @@ test('member and staff share server-issued identity but never fake official paym
  for(const path of ['update-application','delete-application','reviewer-queue','organizer-queue'])assert.match(api,new RegExp(path));
  assert.match(backend,/account_id=\?/);assert.match(backend,/payment_status='unpaid'/);
  const locale=await read('public/page-locale.js');
- assert.match(api,/mt\('testComplete'\)/); // TEST receipt must remain explicitly non-official
- assert.match(api,/result\.testOnly!==true/);
+ assert.match(api,/entryReviewKey/); // The member dashboard reports receipt and review.
+ assert.doesNotMatch(api,/api\('mock-payment'/);
  assert.match(locale,/No real payment/);
  for(const lang of ['en','ne','zh'])assert.match(locale,new RegExp('"'+lang+'"\\s*:'));
  assert.match(member,/id="start-application"/);
@@ -50,7 +50,8 @@ test('member and staff share server-issued identity but never fake official paym
  assert.match(member,/id="university-statement"/);
  assert.match(locale,/60–90 seconds/);
  assert.match(api,/mt\('delete'\)/);
- assert.match(api,/payment_status==='simulated_paid'/);
+ assert.match(api,/entryReviewKey/);
+ assert.match(api,/organizerState/);
  assert.match(api,/callout.hidden=hasEntries/);
  assert.match(member,/data-lang="zh"/);
  assert.match(member,/page-locale\.js/);
@@ -80,7 +81,8 @@ test('backoffice roster retains one guarded staff entry and one scoring workbenc
  assert.match(html,/data-page="back"/);
  assert.match(html,/data-role-tab="reviewer"/);
  assert.match(js,/if\(page==='back'\)/);
- assert.match(js,/api\('score',payload\)/);
+ assert.match(js,/api\(single\?'january-video-score':'score',payload\)/);
+ assert.match(js,/scoresEqual\(readStored\(row\),payload\)/);
  assert.doesNotMatch(js,/ghv_photo_url|ghv_gender/);
 });
 
@@ -278,7 +280,7 @@ test('brand pages omit image provenance claims in all languages while retaining 
  assert.match(home,/approved-grand-hall-20261114\.jpg/);
  assert.match(home,/approved-peace-tower-20261114\.jpg/);
  assert.match(legacy,/Do not enter real personal information/);
- assert.match(home,/正式比賽報名與真實付款尚未開放/);
+ assert.match(home,/正式比賽報名尚未開放/); // 2026-11-18 Muse/Alan: public notice omits payment
 });
 
 

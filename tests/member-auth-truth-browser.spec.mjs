@@ -81,29 +81,18 @@ test('Nepal singer onboarding CTA and category guidance work on mobile (syntheti
  await page.screenshot({path:'test-results/ghv-singer-ux-20261104/02-mobile-category-and-guidance.png'});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });
-test('TEST payment state is displayed after explicit confirmation, never claimed as real payment (synthetic UI screenshot)',async({page})=>{
- let paid=false;
- await page.setViewportSize({width:1280,height:820});
- await page.route('**/api/e2e/**',async r=>{
-  const u=new URL(r.request().url()),p=u.pathname;
-  let payload;
-  if(p.endsWith('/me'))payload={ok:true,account:{id:'synthetic-member',role:'member'}};
-  else if(p.endsWith('/applications'))payload={ok:true,applications:[{id:'TEST-ENTRY-0001',stage_name:'TEST Singer',song_title:'Example Song',category:'university',round_code:'2027-04',status:paid?'under_review':'submitted',payment_status:paid?'simulated_paid':'unpaid',demo_url:'https://youtu.be/abcdef'}]};
-  else if(p.endsWith('/mock-payment')){paid=true;payload={ok:true,status:'simulated_paid',testOnly:true,realCharge:false,amount_npr:500};}
-  else payload={ok:false,error:'not_found'};
-  await r.fulfill({status:payload.ok?200:404,contentType:'application/json',body:JSON.stringify(payload)});
+test('previously simulated entries show the review state without a checkout control',async({page})=>{
+ await page.route('**/api/e2e/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  const data=path.endsWith('/me')?{ok:true,account:{id:'synthetic-member',role:'member'}}:
+   {ok:true,applications:[{id:'TEST-ENTRY-0001',stage_name:'TEST Singer',song_title:'Example Song',category:'university',round_code:'2027-04',status:'under_review',payment_status:'simulated_paid',demo_url:'https://youtu.be/abcdef',approval_state:'pending'}]};
+  await route.fulfill({json:data});
  });
- page.on('dialog',d=>d.accept());
  await page.goto('/member.html#login');
  await page.locator('[data-lang=en]').click();
- await expect(page.getByText('Complete TEST checkout (no charge)')).toBeVisible();
- await page.getByText('Complete TEST checkout (no charge)').click();
- await expect(page.locator('#test-completion')).toBeVisible();
- await expect(page.locator('#test-completion')).toContainText('TEST REGISTRATION COMPLETE');
- await expect(page.locator('#test-completion')).toContainText('No payment charged');
- await expect(page.getByText('✓ TEST checkout complete')).toBeVisible();
- await page.locator('#test-completion').scrollIntoViewIfNeeded();
- await page.screenshot({path:'test-results/ghv-singer-ux-20261104/03-desktop-mock-payment-receipt.png'});
+ await expect(page.locator('#entries')).toContainText('Submitted for organizer approval');
+ await expect(page.getByRole('button',{name:/checkout|payment/i})).toHaveCount(0);
+ await expect(page.locator('#test-completion')).toContainText('Submitted for organizer approval');
 });
 test('latest news remains short expandable cards (synthetic UI screenshot)',async({page})=>{
  await page.setViewportSize({width:390,height:844});
@@ -278,29 +267,45 @@ test('main member page sends a fresh Turnstile token and verifies the same mailb
  await page.locator('#member-code-form [name=code]').fill('123456');
  await page.locator('#member-code-form button[type=submit]').click();
  await expect(page.locator('#start-application')).toBeVisible();
+ await expect(page.locator('#application-form-heading')).toBeFocused();
  expect(requests).toEqual([
   {email:'singer@example.invalid',role:'member',turnstile_token:'synthetic-token'},
   {email:'singer@example.invalid',challenge_id:'synthetic-challenge',code:'123456'}
  ]);
 });
 
-test('signed-in singer can type fictional private fields while server-side storage remains gated',async({page})=>{
- await page.route('**/api/e2e/**',async r=>{
-  const endpoint=new URL(r.request().url()).pathname;
-  const payload=endpoint.endsWith('/me')?{ok:true,account:{id:'test-private-preview',role:'member'},muse_form_enabled:false}:
-   endpoint.endsWith('/applications')?{ok:true,applications:[]}:{ok:false,error:'not_found'};
-  await r.fulfill({status:payload.ok?200:404,contentType:'application/json',body:JSON.stringify(payload)});
+test('unavailable private fields do not collect input or block a test entry',async({page})=>{
+ let sent=null;
+ await page.route('**/api/e2e/**',async route=>{
+  const req=route.request(),endpoint=new URL(req.url()).pathname;
+  let data={ok:true,applications:[]};
+  if(endpoint.endsWith('/me'))data={ok:true,account:{id:'test-private-preview',role:'member'},muse_form_enabled:false,frontline_form_enabled:true,nepal_locations_enabled:true,five_demo_enabled:true,five_demo_january_only:true};
+  else if(endpoint.endsWith('/applications')&&req.method()==='POST'){sent=req.postDataJSON();data={ok:true,application_id:'TEST-READY'};}
+  return route.fulfill({json:data});
  });
  await page.goto('/member.html#register');
- await page.locator('[data-lang=zh]').click();
  await expect(page.locator('#application-details')).toBeVisible();
- await expect(page.locator('#muse-test-fields')).toBeEnabled();
- await expect(page.locator('#muse-fields-title')).toHaveText('報名資料');
- await page.locator('#muse-test-fields [name=full_name]').fill('TEST FICTIONAL ONLY');
- await page.locator('#muse-test-fields [name=contact_phone]').fill('+977 9800000000');
- await expect(page.locator('#muse-test-fields [name=contact_phone]')).toHaveValue('+977 9800000000');
- await expect(page.locator('#muse-fields-notice')).toContainText('只供介面測試');
- await expect(page.locator('#member-panel')).toBeVisible();
+ await expect(page.locator('#muse-test-fields [name=full_name]')).toBeDisabled();
+ await expect(page.locator('#muse-fields-notice')).toContainText('可繼續');
+ await page.locator('[name=competition_region]').selectOption('B');
+ await page.locator('[name=eligibility_basis]').selectOption('graduated');
+ await page.locator('[name=stage_name]').fill('TEST Singer');
+ await page.locator('[name=province]').selectOption('lumbini');
+ await page.locator('[name=location_detail]').fill('Sample Municipality');
+ await page.locator('[name=affiliation]').fill('Sample College');
+ await page.locator('[name=song_title]').fill('TEST Song');
+ await page.locator('[name=original_artist]').fill('TEST Artist');
+ await page.locator('[name=song_language]').selectOption('Nepali');
+ await page.locator('[name=song_key]').selectOption('Unknown');
+ await page.locator('[name=demo_url]').fill('https://youtu.be/dQw4w9WgXcQ');
+ await page.locator('[name=video_confirmed]').check();
+ await page.locator('[name=no_exclusive_contract]').check();
+ await page.locator('[name=nonreligious_song_ack]').check();
+ await page.locator('#application-form button[type=submit]').click();
+ await expect(page.locator('#member-status')).toContainText('TEST-READY');
+ expect(sent).toMatchObject({competition_region:'B',eligibility_basis:'graduated',province:'lumbini'});
+ expect(sent).not.toHaveProperty('full_name');
+ expect(sent).not.toHaveProperty('contact_email');
 });
 
 test('2027 singer may add up to five separately described demo videos without mobile overflow',async({page})=>{

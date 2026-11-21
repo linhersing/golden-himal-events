@@ -1,0 +1,246 @@
+/* Golden Himal Palace | OFFICIAL DOMAIN staff backoffice visual skin
+   Only active when official-backoffice-decor.js confirms the exact canonical hostname.
+   Pure visual layer: NO changes to authentication, OTP, Turnstile, permissions or routes. */
+
+body[data-page="back"].ghp-official-backoffice {
+  --ghp-office-wine: #49303c;
+  --ghp-office-wine-deep: #32242e;
+  --ghp-office-gold: #cda56e;
+  --ghp-office-paper: #fffdfa;
+  min-height: 100vh;
+  color: #40302f;
+  background:
+    radial-gradient(ellipse at 15% 8%, rgba(236, 196, 135, .38), transparent 40%),
+    radial-gradient(ellipse at 90% 75%, rgba(151, 97, 104, .14), transparent 47%),
+    linear-gradient(165deg, #f2e6d6 0%, #fcf8f1 47%, #f2e9e4 100%);
+  background-attachment: scroll;
+}
+
+body[data-page="back"].ghp-official-backoffice .masthead {
+  position: relative;
+  margin-top: 16px;
+  padding: 17px clamp(16px, 3vw, 30px);
+  border: 1px solid rgba(229, 193, 144, .48);
+  border-radius: 22px;
+  background: linear-gradient(114deg, #332530 0%, #543641 59%, #755047 100%);
+  box-shadow: 0 14px 38px rgba(57, 32, 42, .18);
+}
+
+body[data-page="back"].ghp-official-backoffice .masthead::after {
+  content: "";
+  position: absolute;
+  left: 26px;
+  right: 26px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(90deg, transparent, #e9c68b 25%, #e9c68b 75%, transparent);
+  opacity: .88;
+  pointer-events: none;
+}
+
+body[data-page="back"].ghp-official-backoffice .masthead .gh-brand-mark {
+  background: #fffaf0;
+  border: 1px solid rgba(235, 207, 164, .8);
+  border-radius: 12px;
+}
+
+body[data-page="back"].ghp-official-backoffice .masthead .gh-brand-type strong {
+  color: #fff7eb;
+}
+
+body[data-page="back"].ghp-official-backoffice .masthead .gh-brand-type small {
+  color: #edd2a6;
+}
+
+body[data-page="back"].ghp-official-backoffice .masthead .gh-brand-slogan {
+  color: #f5e2c1;
+}
+
+body[data-page="back"].ghp-official-backoffice .masthead > a.small-link {
+  color: #fff7ec;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+body[data-page="back"].ghp-official-backoffice .page-shell {
+  max-width: 900px;
+}
+
+body[data-page="back"].ghp-official-backoffice .page-heading {
+  margin-top: 5px;
+  color: #4e3039;
+  letter-spacing: .015em;
+}
+
+body[data-page="back"].ghp-official-backoffice .ghp-official-site-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  margin: 2px 0 15px;
+  padding: 8px 14px;
+  border: 1px solid rgba(156, 100, 70, .22);
+  border-radius: 999px;
+  background: linear-gradient(110deg, #f6e8d1, #fff7e9);
+  color: #53343e;
+  box-shadow: 0 5px 17px rgba(91, 52, 65, .06);
+  font-size: .8rem;
+  font-weight: 800;
+  letter-spacing: .025em;
+  line-height: 1.45;
+}
+
+body[data-page="back"].ghp-official-backoffice .ghp-official-site-tag::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #b9884b;
+  box-shadow: 0 0 0 3px rgba(185, 136, 75, .16);
+}
+
+body[data-page="back"].ghp-official-backoffice .staff-languages button {
+  border-color: #d9c7b2;
+  border-radius: 11px;
+  background: #fffdf8;
+  box-shadow: 0 3px 10px rgba(63, 42, 43, .05);
+}
+
+body[data-page="back"].ghp-official-backoffice .staff-languages button[aria-pressed="true"] {
+  border-color: #54323c;
+  background: #54323c;
+  color: #fffdfa;
+}
+
+body[data-page="back"].ghp-official-backoffice .staff-boundary {
+  border-left-color: #b58a55;
+  border-radius: 13px;
+  background: linear-gradient(105deg, #f6e8d0, #fff9eb);
+}
+
+body[data-page="back"].ghp-official-backoffice #back-signin {
+  position: relative;
+  overflow: visible;
+  border: 1px solid #e5d3bc;
+  border-radius: 24px;
+  padding: clamp(20px, 4.5vw, 36px);
+  background: linear-gradient(160deg, rgba(255, 255, 255, .99), rgba(255, 250, 242, .98));
+  box-shadow: 0 23px 57px rgba(83, 51, 57, .11);
+}
+
+body[data-page="back"].ghp-official-backoffice #back-signin::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 27px;
+  right: 27px;
+  height: 4px;
+  background: linear-gradient(90deg, #6d3f48, #d8b47b, #6d3f48);
+  border-radius: 0 0 7px 7px;
+  pointer-events: none;
+}
+
+body[data-page="back"].ghp-official-backoffice #back-signin h2 {
+  color: #54323c;
+}
+
+body[data-page="back"].ghp-official-backoffice #back-signin label.field input {
+  border-color: #d9c8b6;
+  border-radius: 12px;
+  background: #fffefb;
+  min-height: 52px;
+}
+
+body[data-page="back"].ghp-official-backoffice #back-signin label.field input:focus-visible {
+  outline-color: #cda56e;
+}
+
+body[data-page="back"].ghp-official-backoffice #back-signin .btn-primary {
+  border-color: #64404b;
+  background: linear-gradient(120deg, #64404b, #7a4b49);
+  color: #fff;
+  box-shadow: 0 9px 22px rgba(96, 55, 65, .17);
+}
+
+body[data-page="back"].ghp-official-backoffice #back-signin .btn-primary:hover {
+  border-color: #80515a;
+  background: linear-gradient(120deg, #744953, #925a51);
+}
+
+body[data-page="back"].ghp-official-backoffice .site-footer {
+  padding: 16px 0;
+  margin-top: 27px;
+  border-top: 1px solid rgba(128, 91, 77, .24);
+}
+
+/* The shared brand footer already exists in backoffice.html but was hidden
+   in simple.css. Show the real approved image only on the official domain. */
+body[data-page="back"].ghp-official-backoffice .ghp-universal-footer-brand {
+  display: flex !important;
+  margin-top: 24px !important;
+  padding: 25px 16px 32px !important;
+  gap: 9px !important;
+  background: linear-gradient(140deg, #f4e5d1, #fffcf6 55%, #f0ddd0) !important;
+  border-top: 2px solid #cda56e !important;
+}
+
+body[data-page="back"].ghp-official-backoffice .ghp-universal-footer-brand .ghp-footer-full-name {
+  color: #56343d;
+  font-size: clamp(1.26rem, 3vw, 2rem);
+}
+
+body[data-page="back"].ghp-official-backoffice .ghp-universal-footer-brand .ghp-universal-logo-window {
+  display: block !important;
+  width: min(265px, 83vw) !important;
+  padding: 9px;
+  border-radius: 14px;
+  background: #fffefa;
+  border: 1px solid rgba(178, 130, 78, .25);
+  box-shadow: 0 10px 28px rgba(78, 49, 52, .09);
+}
+
+body[data-page="back"].ghp-official-backoffice .ghp-universal-footer-brand p[lang=en],
+body[data-page="back"].ghp-official-backoffice .ghp-universal-footer-brand p[lang=ne] {
+  color: #755347 !important;
+  font-size: clamp(.85rem, 2.1vw, 1.05rem) !important;
+}
+
+body.staff-record-open[data-page="back"].ghp-official-backoffice .ghp-official-site-tag {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  body[data-page="back"].ghp-official-backoffice .masthead {
+    margin-top: 10px;
+    padding: 13px 12px;
+    border-radius: 15px;
+  }
+
+  body[data-page="back"].ghp-official-backoffice .masthead::after {
+    left: 12px;
+    right: 12px;
+  }
+
+  body[data-page="back"].ghp-official-backoffice .ghp-official-site-tag {
+    padding: 7px 11px;
+    margin-bottom: 12px;
+    font-size: .73rem;
+  }
+
+  body[data-page="back"].ghp-official-backoffice #back-signin {
+    padding: 19px 15px 23px;
+    border-radius: 19px;
+  }
+
+  body[data-page="back"].ghp-official-backoffice .ghp-universal-footer-brand {
+    padding: 22px 11px 27px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-page="back"].ghp-official-backoffice #back-signin .btn-primary {
+    transition: none;
+  }
+}
