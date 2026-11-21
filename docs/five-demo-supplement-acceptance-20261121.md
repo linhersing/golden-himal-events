@@ -1,6 +1,6 @@
 # Five-demo 48-hour supplement acceptance — 2026-11-21
 
-Status: local regression verified; independent review, cloud update-log readback and release acceptance remain with the coordinating task. No deployment or remote database write was performed for this change.
+Status: local regression and independent review verified; release and shared remote database acceptance remain pending. No deployment or shared database write was performed during development.
 
 ## Reproduced failure
 
@@ -41,7 +41,9 @@ node --test tests/*.test.mjs
 git diff --check
 ```
 
-The final related run passed 39/39 (25 new regression cases and 14 existing cases). The complete Node suite after those additions passed 303 tests, failed 0 and skipped 1 (304 total). The existing Windows skip is `successful SQL file import with progress output still verifies actual schema and preserved rows` in `practice-provision.test.mjs`, whose POSIX `npx` fixture runs on Linux CI. The full command is exactly the test script in `package.json`; the `npm` executable is unavailable in this shell. Diff whitespace validation passed.
+The final related run passed39/39 (25 new cases and14 existing). Exact PR full-suite totals belong to its CI run; counts from mixed worktree checkpoints include separately prepared work. The existing Windows skip is the POSIX `npx` fixture in `practice-provision.test.mjs`, which runs on Linux CI. Diff whitespace validation passed.
+
+`scripts/five-demo-supplement-isolated-test.mjs` also executes the actual bundled Worker over HTTP with disposable D1 and a verified synthetic public session. It creates one fictional five-demo entry, requests/corrects its main link, reads matching member/organizer/canonical records, preserves demos2–5, rejects foreign ownership/reviewer/second correction, and proves the original20applications/54videos are unchanged using readback and SHA256. The existing CI runtime entry runs this check. It performs no shared remote operation or real notification delivery.
 
 ## Rollback and remaining acceptance
 
