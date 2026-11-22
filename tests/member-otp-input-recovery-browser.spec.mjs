@@ -32,7 +32,7 @@ for(const language of ['zh','ne']){
   await page.locator('#member-code-form button[type="submit"]').click();
   await expect(page.locator('#member-panel')).toBeVisible();
   await expect(page.locator('#signin-panel')).toBeHidden();
-  await expect(page.locator('#muse-test-fields')).toBeEnabled();
+  await expect(page.locator('#muse-test-fields input[name="full_name"]')).toBeEnabled();
   await page.locator('#muse-test-fields input[name="full_name"]').fill('TEST SINGER');
   await expect(page.locator('#muse-test-fields input[name="full_name"]')).toHaveValue('TEST SINGER');
   await expect(page.locator('#application-form button[type="submit"]')).toBeDisabled();
@@ -59,7 +59,7 @@ for(const language of ['zh','ne']){
   });
   await page.goto('/member');
   await expect(page.locator('#member-panel')).toBeVisible();
-  await expect(page.locator('#muse-test-fields')).toBeDisabled();
+  await expect(page.locator('#muse-test-fields input[name="full_name"]')).toBeDisabled();
   await expect(page.locator('#signin-panel')).toBeHidden();
  });
 }
