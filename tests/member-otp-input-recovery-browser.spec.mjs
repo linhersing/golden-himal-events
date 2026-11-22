@@ -2,7 +2,13 @@ import {test,expect} from '@playwright/test';
 
 // No real OTP or shared D1 record is used. The fixture models a verified
 // member session and a temporary failure to fetch that member's own entries.
-for(const language of ['zh','ne']){
+for(const language of ['zh','en','ne']){
+ test('video sharing instructions clarify YouTube is optional in '+language,async({page})=>{
+  const expected={zh:'不必有自己的 YouTube 頻道',en:'No YouTube channel is required',ne:'YouTube च्यानल अनिवार्य छैन'};
+  await page.addInitScript(lang=>localStorage.setItem('ghv_ui_language_v1',lang),language);
+  await page.goto('/member');
+  await expect(page.locator('[data-l="videoPlatformSimpleNote"]')).toContainText(expected[language]);
+ });
  test('member OTP keeps editable draft and retries safely in '+language,async({page})=>{
   let verified=false,entryReads=0,submissions=0;
   await page.addInitScript(lang=>localStorage.setItem('ghv_ui_language_v1',lang),language);
