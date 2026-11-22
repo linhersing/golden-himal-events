@@ -5,6 +5,45 @@ registration uses real email and D1. Earlier static-preview checkmarks are no
 longer evidence for this runtime. Read existing Drive MASTER and AI_BRIDGE for
 the latest frontline paper and Muse/Alan decisions before a release.
 
+## Non-negotiable acceptance rule — approved 2026-11-22
+
+For **every** change to the canonical member, registration, or staff flows, do not
+claim that the site is ready unless all applicable checks below pass on
+https://goldenhimalpalace.com/ (not an old Workers preview). This rule supersedes
+older single-role, static-page, synthetic-OTP, or CI-only success claims.
+
+- [ ] Real Cloudflare human verification works for members and invited staff.
+  A legitimate six-digit OTP email **arrives** and is accepted within its
+  permitted lifetime. Failed/expired challenges show accurate localized
+  recovery text. Never bypass Turnstile, OTP, role isolation, or rate limits.
+- [ ] **Chinese (zh-Hant), English, and Nepali** each permit real text entry after
+  successful sign-in: nine authorized private contact/education fields,
+  performance name, song and video details, mobile keyboard and desktop,
+  including non-invited public members. Switching languages does not erase
+  entered text or accidentally disable authorized fields. Negative cases
+  must keep unauthorized private fields locked.
+- [ ] Actual submit returns an identifiable confirmation and application ID;
+  re-login/refresh yields the **same saved values** from Cloudflare D1. Unknown
+  results must not be mistaken for success or cause duplicate submissions.
+- [ ] The **organizer backoffice** can read that submission's authorized
+  complete information; a **separate organizer submission-notification email**
+  is actually received in the approved recipient inbox and references the
+  correct application ID/backoffice route. Do not confuse participant OTP
+  delivery with organizer notification, or API "accepted" with inbox receipt.
+  Sensitive contact/address/ID contents belong in the access-controlled
+  backoffice, not in a plain notification email without separately approved
+  privacy/security policy.
+- [ ] Record three-language desktop and **physical** phone device outcomes,
+  non-invited/invited member variants, organizer and reviewer role isolation,
+  deployed SHA, Cloudflare version, receipt/ID, and redacted inbox/D1 readback
+  evidence. A synthetic browser run alone is not frontline UAT.
+
+If any element is unimplemented, fails, or lacks live evidence, report
+**PARTIAL / BLOCKED / FAIL** with exact gap; do not declare end-to-end PASS.
+This is an acceptance requirement, **not** a claim that the backoffice mail
+notification already exists. Keep official payment, public voting, and real
+identity-document uploads off until separately authorized.
+
 ## P0 release gates — attach evidence for every relevant change
 
 - [ ] Confirm current main/PR dependencies; preserve other work and record reviewed SHA.
