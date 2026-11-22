@@ -15,12 +15,12 @@ for(const language of ['zh','ne']){
    else if(path.endsWith('/me')){
     if(!verified){status=401;body={ok:false,error:'login_required'}}
     else body={ok:true,account:{id:'member-001',role:'member',available_roles:['member']},muse_form_enabled:true,frontline_form_enabled:true,nepal_locations_enabled:true,five_demo_enabled:true};
+   }else if(path.endsWith('/applications')&&route.request().method()==='POST'){
+    submissions++;status=403;body={ok:false,error:'blocked_in_fixture'};
    }else if(path.endsWith('/applications')){
     entryReads++;
     if(entryReads===1){status=503;body={ok:false,error:'test_database_unavailable'}}
     else body={ok:true,applications:[]};
-   }else if(route.request().method()==='POST'&&path.endsWith('/applications')){
-    submissions++;status=403;body={ok:false,error:'blocked_in_fixture'};
    }
    await route.fulfill({status,contentType:'application/json',body:JSON.stringify(body)});
   });
