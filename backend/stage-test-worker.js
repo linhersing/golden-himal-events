@@ -3,6 +3,7 @@
 import {handleE2E,account,ownsApplication} from './staging-e2e.js';
 import {stageLedger} from './stage-test-ledger.js';
 import {handleVoteTest} from './final-vote-test-http.js';
+import {handleFrontlineHandoff} from './frontline-handoff-http.js';
 const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const permittedHost=host=>['127.0.0.1','localhost'].includes(host)||/^ghv-stage-test-[a-z0-9-]+\.linhersing\.workers\.dev$/.test(host);
 // Inspect a bounded clone so the existing auth handler still receives its
@@ -57,12 +58,15 @@ export default {async fetch(request,env){
     if(!['organizer','reviewer'].includes(challenge.kind))return json({ok:false,error:'staff_only'},403);
    }
   }
-  return handleE2E(request,{...env,DB:env.E2E_DB});
+  const response=await handleE2E(request,{...env,DB:env.E2E_DB});
+  if(url.pathname==='/api/e2e/me'&&response.ok){const body=await response.json();return Response.json({...body,frontline_handoff_available:body.account?.role==='organizer'&&env.STAGING_FRONTLINE_HANDOFF_ENABLED==='true'},{status:response.status,headers:response.headers})}
+  return response;
  }
  if(url.pathname==='/api/vote-test')return handleVoteTest(request,env);
+ if(url.pathname==='/api/frontline-handoff-test')return handleFrontlineHandoff(request,env);
  if(url.pathname!=='/api/stage-test'){
   const response=await env.ASSETS.fetch(request);
-  if(!['/staff-login.html','/staff-login.js','/staff-login.css'].includes(url.pathname))return response;
+  if(!['/staff-login.html','/staff-login.js','/staff-login.css','/frontline-handoff.html','/frontline-handoff.js','/frontline-handoff.css'].includes(url.pathname))return response;
   const headers=new Headers(response.headers);
   headers.set('Cache-Control','no-store');
   headers.set('Referrer-Policy','no-referrer');

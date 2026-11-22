@@ -36,7 +36,7 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
  const dist=resolve(assets);
  const mf=new Miniflare(convertV4MiniflareOptions({host:'127.0.0.1',resourcePersistencePath:state,enableDevRegistry:false,workers:[{
   modules:true,script,compatibilityDate:'2026-10-28',d1Databases:{E2E_DB:'staff-workspace-fictional-only'},
-  bindings:{STAGING_ONLINE_JUDGING_MODE:options.judgingMode||'final_only',STAGING_FINAL_VOTE_REHEARSAL_ENABLED:options.voteRehearsal?'true':'false',FINAL_VOTE_TURNSTILE_SITE_KEY:'1x00000000000000000000AA',FINAL_VOTE_CREDENTIAL_SECRET:identity,FINAL_VOTE_TURNSTILE_SECRET:'fictional-turnstile-secret-over-32-characters',STAGING_STAGE_REHEARSAL_ENABLED:options.stageRehearsal?'true':'false',STAGING_IDENTITY_SECRET:identity,STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
+  bindings:{STAGING_FRONTLINE_HANDOFF_ENABLED:options.frontlineHandoff?'true':'false',STAGING_ONLINE_JUDGING_MODE:options.judgingMode||'final_only',STAGING_FINAL_VOTE_REHEARSAL_ENABLED:options.voteRehearsal?'true':'false',FINAL_VOTE_TURNSTILE_SITE_KEY:'1x00000000000000000000AA',FINAL_VOTE_CREDENTIAL_SECRET:identity,FINAL_VOTE_TURNSTILE_SECRET:'fictional-turnstile-secret-over-32-characters',STAGING_STAGE_REHEARSAL_ENABLED:options.stageRehearsal?'true':'false',STAGING_IDENTITY_SECRET:identity,STAGING_E2E_ENABLED:'true',STAGING_SUBMISSION_MODE:'links',
    STAGING_PASSWORD_SIGNUP_ENABLED:'true',STAGING_STAFF_TURNSTILE_REQUIRED:'true',STAGING_ADMIN_MANAGEMENT_ENABLED:'true',
    STAGING_TEST_APPROVAL_ENABLED:'true',STAGING_FRONTLINE_2027_ENABLED:'true',STAGING_FIVE_DEMO_REHEARSAL:'true',
    STAGING_MUSE_AUDITION_ENABLED:'true',STAGING_PROFILE_URLS_ENABLED:'true',
@@ -62,6 +62,7 @@ export async function isolatedStaffRuntime(repo,dependencies,assets=join(repo,'d
   const names=(await readdir(migrations)).filter(name=>/^10(?:00|03|04|05|07|09|10|11|12|13|14|15|16|17|18|19)_.*\.sql$/.test(name)).sort();
   if(options.stageRehearsal)names.push('1020_stage_ledger_ISOLATED_TEST_ONLY.sql');
   if(options.voteRehearsal)names.push('1021_final_vote_ISOLATED_TEST_ONLY.sql');
+  if(options.frontlineHandoff)names.push('1022_frontline_handoff_ISOLATED_TEST_ONLY.sql');
   for(const name of names){
    const statements=unstable_splitSqlQuery(await readFile(join(migrations,name),'utf8'));
    await db.batch(statements.map(sql=>db.prepare(sql)));

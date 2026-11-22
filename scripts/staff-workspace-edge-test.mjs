@@ -176,3 +176,7 @@ assert.equal(additional.status,0,additional.error?.message||'Additional browser 
 const staffLogin=spawnSync(process.execPath,['scripts/stage-staff-login-isolated-test.mjs',dependencies,join(evidence,'stage-staff-login')],{cwd:repo,encoding:'utf8',timeout:120000});
 process.stdout.write(staffLogin.stdout||'');process.stderr.write(staffLogin.stderr||'');
 assert.equal(staffLogin.status,0,staffLogin.error?.message||'Isolated staff OTP login failed');
+
+const handoff=spawnSync(process.execPath,['scripts/frontline-handoff-isolated-test.mjs',dependencies,join(evidence,'frontline-handoff')],{cwd:repo,encoding:'utf8',timeout:180000});
+process.stdout.write(handoff.stdout||'');process.stderr.write(handoff.stderr||'');
+assert.equal(handoff.status,0,handoff.error?.message||'Frontline manual final handoff failed');
