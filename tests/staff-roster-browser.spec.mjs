@@ -212,7 +212,7 @@ for(const [device,width] of [['desktop',1280],['mobile',375]]){
    if(path==='organizer-queue')json={ok:true,applications:[],registration_management_enabled:true};
    if(path==='organizer-registrations'){
     const filter=url.searchParams.get('state'),query=url.searchParams.get('q');
-    json={ok:true,registrations:(filter==='all'||filter===row.state)&&(!query||row.stage_name.includes(query)||row.id.includes(query))?[row]:[],next_offset:null};
+    json={ok:true,registrations:(filter==='all'||filter==='available'&&row.state!=='deleted'||filter===row.state)&&(!query||row.stage_name.includes(query)||row.id.includes(query))?[row]:[],next_offset:null};
    }
    if(path==='organizer-registration-action'){
     const {action,version,updated_at,stage_name,affiliation}=route.request().postDataJSON();
@@ -231,7 +231,7 @@ for(const [device,width] of [['desktop',1280],['mobile',375]]){
   await page.locator('#staff-management-open').click();
   await expect(cards).toContainText('Fictional Singer');
   await panel.getByLabel('搜尋姓名、曲目或編號').fill('Fictional');
-  await filter.selectOption('all');
+  await filter.selectOption('available');
   await search.click();
   await cards.getByRole('button',{name:/Fictional Singer/}).click();
   const record=page.locator('#organizer-entry-content');
