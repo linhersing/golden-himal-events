@@ -15,6 +15,7 @@ import {MUSE_FIELDS,museHasFields,parseMuseAudition,museAuditionReady,insertMuse
 import {handleVideoSupplement,supplementColumns,supplementGuard,supplementJoin,videoSupplementsReady} from './test-video-supplement.js';
 import {handleAdminRegistration,handleOrganizerContact,managedEraseAvailable,drainRemovedMemberMedia} from './staging-admin-registration.js';
 import {handleCorrectionRoute} from './member-corrections.js';
+import {registrationWindow} from './registration-window.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
  * No official entries, actual payments, or exposed R2 URLs.
@@ -128,6 +129,7 @@ async function requestCode(request,env){
  if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i.test(email)||email.length>250)return deny('invalid_email');
  const invited=emailAllowed(email,env,role);
  const publicTest=!invited&&role==='member'&&await publicSignupReady(env);
+ if(!invited&&role==='member'&&!registrationWindow(env).testSubmissionsAllowed)return deny('registration_window_closed',403);
  const staffProtected=staffProtection(env,role);
  if(staffProtected){
   const config=await staffLoginConfig(env);
@@ -253,6 +255,7 @@ async function applications(a,env,supplements){
 }
 async function submitApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
+ if(!registrationWindow(env).testSubmissionsAllowed)return deny('registration_window_closed',403);
  const b=await bodyJSON(request,13500);if(!b)return deny('invalid_json');
  if(!['2027-01','2027-04'].includes(b.round_code))return deny('invalid_audition_window');
  if(b.round_code==='2027-04'){
@@ -581,9 +584,10 @@ export async function handleE2E(request,env){
  if(isPost&&!sameOrigin(request))return deny('origin_not_allowed',403);
  if(!['GET','POST'].includes(request.method))return deny('method_not_allowed',405);
  try{
+  if(pathname==='/api/e2e/registration-window'&&!isPost)return json({ok:true,...registrationWindow(env)},200,{'Cache-Control':'no-store'});
   if(pathname==='/api/e2e/staff-login-config'&&!isPost)return json({ok:true,testOnly:true,...await staffLoginConfig(env)});
   if(pathname==='/api/e2e/signup-config'&&!isPost){
-   const ready=await publicSignupReady(env);
+   const ready=await publicSignupReady(env)&&registrationWindow(env).testSubmissionsAllowed;
    return json(ready?{ok:true,testOnly:true,mode:'public_test',siteKey:env.STAGING_TURNSTILE_SITE_KEY}:
     {ok:true,testOnly:true,mode:'invited'});
   }
