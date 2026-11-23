@@ -59,8 +59,13 @@ export async function checkRecycle(runtime,browser,evidence,expect){
    await page.screenshot({path:join(evidence,'recycle-selected-complete-'+device+'.png')});
    await frame.locator('#organizer-entry-back').click();
    await frame.locator('#admin-registration-search select[name=state]').selectOption('deleted');
-   await expect(frame.locator('#admin-registration-list input[data-admin-select-id]:not([disabled])')).toHaveCount(2);
-   await frame.locator('#admin-select-page').check();
+   // Only restore the same checked IDs, even if unrelated recycle-bin
+   // records also exist from earlier TEST sessions.
+   for(const id of ids){
+    const checkbox=frame.locator('#admin-registration-list input[data-admin-select-id="'+id+'"]');
+    await expect(checkbox).toBeVisible();await checkbox.check();
+   }
+   await expect(frame.locator('#admin-selected-count')).toHaveText('已選 2 筆');
    const restorePreview=page.waitForResponse(r=>r.url().endsWith(endpoint)&&r.request().postDataJSON()?.operation==='preview'&&r.request().postDataJSON()?.action==='restore');
    await frame.locator('#admin-selected-action').click();
    const restore=await (await restorePreview).json();
