@@ -31,7 +31,7 @@ const text={
  countdownLabel:['दर्ता खुल्न बाँकी',''],day:'दिन',hour:'घण्टा',minute:'मिनेट'}
 };
 let info=null,offset=0;
-const lang=()=>['en','ne','zh'].includes(window.GHVLocale?.lang)?window.GHVLocale.lang:'en';
+const lang=()=>['en','ne','zh'].includes(window.GHVLocale?.lang)?window.GHVLocale.lang:(document.documentElement.lang?.startsWith('zh')?'zh':document.documentElement.lang?.startsWith('ne')?'ne':'en');
 function draw(){
  const t=text[lang()],state=info?.phase&&t[info.phase]?info.phase:'unavailable';
  const [title,description]=t[state];
@@ -63,6 +63,7 @@ async function refresh(){
  draw();
 }
 window.addEventListener('ghv:languagechange',draw);
+document.querySelectorAll('[data-lang]').forEach(button=>button.addEventListener('click',()=>queueMicrotask(draw)));
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 refresh();
 setInterval(draw,30000);
