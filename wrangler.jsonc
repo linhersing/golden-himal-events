@@ -47,7 +47,8 @@
     "STAGING_FIVE_DEMO_REHEARSAL": "true",
     "STAGING_MUSE_AUDITION_ENABLED": "true",
     "STAGING_STAFF_TURNSTILE_REQUIRED": "true",
-    "STAGING_ADMIN_MANAGEMENT_ENABLED": "true"
+    "STAGING_ADMIN_MANAGEMENT_ENABLED": "true",
+    "GHV_REGISTRATION_WINDOW_MODE": "testing"
   },
   "triggers": {"crons": ["*/5 * * * *"]},
   "observability": {
