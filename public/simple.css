@@ -2116,34 +2116,34 @@ body[data-page="back"] .staff-otp-expiry[data-state="error"]{
 
 
 /* Audition opening status: visible before an applicant signs in. */
-body[data-page="member"] .ghv-entry-window{
+:is(body[data-page="member"],body[data-page="home"]) .ghv-entry-window{
  display:flex;gap:18px;align-items:center;justify-content:space-between;
  border:1px solid #ceb789;border-radius:18px;
  background:linear-gradient(125deg,#fffdf8,#f5eddd);
  padding:20px 24px;margin:18px auto 26px;box-shadow:0 4px 18px rgba(48,36,23,.07);
 }
-body[data-page="member"] .ghv-entry-window-text{min-width:0}
-body[data-page="member"] .ghv-entry-window-kicker{
+:is(body[data-page="member"],body[data-page="home"]) .ghv-entry-window-text{min-width:0}
+:is(body[data-page="member"],body[data-page="home"]) .ghv-entry-window-kicker{
  color:#795e3b;font-size:.74rem;letter-spacing:.10em;font-weight:800;
 }
-body[data-page="member"] #ghv-entry-window-title{
+:is(body[data-page="member"],body[data-page="home"]) #ghv-entry-window-title{
  margin:5px 0 6px;font-size:clamp(1.05rem,2.9vw,1.36rem);
  color:#392d20;line-height:1.35;
 }
-body[data-page="member"] #ghv-entry-window-note{margin:0;color:#605548;line-height:1.65}
-body[data-page="member"] #ghv-entry-window-clock{
+:is(body[data-page="member"],body[data-page="home"]) #ghv-entry-window-note{margin:0;color:#605548;line-height:1.65}
+:is(body[data-page="member"],body[data-page="home"]) #ghv-entry-window-clock{
  flex-shrink:0;border-radius:12px;background:#47372b;color:#fff;
  font-variant-numeric:tabular-nums;font-size:clamp(.85rem,2.3vw,1.05rem);
  padding:13px 16px;text-align:center;white-space:normal;
 }
-body[data-page="member"] .ghv-entry-window[data-phase="testing"]{
+:is(body[data-page="member"],body[data-page="home"]) .ghv-entry-window[data-phase="testing"]{
  border-color:#b6c6bc;background:linear-gradient(120deg,#f9fffb,#eef6f0);
 }
-body[data-page="member"] .ghv-entry-window[data-phase="closed"],
-body[data-page="member"] .ghv-entry-window[data-phase="awaiting_launch_approval"]{
+:is(body[data-page="member"],body[data-page="home"]) .ghv-entry-window[data-phase="closed"],
+:is(body[data-page="member"],body[data-page="home"]) .ghv-entry-window[data-phase="awaiting_launch_approval"]{
  background:#f5f3ef;border-color:#d8d2ca;
 }
 @media(max-width:600px){
- body[data-page="member"] .ghv-entry-window{flex-direction:column;align-items:stretch;padding:16px}
- body[data-page="member"] #ghv-entry-window-clock{width:100%}
+ :is(body[data-page="member"],body[data-page="home"]) .ghv-entry-window{flex-direction:column;align-items:stretch;padding:16px}
+ :is(body[data-page="member"],body[data-page="home"]) #ghv-entry-window-clock{width:100%}
 }
