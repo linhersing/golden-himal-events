@@ -8,6 +8,7 @@ import {spawnSync} from 'node:child_process';
 import {createDecipheriv} from 'node:crypto';
 import {securitySnapshot,monitorSecurity,evaluateSecuritySignals} from '../backend/security-monitor.js';
 import {validateD1Export,encryptVerifiedExport} from '../scripts/secure-d1-export.mjs';
+import {unsealAndVerify} from '../scripts/recover-d1-export.mjs';
 
 const EMPTY_SIGNALS={staffRequestMax:0,staffVerifyMax:0,exhaustedChallenges:0,
   newChallenges:0,staffDenied:0,adminDeletes:0};
@@ -107,4 +108,33 @@ test('backup CLI requires key, writes encrypted-only output, and will not overwr
   assert.equal(readFileSync(encrypted).subarray(0,4).toString(),'GHV1');
   assert.notEqual(spawnSync(process.execPath,command,{env:{...env,GHV_D1_BACKUP_KEY_HEX:'35'.repeat(32)}}).status,0);
  }finally{rmSync(dir,{recursive:true,force:true})}
+});
+
+
+test('tampering and wrong key cannot reveal D1 SQL',()=>{
+ const source=Buffer.from(goodSQL,'utf8');
+ const key=Buffer.alloc(32,0x44),other=Buffer.alloc(32,0x55);
+ const {sealed}=encryptVerifiedExport(source,key);
+ assert.deepEqual(unsealAndVerify(sealed,key),source);
+ assert.throws(()=>unsealAndVerify(sealed,other));
+ const changed=Buffer.from(sealed);changed[changed.length-1]^=1;
+ assert.throws(()=>unsealAndVerify(changed,key));
+ assert.throws(()=>unsealAndVerify(Buffer.from('plaintext'),key));
+});
+
+test('recovery CLI restores to private destination without overwriting or printing applicant rows',()=>{
+ const dir=mkdtempSync(join(tmpdir(),'ghv-recovery-'));
+ try{
+  const encrypted=join(dir,'data.enc'),output=join(dir,'restored.sql');
+  const keyHex='46'.repeat(32),key=Buffer.from(keyHex,'hex');
+  writeFileSync(encrypted,encryptVerifiedExport(Buffer.from(goodSQL),key).sealed);
+  const command=[new URL('../scripts/recover-d1-export.mjs',import.meta.url).pathname,encrypted,output];
+  const env={...process.env,GHV_D1_BACKUP_KEY_HEX:keyHex};
+  const pass=spawnSync(process.execPath,command,{env,encoding:'utf8'});
+  assert.equal(pass.status,0,pass.stderr);
+  assert.equal(readFileSync(output,'utf8'),goodSQL);
+  assert.doesNotMatch(pass.stdout,/TEST-ACCOUNT|TEST-APP/i);
+  const retry=spawnSync(process.execPath,command,{env,encoding:'utf8'});
+  assert.notEqual(retry.status,0);
+ }finally{rmSync(dir,{force:true,recursive:true})}
 });
