@@ -57,7 +57,7 @@ window.GHVRegistrationBulk={create({api,t,onChanged,isAllowed}){
   root.replaceChildren();root.setAttribute('aria-busy',String(busy));
   root.append(n('h3',t(selectionAction==='restore'?'從資源回收桶還原':'移到資源回收桶')),
    n('p',t('這不是永久刪除。選手帳號、作品、成績、操作紀錄仍會保留，日後可以還原。'),'notice'),
-   n('p',t(selection?'你明確勾選了 '+selection.length+' 筆，請核對實際可處理數量後再確認。':'請返回選手名單，勾選要整理的選手。'),'minor'));
+   n('p',selection?t('你明確勾選了')+' '+selection.length+' '+t('筆')+'，'+t('請核對實際可處理數量後再確認。'):t('請返回選手名單，勾選要整理的選手。'),'minor'));
   const feedback=n('p',message||t('先預覽，再確認；不會立即刪除。'),'feedback');feedback.setAttribute('role','status');root.append(feedback);
   if(plan){
    root.append(stats([['這次動作',t(plan.action==='delete'?'移到資源回收桶':'還原到主要名單')],['這次將處理',plan.total],['受保護，不處理',plan.protected_count]]));
