@@ -42,8 +42,27 @@ export async function handleRegistrationBulk(request,env,actor,{json,deny,NOW,uu
    return json({ok:true,testOnly:true,batches:rows.results});
   }
   if(body.operation==='preview'||body.operation==='preview_restore'){
-   let candidates,protectedCount=0,source,eligibleCount;
-   if(body.operation==='preview_restore'){
+   let candidates,protectedCount=0,source,eligibleCount,explicitAction;
+   const selected=body.operation==='preview'&&body.ids!==undefined;
+   if(selected){
+    // A user's selection is never permission to delete arbitrary IDs.
+    // Only a short, unique, current list can create an audited batch preview.
+    if(!Array.isArray(body.ids)||body.ids.length<1||body.ids.length>25||
+       !['delete','restore'].includes(body.action)||
+       new Set(body.ids).size!==body.ids.length||body.ids.some(id=>!validId(id)))
+      return deny('invalid_bulk_selection',422);
+    const placeholders=body.ids.map(()=>'?').join(',');
+    const found=await db.prepare('SELECT id,version,updated_at,protected,state FROM e2e_admin_registrations WHERE id IN ('+placeholders+')')
+     .bind(...body.ids).all();
+    const byId=new Map(found.results.map(row=>[row.id,row]));
+    const matched=body.ids.map(id=>byId.get(id));
+    if(matched.some(row=>!row||body.action==='delete'&&row.state==='deleted'||
+       body.action==='restore'&&row.state!=='deleted'))return deny('admin_bulk_stale_selection',409);
+    candidates={results:matched};
+    protectedCount=matched.filter(row=>row.protected).length;
+    eligibleCount=matched.length-protectedCount;
+    explicitAction=body.action;
+   }else if(body.operation==='preview_restore'){
     source=await load(body.batch_id);
     if(!source||source.action!=='delete')return deny('admin_bulk_not_found',404);
     candidates=await db.prepare(`SELECT a.id,a.version,a.updated_at,a.protected FROM json_each(?) t
@@ -57,7 +76,7 @@ export async function handleRegistrationBulk(request,env,actor,{json,deny,NOW,uu
    }
    if(source)protectedCount=candidates.results.filter(r=>r.protected).length;
    const eligible=candidates.results.filter(r=>!r.protected),targets=eligible.slice(0,limit).map(({id,version,updated_at})=>({id,version,updated_at}));
-   const action=source?'restore':'delete',expires_at=NOW()+lifetime,remaining_count=Math.max(0,(eligibleCount??eligible.length)-limit);
+   const action=explicitAction||(source?'restore':'delete'),expires_at=NOW()+lifetime,remaining_count=Math.max(0,(eligibleCount??eligible.length)-limit);
    const batch_id=targets.length?uuid():null;
    if(batch_id)await writeEvent(db,actor,{id:batch_id,time:NOW(),target:null,action:'search',result:'success',detail:{access:scope,action,expires_at,targets,protected_count:protectedCount,remaining_count,...(source?{source_batch_id:source.batch_id}:{})}});
    return json({ok:true,testOnly:true,batch_id,action,total:targets.length,protected_count:protectedCount,remaining_count,expires_at,chunk_size:chunkSize});
