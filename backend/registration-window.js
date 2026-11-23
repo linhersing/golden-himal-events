@@ -10,8 +10,10 @@ export const OFFICIAL_END_UTC=Date.parse('2027-01-31T18:15:00Z');   // 2027-02-0
 const MODES=['testing','paused','scheduled'];
 
 export function registrationWindow(env={},now=Date.now()){
- const mode=MODES.includes(env.GHV_REGISTRATION_WINDOW_MODE)
-   ?env.GHV_REGISTRATION_WINDOW_MODE:'testing';
+ const requested=env.GHV_REGISTRATION_WINDOW_MODE;
+ // Preserve current TEST behavior only when no mode was specified at all.
+ // An operator typo must never accidentally reopen submissions.
+ const mode=requested===undefined?'testing':MODES.includes(requested)?requested:'paused';
  if(!Number.isFinite(now))throw Error('registration_window_invalid_time');
  const within=now>=OFFICIAL_START_UTC&&now<OFFICIAL_END_UTC;
  const phase=mode==='testing'?'testing'
