@@ -53,7 +53,7 @@ function draw(){
 }
 async function refresh(){
  try{
-  const res=await fetch('/api/e2e/registration-window',{cache:'no-store',credentials:'same-origin'});
+  const res=await fetch('/api/staging/registration-window',{cache:'no-store',credentials:'same-origin'});
   if(!res.ok)throw Error('window_unavailable');
   const data=await res.json();
   if(data.ok!==true||typeof data.opensAt!=='string'||!data.serverNow)throw Error('window_unavailable');
