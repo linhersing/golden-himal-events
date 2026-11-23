@@ -1,0 +1,49 @@
+# Golden Himal Voice — optional *manual* encrypted D1 SQL snapshot.
+# This does not replace existing daily Git/code or conversation archive tasks.
+# No Cloudflare keys or encryption keys are committed to this repository.
+name: Verify encrypted D1 backup (manual)
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  encrypted-d1-backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Export E2E_DB through scoped Cloudflare token and encrypt immediately
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.GHV_BACKUP_CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.GHV_BACKUP_CF_ACCOUNT_ID }}
+          GHV_D1_BACKUP_KEY_HEX: ${{ secrets.GHV_D1_BACKUP_KEY_HEX }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo 'BLOCKED: backup Cloudflare token missing'; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo 'BLOCKED: Cloudflare account missing'; exit 1; }
+          test -n "$GHV_D1_BACKUP_KEY_HEX" || { echo 'BLOCKED: backup encryption key missing'; exit 1; }
+          export_file="$RUNNER_TEMP/ghv-e2e-export.sql"
+          encrypted_file="$RUNNER_TEMP/ghv-e2e-export.enc"
+          manifest_file="$RUNNER_TEMP/ghv-e2e-manifest.json"
+          trap 'rm -f "$export_file"' EXIT
+          npx --yes wrangler@4.62.0 d1 export E2E_DB --remote --output "$export_file"
+          node scripts/secure-d1-export.mjs "$export_file" "$encrypted_file" "$manifest_file"
+          test -s "$encrypted_file" && test -s "$manifest_file"
+      - name: Store encrypted ciphertext and non-sensitive manifest only
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghv-d1-encrypted-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/ghv-e2e-export.enc
+            ${{ runner.temp }}/ghv-e2e-manifest.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Remove temporary snapshot files
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/ghv-e2e-export.sql" "$RUNNER_TEMP/ghv-e2e-export.enc" "$RUNNER_TEMP/ghv-e2e-manifest.json"
