@@ -279,6 +279,7 @@ function friendlyError(e){
  invalid_demo_count:mt('submitDemoCount'),
  invalid_demo_fields:mt('submitDemoFields'),
  duplicate_demo_url:mt('submitDuplicateVideo'),
+ registration_window_closed:'報名收件尚未開放。請留意2027年1月1日的正式公告。',
  demo_first_mismatch:mt('submitDemoMismatch'),
  missing_song_or_identity_test_fields:mt('submitRequiredFields'),
  invalid_audition_window:mt('submitWindow'),
