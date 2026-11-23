@@ -244,7 +244,7 @@ for(const [device,width] of [['desktop',1280],['mobile',375]]){
   await record.getByRole('button',{name:'停用報名'}).click();
   await expect(record).toContainText('已停用');
   await record.getByRole('button',{name:'移至回收區'}).click();
-  await expect(record).toContainText('已刪除，可復原');
+  await expect(record).toContainText('資源回收桶 · 可還原');
   await record.getByRole('button',{name:'復原報名'}).click();
   await expect(record).toContainText('有效');
   await record.getByText('操作紀錄',{exact:true}).click();
