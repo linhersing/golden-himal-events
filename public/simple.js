@@ -1225,37 +1225,70 @@ async function renderJanuaryRoster(){
   panel.append(section);
  }
 }
-const registrationStates={active:'有效',disabled:'已停用',deleted:'已刪除，可復原'};
+const registrationStates={active:'有效',disabled:'已停用',deleted:'資源回收桶 · 可還原'};
 const registrationActions={search:'查詢',audit_read:'查看操作紀錄',edit:'修改報名資料',disable:'停用報名',delete:'移至回收區',restore:'復原報名'};
 const auditResults={success:'成功',conflict:'資料已更新或狀態不符',protected:'評分或晉級保護',missing:'找不到資料',invalid:'資料格式錯誤',failed:'暫時無法處理',denied:'權限拒絕'};
 function clearAdminRegistrations(){
- staffBulk?.clear();
+ staffBulk?.clear();staffManageBatchPick=null;staffManageReload=null;
  const panel=$('organizer-admin-registrations');
  if(!panel)return;
  panel.hidden=true;panel.open=false;panel.ontoggle=null;
  $('admin-registration-search').reset();
  for(const id of ['admin-registration-results','admin-registration-list','admin-registration-pager'])$(id).replaceChildren();
 }
-let staffManageNavigate=null,staffManageCard=null,staffManageChanged=null,staffBulk=null;
+let staffManageNavigate=null,staffManageCard=null,staffManageChanged=null,staffManageBatchPick=null,staffManageReload=null,staffBulk=null;
 function showAdminRegistrations(enabled){
  const panel=$('organizer-admin-registrations');
  if(!panel||!enabled){clearAdminRegistrations();return;}
  panel.hidden=false;
  const form=$('admin-registration-search'),list=$('admin-registration-list'),pager=$('admin-registration-pager');
- let offset=0;
+ const stateFilter=form.elements.namedItem('state'),selectAll=$('admin-select-page'),
+  count=$('admin-selected-count'),actionButton=$('admin-selected-action'),
+  clearButton=$('admin-clear-selection'),hint=$('admin-recycle-hint');
+ let offset=0,rows=[],selected=new Set();
+ function isTrash(){return stateFilter.value==='deleted'}
+ function selectable(row){return !row.protected&&(isTrash()?row.state==='deleted':row.state!=='deleted')}
+ function syncSelected(){
+  const allowed=rows.filter(selectable),checked=allowed.filter(row=>selected.has(row.id)).length;
+  count.textContent='已選 '+checked+' 筆';
+  selectAll.checked=allowed.length>0&&checked===allowed.length;
+  selectAll.indeterminate=checked>0&&checked<allowed.length;selectAll.disabled=!allowed.length;
+  actionButton.disabled=!checked;
+  actionButton.textContent=isTrash()?'還原所選 '+checked+' 筆':'移到資源回收桶 '+checked+' 筆';
+  hint.textContent=isTrash()
+   ?'這裡的選手還保留在資料庫，可還原到主要名單；不會永久刪除。'
+   :'只整理你勾選的選手；移到資源回收桶後仍可還原。已評分或晉級資料受保護。';
+ }
  async function search(){
   const query=new URLSearchParams({...formValues(form),offset:String(offset)});
   const data=await api('organizer-registrations?'+query);
   if(!account||role!=='organizer'||panel.hidden)return;
-  list.replaceChildren();pager.replaceChildren();
-  $('admin-registration-results').textContent=data.registrations.length?'本頁 '+data.registrations.length+' 筆':'沒有符合條件的資料。';
-  for(const registration of data.registrations)list.append(card(registration));
+  rows=data.registrations||[];selected.clear();list.replaceChildren();pager.replaceChildren();
+  $('admin-registration-results').textContent=rows.length?'本頁 '+rows.length+' 筆（每頁最多25筆）':'沒有符合條件的資料。';
+  for(const registration of rows)list.append(card(registration));
+  syncSelected();
   for(const [to,label] of [[offset>0?offset-25:null,'上一頁'],[data.next_offset,'下一頁']]){
    if(to===null)continue;
    const button=node('button',label,'btn btn-soft');button.type='button';
    button.onclick=()=>run(async()=>{offset=to;await search()});pager.append(button);
   }
  }
+ selectAll.onchange=()=>{
+  for(const row of rows.filter(selectable)){if(selectAll.checked)selected.add(row.id);else selected.delete(row.id)}
+  list.querySelectorAll('input[data-admin-select-id]').forEach(input=>{input.checked=selected.has(input.dataset.adminSelectId)});
+  syncSelected();
+ };
+ clearButton.onclick=()=>{
+  selected.clear();list.querySelectorAll('input[data-admin-select-id]').forEach(input=>{input.checked=false});
+  syncSelected();
+ };
+ actionButton.onclick=()=>{
+  const ids=rows.filter(row=>selected.has(row.id)&&selectable(row)).map(row=>row.id);
+  if(ids.length&&staffManageBatchPick)staffManageBatchPick(ids,isTrash()?'restore':'delete');
+ };
+ staffManageReload=search;
+ stateFilter.onchange=()=>{offset=0;run(search)};
+
  async function mutate(row,action,fields={}){
   try{
    const result=await api('organizer-registration-action',{id:row.id,action,version:row.version,updated_at:row.updated_at,...fields});
@@ -1271,11 +1304,19 @@ function showAdminRegistrations(enabled){
  }
  function card(row,expanded=false){
   if(!expanded){
+   const wrapper=node('div',undefined,'admin-select-row');
+   const label=node('label',undefined,'admin-row-checkbox'),input=node('input');
+   input.type='checkbox';input.dataset.adminSelectId=row.id;
+   input.disabled=!selectable(row);input.checked=selected.has(row.id);
+   input.setAttribute('aria-label','選取 '+row.stage_name);
+   input.onchange=()=>{if(input.checked)selected.add(row.id);else selected.delete(row.id);syncSelected()};
+   label.append(input);
    const button=staffButton(undefined,'roster-entry roster-action',()=>staffManageNavigate?.(row));
    const text=node('span',undefined,'roster-entry-text');
    text.append(node('strong',row.stage_name),node('span',row.id+' · '+sw(registrationStates[row.state]),'minor'));
+   if(row.protected)text.append(node('span','已有評分或晉級，不能批次移除','minor'));
    button.append(text,node('span',sw('查看選手')+' ›'));
-   return button;
+   wrapper.append(label,button);return wrapper;
   }
   const item=node('article',undefined,'roster-entry');
   const info=node('div',undefined,'roster-entry-text');
@@ -1324,6 +1365,7 @@ function showAdminRegistrations(enabled){
  staffManageCard=row=>card(row,true);
  panel.ontoggle=()=>{if(panel.open&&!list.childElementCount)run(search)};
  form.onsubmit=event=>{event.preventDefault();offset=0;run(search)};
+ syncSelected();
 }
 
 function organizerState(entry){
@@ -1377,6 +1419,7 @@ async function renderOrganizer(){
  };
  const oldDispose=nav.dispose;
  nav.dispose=()=>{oldDispose();managementAnchor.remove();staffBulk?.clear();staffManageNavigate=null;staffManageChanged=null;};
+ staffManageBatchPick=(ids,action)=>{staffBulk.openSelection(ids,action);nav.go('management-bulk')};
  staffManageNavigate=(row,replace=false)=>{
   managementRows.set(row.id,row);
   if(replace)nav.replace('management-entry',row.id);else nav.go('management-entry',row.id);
@@ -1386,6 +1429,7 @@ async function renderOrganizer(){
   if(!account||role!=='organizer'||staffRoute!==nav)return;
   $('admin-registration-list').replaceChildren();$('admin-registration-pager').replaceChildren();
   apps.splice(0,apps.length,...fresh.applications||[]);paint();
+  if(staffManageReload)await staffManageReload();
  };
  const tools=$('staff-management-open');
  tools.hidden=!v.registration_management_enabled;
@@ -1411,7 +1455,7 @@ async function renderOrganizer(){
  }
  function showRecord(route){
   if(route.id==='_management'){
-   $('organizer-entry-title').textContent=sw('報名管理與稽核');
+   $('organizer-entry-title').textContent=sw('選手名單管理');
    $('organizer-entry-step').textContent=sw('測試資料');
    back.hidden=false;
    if(route.view==='management-entry'){
