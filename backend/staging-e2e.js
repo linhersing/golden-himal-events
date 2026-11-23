@@ -592,6 +592,8 @@ export async function handleE2E(request,env){
     {ok:true,testOnly:true,mode:'invited'});
   }
   if(pathname==='/api/e2e/password-config'&&!isPost){const ready=await passwordModeReady(env);return json(ready?{ok:true,enabled:true,siteKey:env.STAGING_TURNSTILE_SITE_KEY,testOnly:true}:{ok:true,enabled:false,testOnly:true});}
+  if(pathname==='/api/e2e/password-register'&&isPost&&!registrationWindow(env).testSubmissionsAllowed)
+   return deny('registration_window_closed',403);
   if(['/api/e2e/password-register','/api/e2e/password-login','/api/e2e/password-recover'].includes(pathname)&&isPost)
    return await passwordRequest(request,env,{json,deny,uuid,NOW,bodyJSON,sign,newSession,cookie});
   if(pathname==='/api/e2e/request-code'&&isPost)return await requestCode(request,env);
