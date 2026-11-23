@@ -5,6 +5,7 @@ import {mailProviderReady,mailSenderReady,emailAddress} from './staging-mail.js'
 import {staffLoginConfig} from './staging-staff-security.js';
 import {drainRemovedMemberMedia} from './staging-admin-registration.js';
 import {handleE2E} from './staging-e2e.js';
+import {monitorSecurity} from './security-monitor.js';
 /*
  * Golden Himal Voice — SAFE STAGING SMOKE TEST ONLY.
  *
@@ -225,7 +226,8 @@ async function handleE2EReadiness(request,env){
 }
 export default {
   async scheduled(controller,env,ctx){
-    await Promise.all([runPracticeSchedule(env),drainRemovedMemberMedia(env.E2E_DB,env.STAGING_MEDIA)]);
+    await Promise.all([runPracticeSchedule(env),drainRemovedMemberMedia(env.E2E_DB,env.STAGING_MEDIA),
+      monitorSecurity(env)]);
   },
   async fetch(request,env,ctx) {
     const url=new URL(request.url);
