@@ -2113,3 +2113,53 @@ body[data-page="back"] .staff-otp-expiry[data-state="error"]{
 .staff-bulk-counts>div{padding:10px;border:1px solid #e7dac9;border-radius:10px;min-width:0}
 .staff-bulk-counts dt{font-size:.87rem;color:#76655b}
 .staff-bulk-counts dd{margin:4px 0 0;font-weight:750;font-size:1.05rem}
+
+
+/* Organizer recycle bin: calm list-selection design, no destructive global action. */
+body[data-page="back"] .admin-batch-toolbar{
+ display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:14px 0 8px;
+ padding:11px 13px;border:1px solid #d7c29f;border-radius:14px;
+ background:#fbf8f1;
+}
+body[data-page="back"] .admin-select-all{
+ display:inline-flex;gap:9px;align-items:center;cursor:pointer;min-height:44px;
+ font-size:.95rem;font-weight:700;color:#553b27;
+}
+body[data-page="back"] .admin-select-all input,
+body[data-page="back"] .admin-row-checkbox input{
+ appearance:auto;width:22px;height:22px;accent-color:#78532c;cursor:pointer;
+}
+body[data-page="back"] .admin-select-all input:disabled,
+body[data-page="back"] .admin-row-checkbox input:disabled{cursor:not-allowed}
+body[data-page="back"] #admin-selected-count{font-size:.9rem;color:#765b42}
+body[data-page="back"] .admin-batch-toolbar .btn{min-height:44px;padding:.52rem .8rem;white-space:normal}
+body[data-page="back"] .admin-batch-toolbar .btn:disabled{opacity:.45;cursor:not-allowed}
+body[data-page="back"] #admin-selected-action:not(:disabled){background:#584534;color:#fff;border-color:#584534}
+body[data-page="back"] .admin-recycle-hint{margin:8px 0 14px;color:#655647;font-size:.86rem;line-height:1.6}
+body[data-page="back"] .admin-select-row{
+ display:flex;align-items:stretch;border:1px solid #e0cfb3;border-radius:12px;
+ background:#fffdf9;overflow:hidden;min-width:0;
+}
+body[data-page="back"] .admin-row-checkbox{
+ display:flex;align-items:center;justify-content:center;
+ padding:12px 11px 12px 15px;border-right:1px solid #f0e6d5;
+}
+body[data-page="back"] .admin-select-row .roster-entry{
+ margin:0;flex:1 1 auto;min-width:0;border:0;border-radius:0;background:transparent;
+}
+body[data-page="back"] .admin-select-row:focus-within{
+ outline:2px solid #927044;outline-offset:2px;
+}
+body[data-page="back"] #admin-registration-list{gap:9px}
+body[data-page="back"] #admin-registration-list .roster-entry-text{overflow-wrap:anywhere}
+body[data-page="back"] .staff-bulk-workspace .staff-bulk-confirm{padding:16px;border:1px solid #d9c7aa;border-radius:14px;background:#fffaf0}
+body[data-page="back"] .staff-bulk-workspace .staff-bulk-confirm .btn{background:#674931;color:#fff;border-color:#674931}
+body[data-page="back"] .staff-bulk-workspace details{border-top:1px solid #e2d6c8;padding-top:12px}
+body[data-page="back"] .staff-bulk-workspace details>summary{cursor:pointer;min-height:44px;font-weight:700}
+@media(max-width:600px){
+ body[data-page="back"] .admin-batch-toolbar{gap:8px;padding:10px}
+ body[data-page="back"] .admin-batch-toolbar #admin-selected-action{width:100%}
+ body[data-page="back"] .admin-batch-toolbar #admin-clear-selection{flex:1}
+ body[data-page="back"] .admin-row-checkbox{padding:10px}
+ body[data-page="back"] .admin-select-row .roster-entry{padding:9px 7px}
+}
