@@ -1250,14 +1250,14 @@ function showAdminRegistrations(enabled){
  function selectable(row){return !row.protected&&(isTrash()?row.state==='deleted':row.state!=='deleted')}
  function syncSelected(){
   const allowed=rows.filter(selectable),checked=allowed.filter(row=>selected.has(row.id)).length;
-  count.textContent='已選 '+checked+' 筆';
+  count.textContent=sw('已選')+' '+checked+' '+sw('筆');
   selectAll.checked=allowed.length>0&&checked===allowed.length;
   selectAll.indeterminate=checked>0&&checked<allowed.length;selectAll.disabled=!allowed.length;
   actionButton.disabled=!checked;
-  actionButton.textContent=isTrash()?'還原所選 '+checked+' 筆':'移到資源回收桶 '+checked+' 筆';
+  actionButton.textContent=sw(isTrash()?'還原所選':'移到資源回收桶')+' '+checked+' '+sw('筆');
   hint.textContent=isTrash()
-   ?'這裡的選手還保留在資料庫，可還原到主要名單；不會永久刪除。'
-   :'只整理你勾選的選手；移到資源回收桶後仍可還原。已評分或晉級資料受保護。';
+   ?sw('這裡的選手還保留在資料庫，可還原到主要名單；不會永久刪除。')
+   :sw('只整理你勾選的選手；移到資源回收桶後仍可還原。已評分或晉級資料受保護。');
  }
  async function search(){
   const query=new URLSearchParams({...formValues(form),offset:String(offset)});
@@ -1308,13 +1308,13 @@ function showAdminRegistrations(enabled){
    const label=node('label',undefined,'admin-row-checkbox'),input=node('input');
    input.type='checkbox';input.dataset.adminSelectId=row.id;
    input.disabled=!selectable(row);input.checked=selected.has(row.id);
-   input.setAttribute('aria-label','選取 '+row.stage_name);
+   input.setAttribute('aria-label',sw('選取')+' '+row.stage_name);
    input.onchange=()=>{if(input.checked)selected.add(row.id);else selected.delete(row.id);syncSelected()};
    label.append(input);
    const button=staffButton(undefined,'roster-entry roster-action',()=>staffManageNavigate?.(row));
    const text=node('span',undefined,'roster-entry-text');
    text.append(node('strong',row.stage_name),node('span',row.id+' · '+sw(registrationStates[row.state]),'minor'));
-   if(row.protected)text.append(node('span','已有評分或晉級，不能批次移除','minor'));
+   if(row.protected)text.append(node('span',sw('已有評分或晉級，不能批次移除'),'minor'));
    button.append(text,node('span',sw('查看選手')+' ›'));
    wrapper.append(label,button);return wrapper;
   }
