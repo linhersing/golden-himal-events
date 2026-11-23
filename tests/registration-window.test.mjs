@@ -30,7 +30,7 @@ test('TEST is explicit; operator can freeze immediately after acceptance',()=>{
 });
 test('unknown mode is not mistaken for official mode',()=>{
  const s=registrationWindow({GHV_REGISTRATION_WINDOW_MODE:'live'});
- assert.equal(s.phase,'testing');
+ assert.equal(s.phase,'paused');
  assert.equal(s.officialSubmissionsAllowed,false);
  assert.throws(()=>registrationWindow({},NaN),/invalid_time/);
 });
