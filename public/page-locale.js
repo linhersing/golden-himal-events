@@ -376,6 +376,10 @@ Object.assign(texts.ne,{"testNotice":"यो परीक्षण वेबस�
 Object.assign(texts.zh,{museFullName:'真實姓名（與身分證明一致）*',museFullNameHelp:'僅供主辦單位核對身分與參賽資格，不是演出名稱。',stageName:'演出名稱（本名或藝名）*',stageNameHelp:'供主辦與評審辨識參賽作品；沒有藝名就填本名。',stagePlaceholder:'沒有藝名可直接填本名'});
 Object.assign(texts.en,{museFullName:'Legal full name (as on ID) *',museFullNameHelp:'For organizer identity and eligibility checks. This is not your performance name.',stageName:'Performance name (real or stage name) *',stageNameHelp:'Used by organizers and judges to identify your entry. No stage name? Enter your full name.',stagePlaceholder:'Your stage name or full name'});
 Object.assign(texts.ne,{museFullName:'परिचयपत्रमा भएको पूरा नाम *',museFullNameHelp:'आयोजकले पहिचान र योग्यता जाँच्न प्रयोग गर्छन्; यो प्रस्तुति नाम होइन।',stageName:'प्रस्तुति नाम (वास्तविक वा मञ्च नाम) *',stageNameHelp:'आयोजक र निर्णायकले तपाईंको आवेदन चिन्ने नाम। मञ्च नाम नभए पूरा नाम लेख्नुहोस्।',stagePlaceholder:'मञ्च नाम नभए पूरा नाम'});
+/* 2026-11-22 frontline clarification: a separate YouTube channel is not required. */
+Object.assign(texts.en,{videoPlatformSimpleNote:'No YouTube channel is required. Record 60–90 seconds of your own continuous singing. Share the video from YouTube or Google Drive; for Drive choose “Anyone with the link → Viewer.” Paste the video link below so authorized organizers can open it in the backoffice. This form does not accept a direct video file upload.'});
+Object.assign(texts.zh,{videoPlatformSimpleNote:'不必有自己的 YouTube 頻道。先用手機錄製本人連續演唱 60–90 秒，可用 YouTube 或 Google Drive 分享影片。Google Drive 設為「知道連結的任何人可檢視」，再把影片網址貼在下方；主辦方會透過後台查看連結。這個表單目前不接受直接傳影片檔案。'});
+Object.assign(texts.ne,{videoPlatformSimpleNote:'आफ्नै YouTube च्यानल अनिवार्य छैन। आफ्नो निरन्तर गायनको ६०–९० सेकेन्ड भिडियो खिच्नुहोस्। YouTube वा Google Drive बाट भिडियोको लिङ्क साझा गर्नुहोस्। Drive मा “Anyone with the link → Viewer” छान्नुहोस्। तल लिङ्क टाँस्नुहोस् ताकि अधिकृत आयोजकले ब्याकअफिसबाट हेर्न सकून्। यस फारममा भिडियो फाइल सिधै अपलोड गर्न मिल्दैन।'});
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
  document.querySelectorAll('[data-l]').forEach(el=>{el.textContent=t(el.dataset.l)});
