@@ -69,3 +69,26 @@ for(const language of ['zh','en','ne']){
   await expect(page.locator('#signin-panel')).toBeHidden();
  });
 }
+
+
+for(const allowed of [true,false])test('registration window cannot override the entry-list recovery gate: '+allowed,async({page})=>{
+ let entryReads=0,posts=0;
+ await page.route('**/api/staging/registration-window',route=>route.fulfill({json:{ok:true,phase:allowed?'testing':'countdown',testSubmissionsAllowed:allowed,opensAt:'2027-01-01T00:00:00+05:45',serverNow:'2026-11-24T10:00:00+05:45'}}));
+ await page.route('**/api/e2e/**',async route=>{
+  const key=new URL(route.request().url()).pathname.split('/').pop();
+  if(key==='me')return route.fulfill({json:{ok:true,account:{id:'synthetic-member',role:'member',available_roles:['member']},muse_form_enabled:true}});
+  if(key==='applications'&&route.request().method()==='POST'){posts++;return route.fulfill({status:409,json:{ok:false}})}
+  if(key==='applications'){entryReads++;return route.fulfill(entryReads===1?{status:503,json:{ok:false,error:'test_database_unavailable'}}:{json:{ok:true,applications:[]}})}
+  return route.fulfill({json:{ok:true}});
+ });
+ await page.goto('/member.html#register');
+ const submit=page.locator('#application-form button[type=submit]');
+ await expect(page.locator('#member-retry-load')).toBeVisible();
+ await expect(page.locator('#ghv-entry-window')).toHaveAttribute('data-phase',allowed?'testing':'countdown');
+ await page.locator('[data-lang=en]').click();
+ await expect(submit).toBeDisabled();
+ await page.locator('#member-retry-load').click();
+ await expect(page.locator('#member-retry-load')).toBeHidden();
+ if(allowed)await expect(submit).toBeEnabled();else await expect(submit).toBeDisabled();
+ expect(posts).toBe(0);
+});
