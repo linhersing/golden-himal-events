@@ -264,12 +264,13 @@ async function applications(a,env,supplements){
  THEN 1 ELSE 0 END AS can_edit, CASE WHEN ${deletion.guard('p')} THEN 1 ELSE 0 END AS can_delete${approvalColumn(approval)}${supplementColumns(supplements)}${withdrawalColumns}
  FROM e2e_applications p${entrantLocationJoin(locations)}${frontlineJoin(frontlineReady)}${supplementJoin(supplements)} WHERE p.account_id=? ORDER BY p.created_at DESC,p.round_code DESC`).bind(a.id).all();
  const entries=rows.results||[];
+ const protectedAccount=deletion.managed&&Boolean(await env.DB.prepare(`SELECT 1 FROM e2e_admin_registrations r JOIN e2e_applications p ON p.id=r.id WHERE p.account_id=? AND (r.state<>'active' OR r.protected=1) LIMIT 1`).bind(a.id).first());
  // April is a separately released TEST window, never auto-opened simply because January was saved.
  const nextRound=env.STAGING_SECOND_AUDITION_ENABLED==='true'&&entries.some(row=>row.round_code==='2027-01')&&
   !entries.some(row=>row.round_code==='2027-04'||row.phase==='final')?'2027-04':null;
  const decorated=await attachProfiles(env,entries);
  const personal=a.role==='member'?await attachMuseAudition(env,decorated):decorated;
- return json({ok:true,account:{id:a.id,role:a.role},applications:a.role==='member'?await attachFiveDemos(env,personal):personal,next_audition_round:nextRound,member_withdrawal_enabled:deletion.managed,testOnly:true});
+ return json({ok:true,account:{id:a.id,role:a.role},applications:a.role==='member'?await attachFiveDemos(env,personal):personal,next_audition_round:nextRound,member_withdrawal_enabled:deletion.managed,account_erase_allowed:!protectedAccount,testOnly:true});
 }
 async function submitApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
