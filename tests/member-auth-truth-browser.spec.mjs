@@ -112,7 +112,7 @@ test('deleting a TEST entry requires confirmation and cancel leaves the record i
  let deletes=0;
  await page.route('**/api/e2e/**',async r=>{
   const endpoint=new URL(r.request().url()).pathname;
-  const entry={id:'TEST-DELETE-001',stage_name:'Synthetic Singer',song_title:'Sample',category:'community',round_code:'2027-01',status:'submitted',payment_status:'unpaid'};
+  const entry={id:'TEST-DELETE-001',stage_name:'Synthetic Singer',song_title:'Sample',category:'community',round_code:'2027-01',status:'submitted',payment_status:'unpaid',phase:'demo',can_edit:1};
   const data=endpoint.endsWith('/me')?{ok:true,account:{id:'synthetic-member',role:'member'}}:
    endpoint.endsWith('/applications')?{ok:true,applications:deletes?[]:[entry]}:
    endpoint.endsWith('/delete-application')?(deletes++,{ok:true,deleted_application_id:entry.id,testOnly:true}):{ok:false,error:'not_found'};
@@ -349,4 +349,20 @@ test('credential evidence remains hidden when private R2 is not bound, while fiv
  await expect(page.locator('#eligibility-docs')).toContainText('安全');
  await expect(page.locator('#eligibility-private-upload')).toBeHidden();
  await expect(page.locator('#demo-add')).toBeEnabled();
+});
+
+
+test('member deletion never reports success if the database readback still includes the entry',async({page})=>{
+ const entry={id:'TEST-DELETE-READBACK',stage_name:'Synthetic Singer',song_title:'Sample',category:'community',round_code:'2027-01',phase:'demo',status:'submitted',payment_status:'unpaid',can_edit:1};
+ await page.route('**/api/e2e/**',async r=>{
+  const key=new URL(r.request().url()).pathname.split('/').pop();
+  const data=key==='me'?{ok:true,account:{id:'synthetic-member',role:'member'}}:key==='applications'?{ok:true,applications:[entry]}:key==='delete-application'?{ok:true,deleted_application_id:entry.id,testOnly:true}:{ok:true};
+  await r.fulfill({json:data});
+ });
+ await page.goto('/member.html#login');await page.locator('[data-lang=en]').click();
+ page.once('dialog',d=>d.accept());
+ await page.getByText('Delete this TEST entry',{exact:true}).click();
+ await expect(page.locator('#member-status')).toBeVisible();
+ await expect(page.locator('#member-status')).toHaveClass(/error/);
+ await expect(page.locator('#entries')).toContainText('Synthetic Singer');
 });

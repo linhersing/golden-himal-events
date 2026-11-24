@@ -179,7 +179,7 @@ test('organizer five-demo rows remain compact until expanded, with song-level se
 });
 
 
-test('staff dashboard shows two concise totals and hides payment info and advanced filters by default',async({page})=>{
+test('staff dashboard shows consistent review totals and hides payment info and advanced filters by default',async({page})=>{
  await page.route('**/api/e2e/**',async route=>{
   const p=new URL(route.request().url()).pathname.split('/').at(-1);
   await route.fulfill({status:200,json:p==='me'?
@@ -188,7 +188,11 @@ test('staff dashboard shows two concise totals and hides payment info and advanc
  });
  await page.setViewportSize({width:375,height:812});
  await page.goto('/backoffice.html');
- await expect(page.locator('.staff-mobile-summary .dash-stat')).toHaveCount(2);
+ for(const id of ['pending-count','organizer-pending-count','organizer-supplement-count','organizer-approved-count'])await expect(page.locator('#'+id)).toHaveText('0');
+ await expect(page.locator('#organizer-unverified-stat')).toBeHidden();
+ await expect(page.locator('[data-overview-filter]:visible')).toHaveCount(4);
+ await expect(page.locator('#staff-management-actions')).toBeHidden(); // mock has no management permission
+ await expect(page.locator('#paid-count')).toBeHidden();
  await expect(page.locator('#paid-count')).toHaveText('0');
  await expect(page.locator('.staff-system-note')).not.toHaveAttribute('open','');
  await expect(page.locator('#organizer-language')).toBeHidden();
@@ -212,7 +216,7 @@ for(const [device,width] of [['desktop',1280],['mobile',375]]){
    if(path==='organizer-queue')json={ok:true,applications:[],registration_management_enabled:true};
    if(path==='organizer-registrations'){
     const filter=url.searchParams.get('state'),query=url.searchParams.get('q');
-    json={ok:true,registrations:(filter==='all'||filter===row.state)&&(!query||row.stage_name.includes(query)||row.id.includes(query))?[row]:[],next_offset:null};
+    json={ok:true,registrations:(filter==='all'||filter==='available'&&row.state!=='deleted'||filter===row.state)&&(!query||row.stage_name.includes(query)||row.id.includes(query))?[row]:[],next_offset:null};
    }
    if(path==='organizer-registration-action'){
     const {action,version,updated_at,stage_name,affiliation}=route.request().postDataJSON();
@@ -231,7 +235,7 @@ for(const [device,width] of [['desktop',1280],['mobile',375]]){
   await page.locator('#staff-management-open').click();
   await expect(cards).toContainText('Fictional Singer');
   await panel.getByLabel('搜尋姓名、曲目或編號').fill('Fictional');
-  await filter.selectOption('all');
+  await filter.selectOption('available');
   await search.click();
   await cards.getByRole('button',{name:/Fictional Singer/}).click();
   const record=page.locator('#organizer-entry-content');
@@ -244,7 +248,7 @@ for(const [device,width] of [['desktop',1280],['mobile',375]]){
   await record.getByRole('button',{name:'停用報名'}).click();
   await expect(record).toContainText('已停用');
   await record.getByRole('button',{name:'移至回收區'}).click();
-  await expect(record).toContainText('已刪除，可復原');
+  await expect(record).toContainText('資源回收桶 · 可還原');
   await record.getByRole('button',{name:'復原報名'}).click();
   await expect(record).toContainText('有效');
   await record.getByText('操作紀錄',{exact:true}).click();

@@ -191,3 +191,28 @@ test('homepage remains anonymous when authorization is missing; staff role canno
  await expect(page.locator('#home-apply')).toContainText('我要報名');
  expect(posts).toBe(0);
 });
+
+
+test('withdrawn member entry is not a pending review or a new registration slot',async({page})=>{
+ const state={entries:[{...entry,approval_state:'pending',status:'withdrawn',payment_status:'unpaid',can_edit:0,video_supplement_state:'pending'}]};
+ await mockMemberApi(page,state);
+ await page.goto('/member.html#login');
+ await expect(page.locator('#member-state-payment')).toHaveText('報名已撤回／移除');
+ await expect(page.locator('#member-edit-lock-reason')).toContainText('同梯次不得重複報名');
+ await expect(page.locator('#member-quick-edit')).toBeHidden();
+ await expect(page.locator('#member-manage-edit')).toBeDisabled();
+ await expect(page.locator('#entries').getByRole('button',{name:/刪除此筆|申請更正基本資料|送出補正資料/})).toHaveCount(0);
+ await expect(page.locator('#new-application-callout')).toBeHidden();
+ for(const [lang,label] of [['en','Entry withdrawn / removed'],['ne','आवेदन फिर्ता / हटाइएको'],['zh','報名已撤回／移除']]){
+  await page.locator('[data-lang="'+lang+'"]').click();
+  await expect(page.locator('#member-state-payment')).toHaveText(label);
+ }
+});
+
+test('locked pending entry does not imply scoring or offer a forbidden deletion',async({page})=>{
+ await mockMemberApi(page,{entries:[{...entry,approval_state:'pending',status:'submitted',payment_status:'unpaid',can_edit:0}]});
+ await page.goto('/member.html#login');
+ await expect(page.locator('#member-edit-lock-reason')).toContainText('仍待審核');
+ await expect(page.locator('#member-edit-lock-reason')).not.toContainText('已開始評分');
+ await expect(page.locator('#entries').getByRole('button',{name:/刪除此筆/})).toHaveCount(0);
+});
