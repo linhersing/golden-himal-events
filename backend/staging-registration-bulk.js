@@ -52,7 +52,7 @@ export async function handleRegistrationBulk(request,env,actor,{json,deny,NOW,uu
        new Set(body.ids).size!==body.ids.length||body.ids.some(id=>!validId(id)))
       return deny('invalid_bulk_selection',422);
     const placeholders=body.ids.map(()=>'?').join(',');
-    const found=await db.prepare('SELECT id,version,updated_at,protected,state FROM e2e_admin_registrations WHERE id IN ('+placeholders+')')
+    const found=await db.prepare(`SELECT r.id,r.version,r.updated_at,r.state,CASE WHEN r.protected=1 OR EXISTS(SELECT 1 FROM e2e_staff_audit e WHERE e.target_id=r.id AND e.actor_role='member' AND e.result='success' AND json_extract(e.diff,'$.member_withdrawal')=1) THEN 1 ELSE 0 END AS protected FROM e2e_admin_registrations r WHERE r.id IN (`+placeholders+')')
      .bind(...body.ids).all();
     const byId=new Map(found.results.map(row=>[row.id,row]));
     const matched=body.ids.map(id=>byId.get(id));
