@@ -272,7 +272,8 @@ function setupProfileFields(ready){
  sync();
 }
 
-function status(text,bad=false){if(!statusBox)return;statusBox.hidden=false;statusBox.className='feedback'+(bad?' error':' success');statusBox.textContent=text;statusBox.scrollIntoView({block:'nearest',behavior:'smooth'})}
+function status(text,bad=false){if(!statusBox)return;statusBox.hidden=false;statusBox.className='feedback'+(bad?' error':' success');delete statusBox.dataset.l;delete statusBox.dataset.lValue;statusBox.textContent=text;statusBox.scrollIntoView({block:'nearest',behavior:'smooth'})}
+function localizedStatus(key,bad=false,value){status(memberCopy(key,value),bad);if(statusBox)localizeMember(statusBox,key,value);}
 function friendlyError(e){
  if(page==='member'){
  const common={"e2e_not_configured":"errNoEmail","test_email_service_unavailable":"errMail","not_on_test_allowlist":"errAllow","expired_or_invalid_code":"errInvalid","login_required":"errLogin","human_check_required":"signupHumanRequired","too_many_code_requests":"signupLimited"};
@@ -701,7 +702,7 @@ mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  }
  authForms(false);
  if(staff)startOtpReminder();
- status(mt(!staff&&publicTest?'signupCodeRequested':'otpRequested'));
+ localizedStatus(!staff&&publicTest?'signupCodeRequested':'otpRequested');
  codeForm.querySelector('input').focus();
 })});
 codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
@@ -712,10 +713,10 @@ codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  stopOtpReminder();
  codeForm.reset();
  await loadSession();
- if(account)status(mt('signedIn'));
+ if(account)localizedStatus('signedIn');
 })});
 const change=$(staff?'back-change':'change-mail');change?.addEventListener('click',()=>{stopOtpReminder();authForms(true);challenge=null;challengeEmail=undefined;codeForm.reset();statusBox.hidden=true});
-$(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff){staffTabs();$('staff-session-expired').hidden=true;}challenge=null;stopOtpReminder();authForms(true);status(mt('signedOut'))}));
+$(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff){staffTabs();$('staff-session-expired').hidden=true;}challenge=null;stopOtpReminder();authForms(true);localizedStatus('signedOut')}));
 }
 async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else{clearAdminRegistrations();await renderJudge()}}else await renderMember()}
 function memberCanEdit(a){
@@ -938,7 +939,7 @@ async function showCorrection(a){
   if(!result.request?.id||result.request?.state!=='pending'||result.testOnly!==true)throw Error('readback_mismatch');
   const check=await api('member-corrections');
   if(!(check.requests||[]).some(x=>x.id===result.request.id&&x.state==='pending'))throw Error('readback_mismatch');
-  await renderMember();status(memberCopy('correctionSuccess',result.request.id));
+  await renderMember();localizedStatus('correctionSuccess',false,result.request.id);
  });});
  box.append(form);form.querySelector('input')?.focus({preventScroll:true});
 }
@@ -1794,15 +1795,15 @@ async function renderJudge(){
 if(page==='member'){
  role='member';setupAuth();
  $('member-manage-delete')?.addEventListener('click',()=>{
-  if(!account||account.role!=='member'){status(mt('accountDeleteLogin'),true);return;}
+  if(!account||account.role!=='member'){localizedStatus('accountDeleteLogin',true);return;}
   if(!confirm(mt('accountDeleteConfirm')))return;
   const phrase=prompt(mt('accountDeletePrompt'));
-  if(phrase!=='DELETE'){status(mt('accountDeleteCancelled'));return;}
+  if(phrase!=='DELETE'){localizedStatus('accountDeleteCancelled');return;}
   run(async()=>{
    const result=await api('delete-my-data',{});
    if(result.deletedTestData!==true)throw Error('readback_mismatch');
    account=null;challenge=null;authUI(false);authForms(true);
-   status(mt('accountDeleteSuccess'));
+   localizedStatus('accountDeleteSuccess');
   });
  });
  window.addEventListener('ghv:languagechange',()=>{
