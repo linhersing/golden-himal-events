@@ -158,7 +158,7 @@ test('member dashboard locks edit button when first judge score exists',async({p
  await expect(page.locator('#member-manage-edit')).toContainText('申請更正基本資料');
  await page.locator('#member-manage-edit').click();
  await expect(page.locator('#member-edit-panel')).toBeVisible();
- await expect(page.locator('#member-edit-panel')).toContainText('更正申請功能尚待TEST資料庫');
+ await expect(page.locator('#member-edit-panel')).toContainText('更正申請功能尚待測試資料庫');
  await expect(page.locator('#member-edit-panel')).not.toContainText('已提交更正申請');
  await expect(page.locator('#member-edit-lock-reason')).toBeVisible();
  await expect(page.locator('#member-edit-lock-reason')).toContainText('已開始評分');
@@ -248,9 +248,27 @@ test('scored contestant can withdraw and account management is fully translated 
  await expect(page.locator('#member-manage-delete')).toContainText('स्थायी रूपमा मेट्नुहोस्');
  await expect(page.locator('#member-manage-close')).toContainText('खाता बन्द');
  await expect(page.locator('#member-manage-edit')).toContainText('आधारभूत विवरण');
+ await page.screenshot({path:'test-results/ghv-member-home-v2/account-management-ne.png',fullPage:true});
  await page.locator('[data-lang=zh]').click();
  const withdraw=page.locator('#entries').getByRole('button',{name:'我要棄權'});
  await expect(withdraw).toBeVisible();page.once('dialog',d=>d.accept());await withdraw.click();
  await expect(page.locator('#member-state-payment')).toHaveText('已自行棄權');
+ await page.screenshot({path:'test-results/ghv-member-home-v2/withdrawal-confirmed-zh.png',fullPage:true});
  await expect(withdraw).toHaveCount(0);expect(writes).toEqual([{application_id:entry.id}]);
+});
+
+
+test('correction request form relocalizes its labels without discarding user input',async({page})=>{
+ const state={entries:[{...entry,status:'scored',approval_state:'approved',can_edit:0,can_delete:0}],withdrawalEnabled:true};
+ await mockMemberApi(page,state);
+ await page.route('**/api/e2e/member-corrections',r=>r.fulfill({json:{ok:true,enabled:true,requests:[],testOnly:true}}));
+ await page.goto('/member.html#login');await page.locator('#member-manage-edit').click();
+ const panel=page.locator('#member-edit-panel');
+ await expect(panel).toContainText('申請更正基本資料');
+ const reason=panel.locator('[name=reason]');await reason.fill('TEST correction explanation');
+ await page.locator('[data-lang=ne]').click();await expect(panel).toContainText('अङ्क दिइसकिएको आवेदन');
+ await expect(reason).toHaveValue('TEST correction explanation');
+ await page.screenshot({path:'test-results/ghv-member-home-v2/correction-form-ne.png',fullPage:true});
+ await page.locator('[data-lang=en]').click();await expect(panel).toContainText('Scored entry: request a correction');
+ await expect(reason).toHaveValue('TEST correction explanation');
 });
