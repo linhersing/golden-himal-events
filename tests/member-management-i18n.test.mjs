@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 const source = name => readFileSync(new URL('../public/'+name, import.meta.url),'utf8');
-const keys=['accountToolsKicker','accountToolsTitle','accountToolsHelp','accountToolsEdit','accountToolsCorrection','accountToolsDelete','accountToolsEmpty','accountToolsEditable','accountToolsLocked','correctionAction','correctionTitle','correctionHelp','correctionUnavailable','correctionPending','correctionName','correctionAffiliation','correctionReason','correctionSubmit','correctionSuccess','accountDeleteLogin','accountDeleteConfirm','accountDeletePrompt','accountDeleteCancelled','accountDeleteSuccess','demoNumber','januaryTestNotice','cancel','signedIn','signedOut','otpRequested','nepalTime'];
+const keys=['accountToolsKicker','accountToolsTitle','accountToolsHelp','accountToolsEdit','accountToolsCorrection','accountToolsDelete','accountToolsEmpty','accountToolsEditable','accountToolsLocked','correctionAction','correctionTitle','correctionHelp','correctionUnavailable','correctionPending','correctionName','correctionAffiliation','correctionReason','correctionSubmit','correctionSuccess','accountDeleteLogin','accountDeleteConfirm','accountDeletePrompt','accountDeleteCancelled','accountDeleteSuccess','demoNumber','januaryTestNotice','cancel','signedIn','signedOut','otpRequested','nepalTime','orgCorrectionCount','orgCorrectionHelp','orgCorrectionEmpty','orgCorrectionId','orgCorrectionName','orgCorrectionAffiliation','orgCorrectionReason','orgCorrectionSafe','orgCorrectionApprove','orgCorrectionDecline','orgCorrectionApproveConfirm','orgCorrectionDeclineConfirm','orgCorrectionApproved','orgCorrectionDeclined','orgPaidLabel','skipToMain'];
 test('member management labels, warnings, dynamic parameters and login feedback switch in all three languages',()=>{
- const sample='$& <img onerror=alert(1)>', elements=keys.map(l=>({dataset:{l,...(['correctionPending','correctionSuccess','demoNumber'].includes(l)?{lValue:sample}:{})}}));
+ const sample='$& <img onerror=alert(1)>', elements=keys.map(l=>({dataset:{l,...(['correctionPending','correctionSuccess','demoNumber','orgCorrectionCount','orgCorrectionId','orgCorrectionName','orgCorrectionAffiliation','orgCorrectionReason'].includes(l)?{lValue:sample}:{})}}));
  const storage=new Map(), document={documentElement:{},querySelector:()=>null,querySelectorAll:s=>s==='[data-l]'?elements:[]};
  const window={dispatchEvent(){}};
  const ctx={window,document,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},CustomEvent:class{}};
@@ -37,4 +37,13 @@ test('member account management HTML and dynamic UI use locale keys; deletion co
  assert.match(js,/phrase!=='DELETE'/);
  assert.match(js,/result\.deletedTestData!==true/);
  assert.match(js,/document\.createTextNode\(' · '\+\(savedVideos\[i\]\.song_title/);
+});
+
+test('organizer correction and practice roster headings use locale keys',()=>{
+ const staff=source('backoffice.html'),practice=source('practice.html'),js=source('simple.js'),copy=source('practice.js');
+ for(const k of ['orgCorrectionCount','orgCorrectionHelp','orgPaidLabel'])assert.ok(staff.includes('data-l="'+k+'"'),k);
+ for(const k of ['judgeMonitorTitle','judgeMonitorHelp','organizerRosterTitle','organizerRosterWarning']){assert.ok(practice.includes('data-i18n="'+k+'"'),k);assert.ok(copy.includes('"'+k+'"'),k);}
+ assert.match(js,/api\('decide-member-correction',\{request_id:c.id,decision\}\)/);
+ assert.match(js,/result\.decision!==decision/);
+ assert.match(js,/mt\(decision==='accepted'\?'orgCorrectionApproveConfirm':'orgCorrectionDeclineConfirm'\)/);
 });
