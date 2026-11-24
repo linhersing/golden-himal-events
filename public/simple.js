@@ -310,7 +310,7 @@ function friendlyError(e){
  muse_fields_not_enabled:mt('contactUnavailable'),
  member_only:'This account is not a singer account.',
  update_locked:mt('editLockedAfterReview'),
- delete_locked:'This entry cannot be deleted.',
+ delete_locked:mt('deleteProtectedEntry'),
  invalid_demo_url:'Enter a valid public video link.',
  invalid_location_detail:mt('locationDetailHelp'),
  location_storage_unavailable:mt('provincePending'),
@@ -720,8 +720,9 @@ function memberCanEdit(a){
   (a.can_edit===undefined&&a.payment_status==='unpaid'&&a.status==='submitted');
 }
 function editLockMessage(a){
+ if(a.status==='withdrawn')return mt('entryWithdrawnHelp');
  if(a.approval_state==='approved'&&a.phase==='demo'&&['submitted','under_review'].includes(a.status))return mt('editApprovedLock');
- return mt('editLockedAfterReview');
+ return a.approval_state==='pending'?mt('entryPendingLockedHelp'):mt('editLockedAfterReview');
 }
 function supplementDeadline(a){
  const lang=window.GHVLocale?.lang||'zh';
@@ -755,7 +756,7 @@ function drawMemberSupplement(box,a){
  });};
  box.append(form);
 }
-const entryReviewKey=entry=>entry.approval_state==='approved'?'approvalAccepted':entry.approval_state==='pending'?'approvalPending':'entryReceived';
+const entryReviewKey=entry=>entry.status==='withdrawn'?'entryWithdrawn':entry.approval_state==='approved'?'approvalAccepted':entry.approval_state==='pending'?'approvalPending':'entryReceived';
 function drawEntry(a){
  const box=node('article',undefined,'entry member-entry');
  const title=node('div',undefined,'member-entry-main');
@@ -777,12 +778,12 @@ function drawEntry(a){
  }
  box.append(meta);
  box.append(node('span',mt(entryReviewKey(a)),'pill '+(a.approval_state==='approved'?'pill-pass':'pill-warn')));
- if(a.approval_state)box.append(node('p',mt(a.approval_state==='approved'?'approvalAccepted':'approvalPending'),'minor'));
+ if(a.approval_state||a.status==='withdrawn')box.append(node('p',mt(entryReviewKey(a)),'minor'));
  drawMemberSupplement(box,a);
  const actions=node('div',undefined,'inline-actions member-entry-buttons');
  if(memberCanEdit(a)){
   const edit=node('button',mt('edit'),'btn btn-primary');edit.type='button';edit.onclick=()=>showEdit(a);actions.append(edit);
- }else{
+ }else if(a.status!=='withdrawn'){
   const correction=node('button','申請更正基本資料（不影響分數）','btn btn-soft');correction.type='button';
   correction.onclick=()=>showCorrection(a);actions.append(correction);
  }
@@ -823,15 +824,15 @@ async function renderMember(){
  }
 
  const manageEdit=$('member-manage-edit'),manageNote=$('member-manage-note');
- const editable=rows.find(memberCanEdit);
+ const editable=rows.find(memberCanEdit),correctable=rows.find(row=>row.status!=='withdrawn');
  if(manageEdit){
-  manageEdit.disabled=!hasEntries;
-  manageEdit.textContent=editable?'修改報名資料':'申請更正基本資料（已評分）';
-  manageEdit.onclick=editable?()=>showEdit(editable):hasEntries?()=>showCorrection(first):null;
+  manageEdit.disabled=!editable&&!correctable;
+  manageEdit.textContent=editable?'修改報名資料':mt('entryCorrectionAction');
+  manageEdit.onclick=editable?()=>showEdit(editable):correctable?()=>showCorrection(correctable):null;
  }
  if(manageNote)manageNote.textContent=editable
   ?'尚未評分的TEST報名可直接修改並經資料庫讀回確認。'
-  :hasEntries?'已評分的歌曲、影片及分數不得改寫；可申請更正姓名或學校／職業，由主辦方留下審核紀錄。':'尚未有報名資料，請先建立一筆測試報名。';
+  :hasEntries?editLockMessage(correctable||first):'尚未有報名資料，請先建立一筆測試報名。';
 
  // The API must explicitly open the later TEST round; a January entry alone is not permission.
  const secondAudition=hasEntries&&v.next_audition_round==='2027-04';
