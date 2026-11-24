@@ -267,12 +267,13 @@
 </div>
 <section id="member-account-tools" class="member-account-tools" aria-labelledby="member-account-tools-title">
  <div class="member-account-tools-head">
-  <div><p class="section-eyebrow">TEST ACCOUNT MANAGEMENT</p><h3 id="member-account-tools-title">報名資料修改與帳號刪除</h3></div>
-  <p>尚未評分的TEST報名可直接修改；已評分後可提出姓名或學校／職業更正申請，由主辦確認並保留歷史。歌曲、影片、分數不能被直接覆蓋。刪除測試帳號會清除關聯資料且無法復原。</p>
+  <div><p class="section-eyebrow" data-l="accountToolsEyebrow">TEST 帳號管理</p><h3 id="member-account-tools-title" data-l="accountToolsTitle">報名、棄權與帳號管理</h3></div>
+  <p data-l="accountToolsHelp">棄權不限48小時；已評分仍可棄權，歷史分數保留。永久刪除僅適用未受保護資料；若需停止使用已受保護帳號，請選棄權並關閉帳號。</p>
  </div>
  <div class="member-account-tools-actions">
-  <button type="button" id="member-manage-edit" class="btn btn-primary" disabled>修改報名資料</button>
-  <button type="button" id="member-manage-delete" class="btn btn-danger-outline">永久刪除我的測試帳號</button>
+  <button type="button" id="member-manage-edit" class="btn btn-primary" data-l="edit" disabled>修改報名資料</button>
+  <button type="button" id="member-manage-delete" class="btn btn-danger-outline" data-l="accountErase">永久刪除我的測試帳號</button>
+  <button type="button" id="member-manage-close" class="btn btn-danger-outline" data-l="accountClose" hidden>棄權並關閉帳號</button>
  </div>
  <p id="member-manage-note" class="minor" role="status" aria-live="polite">尚未有可修改的報名時，請先建立測試報名。</p>
 </section>
