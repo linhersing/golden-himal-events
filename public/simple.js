@@ -93,6 +93,7 @@ if(page==='home'){
  const apply=()=>{
   document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
   document.querySelectorAll('[data-t]').forEach(el=>{const x=translations[lang][el.dataset.t];if(x)el.textContent=x});
+   const skip=document.querySelector('.skip');if(skip)skip.textContent=({zh:'跳至主要內容',en:'Skip to main content',ne:'मुख्य सामग्रीमा जानुहोस्'})[lang];
   document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)));
   applyHomeState();
  };
@@ -124,6 +125,9 @@ const node=(tag,txt,cls)=>{const x=document.createElement(tag);if(txt!==undefine
 const safeLink=(url)=>{try{const u=new URL(url);return u.protocol==='https:'?u.href:null}catch{return null}};
 const formValues=form=>Object.fromEntries(new FormData(form));
 const mt=k=>window.GHVLocale?.t(k)||k;
+const memberCopy=(key,value)=>value===undefined?mt(key):mt(key).replace('{value}',()=>String(value));
+function localizeMember(el,key,value){el.dataset.l=key;if(value===undefined)delete el.dataset.lValue;else el.dataset.lValue=String(value);el.textContent=memberCopy(key,value);return el;}
+const memberNode=(tag,key,cls,value)=>localizeMember(node(tag,undefined,cls),key,value);
 const EXTRA_LANGUAGE_OPTIONS=[
  ['Tharu','Tharu'],['Nepal Bhasa','Nepal Bhasa (Newari)'],['Awadhi','Awadhi'],
  ['Gurung','Gurung'],['Magar','Magar'],['Limbu','Limbu'],['Urdu','Urdu'],
@@ -269,7 +273,8 @@ function setupProfileFields(ready){
  sync();
 }
 
-function status(text,bad=false){if(!statusBox)return;statusBox.hidden=false;statusBox.className='feedback'+(bad?' error':' success');statusBox.textContent=text;statusBox.scrollIntoView({block:'nearest',behavior:'smooth'})}
+function status(text,bad=false){if(!statusBox)return;statusBox.hidden=false;statusBox.className='feedback'+(bad?' error':' success');delete statusBox.dataset.l;delete statusBox.dataset.lValue;statusBox.textContent=text;statusBox.scrollIntoView({block:'nearest',behavior:'smooth'})}
+function localizedStatus(key,bad=false,value){status(memberCopy(key,value),bad);if(statusBox)localizeMember(statusBox,key,value);}
 function friendlyError(e){
  if(page==='member'){
  const common={"e2e_not_configured":"errNoEmail","test_email_service_unavailable":"errMail","not_on_test_allowlist":"errAllow","expired_or_invalid_code":"errInvalid","login_required":"errLogin","human_check_required":"signupHumanRequired","too_many_code_requests":"signupLimited"};
@@ -775,10 +780,10 @@ codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  stopOtpReminder();
  codeForm.reset();
  const loaded=await loadSession(true);
- if(account&&loaded===true)status(staff?'已登入。':mt('signedIn'));
+ if(account&&loaded===true)localizedStatus('signedIn');
 })});
 const change=$(staff?'back-change':'change-mail');change?.addEventListener('click',()=>{stopOtpReminder();authForms(true);challenge=null;challengeEmail=undefined;codeForm.reset();statusBox.hidden=true});
-$(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff){staffTabs();$('staff-session-expired').hidden=true;}challenge=null;stopOtpReminder();authForms(true);status(page==='member'?mt('signedOut'):'已登出。')}));
+$(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff){staffTabs();$('staff-session-expired').hidden=true;}challenge=null;stopOtpReminder();authForms(true);localizedStatus('signedOut')}));
 }
 async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else{clearAdminRegistrations();await renderJudge()}}else await renderMember()}
 function memberCanEdit(a){
@@ -802,7 +807,7 @@ function supplementDeadline(a){
  const lang=window.GHVLocale?.lang||'zh';
  const locale=lang==='zh'?'zh-TW':lang==='ne'?'ne-NP':'en-NP';
  return new Intl.DateTimeFormat(locale,{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Kathmandu'})
-  .format(new Date(a.video_supplement_deadline*1000))+' · '+(staff?'尼泊爾時間':mt('nepalTime'));
+  .format(new Date(a.video_supplement_deadline*1000))+' · '+mt('nepalTime');
 }
 function drawMemberSupplement(box,a){
  const state=a.video_supplement_state;
@@ -858,7 +863,7 @@ function drawEntry(a,withdrawalEnabled=false){
  if(memberCanEdit(a)){
   const edit=node('button',mt('edit'),'btn btn-primary');edit.type='button';edit.onclick=()=>showEdit(a);actions.append(edit);
  }else if(a.status!=='withdrawn'){
-  const correction=node('button',mt('entryCorrectionAction'),'btn btn-soft');correction.type='button';
+  const correction=memberNode('button','correctionAction','btn btn-soft');correction.type='button';
   correction.onclick=()=>showCorrection(a);actions.append(correction);
  }
 
@@ -866,7 +871,7 @@ function drawEntry(a,withdrawalEnabled=false){
  for(let i=0;i<savedVideos.length;i++){
   const url=safeLink(savedVideos[i]?.demo_url);
   if(url){
-   const link=node('a',savedVideos.length>1?'Demo '+(i+1)+' · '+(savedVideos[i].song_title||''):mt('viewVideo'),'btn btn-soft');
+   const link=node('a',undefined,'btn btn-soft');if(savedVideos.length>1){link.append(memberNode('span','demoNumber',undefined,i+1),document.createTextNode(' · '+(savedVideos[i].song_title||'')));}else localizeMember(link,'viewVideo');
    link.href=url;link.target='_blank';link.rel='noopener noreferrer';actions.append(link);
   }
  }
@@ -883,7 +888,7 @@ function drawEntry(a,withdrawalEnabled=false){
    });
   };
   // Public checkout is disabled under the 2026-11-18 Muse/Alan policy.
-  if(a.round_code==='2027-01')box.append(node('p','2027 January audition TEST · 將依參賽資格審核 · परीक्षण आवेदन','minor'));
+  if(a.round_code==='2027-01')box.append(memberNode('p','januaryTestNotice','minor'));
   actions.append(del);
  }
  if(withdrawalEnabled&&!a.member_withdrawn){
@@ -994,35 +999,35 @@ async function showCorrection(a){
  const holder=$('member-edit-panel');if(!holder)return;
  holder.hidden=false;holder.replaceChildren();
  const box=node('div',undefined,'member-edit-box');box.dataset.editing='true';
- box.append(node('h3','已評分報名｜申請更正基本資料'),
-  node('p','正式評分不會被刪除或覆蓋。更正姓名或學校／職業須經主辦審核；歌曲、影片與分數不可透過此表修改。','minor'));
+ box.append(memberNode('h3','correctionTitle'),
+  memberNode('p','correctionHelp','minor'));
  holder.append(box);holder.scrollIntoView({block:'start',behavior:'smooth'});
  let current;
  try{current=await api('member-corrections')}
  catch(e){status(friendlyError(e),true);return;}
  if(!current.enabled){
-  box.append(node('p','更正申請功能尚待TEST資料庫增量遷移驗證；目前無法送出。請勿以此作為已修改成功。','feedback error'));
+  box.append(memberNode('p','correctionUnavailable','feedback error'));
   return;
  }
  const prior=(current.requests||[]).find(x=>x.application_id===a.id&&x.state==='pending');
  if(prior){
-  box.append(node('p','已有待審更正申請：'+prior.id+'。主辦審核前不能重複提交。','notice'));
+  box.append(memberNode('p','correctionPending','notice',prior.id));
   return;
  }
  const form=node('form',undefined,'form-grid');
  for(const [name,caption,value,max] of [
-  ['stage_name','報名姓名／顯示名稱',a.stage_name,60],
-  ['affiliation','學校／職業',a.affiliation,100],
-  ['reason','更正原因（至少8字）','',400]
+  ['stage_name','correctionName',a.stage_name,60],
+  ['affiliation','correctionAffiliation',a.affiliation,100],
+  ['reason','correctionReason','',400]
  ]){
   const label=node('label',undefined,'field full'),input=name==='reason'?node('textarea'):node('input');
   input.name=name;input.required=true;input.maxLength=max;
   if(name==='reason')input.minLength=8;else input.value=value||'';
-  label.append(node('span',caption),input);form.append(label);
+  label.append(memberNode('span',caption),input);form.append(label);
  }
  const buttons=node('div',undefined,'form-actions full');
- const submit=node('button','提交更正申請','btn btn-primary');submit.type='submit';
- const cancel=node('button','取消','btn btn-soft');cancel.type='button';cancel.onclick=()=>{holder.replaceChildren();holder.hidden=true;};
+ const submit=memberNode('button','correctionSubmit','btn btn-primary');submit.type='submit';
+ const cancel=memberNode('button','cancel','btn btn-soft');cancel.type='button';cancel.onclick=()=>{holder.replaceChildren();holder.hidden=true;};
  buttons.append(submit,cancel);form.append(buttons);
  form.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
   const v=formValues(form);
@@ -1030,7 +1035,7 @@ async function showCorrection(a){
   if(!result.request?.id||result.request?.state!=='pending'||result.testOnly!==true)throw Error('readback_mismatch');
   const check=await api('member-corrections');
   if(!(check.requests||[]).some(x=>x.id===result.request.id&&x.state==='pending'))throw Error('readback_mismatch');
-  await renderMember();status('已提交更正申請，編號：'+result.request.id+'。原始分數與影片保持不變。');
+  await renderMember();localizedStatus('correctionSuccess',false,result.request.id);
  });});
  box.append(form);form.querySelector('input')?.focus({preventScroll:true});
 }
@@ -1083,7 +1088,7 @@ function showEdit(a){
   for(let slot=2;slot<=5;slot++){
    const old=saved[slot-1]||{},card=node('section',undefined,'demo-edit-card');
    card.dataset.demoSlot=String(slot);card.hidden=slot>saved.length;
-   card.append(node('h4','Demo '+slot));
+   card.append(memberNode('h4','demoNumber',undefined,slot));
    const group=node('div',undefined,'demo-extra-grid');
    for(const [name,key,max] of [['song_title','songTitle',100],['original_artist','artist',100],['song_language','songLang',30],['demo_url','videoUrl',1000]]){
     const label=node('label',undefined,'field');label.append(node('span',mt(key)));
