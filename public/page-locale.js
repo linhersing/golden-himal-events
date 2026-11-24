@@ -259,6 +259,9 @@ Object.assign(texts.ne,{"museTitle":"दर्ता विवरण","museInfo"
 Object.assign(texts.zh,{formTitle:'填寫報名表',goToForm:'前往報名表'});
 Object.assign(texts.en,{formTitle:'Registration form',goToForm:'Go to registration form'});
 Object.assign(texts.ne,{formTitle:'दर्ता फाराम',goToForm:'दर्ता फाराममा जानुहोस्'});
+Object.assign(texts.zh,{registrationWindowClosed:'報名尚未開放，請留意2027年1月1日的正式公告。'});
+Object.assign(texts.en,{registrationWindowClosed:'Registration is not open yet. Please check the organizer announcement for January 1, 2027.'});
+Object.assign(texts.ne,{registrationWindowClosed:'दर्ता अझै खुलेको छैन। १ जनवरी २०२७ को आधिकारिक सूचना हेर्नुहोस्।'});
 /* 2026-11-17 front-line audition rules: 2027-01-01—2027-01-31 Nepal local. */
 Object.assign(texts.zh,{
  entryPeriodTitle:"2027 海選收件日期",entryPeriodDates:"2027年1月1日至1月31日｜尼泊爾當地時間",entryPeriodHelp:"海選與第一次初選免費；確切開放及截止時刻、地點以主辦單位官網公告為準。目前仍是測試網站。",
