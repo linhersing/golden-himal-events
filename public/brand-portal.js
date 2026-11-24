@@ -318,13 +318,16 @@ Object.assign(translations.ne,{
 });
 
 let lang='zh';try{const saved=localStorage.getItem(key);if(Object.prototype.hasOwnProperty.call(translations,saved))lang=saved}catch{}
+Object.assign(translations.zh,{"skipToMain":"跳至主要內容"});
+Object.assign(translations.en,{"skipToMain":"Skip to main content"});
+Object.assign(translations.ne,{"skipToMain":"मुख्य सामग्रीमा जानुहोस्"});
 function apply(){document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
  document.querySelectorAll('[data-p]').forEach(el=>{const value=translations[lang][el.dataset.p];if(value!==undefined)el.textContent=value});
  document.querySelectorAll('[data-lang]').forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.lang===lang)));
  const previous=document.getElementById('portal-gallery-prev'),next=document.getElementById('portal-gallery-next');
  if(previous)previous.setAttribute('aria-label',translations[lang].galleryPrevious);
  if(next)next.setAttribute('aria-label',translations[lang].galleryNext);
- document.title=document.body.dataset.page==='story'?(lang==='zh'?'認識 Golden Himal｜Golden Himal Palace':'Our Story | Golden Himal Palace'):'Golden Himal Palace | Chitwan, Nepal';
+ document.title=document.body.dataset.page==='story'?(lang==='zh'?'認識 Golden Himal｜Golden Himal Palace':lang==='ne'?'हाम्रो कथा | Golden Himal Palace':'Our Story | Golden Himal Palace'):'Golden Himal Palace | Chitwan, Nepal';
 }
 document.querySelectorAll('[data-lang]').forEach(btn=>btn.addEventListener('click',()=>{const next=btn.dataset.lang;if(!Object.prototype.hasOwnProperty.call(translations,next))return;lang=next;try{localStorage.setItem(key,lang)}catch{}apply()}));
 // Mobile photo browsing must not depend on discovering a hidden swipe gesture.
