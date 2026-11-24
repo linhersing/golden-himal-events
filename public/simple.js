@@ -1391,9 +1391,17 @@ async function renderOrganizer(){
  if(!january.hidden){
   january.ontoggle=()=>{if(january.open)run(renderJanuaryRoster)};
  }
- $('pending-count').textContent=String(apps.length);
- $('scores-count').textContent=String(apps.reduce((n,a)=>n+Number(a.demo_judges||0)+Number(a.live_judges||0),0));
- $('paid-count').textContent='0';
+ function refreshOverview(){
+  const counts={'待審核':0,'待補件':0,'已核准':0,'待核對':0};
+  for(const entry of apps)counts[organizerState(entry)]++;
+  for(const [id,value] of [['pending-count',apps.length],['organizer-pending-count',counts['待審核']],['organizer-supplement-count',counts['待補件']],['organizer-approved-count',counts['已核准']],['organizer-unverified-count',counts['待核對']],['scores-count',apps.reduce((n,a)=>n+Number(a.demo_judges||0)+Number(a.live_judges||0),0)]]){
+   $(id).textContent=String(value);
+  }
+  $('organizer-unverified-stat').hidden=!counts['待核對'];
+  $('organizer-overview-limit').hidden=apps.length<500;
+  $('paid-count').textContent='0';
+ }
+ refreshOverview();
  let toolArea=dashboard.querySelector('.staff-tools');
  if(!toolArea){
   toolArea=node('div',undefined,'staff-tools');
@@ -1562,14 +1570,16 @@ async function renderOrganizer(){
   }
  }
  function paint(){
+  refreshOverview();
   const q=search.value.trim().toLowerCase(),lang=language.value,cat=category.value,st=statusFilter.value;
+  dashboard.querySelectorAll('[data-overview-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.overviewFilter===st)));
   const found=apps.filter(entry=>{
    const works=staffWorks(entry);
    if(q&&![entry.stage_name,entry.id,staffShortId(entry),entry.round_code,...works.flatMap(work=>[work.song_title,work.original_artist])].some(value=>String(value||'').toLowerCase().includes(q)))return false;
    if(lang&&!works.some(work=>work.song_language===lang))return false;
    if(cat&&(cat==='single'?!staffGroup(entry).startsWith(sw('單一組別')):entry.category!==cat||staffGroup(entry).startsWith(sw('單一組別'))))return false;
    const judged=Number(entry.demo_judges||0)+Number(entry.live_judges||0)>0;
-   return st==='scored'?judged:st==='unscored'?!judged:st==='pending'?organizerState(entry)==='待審核':st==='approved'?organizerState(entry)==='已核准':st==='supplement'?organizerState(entry)==='待補件':true;
+   return st==='scored'?judged:st==='unscored'?!judged:st==='pending'?organizerState(entry)==='待審核':st==='approved'?organizerState(entry)==='已核准':st==='supplement'?organizerState(entry)==='待補件':st==='unverified'?organizerState(entry)==='待核對':true;
   });
   const pages=Math.max(1,Math.ceil(found.length/perPage));
   pageNo=staffListPages.organizer=Math.min(pageNo,pages);holder.replaceChildren();
@@ -1592,41 +1602,57 @@ async function renderOrganizer(){
  }
  search.oninput=()=>{pageNo=1;paint()};
  for(const control of [language,category,statusFilter])control.onchange=search.oninput;
+ dashboard.querySelectorAll('[data-overview-filter]').forEach(button=>{
+  button.onclick=()=>{
+   search.value='';language.value='';category.value='';statusFilter.value=button.dataset.overviewFilter;
+   pageNo=1;paint();holder.scrollIntoView({block:'nearest',behavior:'smooth'});
+  };
+ });
  paint();
- window.staffRelocalize=()=>{paint();nav.display({focus:false})};
-
  const correctionPanel=$('organizer-corrections'),correctionList=$('organizer-correction-list');
- if(correctionPanel&&correctionList){
+ let correctionState='loading',correctionRows=[];
+ function paintCorrections(){
+  if(!correctionPanel||!correctionList)return;
+  correctionPanel.hidden=correctionState==='disabled';
   correctionList.replaceChildren();
+  const count=correctionPanel.querySelector('[data-correction-count]');
+  count.textContent=correctionState==='ready'?sw('待處理修改申請')+' '+correctionRows.length+' '+sw('筆'):sw(correctionState==='loading'?'正在讀取…':'無法讀取修改申請，請重新整理。');
+  if(correctionState!=='ready')return;
+  if(!correctionRows.length)correctionList.append(node('p',sw('目前沒有待處理的基本資料修改申請。'),'minor'));
+  for(const c of correctionRows){
+   const card=node('article',undefined,'roster-entry');
+   card.append(node('strong',sw('報名編號')+'：'+c.application_id));
+   card.append(node('p',sw('姓名')+'：'+c.previous_stage_name+' → '+c.proposed_stage_name,'minor'));
+   card.append(node('p',sw('學校／職業')+'：'+c.previous_affiliation+' → '+c.proposed_affiliation,'minor'));
+   card.append(node('p',sw('更正原因')+'：'+c.reason,'minor'));
+   card.append(node('p',sw('已評分作品、影片與分數不受此更正影響。'),'minor'));
+   for(const [decision,label] of [['accepted','同意更正基本資料'],['declined','不接受更正']]){
+    const btn=node('button',sw(label),'btn btn-soft');btn.type='button';
+    btn.onclick=()=>{if(!confirm(sw('確認這項操作？')+' '+sw(label)+' '+sw('本次操作會保留稽核紀錄。')))return;
+     run(async()=>{
+      const result=await api('decide-member-correction',{request_id:c.id,decision});
+      if(result.decision!==decision)throw Error('readback_mismatch');
+      await renderOrganizer();status(sw('更正申請已處理')+'：'+sw(label));
+     });
+    };
+    card.append(btn);
+   }
+   correctionList.append(card);
+  }
+ }
+ window.staffRelocalize=()=>{paint();paintCorrections();nav.display({focus:false})};
+ if(correctionPanel&&correctionList){
+  paintCorrections();
   try{
    const reqs=await api('organizer-corrections');
-   correctionPanel.hidden=!reqs.enabled;
-   if(reqs.enabled){
-    const pending=(reqs.requests||[]).filter(x=>x.state==='pending');
-    correctionPanel.querySelector('[data-correction-count]').textContent='待審 '+pending.length+' 筆';
-    if(!pending.length)correctionList.append(node('p','目前沒有待審更正申請。','minor'));
-    for(const c of pending){
-     const card=node('article',undefined,'roster-entry');
-     card.append(node('strong','報名編號：'+c.application_id));
-     card.append(node('p','姓名：'+c.previous_stage_name+' → '+c.proposed_stage_name,'minor'));
-     card.append(node('p','學校／職業：'+c.previous_affiliation+' → '+c.proposed_affiliation,'minor'));
-     card.append(node('p','更正原因：'+c.reason,'minor'));
-     card.append(node('p','已評分作品、影片與分數不受此更正影響。','minor'));
-     for(const [decision,label] of [['accepted','同意更正基本資料'],['declined','不接受更正']]){
-      const btn=node('button',label,'btn btn-soft');btn.type='button';
-      btn.onclick=()=>{if(!confirm('確認'+label+'？本次操作會保留稽核紀錄。'))return;
-       run(async()=>{
-        const result=await api('decide-member-correction',{request_id:c.id,decision});
-        if(result.decision!==decision)throw Error('readback_mismatch');
-        await renderOrganizer();status('更正申請已處理：'+label);
-       });
-      };
-      card.append(btn);
-     }
-     correctionList.append(card);
-    }
-   }
-  }catch{correctionPanel.hidden=true;}
+   if(!account||role!=='organizer'||staffRoute!==nav)return;
+   correctionState=reqs.enabled?'ready':'disabled';
+   correctionRows=(reqs.requests||[]).filter(x=>x.state==='pending');
+  }catch{
+   if(!account||role!=='organizer'||staffRoute!==nav)return;
+   correctionState='error';
+  }
+  paintCorrections();
  }
 }
 
