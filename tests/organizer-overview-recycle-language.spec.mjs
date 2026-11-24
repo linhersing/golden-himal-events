@@ -18,6 +18,12 @@ test('organizer entry review totals are consistent and three languages update in
  });
  await page.goto('/backoffice.html');
  await page.locator('[data-lang=zh]').click();
+ await expect(page.locator('#staff-management-open')).toBeVisible();
+ await expect(page.locator('#staff-trash-open')).toBeVisible();
+ const actions=await page.locator('#staff-management-actions').boundingBox();
+ const roster=await page.locator('#admin-apps').boundingBox();
+ expect(actions.y+actions.height).toBeLessThan(roster.y);
+
  for(const [id,value] of [['pending-count','5'],['organizer-pending-count','1'],['organizer-supplement-count','2'],['organizer-approved-count','2']])
   await expect(page.locator('#'+id)).toHaveText(value);
  await expect(page.locator('[data-correction-count]')).toHaveText('待處理修改申請 0 筆');
