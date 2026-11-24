@@ -232,10 +232,27 @@ async function logout(request,env,a){
  if(match)await env.DB.prepare('DELETE FROM e2e_sessions WHERE session_fingerprint=?').bind(await sign(env,sessionLabel(env,a.role)+match[1])).run();
  return json({ok:true},200,{'Set-Cookie':cookie('',0)});
 }
+// Self-deletion and correction are independent permissions. The 48-hour
+// supplement deadline limits correction submissions, not voluntary withdrawal.
+async function memberDeletionPolicy(env){
+ const managed=await managedEraseAvailable(env.DB);
+ const modern=Boolean(await env.DB.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='e2e_demo_2027_scores'").first());
+ const approvals=approvalRequired(env)||await approvalSchemaReady(env);
+ const guard=alias=>`${alias}.phase='demo' AND ${alias}.status='submitted' AND ${alias}.payment_status='unpaid'
+ AND ${alias}.media_key IS NULL AND ${alias}.eligibility_key IS NULL AND ${alias}.receipt_key IS NULL
+ AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=${alias}.id)
+ AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=${alias}.id)
+ AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=${alias}.id)
+ ${modern?` AND NOT EXISTS(SELECT 1 FROM e2e_demo_2027_scores s WHERE s.application_id=${alias}.id)`:''}
+ ${managed?` AND EXISTS(SELECT 1 FROM e2e_admin_registrations r WHERE r.id=${alias}.id AND r.state='active' AND r.protected=0)`:''}
+ ${pendingGuard(approvals,alias)}`;
+ return {managed,guard};
+}
 async function applications(a,env,supplements){
  const approval=approvalRequired(env);
  const locations=await entrantLocationsReady(env.DB);
  const frontlineReady=await frontline2027Ready(env.DB);
+ const deletion=await memberDeletionPolicy(env);
  const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,${entrantLocationFields(locations)},p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url${frontlineSelect(frontlineReady)},
  p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,p.receipt_key IS NOT NULL AS has_receipt_file,
  p.phase,p.status,p.payment_status,p.created_at,p.updated_at,
@@ -243,7 +260,7 @@ async function applications(a,env,supplements){
  AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
  AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingGuard(approval,'p')}${supplementGuard(supplements,'p')}
- THEN 1 ELSE 0 END AS can_edit${approvalColumn(approval)}${supplementColumns(supplements)}
+ THEN 1 ELSE 0 END AS can_edit, CASE WHEN ${deletion.guard('p')} THEN 1 ELSE 0 END AS can_delete${approvalColumn(approval)}${supplementColumns(supplements)}
  FROM e2e_applications p${entrantLocationJoin(locations)}${frontlineJoin(frontlineReady)}${supplementJoin(supplements)} WHERE p.account_id=? ORDER BY p.created_at DESC,p.round_code DESC`).bind(a.id).all();
  const entries=rows.results||[];
  // April is a separately released TEST window, never auto-opened simply because January was saved.
@@ -414,17 +431,27 @@ async function updateApplication(request,env,a,supplements){
  const result=await selectApplication(env.DB,id,a.id);
  return json({ok:true,application_id:result.id,stage_name:result.stage_name,song_title:result.song_title,original_artist:result.original_artist,song_language:result.song_language,demo_url:result.demo_url,testOnly:true});
 }
-async function deleteApplication(request,env,a,supplements){
+async function deleteApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request);if(!b||Object.keys(b).some(k=>k!=='application_id'))
    return deny('invalid_json',422);
  const id=String(b.application_id||'');
  const app=await selectApplication(env.DB,id,a.id);
  if(!app)return deny('application_not_found',404);
- if(app.payment_status!=='unpaid'||app.status!=='submitted'||app.phase!=='demo'||app.media_key||app.eligibility_key||app.receipt_key)
-   return deny('delete_locked',409);
- const changed=await env.DB.prepare(`DELETE FROM e2e_applications WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo' AND media_key IS NULL AND eligibility_key IS NULL AND receipt_key IS NULL${pendingGuard(approvalRequired(env),'e2e_applications')}${supplementGuard(supplements,'e2e_applications')}`)
-  .bind(id,a.id).run();
+ const db=env.DB,policy=await memberDeletionPolicy(env);
+ const where=`id=? AND account_id=? AND ${policy.guard('e2e_applications')}`;
+ const remove=db.prepare(`DELETE FROM e2e_applications WHERE ${where}`).bind(id,a.id);
+ let changed;
+ try{
+  if(policy.managed){
+   // Keep a non-PII, append-only receipt even though the member's application
+   // and its dependent correction rows are removed by foreign-key cascade.
+   const audit=db.prepare(`INSERT INTO e2e_staff_audit(id,actor_id,actor_role,target_id,action,result,occurred_at,diff)
+    SELECT ?,?,'member',id,'delete','success',?,? FROM e2e_applications WHERE ${where}`)
+    .bind(uuid(),a.id,NOW(),JSON.stringify({member_self_delete:true}),id,a.id);
+   [,changed]=await db.batch([audit,remove]);
+  }else changed=await remove.run();
+ }catch(e){if(String(e?.message).includes('managed_registration_preserved'))return deny('delete_locked',409);throw e;}
  if(!changed.meta?.changes)return deny('delete_locked',409);
  return json({ok:true,deleted_application_id:id,testOnly:true});
 }
@@ -640,7 +667,7 @@ export async function handleE2E(request,env){
    return response;
   }
     if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a,supplements);
-    if(pathname==='/api/e2e/delete-application'&&isPost)return await deleteApplication(request,env,a,supplements);
+    if(pathname==='/api/e2e/delete-application'&&isPost)return await deleteApplication(request,env,a);
   if(pathname==='/api/e2e/mock-payment'&&isPost)return await mockPayment(request,env,a);
   if(pathname==='/api/e2e/demo-upload'&&isPost)return await mediaUpload(request,env,a);
   if(pathname==='/api/e2e/demo-download'&&!isPost)return await streamMedia(request,env,a);
