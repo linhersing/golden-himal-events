@@ -253,6 +253,7 @@ async function applications(a,env,supplements){
  const locations=await entrantLocationsReady(env.DB);
  const frontlineReady=await frontline2027Ready(env.DB);
  const deletion=await memberDeletionPolicy(env);
+ const withdrawalColumns=deletion.managed?`, CASE WHEN EXISTS(SELECT 1 FROM e2e_staff_audit e WHERE e.target_id=p.id AND e.actor_role='member' AND e.result='success' AND json_extract(e.diff,'$.member_withdrawal')=1) THEN 1 ELSE 0 END AS member_withdrawn`:'';
  const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,${entrantLocationFields(locations)},p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url${frontlineSelect(frontlineReady)},
  p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,p.receipt_key IS NOT NULL AS has_receipt_file,
  p.phase,p.status,p.payment_status,p.created_at,p.updated_at,
@@ -260,7 +261,7 @@ async function applications(a,env,supplements){
  AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
  AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingGuard(approval,'p')}${supplementGuard(supplements,'p')}
- THEN 1 ELSE 0 END AS can_edit, CASE WHEN ${deletion.guard('p')} THEN 1 ELSE 0 END AS can_delete${approvalColumn(approval)}${supplementColumns(supplements)}
+ THEN 1 ELSE 0 END AS can_edit, CASE WHEN ${deletion.guard('p')} THEN 1 ELSE 0 END AS can_delete${approvalColumn(approval)}${supplementColumns(supplements)}${withdrawalColumns}
  FROM e2e_applications p${entrantLocationJoin(locations)}${frontlineJoin(frontlineReady)}${supplementJoin(supplements)} WHERE p.account_id=? ORDER BY p.created_at DESC,p.round_code DESC`).bind(a.id).all();
  const entries=rows.results||[];
  // April is a separately released TEST window, never auto-opened simply because January was saved.
@@ -268,7 +269,7 @@ async function applications(a,env,supplements){
   !entries.some(row=>row.round_code==='2027-04'||row.phase==='final')?'2027-04':null;
  const decorated=await attachProfiles(env,entries);
  const personal=a.role==='member'?await attachMuseAudition(env,decorated):decorated;
- return json({ok:true,account:{id:a.id,role:a.role},applications:a.role==='member'?await attachFiveDemos(env,personal):personal,next_audition_round:nextRound,testOnly:true});
+ return json({ok:true,account:{id:a.id,role:a.role},applications:a.role==='member'?await attachFiveDemos(env,personal):personal,next_audition_round:nextRound,member_withdrawal_enabled:deletion.managed,testOnly:true});
 }
 async function submitApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
@@ -568,6 +569,56 @@ async function submitScore(request,env,a){
  await env.DB.prepare("UPDATE e2e_applications SET status='scored',updated_at=? WHERE id=? AND status='under_review'").bind(NOW(),app.id).run();
  return json({ok:true,score:b.technique+b.interpretation,storedIn:'cloudflare-d1-staging',testOnly:true});
 }
+// Voluntary withdrawal is not physical deletion. Keep scores, promotions,
+// immutable audit and published roster history; retire the application from active work.
+async function memberWithdrawalStatements(db,a,target=null){
+ const event=uuid(),now=NOW();
+ const filter=target?' AND id=?':'',args=target?[a.id,target]:[a.id];
+ const audit=db.prepare(`INSERT INTO e2e_staff_audit(id,actor_id,actor_role,target_id,action,result,occurred_at,diff)
+  SELECT ?||':'||id,?,'member',id,'delete','success',?,json_object('member_withdrawal',1,'prior_status',status)
+  FROM e2e_applications WHERE account_id=?${filter}
+  AND NOT EXISTS(SELECT 1 FROM e2e_staff_audit e WHERE e.target_id=e2e_applications.id AND e.actor_role='member' AND e.result='success' AND json_extract(e.diff,'$.member_withdrawal')=1)`)
+  .bind(event,a.id,now,...args);
+ const control=db.prepare(`INSERT INTO e2e_registration_controls(application_id,state,previous_status,version,last_event_id)
+  SELECT p.id,'deleted','withdrawn',1,e.id FROM e2e_applications p JOIN e2e_staff_audit e ON e.id=?||':'||p.id WHERE p.account_id=?
+  ON CONFLICT(application_id) DO UPDATE SET state='deleted',previous_status='withdrawn',version=e2e_registration_controls.version+1,last_event_id=excluded.last_event_id`).bind(event,a.id);
+ const update=db.prepare(`UPDATE e2e_applications SET status='withdrawn',updated_at=MAX(updated_at+1,?) WHERE account_id=?
+  AND EXISTS(SELECT 1 FROM e2e_staff_audit e WHERE e.id=?||':'||e2e_applications.id)`).bind(now,a.id,event);
+ return [audit,control,update];
+}
+async function withdrawMemberEntry(request,env,a){
+ if(!requireRole(a,'member'))return deny('member_only',403);
+ if(!await managedEraseAvailable(env.DB))return deny('member_withdrawal_unavailable',503);
+ const b=await bodyJSON(request);
+ if(!b||typeof b.application_id!=='string'||Object.keys(b).some(k=>k!=='application_id'))return deny('invalid_json',422);
+ const id=b.application_id,db=env.DB;
+ if(!await selectApplication(db,id,a.id))return deny('application_not_found',404);
+ await db.batch(await memberWithdrawalStatements(db,a,id));
+ const verified=await db.prepare(`SELECT p.status,c.state FROM e2e_applications p JOIN e2e_registration_controls c ON c.application_id=p.id
+  WHERE p.id=? AND p.account_id=? AND EXISTS(SELECT 1 FROM e2e_staff_audit e WHERE e.target_id=p.id AND e.actor_role='member' AND e.result='success' AND json_extract(e.diff,'$.member_withdrawal')=1)`).bind(id,a.id).first();
+ if(verified?.status!=='withdrawn'||verified.state!=='deleted')return deny('readback_mismatch',503);
+ return json({ok:true,application_id:id,withdrawn:true,testOnly:true});
+}
+async function closeMemberAccount(env,a){
+ if(!requireRole(a,'member'))return deny('member_only',403);
+ const db=env.DB;
+ if(!await managedEraseAvailable(db))return deny('member_withdrawal_unavailable',503);
+ const tables=new Set((await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('e2e_password_accounts','e2e_public_signup_accounts')").all()).results.map(x=>x.name));
+ const mail=a.mailboxFingerprint||(a.email?await sign(env,'email:'+a.email):null);
+ const retired=await sign(env,'retired-test-account:'+uuid());
+ const statements=await memberWithdrawalStatements(db,a);
+ if(tables.has('e2e_password_accounts'))statements.push(db.prepare('DELETE FROM e2e_password_accounts WHERE account_id=?').bind(a.id));
+ if(tables.has('e2e_public_signup_accounts'))statements.push(db.prepare('DELETE FROM e2e_public_signup_accounts WHERE account_id=?').bind(a.id));
+ if(mail)statements.push(db.prepare("DELETE FROM e2e_email_challenges WHERE kind='member' AND email_fingerprint=?").bind(mail));
+ statements.push(db.prepare('DELETE FROM e2e_sessions WHERE account_id=?').bind(a.id));
+ // Keep an unloginable internal reference for existing contest history.
+ statements.push(db.prepare("UPDATE e2e_accounts SET email_fingerprint=?,email_hint='closed TEST account',verified_at=NULL WHERE id=? AND role='member'").bind(retired,a.id));
+ await db.batch(statements);
+ const check=await db.prepare('SELECT email_fingerprint,verified_at FROM e2e_accounts WHERE id=?').bind(a.id).first();
+ const sessions=await db.prepare('SELECT COUNT(*) n FROM e2e_sessions WHERE account_id=?').bind(a.id).first();
+ if(check?.email_fingerprint!==retired||check.verified_at!==null||Number(sessions?.n)!==0)return deny('readback_mismatch',503);
+ return json({ok:true,closedTestAccount:true,retainedContestHistory:true,testOnly:true},200,{'Set-Cookie':cookie('',0)});
+}
 async function eraseMember(env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const rows=await env.DB.prepare('SELECT media_key,eligibility_key,receipt_key FROM e2e_applications WHERE account_id=?').bind(a.id).all();
@@ -673,6 +724,8 @@ export async function handleE2E(request,env){
   if(pathname==='/api/e2e/demo-download'&&!isPost)return await streamMedia(request,env,a);
   if(pathname==='/api/e2e/reviewer-queue'&&!isPost)return await judgeQueue(env,a);
   if(pathname==='/api/e2e/score'&&isPost)return await submitScore(request,env,a);
+  if(pathname==='/api/e2e/withdraw-entry'&&isPost)return await withdrawMemberEntry(request,env,a);
+  if(pathname==='/api/e2e/close-my-account'&&isPost)return await closeMemberAccount(env,a);
   if(pathname==='/api/e2e/delete-my-data'&&isPost)return await eraseMember(env,a);
   return deny('not_found',404);
  }catch{return deny('temporary_service_error',503)}
