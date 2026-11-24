@@ -858,7 +858,7 @@ function drawEntry(a,withdrawalEnabled=false){
  if(memberCanEdit(a)){
   const edit=node('button',mt('edit'),'btn btn-primary');edit.type='button';edit.onclick=()=>showEdit(a);actions.append(edit);
  }else if(a.status!=='withdrawn'){
-  const correction=node('button','申請更正基本資料（不影響分數）','btn btn-soft');correction.type='button';
+  const correction=node('button',mt('entryCorrectionAction'),'btn btn-soft');correction.type='button';
   correction.onclick=()=>showCorrection(a);actions.append(correction);
  }
 
@@ -1302,7 +1302,7 @@ async function renderJanuaryRoster(){
   section.append(node('h3',region.region+' 區 · '+(region.published_at?'已確認 TEST 名冊':blockers[region.blocker]||'可確認 TEST 名冊')));
   const rows=region.selected||region.ranked||[];
   const list=node('ol');
-  for(const row of rows)list.append(node('li',row.stage_name+' · Demo '+row.position+' · '+row.average+' 分'));
+  for(const row of rows)list.append(node('li',row.stage_name+' · Demo '+row.position+' · '+row.average+' 分'+(row.withdrawn?' · '+sw('已棄權（歷史名冊）'):'')));
   section.append(list);
   if(region.incomplete?.length)section.append(node('p','待評分完成：'+region.incomplete.length+' 位','minor'));
   if(!region.published_at&&!region.blocker){
