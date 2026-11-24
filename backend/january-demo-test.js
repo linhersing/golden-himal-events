@@ -96,7 +96,11 @@ export async function januaryRoster(request,env,organizer,context){
   const stored=await db.prepare('SELECT roster,published_at,seat_limit FROM e2e_january_demo_test_rosters WHERE region=?').bind(region).first();
   if(stored){
    if(post)return deny('january_roster_already_recorded',409);
-   results.push({region,seats:stored.seat_limit,panel,selected:JSON.parse(stored.roster),published_at:stored.published_at});continue;
+   const selected=JSON.parse(stored.roster);
+   // Never rewrite the historical roster; annotate withdrawn entries at read time.
+   const withdrawn=await db.prepare(`SELECT p.id FROM e2e_applications p JOIN json_each(?) j ON p.id=json_extract(j.value,'$.application_id') WHERE p.status='withdrawn'`).bind(stored.roster).all();
+   const ids=new Set((withdrawn.results||[]).map(r=>r.id));
+   results.push({region,seats:stored.seat_limit,panel,selected:selected.map(row=>ids.has(row.application_id)?{...row,withdrawn:true}:row),published_at:stored.published_at});continue;
   }
   const rows=(await db.prepare(applicantScores).bind(region).all()).results||[];
   const {ranked,incomplete}=rank(rows,panel);
