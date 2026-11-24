@@ -42,3 +42,43 @@ test('organizer entry review totals are consistent and three languages update in
  await expect(page.locator('#admin-registration-search select[name=state]')).toHaveValue('deleted');
  await expect(page.locator('#admin-registration-results')).toHaveText('資源回收桶目前沒有資料。');
 });
+
+
+test('review actions distinguish normal pending, correction open, expired and submitted',async({page})=>{
+ const entries=[
+ {id:'normal',stage_name:'Normal TEST',approval_state:'pending',video_supplement_available:1},
+ {id:'expired',stage_name:'Expired TEST',approval_state:'pending',video_supplement_state:'expired',video_supplement_deadline:1700000000},
+ {id:'open',stage_name:'Open TEST',approval_state:'pending',video_supplement_state:'pending',video_supplement_deadline:1893456000},
+ {id:'submitted',stage_name:'Submitted TEST',approval_state:'pending',video_supplement_state:'submitted'}
+ ].map(x=>({...x,round_code:'2027-01',phase:'demo',category:'university',demo_entries:[]}));
+ await page.route('**/api/e2e/**',route=>{
+  const key=new URL(route.request().url()).pathname.split('/').at(-1);
+  if(key==='approve-test-application'){
+   const id=route.request().postDataJSON().application_id;
+   expect(id).toBe('submitted');entries.find(e=>e.id===id).approval_state='approved';
+   return route.fulfill({json:{ok:true,testOnly:true,approval_state:'approved'}});
+  }
+  return route.fulfill({json:key==='me'?{ok:true,account:{id:'test-organizer',role:'organizer',available_roles:['organizer']}}:key==='organizer-queue'?{ok:true,applications:entries}: {ok:true}});
+ });
+ await page.goto('/backoffice.html');await page.locator('[data-lang=zh]').click();
+ await expect(page.locator('#organizer-pending-count')).toHaveText('2');
+ await expect(page.locator('#organizer-supplement-count')).toHaveText('2');
+ const detail=page.locator('#organizer-entry-content');
+ for(const [id,label,approve,request] of [['normal','待審核',true,true],['expired','補件已逾期',false,false],['open','待補件',false,false],['submitted','待審核',true,false]]){
+  await page.locator('[data-application-id="'+id+'"]').click();
+  await detail.getByRole('button',{name:/報名審核與補件/}).click();
+  await expect(detail).toContainText(label);
+  await expect(detail.getByRole('button',{name:'核准測試報名',exact:true})).toHaveCount(approve?1:0);
+  await expect(detail.getByRole('button',{name:'開放 48 小時補件',exact:true})).toHaveCount(request?1:0);
+  if(id==='expired')await expect(detail).toContainText('系統禁止直接核准');
+  if(id==='submitted'){
+   page.once('dialog',d=>d.accept());
+   await detail.getByRole('button',{name:'核准測試報名',exact:true}).click();
+   await expect(detail).toContainText('已核准');
+  }
+  await page.locator('#organizer-entry-close').click();
+  await expect(page.locator('#admin-apps')).toBeVisible();
+ }
+ await expect(page.locator('#organizer-approved-count')).toHaveText('1');
+ await expect(page.locator('#organizer-pending-count')).toHaveText('1');
+});
