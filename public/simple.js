@@ -1170,9 +1170,9 @@ function createStaffWorkspace(staffRole,list,workspace,content,render){
    window.scrollTo(0,scroll);button?.focus({preventScroll:true});
   }
  }
- function open(entry,button){
+ function open(entry,button,view='overview'){
   scroll=window.scrollY;trigger=button;
-  save({scope,id:entry.id,view:'overview',depth:1},'pushState');
+  save({scope,id:entry.id,view,depth:1},'pushState');
   display();
  }
  function go(view,detail){
@@ -1242,17 +1242,18 @@ function showAdminRegistrations(enabled){
  if(!panel||!enabled){clearAdminRegistrations();return;}
  panel.hidden=false;
  const form=$('admin-registration-search'),list=$('admin-registration-list'),pager=$('admin-registration-pager');
- let offset=0;
+ let offset=0,searchSequence=0;
  async function search(){
+  const sequence=++searchSequence;
   const query=new URLSearchParams({...formValues(form),offset:String(offset)});
   const data=await api('organizer-registrations?'+query);
-  if(!account||role!=='organizer'||panel.hidden)return;
+  if(sequence!==searchSequence||!account||role!=='organizer'||panel.hidden)return;
   list.replaceChildren();pager.replaceChildren();
-  $('admin-registration-results').textContent=data.registrations.length?'本頁 '+data.registrations.length+' 筆':'沒有符合條件的資料。';
+  $('admin-registration-results').textContent=data.registrations.length?sw('本頁筆數')+'：'+data.registrations.length:sw('沒有符合條件的資料。');
   for(const registration of data.registrations)list.append(card(registration));
   for(const [to,label] of [[offset>0?offset-25:null,'上一頁'],[data.next_offset,'下一頁']]){
    if(to===null)continue;
-   const button=node('button',label,'btn btn-soft');button.type='button';
+   const button=node('button',sw(label),'btn btn-soft');button.type='button';
    button.onclick=()=>run(async()=>{offset=to;await search()});pager.append(button);
   }
  }
@@ -1338,6 +1339,7 @@ const contactViews={
 };
 async function renderOrganizer(){
  clearStaffWorkspace();
+ for(const id of ['pending-count','pending-registration-count','supplement-registration-count','scores-count','pending-correction-count'])$(id).textContent='—';
  const dashboard=$('organizer-dashboard');
  dashboard.hidden=false;$('judge-dashboard').hidden=true;
  const v=await api('organizer-queue?view=workbench'),apps=v.applications||[];
@@ -1349,8 +1351,13 @@ async function renderOrganizer(){
  if(!january.hidden){
   january.ontoggle=()=>{if(january.open)run(renderJanuaryRoster)};
  }
- $('pending-count').textContent=String(apps.length);
- $('scores-count').textContent=String(apps.reduce((n,a)=>n+Number(a.demo_judges||0)+Number(a.live_judges||0),0));
+ function paintCounts(){
+  $('pending-count').textContent=String(apps.length);
+  $('pending-registration-count').textContent=String(apps.filter(a=>organizerState(a)==='待審核').length);
+  $('supplement-registration-count').textContent=String(apps.filter(a=>organizerState(a)==='待補件').length);
+  $('scores-count').textContent=String(apps.reduce((n,a)=>n+Number(a.demo_judges||0)+Number(a.live_judges||0),0));
+ }
+ paintCounts();
  $('paid-count').textContent='0';
  let toolArea=dashboard.querySelector('.staff-tools');
  if(!toolArea){
@@ -1369,6 +1376,7 @@ async function renderOrganizer(){
  const management=$('organizer-admin-registrations'),managementAnchor=node('span');
  management.before(managementAnchor);
  const managementRows=new Map();
+ let managementMode=null;
  const nav=createStaffWorkspace('organizer',dashboard,workspace,panel,showRecord);
  staffBulk?.clear();
  staffBulk=window.GHVRegistrationBulk.create({api,t:sw,isAllowed:()=>Boolean(account&&role==='organizer'&&staffRoute===nav),onChanged:()=>staffManageChanged?.()});
@@ -1390,6 +1398,9 @@ async function renderOrganizer(){
  const tools=$('staff-management-open');
  tools.hidden=!v.registration_management_enabled;
  tools.onclick=()=>nav.open({id:'_management'},tools);
+ const recycle=$('staff-recycle-open');
+ recycle.hidden=!v.registration_management_enabled;
+ recycle.onclick=()=>nav.open({id:'_management'},recycle,'management-recycle');
  $('admin-registration-bulk-open').onclick=()=>nav.go('management-bulk');
  management.hidden=true;
  back.onclick=nav.back;close.onclick=nav.close;
@@ -1424,8 +1435,20 @@ async function renderOrganizer(){
    }else if(route.view==='management-bulk'){
     panel.append(staffBulk.render());
    }else{
+    const recycleMode=route.view==='management-recycle';
+    const form=$('admin-registration-search');
+    const state=form.elements.namedItem('state');
+    if(managementMode!==recycleMode){
+     form.reset();state.value=recycleMode?'deleted':'active';managementMode=recycleMode;
+    }
+    $('organizer-entry-title').textContent=sw(recycleMode?'資源回收桶':'報名管理與稽核');
+    $('recycle-explanation').hidden=!recycleMode;
+    state.closest('label').hidden=recycleMode;
+    if(recycleMode)state.value='deleted';
     panel.append(management);management.hidden=false;
-    management.open=true;management.ontoggle?.();
+    management.open=true;
+    $('admin-registration-list').replaceChildren();$('admin-registration-pager').replaceChildren();
+    form.requestSubmit();
    }
    return;
   }
@@ -1518,6 +1541,7 @@ async function renderOrganizer(){
   }
  }
  function paint(){
+  paintCounts();
   const q=search.value.trim().toLowerCase(),lang=language.value,cat=category.value,st=statusFilter.value;
   const found=apps.filter(entry=>{
    const works=staffWorks(entry);
@@ -1559,8 +1583,8 @@ async function renderOrganizer(){
    correctionPanel.hidden=!reqs.enabled;
    if(reqs.enabled){
     const pending=(reqs.requests||[]).filter(x=>x.state==='pending');
-    correctionPanel.querySelector('[data-correction-count]').textContent='待審 '+pending.length+' 筆';
-    if(!pending.length)correctionList.append(node('p','目前沒有待審更正申請。','minor'));
+    $('pending-correction-count').textContent=String(pending.length);
+    if(!pending.length)correctionList.append(node('p',sw('目前沒有待審更正申請。'),'minor'));
     for(const c of pending){
      const card=node('article',undefined,'roster-entry');
      card.append(node('strong','報名編號：'+c.application_id));
