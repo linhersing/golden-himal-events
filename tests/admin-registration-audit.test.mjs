@@ -114,6 +114,25 @@ test('organizer alone edits, disables, removes and restores a fictional D1 regis
   assert.equal(db.prepare('SELECT COUNT(*) n FROM e2e_test_video_supplements WHERE application_id=?').get(secondId).n,0);
   const receipt=db.prepare("SELECT actor_role,action,result,diff FROM e2e_staff_audit WHERE target_id=? AND actor_role='member'").get(secondId);
   assert.deepEqual({...receipt},{actor_role:'member',action:'delete',result:'success',diff:JSON.stringify({member_self_delete:true})});
+  assert.equal((await call('withdraw-entry','judge-fake',{application_id:id})).status,403);
+  const withdrew=await call('withdraw-entry','singer-fake',{application_id:id});
+  assert.equal(withdrew.status,200,await withdrew.clone().text());
+  assert.equal((await withdrew.json()).withdrawn,true);
+  assert.equal((await call('withdraw-entry','singer-fake',{application_id:id})).status,200);
+  assert.equal(db.prepare('SELECT status FROM e2e_applications WHERE id=?').get(id).status,'withdrawn');
+  assert.equal(db.prepare('SELECT state FROM e2e_registration_controls WHERE application_id=?').get(id).state,'deleted');
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM e2e_demo_2027_scores WHERE application_id=?').get(id).n,15);
+  assert.equal(db.prepare('SELECT roster FROM e2e_january_demo_test_rosters WHERE region=?').get('A').roster,roster);
+  const withdrawnRow=(await (await call('applications','singer-fake')).json()).applications.find(x=>x.id===id);
+  assert.equal(withdrawnRow.member_withdrawn,1);
+  assert.equal((await change('restore',5)).status,409);
+  const closed=await call('close-my-account','singer-fake',{});
+  assert.equal(closed.status,200,await closed.clone().text());
+  assert.deepEqual(await closed.json(),{ok:true,closedTestAccount:true,retainedContestHistory:true,testOnly:true});
+  assert.equal((await call('me','singer-fake')).status,401);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM e2e_demo_2027_scores WHERE application_id=?').get(id).n,15);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM e2e_accounts WHERE email_fingerprint=?').get(fingerprint('email:singer@example.invalid')).n,0);
+
 
  }finally{db.close()}
 });
