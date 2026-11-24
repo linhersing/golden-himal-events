@@ -392,6 +392,9 @@ Object.assign(texts.ne,{"accountToolsEyebrow":"परीक्षण खात�
 Object.assign(texts.zh,{accountProtectedHelp:'此帳號有受保護的參賽紀錄，請使用「棄權並關閉帳號」。'});
 Object.assign(texts.en,{accountProtectedHelp:'This account has protected contest records. Use Withdraw and close account.'});
 Object.assign(texts.ne,{accountProtectedHelp:'यस खातामा सुरक्षित प्रतियोगिता अभिलेख छन्। प्रतियोगिताबाट फिर्ता भएर खाता बन्द गर्नुहोस्।'});
+Object.assign(texts.zh,{accountEdit:'修改報名資料'});
+Object.assign(texts.en,{accountEdit:'Edit registration details'});
+Object.assign(texts.ne,{accountEdit:'आवेदन विवरण सम्पादन गर्नुहोस्'});
 function apply(){
  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
  document.querySelectorAll('[data-l]').forEach(el=>{el.textContent=t(el.dataset.l)});
