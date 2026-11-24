@@ -30,6 +30,7 @@ export async function checkRecycle(runtime,browser,evidence,expect){
     await frame.locator('#organizer-entry-back').click();
    }
    const checked=frame.locator('#admin-registration-list input[data-admin-select-id]:not([disabled])');
+   await expect(checked.nth(1)).toBeVisible();
    const allowed=await checked.count();assert(allowed>=2,'need two selectable fixtures');
    // All means THIS PAGE, never all 500 test records or all matching pages.
    await frame.locator('#admin-select-page').check();
@@ -57,8 +58,10 @@ export async function checkRecycle(runtime,browser,evidence,expect){
     assert.equal((await db.prepare('SELECT state FROM e2e_registration_controls WHERE application_id=?').bind(id).first()).state,'deleted');
    assert.deepEqual(await counts(),before,'moving to recycle bin preserves all physical records');
    await page.screenshot({path:join(evidence,'recycle-selected-complete-'+device+'.png')});
-   await frame.locator('#organizer-entry-back').click();
-   await frame.locator('#admin-registration-search select[name=state]').selectOption('deleted');
+   await frame.locator('#organizer-entry-close').click();
+   await expect(frame).toBeHidden();
+   await page.locator('#staff-trash-open').click();
+   await expect(frame.locator('#admin-registration-search select[name=state]')).toHaveValue('deleted');
    // Only restore the same checked IDs, even if unrelated recycle-bin
    // records also exist from earlier TEST sessions.
    for(const id of ids){
