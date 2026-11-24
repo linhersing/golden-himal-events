@@ -8,7 +8,9 @@ const backend=readFileSync(new URL('../backend/staging-e2e.js',import.meta.url),
 test('January 2027 audition is not blocked by checkout, and public payment UI is disabled',()=>{
  // Nov 18 Muse/Alan policy: public site must not surface payment UI.
  assert.doesNotMatch(member,/actions\.append\(pay\)/);
- assert.match(member,/2027 January audition TEST/);
+ assert.match(member,/memberNode\('p','januaryTestNotice','minor'\)/);
+ const locale=readFileSync(new URL('../public/page-locale.js',import.meta.url),'utf8');
+ assert.match(locale,/January 2027 audition TEST — eligibility review applies/);
  const memberPage=readFileSync(new URL('../public/member.html',import.meta.url),'utf8');
  assert.match(memberPage,/id="register"/);
  assert.match(memberPage,/data-l="statusPayment">Stage review<\x2fspan>/);
