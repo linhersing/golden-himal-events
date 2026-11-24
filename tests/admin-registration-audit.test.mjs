@@ -105,5 +105,15 @@ test('organizer alone edits, disables, removes and restores a fictional D1 regis
   assert.throws(()=>db.prepare('DELETE FROM e2e_applications WHERE id=?').run(id),/managed_registration_preserved/);
   assert.equal(db.prepare('SELECT roster FROM e2e_january_demo_test_rosters WHERE region=?').get('A').roster,roster);
   assert.deepEqual(db.prepare('SELECT id,updated_at FROM e2e_applications WHERE id=?').get(id),row);
+  // The member endpoint must not bypass managed scores/rosters.
+  assert.equal((await call('delete-application','singer-fake',{application_id:id})).status,409);
+  const secondId='22222222-3333-4444-8555-666666666666';
+  db.prepare("INSERT INTO e2e_applications(id,account_id,round_code,category,province,location_basis,affiliation,stage_name,song_title,original_artist,song_language,song_key,created_at,updated_at) VALUES(?,?,'2027-04','community','bagmati','work','Fictional School','Test Singer','Test Song','Test Artist','ne','C',1,1)").run(secondId,'singer-fake');
+  db.prepare('INSERT INTO e2e_test_video_supplements(application_id,requested_by,requested_at) VALUES(?,?,?)').run(secondId,'organizer-fake',1);
+  assert.equal((await call('delete-application','singer-fake',{application_id:secondId})).status,200);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM e2e_test_video_supplements WHERE application_id=?').get(secondId).n,0);
+  const receipt=db.prepare("SELECT actor_role,action,result,diff FROM e2e_staff_audit WHERE target_id=? AND actor_role='member'").get(secondId);
+  assert.deepEqual({...receipt},{actor_role:'member',action:'delete',result:'success',diff:JSON.stringify({member_self_delete:true})});
+
  }finally{db.close()}
 });
