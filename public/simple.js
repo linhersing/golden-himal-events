@@ -493,7 +493,34 @@ function staffTabs(){
  document.querySelector('.role-tabs')?.toggleAttribute('hidden',!account);
  document.querySelectorAll('[data-role-tab]').forEach(b=>{b.hidden=!roles.includes(b.dataset.roleTab);b.classList.toggle('active',b.dataset.roleTab===role);if(b.dataset.roleTab==='reviewer'){b.removeAttribute('data-t');b.dataset.staffText=staffJudgingPolicy.mode==='all_stages_test'?'評審':'決賽評審（TEST）';b.textContent=sw(b.dataset.staffText)}});
 }
-async function loadSession(){try{
+// An authenticated member may still have a transient application-list failure.
+// Keep the verified session, let them type a local draft, but prevent an
+// unverified duplicate submission until the list has been read successfully.
+function memberRecoveryText(kind){
+ const texts={
+  zh:{failed:'會員已通過驗證，但暫時無法讀取既有報名資料。可先填寫，但請勿重複送出；按「重新載入報名資料」再試。',retry:'重新載入報名資料',ready:'報名資料已重新載入，可以繼續操作。',verification:'驗證後無法確認會員登入狀態。請確認網路連線並重新整理此頁；不要重複送出報名。'},
+  en:{failed:'Your account is verified, but saved entries could not be loaded. You may prepare a draft, but submitting is paused to prevent duplicates. Retry loading your entries.',retry:'Retry loading entries',ready:'Your entries have loaded. You can continue.',verification:'We could not confirm your member session after verification. Check your connection and reload this page; do not submit a duplicate entry.'},
+  ne:{failed:'तपाईंको खाता प्रमाणित भएको छ, तर पहिलेका आवेदनहरू लोड हुन सकेनन्। विवरण टाइप गर्न सक्नुहुन्छ, तर दोहोरिएको आवेदन रोक्न पठाउने सुविधा अस्थायी रूपमा बन्द छ। फेरि लोड गर्नुहोस्।',retry:'आवेदन फेरि लोड गर्नुहोस्',ready:'आवेदन विवरण लोड भयो। अब अगाडि बढ्न सक्नुहुन्छ।',verification:'प्रमाणीकरणपछि सदस्य सत्र पुष्टि हुन सकेन। इन्टरनेट जाँच गरी पृष्ठ फेरि खोल्नुहोस्; आवेदन दोहोर्‍याएर नपठाउनुहोस्।'}
+ };
+ const locale=window.GHVLocale?.lang||'zh';
+ return (texts[locale]||texts.zh)[kind];
+}
+function showMemberDataRetry(){
+ let retry=$('member-retry-load');
+ if(!retry){
+  retry=node('button',undefined,'btn btn-soft');
+  retry.id='member-retry-load';retry.type='button';
+  $('member-status')?.insertAdjacentElement('afterend',retry);
+  retry.addEventListener('click',async()=>{
+   retry.disabled=true;
+   try{if(await loadSession()===true)status(memberRecoveryText('ready'))}
+   finally{retry.disabled=false}
+  });
+ }
+ retry.textContent=memberRecoveryText('retry');
+ retry.hidden=false;
+}
+async function loadSession(followingOtp=false){let authenticatedMember=false;try{
  let v=await api('me');
  const granted=v.account.available_roles||[v.account.role];
  const target=staff?(granted.includes('organizer')?'organizer':granted.includes('reviewer')?'reviewer':null):'member';
@@ -502,7 +529,7 @@ async function loadSession(){try{
   v=await api('switch-role',{role:target});
   v=await api('me');
  }
- account=v.account;role=account.role;if(staff){staffJudgingPolicy={mode:'final_only'};applyStaffJudgingPolicy(v);}authUI(true);
+ account=v.account;role=account.role;if(staff){staffJudgingPolicy={mode:'final_only'};applyStaffJudgingPolicy(v);}authUI(true);authenticatedMember=!staff;
  if(staff){trackStaffSession(v);staffTabs();}else{
   setupProfileFields(v.profile_enabled===true);
   setupFrontlineForm(v.frontline_form_enabled===true);
@@ -517,7 +544,23 @@ async function loadSession(){try{
    option.disabled=!nationwide&&!['bagmati','gandaki'].includes(option.value);option.hidden=option.disabled;
   }
  }
- await dashboard();
+ try{
+  await dashboard();
+ }catch(e){
+  if(!authenticatedMember)throw e;
+  // A valid /me response is not invalidated by a later /applications outage.
+  // Let the singer type while preventing an unknown duplicate D1 write.
+  const save=$('application-form')?.querySelector('button[type="submit"]');
+  if(save){save.dataset.entriesBlocked='true';save.disabled=true;}
+  showMemberDataRetry();
+  status(memberRecoveryText('failed'),true);
+  return false;
+ }
+ if(authenticatedMember){
+  const save=$('application-form')?.querySelector('button[type="submit"]');
+  if(save){delete save.dataset.entriesBlocked;save.disabled=save.dataset.windowBlocked==='true';}
+  const retry=$('member-retry-load');if(retry)retry.hidden=true;
+ }
  // Preserve the public QR URL: after successful OTP, take a first-time singer
  // straight to the visible form. Existing entrants remain on their dashboard.
  if(!staff&&location.hash==='#register'){
@@ -529,7 +572,20 @@ async function loadSession(){try{
    });
   }
  }
- }catch(e){account=null;authUI(false);if(staff)staffTabs();if(e.message==='e2e_not_configured')status(friendlyError(e),true)}}
+ return true;
+ }catch(e){
+  if(authenticatedMember){
+   const save=$('application-form')?.querySelector('button[type="submit"]');
+   if(save){save.dataset.entriesBlocked='true';save.disabled=true;}
+   showMemberDataRetry();
+   status(memberRecoveryText('failed'),true);
+   return false;
+  }
+  account=null;authUI(false);if(staff)staffTabs();
+  if(e.message==='e2e_not_configured')status(friendlyError(e),true);
+  else if(followingOtp&&!staff)status(memberRecoveryText('verification'),true);
+  return false;
+ }}
 function setupAuth(){
 const mailForm=$(prefix+'-email-form'),codeForm=$(prefix+'-code-form');
 let challengeEmail,publicTest=false,staffHuman=false,humanToken,widgetId,widgetTimer,widgetScript;
@@ -698,7 +754,15 @@ mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  }
  authForms(false);
  if(staff)startOtpReminder();
- status(staff?'驗證信已要求寄送，請查看 Email（僅限受邀測試帳號）。':mt(publicTest?'signupCodeRequested':'otpRequested'));
+ // Staff OTP API acceptance is not proof of inbox delivery, and a member
+ // account never automatically grants organizer or reviewer permissions.
+ const staffOtpCopy={
+  zh:'工作人員驗證碼寄送請求已受理，但尚未確認郵件送達。請檢查收件匣與垃圾郵件；未收到時請主辦方核對此信箱是否具受邀主辦／評審權限，並查詢寄信紀錄。一般報名會員不會自動取得後台權限。',
+  en:'Staff verification email was requested, but inbox delivery has not been confirmed. Check Inbox and Spam. If nothing arrives, ask an organizer to verify that this email is invited as organizer/reviewer and review email-delivery logs. A singer account does not automatically grant staff access.',
+  ne:'कर्मचारीको प्रमाणीकरण इमेल पठाउन अनुरोध स्वीकार गरिएको छ, तर इमेल पुगेको पुष्टि भएको छैन। इनबक्स र स्प्याम हेर्नुहोस्। इमेल नआएमा यो ठेगानालाई आयोजक वा निर्णायकको निमन्त्रणा छ कि छैन र मेल पठाएको रेकर्ड जाँच्न आयोजकलाई भन्नुहोस्। प्रतियोगी खाताले स्वतः कर्मचारी अधिकार दिँदैन।'
+ };
+ const staffLang=document.documentElement.lang==='zh-Hant'?'zh':document.documentElement.lang;
+ status(staff?(staffOtpCopy[staffLang]||staffOtpCopy.zh):mt(publicTest?'signupCodeRequested':'otpRequested'));
  codeForm.querySelector('input').focus();
 })});
 codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
@@ -708,8 +772,8 @@ codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  challengeEmail=undefined;
  stopOtpReminder();
  codeForm.reset();
- await loadSession();
- if(account)status(staff?'已登入。':mt('signedIn'));
+ const loaded=await loadSession(true);
+ if(account&&loaded===true)status(staff?'已登入。':mt('signedIn'));
 })});
 const change=$(staff?'back-change':'change-mail');change?.addEventListener('click',()=>{stopOtpReminder();authForms(true);challenge=null;challengeEmail=undefined;codeForm.reset();statusBox.hidden=true});
 $(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logout',{});account=null;authUI(false);if(staff){staffTabs();$('staff-session-expired').hidden=true;}challenge=null;stopOtpReminder();authForms(true);status(page==='member'?mt('signedOut'):'已登出。')}));
