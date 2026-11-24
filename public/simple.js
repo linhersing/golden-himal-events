@@ -1477,7 +1477,8 @@ function showAdminRegistrations(enabled){
 }
 
 function organizerState(entry){
- if(['pending','expired'].includes(entry.video_supplement_state))return '待補件';
+ if(entry.video_supplement_state==='expired')return '補件已逾期';
+ if(entry.video_supplement_state==='pending')return '待補件';
  return entry.approval_state==='approved'?'已核准':entry.approval_state==='pending'?'待審核':'待核對';
 }
 const contactViews={
@@ -1500,12 +1501,14 @@ async function renderOrganizer(){
   january.ontoggle=()=>{if(january.open)run(renderJanuaryRoster)};
  }
  function refreshOverview(){
-  const counts={'待審核':0,'待補件':0,'已核准':0,'待核對':0};
+  const counts={'待審核':0,'待補件':0,'補件已逾期':0,'已核准':0,'待核對':0};
   for(const entry of apps)counts[organizerState(entry)]++;
   for(const [id,value] of [['pending-count',apps.length],['organizer-pending-count',counts['待審核']],['organizer-supplement-count',counts['待補件']],['organizer-approved-count',counts['已核准']],['organizer-unverified-count',counts['待核對']],['scores-count',apps.reduce((n,a)=>n+Number(a.demo_judges||0)+Number(a.live_judges||0),0)]]){
    $(id).textContent=String(value);
   }
   $('organizer-unverified-stat').hidden=!counts['待核對'];
+  $('organizer-expired-count').textContent=String(counts['補件已逾期']);
+  $('organizer-expired-stat').hidden=!counts['補件已逾期'];
   $('organizer-overview-limit').hidden=apps.length<500;
   $('paid-count').textContent='0';
  }
@@ -1651,7 +1654,7 @@ async function renderOrganizer(){
   }
   if(step==='review'){
    const supplement=entry.video_supplement_state;
-   const reviewState=supplement==='expired'?'補件已逾期':organizerState(entry);
+   const reviewState=organizerState(entry);
    fields(panel,[['報名狀態',sw(reviewState)]]);
    if(['pending','expired'].includes(supplement)){
     if(Number(entry.video_supplement_deadline)>0)fields(panel,[['補件截止時間',supplementDeadline(entry)]]);
@@ -1700,7 +1703,10 @@ async function renderOrganizer(){
    if(lang&&!works.some(work=>work.song_language===lang))return false;
    if(cat&&(cat==='single'?!staffGroup(entry).startsWith(sw('單一組別')):entry.category!==cat||staffGroup(entry).startsWith(sw('單一組別'))))return false;
    const judged=Number(entry.demo_judges||0)+Number(entry.live_judges||0)>0;
-   return st==='scored'?judged:st==='unscored'?!judged:st==='pending'?organizerState(entry)==='待審核':st==='approved'?organizerState(entry)==='已核准':st==='supplement'?organizerState(entry)==='待補件':st==='unverified'?organizerState(entry)==='待核對':true;
+   if(st==='scored')return judged;
+   if(st==='unscored')return !judged;
+   const filterStates={pending:'待審核',approved:'已核准',supplement:'待補件',expired:'補件已逾期',unverified:'待核對'};
+   return !Object.hasOwn(filterStates,st)||organizerState(entry)===filterStates[st];
   });
   const pages=Math.max(1,Math.ceil(found.length/perPage));
   pageNo=staffListPages.organizer=Math.min(pageNo,pages);holder.replaceChildren();
@@ -1715,7 +1721,7 @@ async function renderOrganizer(){
    const id=node('span',shownId,'roster-mini staff-entry-id');id.title=entry.id;
    info.append(node('strong',entry.stage_name||sw('選手')),id,node('span',[entry.round_code,staffGroup(entry),staffWorks(entry).length+' '+sw('首作品')].filter(Boolean).join(' · '),'roster-mini'));
    open.append(info,node('span',sw('查看選手')+' ›','organizer-record-arrow'));
-   const state=organizerState(entry),badge=node('span',sw(entry.video_supplement_state==='expired'?'補件已逾期':state),'pill '+(state==='已核准'?'pill-pass':'pill-warn'));
+   const state=organizerState(entry),badge=node('span',sw(state),'pill '+(state==='已核准'?'pill-pass':'pill-warn'));
    const side=node('div',undefined,'organizer-record-status');side.append(badge);
    card.append(open,side);holder.append(card);
   }

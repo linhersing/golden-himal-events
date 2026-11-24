@@ -62,7 +62,20 @@ test('review actions distinguish normal pending, correction open, expired and su
  });
  await page.goto('/backoffice.html');await page.locator('[data-lang=zh]').click();
  await expect(page.locator('#organizer-pending-count')).toHaveText('2');
- await expect(page.locator('#organizer-supplement-count')).toHaveText('2');
+ await expect(page.locator('#organizer-supplement-count')).toHaveText('1');
+ await expect(page.locator('#organizer-expired-count')).toHaveText('1');
+ await page.locator('[data-overview-filter=supplement]').click();
+ await expect(page.locator('[data-application-id="open"]')).toBeVisible();
+ await expect(page.locator('[data-application-id="expired"]')).toHaveCount(0);
+ await page.locator('[data-overview-filter=expired]').click();
+ await expect(page.locator('[data-application-id="expired"]')).toBeVisible();
+ await expect(page.locator('[data-application-id="open"]')).toHaveCount(0);
+ for(const [lang,label] of [['en','Correction deadline expired'],['ne','सुधारको समय सकियो'],['zh','補件已逾期']]){
+  await page.locator('[data-lang='+lang+']').click();
+  await expect(page.locator('[data-overview-filter=expired]')).toContainText(label);
+  await expect(page.locator('[data-application-id="expired"]')).toBeVisible();
+ }
+ await page.locator('[data-overview-filter=""]').click();
  const detail=page.locator('#organizer-entry-content');
  for(const [id,label,approve,request] of [['normal','待審核',true,true],['expired','補件已逾期',false,false],['open','待補件',false,false],['submitted','待審核',true,false]]){
   await page.locator('[data-application-id="'+id+'"]').click();
