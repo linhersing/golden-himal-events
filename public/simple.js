@@ -312,6 +312,7 @@ function friendlyError(e){
  member_only:'This account is not a singer account.',
  update_locked:mt('editLockedAfterReview'),
  delete_locked:mt('deleteProtectedEntry'),
+ member_withdrawal_unavailable:mt('withdrawUnavailable'),
  invalid_demo_url:'Enter a valid public video link.',
  invalid_location_detail:mt('locationDetailHelp'),
  location_storage_unavailable:mt('provincePending'),
@@ -792,6 +793,7 @@ function memberCanDelete(a){
  return a.payment_status==='unpaid'&&a.status==='submitted'&&a.phase==='demo'&&memberCanEdit(a)&&!a.has_uploaded_file&&!a.has_eligibility_file&&!a.has_receipt_file&&a.approval_state!=='approved'&&!a.video_supplement_state;
 }
 function editLockMessage(a){
+ if(a.member_withdrawn)return mt('voluntaryWithdrawnHelp');
  if(a.status==='withdrawn')return mt('entryWithdrawnHelp');
  if(a.approval_state==='approved'&&a.phase==='demo'&&['submitted','under_review'].includes(a.status))return mt('editApprovedLock');
  return a.approval_state==='pending'?mt('entryPendingLockedHelp'):mt('editLockedAfterReview');
@@ -828,8 +830,8 @@ function drawMemberSupplement(box,a){
  });};
  box.append(form);
 }
-const entryReviewKey=entry=>entry.status==='withdrawn'?'entryWithdrawn':entry.approval_state==='approved'?'approvalAccepted':entry.approval_state==='pending'?'approvalPending':'entryReceived';
-function drawEntry(a){
+const entryReviewKey=entry=>entry.member_withdrawn?'voluntaryWithdrawn':entry.status==='withdrawn'?'entryWithdrawn':entry.approval_state==='approved'?'approvalAccepted':entry.approval_state==='pending'?'approvalPending':'entryReceived';
+function drawEntry(a,withdrawalEnabled=false){
  const box=node('article',undefined,'entry member-entry');
  const title=node('div',undefined,'member-entry-main');
  const avatar=profileImage(a.photo_url_1);
@@ -884,6 +886,15 @@ function drawEntry(a){
   if(a.round_code==='2027-01')box.append(node('p','2027 January audition TEST · 將依參賽資格審核 · परीक्षण आवेदन','minor'));
   actions.append(del);
  }
+ if(withdrawalEnabled&&!a.member_withdrawn){
+  const withdraw=node('button',mt('withdrawEntry'),'btn btn-danger-outline');withdraw.type='button';
+  withdraw.onclick=()=>{if(!confirm(mt('withdrawConfirm')))return;run(async()=>{
+   const result=await api('withdraw-entry',{application_id:a.id});
+   if(result.application_id!==a.id||result.withdrawn!==true||result.testOnly!==true)throw Error('readback_mismatch');
+   const rows=await renderMember();if(!rows.some(row=>row.id===a.id&&row.member_withdrawn&&row.status==='withdrawn'))throw Error('readback_mismatch');
+   status(mt('withdrawSuccess'));
+  });};actions.append(withdraw);
+ }
  box.append(actions);
  if(!memberCanEdit(a)&&!a.video_supplement_state)box.append(node('p',editLockMessage(a),'minor'));
  return box;
@@ -905,12 +916,11 @@ async function renderMember(){
  const editable=rows.find(memberCanEdit),correctable=rows.find(row=>row.status!=='withdrawn');
  if(manageEdit){
   manageEdit.disabled=!editable&&!correctable;
-  manageEdit.textContent=editable?'修改報名資料':mt('entryCorrectionAction');
+  manageEdit.textContent=mt(editable?'edit':'entryCorrectionAction');
   manageEdit.onclick=editable?()=>showEdit(editable):correctable?()=>showCorrection(correctable):null;
  }
- if(manageNote)manageNote.textContent=editable
-  ?'尚未評分的TEST報名可直接修改並經資料庫讀回確認。'
-  :hasEntries?editLockMessage(correctable||first):'尚未有報名資料，請先建立一筆測試報名。';
+ if(manageNote)manageNote.textContent=editable?mt('accountEditable'):hasEntries?editLockMessage(correctable||first):mt('accountNoEntry');
+ const close=$('member-manage-close');if(close)close.hidden=v.member_withdrawal_enabled!==true;
 
  // The API must explicitly open the later TEST round; a January entry alone is not permission.
  const secondAudition=hasEntries&&v.next_audition_round==='2027-04';
@@ -962,7 +972,7 @@ async function renderMember(){
   const video=$('member-view-video'),link=safeLink(first.demo_url);
   video.hidden=!link;if(link)video.href=link;else video.removeAttribute('href');
   $('member-show-details').onclick=()=>document.getElementById('member-entry-overview').scrollIntoView({behavior:'smooth',block:'start'});
-  for(const a of rows)holder.append(drawEntry(a));
+  for(const a of rows)holder.append(drawEntry(a,v.member_withdrawal_enabled===true));
  }else{
   $('member-hero-avatar').replaceChildren();
   $('member-quick-edit').onclick=null;
@@ -1328,7 +1338,7 @@ function showAdminRegistrations(enabled){
  let offset=0,rows=[],selected=new Set(),searchGeneration=0;
  const currentTab=$('admin-current-tab'),trashTab=$('admin-trash-tab');
  function isTrash(){return stateFilter.value==='deleted'}
- function selectable(row){return !row.protected&&(isTrash()?row.state==='deleted':row.state!=='deleted')}
+ function selectable(row){return !row.member_withdrawn&&!row.protected&&(isTrash()?row.state==='deleted':row.state!=='deleted')}
  function syncSelected(){
   const allowed=rows.filter(selectable),checked=allowed.filter(row=>selected.has(row.id)).length;
   count.textContent=sw('已選')+' '+checked+' '+sw('筆');
@@ -1403,16 +1413,16 @@ function showAdminRegistrations(enabled){
    label.append(input);
    const button=staffButton(undefined,'roster-entry roster-action',()=>staffManageNavigate?.(row));
    const text=node('span',undefined,'roster-entry-text');
-   text.append(node('strong',row.stage_name),node('span',row.id+' · '+sw(registrationStates[row.state]),'minor'));
+   text.append(node('strong',row.stage_name),node('span',row.id+' · '+sw(row.member_withdrawn?'選手自行棄權':registrationStates[row.state]),'minor'));
    if(row.protected)text.append(node('span',sw('已有評分或晉級，不能批次移除'),'minor'));
    button.append(text,node('span',sw('查看選手')+' ›'));
    wrapper.append(label,button);return wrapper;
   }
   const item=node('article',undefined,'roster-entry');
   const info=node('div',undefined,'roster-entry-text');
-  info.append(node('strong',row.stage_name),node('p',row.id+' · '+sw(registrationStates[row.state]),'minor'));
+  info.append(node('strong',row.stage_name),node('p',row.id+' · '+sw(row.member_withdrawn?'選手自行棄權':registrationStates[row.state]),'minor'));
   if(row.protected)info.append(node('p',sw('已有評分或晉級。這筆資料已鎖定。'),'minor'));
-  if(!row.protected&&row.state==='active'){
+  if(!row.member_withdrawn&&!row.protected&&row.state==='active'){
    const edit=node('details');edit.append(node('summary',sw(registrationActions.edit)));
    const fields=node('form');
    for(const [name,label] of [['stage_name','演出名稱／藝名'],['affiliation','學校／職業']]){
@@ -1425,7 +1435,7 @@ function showAdminRegistrations(enabled){
    edit.append(fields);info.append(edit);
   }
   const side=node('div',undefined,'roster-entry-side');
-  if(!row.protected){
+  if(!row.member_withdrawn&&!row.protected){
    const actions=row.state==='active'?['disable','delete']:row.state==='disabled'?['delete','restore']:['restore'];
    for(const action of actions){
     const button=node('button',sw(registrationActions[action]),'btn btn-soft');button.type='button';
@@ -1966,15 +1976,15 @@ async function renderJudge(){
 if(page==='member'){
  role='member';setupAuth();
  $('member-manage-delete')?.addEventListener('click',()=>{
-  if(!account||account.role!=='member'){status('請先登入本人會員帳號。',true);return;}
-  if(!confirm('刪除測試會員將永久清除你的測試帳號、報名與相關資料；這項操作無法復原。確定繼續？'))return;
-  const phrase=prompt('最後確認：請輸入 DELETE，才會刪除你的測試帳號。');
-  if(phrase!=='DELETE'){status('已取消刪除。未修改任何資料。');return;}
+  if(!account||account.role!=='member'){status(mt('errLogin'),true);return;}
+  if(!confirm(mt('accountEraseConfirm')))return;
+  const phrase=prompt(mt('accountErasePhrase'));
+  if(phrase!=='DELETE'){status(mt('accountCanceled'));return;}
   run(async()=>{
    const result=await api('delete-my-data',{});
    if(result.deletedTestData!==true)throw Error('readback_mismatch');
    account=null;challenge=null;authUI(false);authForms(true);
-   status('已刪除你的測試會員與相關測試報名資料。');
+   status(mt('accountErased'));
   });
  });
  window.addEventListener('ghv:languagechange',()=>{
@@ -1982,6 +1992,12 @@ if(page==='member'){
    input.setAttribute('aria-label',mt('songLangOtherLabel'));
   });
   if(account&&account.role==='member'){if(document.querySelector('[data-editing]'))return;renderMember().catch(e=>status(friendlyError(e),true))}
+ });
+ $('member-manage-close')?.addEventListener('click',()=>{
+  if(!account||account.role!=='member'){status(mt('errLogin'),true);return;}
+  if(!confirm(mt('accountCloseConfirm')))return;
+  if(prompt(mt('accountClosePhrase'))!=='CLOSE'){status(mt('accountCanceled'));return;}
+  run(async()=>{const result=await api('close-my-account',{});if(result.closedTestAccount!==true||result.retainedContestHistory!==true)throw Error('readback_mismatch');account=null;challenge=null;authUI(false);authForms(true);status(mt('accountClosed'));});
  });
  $('eligibility-upload-submit')?.addEventListener('click',()=>{
   const file=$('eligibility-upload-file')?.files?.[0];
