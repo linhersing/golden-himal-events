@@ -1229,14 +1229,14 @@ const registrationStates={active:'有效',disabled:'已停用',deleted:'資源�
 const registrationActions={search:'查詢',audit_read:'查看操作紀錄',edit:'修改報名資料',disable:'停用報名',delete:'移至回收區',restore:'復原報名'};
 const auditResults={success:'成功',conflict:'資料已更新或狀態不符',protected:'評分或晉級保護',missing:'找不到資料',invalid:'資料格式錯誤',failed:'暫時無法處理',denied:'權限拒絕'};
 function clearAdminRegistrations(){
- staffBulk?.clear();staffManageBatchPick=null;staffManageReload=null;
+ staffBulk?.clear();staffManageBatchPick=null;staffManageReload=null;staffManageSetView=null;staffManageRelocalize=null;
  const panel=$('organizer-admin-registrations');
  if(!panel)return;
  panel.hidden=true;panel.open=false;panel.ontoggle=null;
  $('admin-registration-search').reset();
  for(const id of ['admin-registration-results','admin-registration-list','admin-registration-pager'])$(id).replaceChildren();
 }
-let staffManageNavigate=null,staffManageCard=null,staffManageChanged=null,staffManageBatchPick=null,staffManageReload=null,staffBulk=null;
+let staffManageNavigate=null,staffManageCard=null,staffManageChanged=null,staffManageBatchPick=null,staffManageReload=null,staffManageSetView=null,staffManageRelocalize=null,staffBulk=null;
 function showAdminRegistrations(enabled){
  const panel=$('organizer-admin-registrations');
  if(!panel||!enabled){clearAdminRegistrations();return;}
@@ -1245,7 +1245,8 @@ function showAdminRegistrations(enabled){
  const stateFilter=form.elements.namedItem('state'),selectAll=$('admin-select-page'),
   count=$('admin-selected-count'),actionButton=$('admin-selected-action'),
   clearButton=$('admin-clear-selection'),hint=$('admin-recycle-hint');
- let offset=0,rows=[],selected=new Set();
+ let offset=0,rows=[],selected=new Set(),searchGeneration=0;
+ const currentTab=$('admin-current-tab'),trashTab=$('admin-trash-tab');
  function isTrash(){return stateFilter.value==='deleted'}
  function selectable(row){return !row.protected&&(isTrash()?row.state==='deleted':row.state!=='deleted')}
  function syncSelected(){
@@ -1253,6 +1254,7 @@ function showAdminRegistrations(enabled){
   count.textContent=sw('已選')+' '+checked+' '+sw('筆');
   selectAll.checked=allowed.length>0&&checked===allowed.length;
   selectAll.indeterminate=checked>0&&checked<allowed.length;selectAll.disabled=!allowed.length;
+  currentTab.setAttribute('aria-pressed',String(!isTrash()));trashTab.setAttribute('aria-pressed',String(isTrash()));
   actionButton.disabled=!checked;
   actionButton.textContent=sw(isTrash()?'還原所選':'移到資源回收桶')+' '+checked+' '+sw('筆');
   hint.textContent=isTrash()
@@ -1260,16 +1262,20 @@ function showAdminRegistrations(enabled){
    :sw('只整理你勾選的選手；移到資源回收桶後仍可還原。已評分或晉級資料受保護。');
  }
  async function search(){
+  const generation=++searchGeneration;
   const query=new URLSearchParams({...formValues(form),offset:String(offset)});
-  const data=await api('organizer-registrations?'+query);
-  if(!account||role!=='organizer'||panel.hidden)return;
+  rows=[];selected.clear();list.replaceChildren();pager.replaceChildren();syncSelected();
+  $('admin-registration-results').textContent=sw('正在讀取…');
+  let data;
+  try{data=await api('organizer-registrations?'+query)}catch(error){if(generation===searchGeneration)$('admin-registration-results').textContent=sw('無法讀取資料，請稍後重試。');throw error;}
+  if(generation!==searchGeneration||!account||role!=='organizer'||panel.hidden)return;
   rows=data.registrations||[];selected.clear();list.replaceChildren();pager.replaceChildren();
-  $('admin-registration-results').textContent=rows.length?'本頁 '+rows.length+' 筆（每頁最多25筆）':'沒有符合條件的資料。';
+  $('admin-registration-results').textContent=rows.length?sw('本頁')+' '+rows.length+' '+sw('筆')+' · '+sw('每頁最多25筆'):sw(isTrash()?'資源回收桶目前沒有資料。':'沒有符合條件的資料。');
   for(const registration of rows)list.append(card(registration));
   syncSelected();
   for(const [to,label] of [[offset>0?offset-25:null,'上一頁'],[data.next_offset,'下一頁']]){
    if(to===null)continue;
-   const button=node('button',label,'btn btn-soft');button.type='button';
+   const button=node('button',sw(label),'btn btn-soft');button.type='button';
    button.onclick=()=>run(async()=>{offset=to;await search()});pager.append(button);
   }
  }
@@ -1287,6 +1293,10 @@ function showAdminRegistrations(enabled){
   if(ids.length&&staffManageBatchPick)staffManageBatchPick(ids,isTrash()?'restore':'delete');
  };
  staffManageReload=search;
+ staffManageSetView=(value)=>{stateFilter.value=value;form.elements.namedItem('q').value='';offset=0;rows=[];selected.clear();list.replaceChildren();pager.replaceChildren();syncSelected();};
+ currentTab.onclick=()=>{staffManageSetView('available');run(search)};
+ trashTab.onclick=()=>{staffManageSetView('deleted');run(search)};
+ staffManageRelocalize=()=>{list.replaceChildren(...rows.map(row=>card(row)));syncSelected();};
  stateFilter.onchange=()=>{offset=0;run(search)};
 
  async function mutate(row,action,fields={}){
@@ -1406,7 +1416,7 @@ async function renderOrganizer(){
  if(!toolArea){
   toolArea=node('div',undefined,'staff-tools');
   dashboard.append(toolArea);
-  for(const element of [$('staff-management-open'),$('organizer-corrections'),$('january-roster-tools'),dashboard.querySelector('.staff-system-note')]){
+  for(const element of [$('staff-management-actions'),$('organizer-corrections'),$('january-roster-tools'),dashboard.querySelector('.staff-system-note')]){
    if(element)toolArea.append(element);
   }
  }
@@ -1439,9 +1449,11 @@ async function renderOrganizer(){
   apps.splice(0,apps.length,...fresh.applications||[]);paint();
   if(staffManageReload)await staffManageReload();
  };
- const tools=$('staff-management-open');
- tools.hidden=!v.registration_management_enabled;
- tools.onclick=()=>nav.open({id:'_management'},tools);
+ const tools=$('staff-management-open'),trash=$('staff-trash-open');
+ $('staff-management-actions').hidden=!v.registration_management_enabled;
+ tools.hidden=trash.hidden=!v.registration_management_enabled;
+ tools.onclick=()=>{staffManageSetView?.('available');nav.open({id:'_management'},tools);};
+ trash.onclick=()=>{staffManageSetView?.('deleted');nav.open({id:'_management'},trash);};
  $('admin-registration-bulk-open').onclick=()=>nav.go('management-bulk');
  management.hidden=true;
  back.onclick=nav.back;close.onclick=nav.close;
@@ -1640,7 +1652,7 @@ async function renderOrganizer(){
    correctionList.append(card);
   }
  }
- window.staffRelocalize=()=>{paint();paintCorrections();nav.display({focus:false})};
+ window.staffRelocalize=()=>{paint();paintCorrections();staffManageRelocalize?.();nav.display({focus:false})};
  if(correctionPanel&&correctionList){
   paintCorrections();
   try{
