@@ -14,7 +14,7 @@ async function mockMemberApi(page,state){
    method=route.request().method();
   let result={ok:true},status=200;
   if(key==='me')result={ok:true,account:{id:'SYNTH-MEMBER-ACCOUNT',role:'member',available_roles:['member']},profile_enabled:state.profileEnabled??false,nepal_locations_enabled:state.locationsEnabled??false};
-  else if(key==='applications'&&method==='GET')result={ok:true,applications:state.entries,next_audition_round:state.nextAudition};
+  else if(key==='applications'&&method==='GET')result={ok:true,applications:state.entries,next_audition_round:state.nextAudition,member_withdrawal_enabled:state.withdrawalEnabled===true};
   else if(key==='submit-video-supplement'&&method==='POST'){
    const payload=route.request().postDataJSON();
    writes.push(payload);
@@ -32,6 +32,11 @@ async function mockMemberApi(page,state){
    }
    state.entries=state.entries.map(e=>e.id===payload.application_id?{...e,...stored}:e);
    result={ok:true,application_id:payload.application_id};
+  }
+  else if(key==='withdraw-entry'&&method==='POST'){
+   const payload=route.request().postDataJSON();writes.push(payload);
+   state.entries=state.entries.map(e=>e.id===payload.application_id?{...e,status:'withdrawn',member_withdrawn:1,can_delete:0}:e);
+   result={ok:true,application_id:payload.application_id,withdrawn:true,testOnly:true};
   }
   else if(key==='delete-application'&&method==='POST'){
    const payload=route.request().postDataJSON();writes.push(payload);
@@ -232,4 +237,20 @@ for(const stateName of ['pending','expired','submitted'])test('correction status
  page.once('dialog',d=>d.accept());await del.click();
  await expect(page.locator('#entries')).toContainText('目前還沒有報名資料');
  expect(writes).toEqual([{application_id:entry.id}]);
+});
+
+
+test('scored contestant can withdraw and account management is fully translated in Nepali',async({page})=>{
+ const state={entries:[{...entry,status:'scored',approval_state:'approved',can_edit:0,can_delete:0}],withdrawalEnabled:true};
+ const writes=await mockMemberApi(page,state);await page.goto('/member.html#login');
+ await page.locator('[data-lang=ne]').click();
+ await expect(page.locator('#member-account-tools-title')).toHaveText('आवेदन, प्रतियोगिताबाट फिर्ता र खाता व्यवस्थापन');
+ await expect(page.locator('#member-manage-delete')).toContainText('स्थायी रूपमा मेट्नुहोस्');
+ await expect(page.locator('#member-manage-close')).toContainText('खाता बन्द');
+ await expect(page.locator('#member-manage-edit')).toContainText('आधारभूत विवरण');
+ await page.locator('[data-lang=zh]').click();
+ const withdraw=page.locator('#entries').getByRole('button',{name:'我要棄權'});
+ await expect(withdraw).toBeVisible();page.once('dialog',d=>d.accept());await withdraw.click();
+ await expect(page.locator('#member-state-payment')).toHaveText('已自行棄權');
+ await expect(withdraw).toHaveCount(0);expect(writes).toEqual([{application_id:entry.id}]);
 });
