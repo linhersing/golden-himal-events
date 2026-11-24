@@ -2198,3 +2198,10 @@ body[data-page="back"] #organizer-corrections [data-correction-count]{font-weigh
 body[data-page="back"] .staff-system-body p{margin:.5rem 0;line-height:1.65}
 @media(min-width:780px){body[data-page="back"] .organizer-overview .organizer-summary-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:320px){body[data-page="back"] .organizer-overview .organizer-summary-grid{grid-template-columns:1fr}}
+
+body[data-page="back"] .organizer-management-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin:.75rem 0}
+body[data-page="back"] .organizer-management-actions[hidden]{display:none!important}
+body[data-page="back"] .organizer-management-actions>.btn{flex:1 1 135px;min-height:46px;font-weight:750}
+body[data-page="back"] .organizer-management-actions>p{flex:1 0 100%;margin:0}
+body[data-page="back"] #staff-trash-open,body[data-page="back"] #admin-trash-tab{border-color:#a58d6f;background:#f8f3e9}
+body[data-page="back"] .organizer-management-actions [aria-pressed="true"]{background:#594534!important;color:#fff;border-color:#594534}
