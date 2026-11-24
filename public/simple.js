@@ -716,6 +716,7 @@ $(prefix+'-logout')?.addEventListener('click',()=>run(async()=>{await api('logou
 }
 async function dashboard(){if(!account)return;if(staff){if(role==='organizer')await renderOrganizer();else{clearAdminRegistrations();await renderJudge()}}else await renderMember()}
 function memberCanEdit(a){
+ if(a.status==='withdrawn'||a.status==='rejected')return false;
  return a.can_edit===true||a.can_edit===1||a.can_edit==='1'||
   (a.can_edit===undefined&&a.payment_status==='unpaid'&&a.status==='submitted');
 }
@@ -779,7 +780,7 @@ function drawEntry(a){
  box.append(meta);
  box.append(node('span',mt(entryReviewKey(a)),'pill '+(a.approval_state==='approved'?'pill-pass':'pill-warn')));
  if(a.approval_state||a.status==='withdrawn')box.append(node('p',mt(entryReviewKey(a)),'minor'));
- drawMemberSupplement(box,a);
+ if(a.status!=='withdrawn'&&a.status!=='rejected')drawMemberSupplement(box,a);
  const actions=node('div',undefined,'inline-actions member-entry-buttons');
  if(memberCanEdit(a)){
   const edit=node('button',mt('edit'),'btn btn-primary');edit.type='button';edit.onclick=()=>showEdit(a);actions.append(edit);
@@ -796,11 +797,17 @@ function drawEntry(a){
    link.href=url;link.target='_blank';link.rel='noopener noreferrer';actions.append(link);
   }
  }
- if(a.payment_status==='unpaid'&&a.status==='submitted'){
+ if(a.payment_status==='unpaid'&&a.status==='submitted'&&a.phase==='demo'&&memberCanEdit(a)&&!a.has_uploaded_file&&!a.has_eligibility_file&&!a.has_receipt_file){
   const del=node('button',mt('delete'),'btn btn-soft');del.type='button';
   del.onclick=()=>{
    if(!confirm(mt('delTitle')+'\n\n'+mt('delBody')+' '+a.id))return;
-   run(async()=>{await api('delete-application',{application_id:a.id});status(mt('deleted'));await renderMember()});
+   run(async()=>{
+    const result=await api('delete-application',{application_id:a.id});
+    if(result.deleted_application_id!==a.id||result.testOnly!==true)throw Error('readback_mismatch');
+    const remaining=await renderMember();
+    if(remaining.some(row=>row.id===a.id))throw Error('readback_mismatch');
+    status(mt('deleted'));
+   });
   };
   // Public checkout is disabled under the 2026-11-18 Muse/Alan policy.
   if(a.round_code==='2027-01')box.append(node('p','2027 January audition TEST · 將依參賽資格審核 · परीक्षण आवेदन','minor'));
@@ -895,6 +902,7 @@ async function renderMember(){
  $('step-login')?.classList.add('active');
  $('step-apply')?.classList.toggle('active',hasEntries);
  $('step-checkout')?.classList.toggle('active',hasEntries);
+ return rows;
 }
 async function showCorrection(a){
  // A graded entry is immutable as to scored song/video. Only display identity
