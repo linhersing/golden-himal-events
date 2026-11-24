@@ -1416,7 +1416,8 @@ async function renderOrganizer(){
  if(!toolArea){
   toolArea=node('div',undefined,'staff-tools');
   dashboard.append(toolArea);
-  for(const element of [$('staff-management-actions'),$('organizer-corrections'),$('january-roster-tools'),dashboard.querySelector('.staff-system-note')]){
+  // Primary management and recovery actions must stay ABOVE the roster.
+  for(const element of [$('organizer-corrections'),$('january-roster-tools'),dashboard.querySelector('.staff-system-note')]){
    if(element)toolArea.append(element);
   }
  }
