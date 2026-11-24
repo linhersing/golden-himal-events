@@ -5,6 +5,7 @@ import {mailProviderReady,mailSenderReady,emailAddress} from './staging-mail.js'
 import {staffLoginConfig} from './staging-staff-security.js';
 import {drainRemovedMemberMedia} from './staging-admin-registration.js';
 import {handleE2E} from './staging-e2e.js';
+import {registrationWindow} from './registration-window.js';
 import {monitorSecurity} from './security-monitor.js';
 /*
  * Golden Himal Voice — SAFE STAGING SMOKE TEST ONLY.
@@ -240,6 +241,10 @@ export default {
       return Response.redirect(new URL('/backoffice.html',url),302);
     if(brand&&alias==='architecture-preview')return Response.redirect(new URL('/news.html',url),302);
     if(brand&&pathname==='/api/e2e/mock-payment')return failure('checkout_paused',404);
+    if(pathname==='/api/staging/registration-window'){
+      if(request.method!=='GET')return failure('method_not_allowed',405);
+      return Response.json({ok:true,...registrationWindow(env)},{headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+    }
     if(pathname.startsWith('/api/e2e/')){
       // Do not mix new applicant/OTP data with the legacy synthetic D1 fixture.
       // E2E_DB auto-provisions separately from the existing ghv-staging DB.
