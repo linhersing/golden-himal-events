@@ -179,7 +179,7 @@ test('organizer five-demo rows remain compact until expanded, with song-level se
 });
 
 
-test('staff dashboard shows two concise totals and hides payment info and advanced filters by default',async({page})=>{
+test('staff dashboard shows consistent review totals and hides payment info and advanced filters by default',async({page})=>{
  await page.route('**/api/e2e/**',async route=>{
   const p=new URL(route.request().url()).pathname.split('/').at(-1);
   await route.fulfill({status:200,json:p==='me'?
@@ -188,7 +188,11 @@ test('staff dashboard shows two concise totals and hides payment info and advanc
  });
  await page.setViewportSize({width:375,height:812});
  await page.goto('/backoffice.html');
- await expect(page.locator('.staff-mobile-summary .dash-stat')).toHaveCount(2);
+ for(const id of ['pending-count','organizer-pending-count','organizer-supplement-count','organizer-approved-count'])await expect(page.locator('#'+id)).toHaveText('0');
+ await expect(page.locator('#organizer-unverified-stat')).toBeHidden();
+ await expect(page.locator('[data-overview-filter]:visible')).toHaveCount(4);
+ await expect(page.locator('#staff-management-actions')).toBeHidden(); // mock has no management permission
+ await expect(page.locator('#paid-count')).toBeHidden();
  await expect(page.locator('#paid-count')).toHaveText('0');
  await expect(page.locator('.staff-system-note')).not.toHaveAttribute('open','');
  await expect(page.locator('#organizer-language')).toBeHidden();
