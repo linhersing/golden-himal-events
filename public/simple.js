@@ -93,6 +93,7 @@ if(page==='home'){
  const apply=()=>{
   document.documentElement.lang=lang==='zh'?'zh-Hant':lang;
   document.querySelectorAll('[data-t]').forEach(el=>{const x=translations[lang][el.dataset.t];if(x)el.textContent=x});
+   const skip=document.querySelector('.skip');if(skip)skip.textContent=({zh:'跳至主要內容',en:'Skip to main content',ne:'मुख्य सामग्रीमा जानुहोस्'})[lang];
   document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)));
   applyHomeState();
  };
@@ -1561,22 +1562,22 @@ async function renderOrganizer(){
    correctionPanel.hidden=!reqs.enabled;
    if(reqs.enabled){
     const pending=(reqs.requests||[]).filter(x=>x.state==='pending');
-    correctionPanel.querySelector('[data-correction-count]').textContent='待審 '+pending.length+' 筆';
-    if(!pending.length)correctionList.append(node('p','目前沒有待審更正申請。','minor'));
+    localizeMember(correctionPanel.querySelector('[data-correction-count]'),'orgCorrectionCount',pending.length);
+    if(!pending.length)correctionList.append(memberNode('p','orgCorrectionEmpty','minor'));
     for(const c of pending){
      const card=node('article',undefined,'roster-entry');
-     card.append(node('strong','報名編號：'+c.application_id));
-     card.append(node('p','姓名：'+c.previous_stage_name+' → '+c.proposed_stage_name,'minor'));
-     card.append(node('p','學校／職業：'+c.previous_affiliation+' → '+c.proposed_affiliation,'minor'));
-     card.append(node('p','更正原因：'+c.reason,'minor'));
-     card.append(node('p','已評分作品、影片與分數不受此更正影響。','minor'));
-     for(const [decision,label] of [['accepted','同意更正基本資料'],['declined','不接受更正']]){
-      const btn=node('button',label,'btn btn-soft');btn.type='button';
-      btn.onclick=()=>{if(!confirm('確認'+label+'？本次操作會保留稽核紀錄。'))return;
+     card.append(memberNode('strong','orgCorrectionId',undefined,c.application_id));
+     card.append(memberNode('p','orgCorrectionName','minor',c.previous_stage_name+' → '+c.proposed_stage_name));
+     card.append(memberNode('p','orgCorrectionAffiliation','minor',c.previous_affiliation+' → '+c.proposed_affiliation));
+     card.append(memberNode('p','orgCorrectionReason','minor',c.reason));
+     card.append(memberNode('p','orgCorrectionSafe','minor'));
+     for(const [decision,label] of [['accepted','orgCorrectionApprove'],['declined','orgCorrectionDecline']]){
+      const btn=memberNode('button',label,'btn btn-soft');btn.type='button';
+       btn.onclick=()=>{if(!confirm(mt(decision==='accepted'?'orgCorrectionApproveConfirm':'orgCorrectionDeclineConfirm')))return;
        run(async()=>{
         const result=await api('decide-member-correction',{request_id:c.id,decision});
         if(result.decision!==decision)throw Error('readback_mismatch');
-        await renderOrganizer();status('更正申請已處理：'+label);
+        await renderOrganizer();localizedStatus(decision==='accepted'?'orgCorrectionApproved':'orgCorrectionDeclined');
        });
       };
       card.append(btn);
