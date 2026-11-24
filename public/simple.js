@@ -1379,7 +1379,7 @@ function showAdminRegistrations(enabled){
 }
 
 function organizerState(entry){
- if(entry.video_supplement_state==='pending')return '待補件';
+ if(['pending','expired'].includes(entry.video_supplement_state))return '待補件';
  return entry.approval_state==='approved'?'已核准':entry.approval_state==='pending'?'待審核':'待核對';
 }
 const contactViews={
@@ -1552,13 +1552,23 @@ async function renderOrganizer(){
    return;
   }
   if(step==='review'){
-   fields(panel,[['報名狀態',sw(organizerState(entry))]]);
-   if(entry.video_supplement_state==='pending')panel.append(node('p',supplementDeadline(entry),'minor'));
+   const supplement=entry.video_supplement_state;
+   const reviewState=supplement==='expired'?'補件已逾期':organizerState(entry);
+   fields(panel,[['報名狀態',sw(reviewState)]]);
+   if(['pending','expired'].includes(supplement)){
+    if(Number(entry.video_supplement_deadline)>0)fields(panel,[['補件截止時間',supplementDeadline(entry)]]);
+    panel.append(node('p',sw(supplement==='expired'?'48 小時補件期限已過，系統禁止直接核准。請由主辦確認逾期處理方式。':'已開放 48 小時補件，選手送出補件後才可核准。'),'notice'));
+   }else if(supplement==='submitted')panel.append(node('p',sw('選手已送出補件，請核對作品及資料後核准。'),'notice'));
+   else if(entry.approval_state==='pending')panel.append(node('p',sw('資料無誤可直接核准；如需修正，再開放 48 小時補件。'),'minor'));
+   else if(entry.approval_state!=='approved')panel.append(node('p',sw('目前未取得核准狀態，請重新整理或聯絡管理員確認。'),'notice'));
    const actions=node('div',undefined,'organizer-roster-actions');
    async function refresh(message){
     const current=(await api('organizer-queue?view=workbench')).applications?.find(item=>item.id===entry.id);
     if(!account||role!=='organizer'||staffRoute!==nav)return;
-    if(current)Object.assign(entry,current);
+    if(!current)throw Error('approval_readback_failed');
+    if(message==='已核准測試報名。'&&current.approval_state!=='approved')throw Error('approval_readback_failed');
+    if(message==='已開放補正。'&&current.video_supplement_state!=='pending')throw Error('approval_readback_failed');
+    Object.assign(entry,current);
     paint();
     if(nav.state()?.id===entry.id)nav.display({focus:false});
     status(sw(message));
@@ -1607,7 +1617,7 @@ async function renderOrganizer(){
    const id=node('span',shownId,'roster-mini staff-entry-id');id.title=entry.id;
    info.append(node('strong',entry.stage_name||sw('選手')),id,node('span',[entry.round_code,staffGroup(entry),staffWorks(entry).length+' '+sw('首作品')].filter(Boolean).join(' · '),'roster-mini'));
    open.append(info,node('span',sw('查看選手')+' ›','organizer-record-arrow'));
-   const state=organizerState(entry),badge=node('span',sw(state),'pill '+(state==='已核准'?'pill-pass':'pill-warn'));
+   const state=organizerState(entry),badge=node('span',sw(entry.video_supplement_state==='expired'?'補件已逾期':state),'pill '+(state==='已核准'?'pill-pass':'pill-warn'));
    const side=node('div',undefined,'organizer-record-status');side.append(badge);
    card.append(open,side);holder.append(card);
   }
