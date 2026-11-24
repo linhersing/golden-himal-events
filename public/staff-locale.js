@@ -1,6 +1,8 @@
 
 (()=>{'use strict';
 const words={
+ "已移除的選手可在資源回收桶內還原。":["Restore removed contestants from the recycle bin.","हटाइएका प्रतियोगीलाई रिसाइकल बिनबाट फर्काउन सकिन्छ।"],
+ "資源回收桶目前沒有資料。":["The recycle bin is empty.","रिसाइकल बिन अहिले खाली छ।"],
  "報名工作總覽":["Entry review overview","आवेदन समीक्षा सारांश"],
  "以下統計以目前讀取的有效測試名冊為準。":["Counts reflect the active TEST roster currently loaded.","सङ्ख्या हाल लोड गरिएको सक्रिय परीक्षण सूचीमा आधारित छ।"],
  "查看全部名單":["View all entries","सबै आवेदन हेर्नुहोस्"],
