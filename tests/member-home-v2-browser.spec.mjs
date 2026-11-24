@@ -33,6 +33,11 @@ async function mockMemberApi(page,state){
    state.entries=state.entries.map(e=>e.id===payload.application_id?{...e,...stored}:e);
    result={ok:true,application_id:payload.application_id};
   }
+  else if(key==='delete-application'&&method==='POST'){
+   const payload=route.request().postDataJSON();writes.push(payload);
+   state.entries=state.entries.filter(e=>e.id!==payload.application_id);
+   result={ok:true,deleted_application_id:payload.application_id,testOnly:true};
+  }
   else if(key==='logout')result={ok:true};
   await route.fulfill({status,json:result});
  });
@@ -215,4 +220,16 @@ test('locked pending entry does not imply scoring or offer a forbidden deletion'
  await expect(page.locator('#member-edit-lock-reason')).toContainText('仍待審核');
  await expect(page.locator('#member-edit-lock-reason')).not.toContainText('已開始評分');
  await expect(page.locator('#entries').getByRole('button',{name:/刪除此筆/})).toHaveCount(0);
+});
+
+for(const stateName of ['pending','expired','submitted'])test('correction status does not hide an authorized self-delete: '+stateName,async({page})=>{
+ const state={entries:[{...entry,approval_state:'pending',status:'submitted',payment_status:'unpaid',can_edit:0,can_delete:1,video_supplement_state:stateName,video_supplement_deadline:1820000000}]};
+ const writes=await mockMemberApi(page,state);
+ await page.goto('/member.html#login');
+ const del=page.locator('#entries').getByRole('button',{name:/刪除此筆/});
+ await expect(del).toBeVisible();
+ if(stateName!=='pending')await expect(page.locator('#entries input[name=demo_url]')).toHaveCount(0);
+ page.once('dialog',d=>d.accept());await del.click();
+ await expect(page.locator('#entries')).toContainText('目前還沒有報名資料');
+ expect(writes).toEqual([{application_id:entry.id}]);
 });
