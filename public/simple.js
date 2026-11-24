@@ -2018,6 +2018,9 @@ const application=$('application-form'),details=$('application-details'),start=$
   setTimeout(()=>application.querySelector('[name=stage_name]')?.focus({preventScroll:true}),180);
  });
  application.addEventListener('submit',e=>{e.preventDefault();
+ const submitButton=application.querySelector('button[type="submit"]');
+ if(submitButton?.dataset.entriesBlocked==='true'){status(memberRecoveryText('failed'),true);return;}
+ if(submitButton?.dataset.windowBlocked==='true'){status(mt('registrationWindowClosed'),true);return;}
  const selectedDemos=collectDemoEntries(application);
  const multiAllowed=fiveDemoEnabled&&(!fiveDemoJanuaryOnly||application.elements.namedItem('round_code')?.value==='2027-01');
  if(selectedDemos.length>1&&!multiAllowed){
