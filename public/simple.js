@@ -785,6 +785,12 @@ function memberCanEdit(a){
  return a.can_edit===true||a.can_edit===1||a.can_edit==='1'||
   (a.can_edit===undefined&&a.payment_status==='unpaid'&&a.status==='submitted');
 }
+function memberCanDelete(a){
+ // Prefer the authoritative, separate backend permission. Old fixtures/servers
+ // without can_delete retain the conservative legacy fallback.
+ if(a.can_delete!==undefined)return a.can_delete===true||a.can_delete===1||a.can_delete==='1';
+ return a.payment_status==='unpaid'&&a.status==='submitted'&&a.phase==='demo'&&memberCanEdit(a)&&!a.has_uploaded_file&&!a.has_eligibility_file&&!a.has_receipt_file&&a.approval_state!=='approved'&&!a.video_supplement_state;
+}
 function editLockMessage(a){
  if(a.status==='withdrawn')return mt('entryWithdrawnHelp');
  if(a.approval_state==='approved'&&a.phase==='demo'&&['submitted','under_review'].includes(a.status))return mt('editApprovedLock');
@@ -862,7 +868,7 @@ function drawEntry(a){
    link.href=url;link.target='_blank';link.rel='noopener noreferrer';actions.append(link);
   }
  }
- if(a.payment_status==='unpaid'&&a.status==='submitted'&&a.phase==='demo'&&memberCanEdit(a)&&!a.has_uploaded_file&&!a.has_eligibility_file&&!a.has_receipt_file){
+ if(memberCanDelete(a)){
   const del=node('button',mt('delete'),'btn btn-soft');del.type='button';
   del.onclick=()=>{
    if(!confirm(mt('delTitle')+'\n\n'+mt('delBody')+' '+a.id))return;
@@ -876,7 +882,7 @@ function drawEntry(a){
   };
   // Public checkout is disabled under the 2026-11-18 Muse/Alan policy.
   if(a.round_code==='2027-01')box.append(node('p','2027 January audition TEST · 將依參賽資格審核 · परीक्षण आवेदन','minor'));
-  if(a.approval_state!=='approved'&&!a.video_supplement_state)actions.append(del);
+  actions.append(del);
  }
  box.append(actions);
  if(!memberCanEdit(a)&&!a.video_supplement_state)box.append(node('p',editLockMessage(a),'minor'));
