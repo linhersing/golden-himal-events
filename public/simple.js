@@ -921,6 +921,8 @@ async function renderMember(){
  }
  if(manageNote)manageNote.textContent=editable?mt('accountEditable'):hasEntries?editLockMessage(correctable||first):mt('accountNoEntry');
  const close=$('member-manage-close');if(close)close.hidden=v.member_withdrawal_enabled!==true;
+ const erase=$('member-manage-delete');if(erase){erase.disabled=v.account_erase_allowed===false;erase.title=erase.disabled?mt('accountProtectedHelp'):'';}
+ if(manageNote&&v.account_erase_allowed===false)manageNote.textContent+=' '+mt('accountProtectedHelp');
 
  // The API must explicitly open the later TEST round; a January entry alone is not permission.
  const secondAudition=hasEntries&&v.next_audition_round==='2027-04';
