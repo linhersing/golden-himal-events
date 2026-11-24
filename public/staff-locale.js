@@ -257,7 +257,9 @@ const words={
  '確認處理這一批':['Confirm this batch','यो समूह पुष्टि गर्नुहोस्'],
  '我的最近批次':['My recent batches','मेरा हालका समूह'],
  '重新讀取最近批次':['Reload recent batches','हालका समूह फेरि पढ्नुहोस्'],
- '已讀取最近批次。':['Recent batches loaded.','हालका समूह पढियो।']
+ '已讀取最近批次。':['Recent batches loaded.','हालका समूह पढियो।'],
+ '選手自行棄權':['Contestant withdrew','प्रतियोगी स्वयं फिर्ता भएको'],
+ '已棄權（歷史名冊）':['Withdrawn (historical roster)','फिर्ता भएको (ऐतिहासिक सूची)']
 };
 function t(key){
  const lang=window.GHVLocale?.lang;
