@@ -133,7 +133,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
   if(forbidden('organizer'))return forbidden('organizer');
   if(!earlierOnlineJudging(env))return deny('frontline_results_required',409);
   const b=await bodyJSON(request);if(!b)return deny('invalid_json');
-  const app=await db.prepare(`SELECT p.id,p.phase,p.round_code,p.category,p.payment_status${approvalColumn(approval)} FROM e2e_applications p WHERE p.id=?`).bind(b.application_id).first();
+  const app=await db.prepare(`SELECT p.id,p.phase,p.round_code,p.category,p.payment_status${approvalColumn(approval)} FROM e2e_applications p WHERE p.id=? AND p.status NOT IN ('withdrawn','rejected')`).bind(b.application_id).first();
   if(!app)return deny('application_not_found',404);
   if(approval&&app.approval_state!=='approved')return deny('test_approval_required',409);
   if(app.round_code==='2027-01'&&app.phase==='demo'&&freeJanuary&&await db.prepare('SELECT 1 FROM e2e_demo_2027_videos WHERE application_id=? LIMIT 1').bind(app.id).first())
@@ -146,7 +146,7 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
     :await db.prepare('SELECT COUNT(*) AS n FROM e2e_live_scores WHERE application_id=? AND stage=?').bind(app.id,app.phase).first();
   if(Number(scored?.n||0)<3)return deny('three_judges_required_for_test',409);
   try{
-   const updated=await db.prepare(`UPDATE e2e_applications SET phase=?,status='shortlisted',updated_at=? WHERE id=? AND phase=?${approvalGuard(approval,'e2e_applications')}`)
+   const updated=await db.prepare(`UPDATE e2e_applications SET phase=?,status='shortlisted',updated_at=? WHERE id=? AND phase=? AND status NOT IN ('withdrawn','rejected')${approvalGuard(approval,'e2e_applications')}`)
     .bind(next,NOW(),app.id,app.phase).run();
    if(!updated.meta?.changes)return deny('stale_stage',409);
    await db.prepare('INSERT INTO e2e_promotion_events(id,application_id,organizer_id,from_phase,to_phase,created_at) VALUES(?,?,?,?,?,?)')
