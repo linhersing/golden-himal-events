@@ -916,7 +916,8 @@ async function renderMember(){
  const editable=rows.find(memberCanEdit),correctable=rows.find(row=>row.status!=='withdrawn');
  if(manageEdit){
   manageEdit.disabled=!editable&&!correctable;
-  manageEdit.textContent=mt(editable?'edit':'entryCorrectionAction');
+  manageEdit.dataset.l=editable?'accountEdit':'entryCorrectionAction';
+  manageEdit.textContent=mt(manageEdit.dataset.l);
   manageEdit.onclick=editable?()=>showEdit(editable):correctable?()=>showCorrection(correctable):null;
  }
  if(manageNote)manageNote.textContent=editable?mt('accountEditable'):hasEntries?editLockMessage(correctable||first):mt('accountNoEntry');
