@@ -764,22 +764,22 @@ mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
   }
  }
  authForms(false);
- if(staff)startOtpReminder();
- // Staff OTP API acceptance is not proof of inbox delivery, and a member
- // account never automatically grants organizer or reviewer permissions.
- const staffOtpCopy={
-  zh:'工作人員驗證碼寄送請求已受理，但尚未確認郵件送達。請檢查收件匣與垃圾郵件；未收到時請主辦方核對此信箱是否具受邀主辦／評審權限，並查詢寄信紀錄。一般報名會員不會自動取得後台權限。',
-  en:'Staff verification email was requested, but inbox delivery has not been confirmed. Check Inbox and Spam. If nothing arrives, ask an organizer to verify that this email is invited as organizer/reviewer and review email-delivery logs. A singer account does not automatically grant staff access.',
-  ne:'कर्मचारीको प्रमाणीकरण इमेल पठाउन अनुरोध स्वीकार गरिएको छ, तर इमेल पुगेको पुष्टि भएको छैन। इनबक्स र स्प्याम हेर्नुहोस्। इमेल नआएमा यो ठेगानालाई आयोजक वा निर्णायकको निमन्त्रणा छ कि छैन र मेल पठाएको रेकर्ड जाँच्न आयोजकलाई भन्नुहोस्। प्रतियोगी खाताले स्वतः कर्मचारी अधिकार दिँदैन।'
- };
- const staffLang=document.documentElement.lang==='zh-Hant'?'zh':document.documentElement.lang;
- status(staff?(staffOtpCopy[staffLang]||staffOtpCopy.zh):mt(publicTest?'signupCodeRequested':'otpRequested'));
+ if(staff){
+  startOtpReminder();
+  $('staff-no-code').open=false;
+  statusBox.hidden=true;
+ }else localizedStatus(publicTest?'signupCodeRequested':'otpRequested');
  codeForm.querySelector('input').focus();
 })});
 codeForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
  if(staff&&otpValidUntil&&Date.now()>=otpValidUntil){tickOtpReminder();return;}
  const code=String(formValues(codeForm).code||'').trim();
- await api('verify-code',{challenge_id:challenge,code,email:challengeEmail});
+ try{await api('verify-code',{challenge_id:challenge,code,email:challengeEmail});}
+ catch(error){
+  if(!staff||error.message!=='expired_or_invalid_code')throw error;
+  localizedStatus('staffCodeFailed',true);
+  return;
+ }
  challengeEmail=undefined;
  stopOtpReminder();
  codeForm.reset();
