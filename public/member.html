@@ -5,7 +5,7 @@
 <title>Singer registration & member login | Golden Himal Voice</title>
 <link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./simple.css"><link rel="stylesheet" href="./palace-shared-header.css">
 </head>
-<body data-page="member"><a class="skip" href="#main">Skip to content</a>
+<body data-page="member"><a class="skip" href="#main" data-l="skipToMain">Skip to content</a>
 <div class="ghp-shared-atmosphere" aria-label="Golden Himal Palace 品牌頁首">
  <header class="masthead wrap ghp-shared-header">
   <a class="ghp-shared-logo" href="./" aria-label="Golden Himal Palace 首頁">
@@ -76,6 +76,12 @@
 <p class="under-actions" id="signup-mode" data-l="invitedOnly">Only pre-approved accounts can test this site. Public sign-ups are not open.</p>
 </details>
 </section>
+<aside class="ghv-entry-window wrap" id="ghv-entry-window" role="status" aria-live="polite" data-phase="unavailable">
+ <div class="ghv-entry-window-text"><span class="ghv-entry-window-kicker">GOLDEN HIMAL VOICE · 2027</span>
+  <h2 id="ghv-entry-window-title">Checking registration status</h2>
+  <p id="ghv-entry-window-note">Official opening is subject to the organizer announcement.</p></div>
+ <strong id="ghv-entry-window-clock" hidden aria-label="Time until official audition entry"></strong>
+</aside>
 <section id="member-panel" hidden>
 <section class="start-callout" id="new-application-callout" aria-labelledby="new-application-title">
 <p class="section-eyebrow" data-l="next">NEXT STEP</p>
@@ -165,6 +171,7 @@
 </ul>
 </details>
 </section>
+<p class="helper-banner full" role="note" data-l="videoPlatformSimpleNote">不必有自己的 YouTube 頻道。先用手機錄製本人連續演唱 60–90 秒，可用 YouTube 或 Google Drive 分享影片。Google Drive 設為「知道連結的任何人可檢視」，再把影片網址貼在下方；主辦方會透過後台查看連結。這個表單目前不接受直接傳影片檔案。</p>
 <label class="field full"><span data-l="videoUrl">Audition performance video link *</span><input name="demo_url" type="url" inputmode="url" required placeholder="https://youtu.be/..."><small class="field-hint" data-l="videoHelp">Paste a YouTube or Google Drive link to the VIDEO of you singing. Before submitting, open the link in a private/incognito window: it must play without asking to sign in or request access.</small></label>
 <section class="demo-multi full" id="demo-multi" aria-labelledby="demo-multi-title">
  <div class="demo-multi-heading"><div><h3 id="demo-multi-title" data-l="demoMultiTitle">海選 Demo 影片｜每人 1–5 支</h3>
@@ -260,12 +267,13 @@
 </div>
 <section id="member-account-tools" class="member-account-tools" aria-labelledby="member-account-tools-title">
  <div class="member-account-tools-head">
-  <div><p class="section-eyebrow">TEST ACCOUNT MANAGEMENT</p><h3 id="member-account-tools-title">報名資料修改與帳號刪除</h3></div>
-  <p>尚未評分的TEST報名可直接修改；已評分後可提出姓名或學校／職業更正申請，由主辦確認並保留歷史。歌曲、影片、分數不能被直接覆蓋。刪除測試帳號會清除關聯資料且無法復原。</p>
+  <div><p class="section-eyebrow" data-l="accountToolsEyebrow">TEST 帳號管理</p><h3 id="member-account-tools-title" data-l="accountToolsTitle">報名、棄權與帳號管理</h3></div>
+  <p data-l="accountToolsHelp">棄權不限48小時；已評分仍可棄權，歷史分數保留。永久刪除僅適用未受保護資料；若需停止使用已受保護帳號，請選棄權並關閉帳號。</p>
  </div>
  <div class="member-account-tools-actions">
-  <button type="button" id="member-manage-edit" class="btn btn-primary" disabled>修改報名資料</button>
-  <button type="button" id="member-manage-delete" class="btn btn-danger-outline">永久刪除我的測試帳號</button>
+  <button type="button" id="member-manage-edit" class="btn btn-primary" data-l="accountEdit" disabled>修改報名資料</button>
+  <button type="button" id="member-manage-delete" class="btn btn-danger-outline" data-l="accountErase">永久刪除我的測試帳號</button>
+  <button type="button" id="member-manage-close" class="btn btn-danger-outline" data-l="accountClose" hidden>棄權並關閉帳號</button>
  </div>
  <p id="member-manage-note" class="minor" role="status" aria-live="polite">尚未有可修改的報名時，請先建立測試報名。</p>
 </section>
@@ -289,7 +297,7 @@
 <footer class="site-footer"><a href="./" class="small-link" data-l="home">Home</a><small data-l="footer">TEST portal · Official registration is not yet open.</small></footer>
 </main>
 <aside class="test-site-banner test-site-footer wrap" role="note" aria-label="Website testing notice"><strong>TEST MODE · 測試階段 · परीक्षण चरण</strong><p data-l="testNotice">本網站僅供系統測試，尚未開放正式報名。</p></aside>
-<script src="./page-locale.js" defer></script><script src="./human-verification-status.js" defer></script><script src="./simple.js" defer></script><script src="./password-member.js" defer></script><script src="./palace-shared-header.js" defer></script><section class="ghp-universal-footer-brand" aria-label="Golden Himal Palace official brand closing">
+<script src="./page-locale.js" defer></script><script src="./registration-window-ui.js" defer></script><script src="./human-verification-status.js" defer></script><script src="./simple.js" defer></script><script src="./password-member.js" defer></script><script src="./palace-shared-header.js" defer></script><section class="ghp-universal-footer-brand" aria-label="Golden Himal Palace official brand closing">
  <strong class="ghp-footer-full-name">GOLDEN HIMAL PALACE</strong>
  <p lang="en">The Best Wedding at Golden Himal.</p>
  <p lang="ne">सबैभन्दा राम्रो विवाह समारोह गोल्डेन हिमालमा।</p>

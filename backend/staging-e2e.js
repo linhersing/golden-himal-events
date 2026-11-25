@@ -15,6 +15,7 @@ import {MUSE_FIELDS,museHasFields,parseMuseAudition,museAuditionReady,insertMuse
 import {handleVideoSupplement,supplementColumns,supplementGuard,supplementJoin,videoSupplementsReady} from './test-video-supplement.js';
 import {handleAdminRegistration,handleOrganizerContact,managedEraseAvailable,drainRemovedMemberMedia} from './staging-admin-registration.js';
 import {handleCorrectionRoute} from './member-corrections.js';
+import {registrationWindow} from './registration-window.js';
 /* Golden Himal Voice: real D1-backed, test-only acceptance API.
  * Invited staff and an opt-in, protected self-service path for test singers.
  * No official entries, actual payments, or exposed R2 URLs.
@@ -128,6 +129,7 @@ async function requestCode(request,env){
  if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i.test(email)||email.length>250)return deny('invalid_email');
  const invited=emailAllowed(email,env,role);
  const publicTest=!invited&&role==='member'&&await publicSignupReady(env);
+ if(!invited&&role==='member'&&!registrationWindow(env).testSubmissionsAllowed)return deny('registration_window_closed',403);
  const staffProtected=staffProtection(env,role);
  if(staffProtected){
   const config=await staffLoginConfig(env);
@@ -230,10 +232,28 @@ async function logout(request,env,a){
  if(match)await env.DB.prepare('DELETE FROM e2e_sessions WHERE session_fingerprint=?').bind(await sign(env,sessionLabel(env,a.role)+match[1])).run();
  return json({ok:true},200,{'Set-Cookie':cookie('',0)});
 }
+// Self-deletion and correction are independent permissions. The 48-hour
+// supplement deadline limits correction submissions, not voluntary withdrawal.
+async function memberDeletionPolicy(env){
+ const managed=await managedEraseAvailable(env.DB);
+ const modern=Boolean(await env.DB.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='e2e_demo_2027_scores'").first());
+ const approvals=approvalRequired(env)||await approvalSchemaReady(env);
+ const guard=alias=>`${alias}.phase='demo' AND ${alias}.status='submitted' AND ${alias}.payment_status='unpaid'
+ AND ${alias}.media_key IS NULL AND ${alias}.eligibility_key IS NULL AND ${alias}.receipt_key IS NULL
+ AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=${alias}.id)
+ AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=${alias}.id)
+ AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=${alias}.id)
+ ${modern?` AND NOT EXISTS(SELECT 1 FROM e2e_demo_2027_scores s WHERE s.application_id=${alias}.id)`:''}
+ ${managed?` AND EXISTS(SELECT 1 FROM e2e_admin_registrations r WHERE r.id=${alias}.id AND r.state='active' AND r.protected=0)`:''}
+ ${pendingGuard(approvals,alias)}`;
+ return {managed,guard};
+}
 async function applications(a,env,supplements){
  const approval=approvalRequired(env);
  const locations=await entrantLocationsReady(env.DB);
  const frontlineReady=await frontline2027Ready(env.DB);
+ const deletion=await memberDeletionPolicy(env);
+ const withdrawalColumns=deletion.managed?`, CASE WHEN EXISTS(SELECT 1 FROM e2e_staff_audit e WHERE e.target_id=p.id AND e.actor_role='member' AND e.result='success' AND json_extract(e.diff,'$.member_withdrawal')=1) THEN 1 ELSE 0 END AS member_withdrawn`:'';
  const rows=await env.DB.prepare(`SELECT p.id,p.round_code,p.category,${entrantLocationFields(locations)},p.location_basis,p.affiliation,p.stage_name,p.song_title,p.original_artist,p.song_language,p.song_key,p.demo_url${frontlineSelect(frontlineReady)},
  p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,p.receipt_key IS NOT NULL AS has_receipt_file,
  p.phase,p.status,p.payment_status,p.created_at,p.updated_at,
@@ -241,18 +261,20 @@ async function applications(a,env,supplements){
  AND NOT EXISTS(SELECT 1 FROM e2e_judge_scores s WHERE s.application_id=p.id)
  AND NOT EXISTS(SELECT 1 FROM e2e_live_scores s WHERE s.application_id=p.id)
  AND NOT EXISTS(SELECT 1 FROM e2e_promotion_events s WHERE s.application_id=p.id)${pendingGuard(approval,'p')}${supplementGuard(supplements,'p')}
- THEN 1 ELSE 0 END AS can_edit${approvalColumn(approval)}${supplementColumns(supplements)}
+ THEN 1 ELSE 0 END AS can_edit, CASE WHEN ${deletion.guard('p')} THEN 1 ELSE 0 END AS can_delete${approvalColumn(approval)}${supplementColumns(supplements)}${withdrawalColumns}
  FROM e2e_applications p${entrantLocationJoin(locations)}${frontlineJoin(frontlineReady)}${supplementJoin(supplements)} WHERE p.account_id=? ORDER BY p.created_at DESC,p.round_code DESC`).bind(a.id).all();
  const entries=rows.results||[];
+ const protectedAccount=deletion.managed&&Boolean(await env.DB.prepare(`SELECT 1 FROM e2e_admin_registrations r JOIN e2e_applications p ON p.id=r.id WHERE p.account_id=? AND (r.state<>'active' OR r.protected=1) LIMIT 1`).bind(a.id).first());
  // April is a separately released TEST window, never auto-opened simply because January was saved.
  const nextRound=env.STAGING_SECOND_AUDITION_ENABLED==='true'&&entries.some(row=>row.round_code==='2027-01')&&
   !entries.some(row=>row.round_code==='2027-04'||row.phase==='final')?'2027-04':null;
  const decorated=await attachProfiles(env,entries);
  const personal=a.role==='member'?await attachMuseAudition(env,decorated):decorated;
- return json({ok:true,account:{id:a.id,role:a.role},applications:a.role==='member'?await attachFiveDemos(env,personal):personal,next_audition_round:nextRound,testOnly:true});
+ return json({ok:true,account:{id:a.id,role:a.role},applications:a.role==='member'?await attachFiveDemos(env,personal):personal,next_audition_round:nextRound,member_withdrawal_enabled:deletion.managed,account_erase_allowed:!protectedAccount,testOnly:true});
 }
 async function submitApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
+ if(!registrationWindow(env).testSubmissionsAllowed)return deny('registration_window_closed',403);
  const b=await bodyJSON(request,13500);if(!b)return deny('invalid_json');
  if(!['2027-01','2027-04'].includes(b.round_code))return deny('invalid_audition_window');
  if(b.round_code==='2027-04'){
@@ -411,17 +433,27 @@ async function updateApplication(request,env,a,supplements){
  const result=await selectApplication(env.DB,id,a.id);
  return json({ok:true,application_id:result.id,stage_name:result.stage_name,song_title:result.song_title,original_artist:result.original_artist,song_language:result.song_language,demo_url:result.demo_url,testOnly:true});
 }
-async function deleteApplication(request,env,a,supplements){
+async function deleteApplication(request,env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const b=await bodyJSON(request);if(!b||Object.keys(b).some(k=>k!=='application_id'))
    return deny('invalid_json',422);
  const id=String(b.application_id||'');
  const app=await selectApplication(env.DB,id,a.id);
  if(!app)return deny('application_not_found',404);
- if(app.payment_status!=='unpaid'||app.status!=='submitted'||app.phase!=='demo'||app.media_key||app.eligibility_key||app.receipt_key)
-   return deny('delete_locked',409);
- const changed=await env.DB.prepare(`DELETE FROM e2e_applications WHERE id=? AND account_id=? AND payment_status='unpaid' AND status='submitted' AND phase='demo' AND media_key IS NULL AND eligibility_key IS NULL AND receipt_key IS NULL${pendingGuard(approvalRequired(env),'e2e_applications')}${supplementGuard(supplements,'e2e_applications')}`)
-  .bind(id,a.id).run();
+ const db=env.DB,policy=await memberDeletionPolicy(env);
+ const where=`id=? AND account_id=? AND ${policy.guard('e2e_applications')}`;
+ const remove=db.prepare(`DELETE FROM e2e_applications WHERE ${where}`).bind(id,a.id);
+ let changed;
+ try{
+  if(policy.managed){
+   // Keep a non-PII, append-only receipt even though the member's application
+   // and its dependent correction rows are removed by foreign-key cascade.
+   const audit=db.prepare(`INSERT INTO e2e_staff_audit(id,actor_id,actor_role,target_id,action,result,occurred_at,diff)
+    SELECT ?,?,'member',id,'delete','success',?,? FROM e2e_applications WHERE ${where}`)
+    .bind(uuid(),a.id,NOW(),JSON.stringify({member_self_delete:true}),id,a.id);
+   [,changed]=await db.batch([audit,remove]);
+  }else changed=await remove.run();
+ }catch(e){if(String(e?.message).includes('managed_registration_preserved'))return deny('delete_locked',409);throw e;}
  if(!changed.meta?.changes)return deny('delete_locked',409);
  return json({ok:true,deleted_application_id:id,testOnly:true});
 }
@@ -538,6 +570,56 @@ async function submitScore(request,env,a){
  await env.DB.prepare("UPDATE e2e_applications SET status='scored',updated_at=? WHERE id=? AND status='under_review'").bind(NOW(),app.id).run();
  return json({ok:true,score:b.technique+b.interpretation,storedIn:'cloudflare-d1-staging',testOnly:true});
 }
+// Voluntary withdrawal is not physical deletion. Keep scores, promotions,
+// immutable audit and published roster history; retire the application from active work.
+async function memberWithdrawalStatements(db,a,target=null){
+ const event=uuid(),now=NOW();
+ const filter=target?' AND id=?':'',args=target?[a.id,target]:[a.id];
+ const audit=db.prepare(`INSERT INTO e2e_staff_audit(id,actor_id,actor_role,target_id,action,result,occurred_at,diff)
+  SELECT ?||':'||id,?,'member',id,'delete','success',?,json_object('member_withdrawal',1,'prior_status',status)
+  FROM e2e_applications WHERE account_id=?${filter}
+  AND NOT EXISTS(SELECT 1 FROM e2e_staff_audit e WHERE e.target_id=e2e_applications.id AND e.actor_role='member' AND e.result='success' AND json_extract(e.diff,'$.member_withdrawal')=1)`)
+  .bind(event,a.id,now,...args);
+ const control=db.prepare(`INSERT INTO e2e_registration_controls(application_id,state,previous_status,version,last_event_id)
+  SELECT p.id,'deleted','withdrawn',1,e.id FROM e2e_applications p JOIN e2e_staff_audit e ON e.id=?||':'||p.id WHERE p.account_id=?
+  ON CONFLICT(application_id) DO UPDATE SET state='deleted',previous_status='withdrawn',version=e2e_registration_controls.version+1,last_event_id=excluded.last_event_id`).bind(event,a.id);
+ const update=db.prepare(`UPDATE e2e_applications SET status='withdrawn',updated_at=MAX(updated_at+1,?) WHERE account_id=?
+  AND EXISTS(SELECT 1 FROM e2e_staff_audit e WHERE e.id=?||':'||e2e_applications.id)`).bind(now,a.id,event);
+ return [audit,control,update];
+}
+async function withdrawMemberEntry(request,env,a){
+ if(!requireRole(a,'member'))return deny('member_only',403);
+ if(!await managedEraseAvailable(env.DB))return deny('member_withdrawal_unavailable',503);
+ const b=await bodyJSON(request);
+ if(!b||typeof b.application_id!=='string'||Object.keys(b).some(k=>k!=='application_id'))return deny('invalid_json',422);
+ const id=b.application_id,db=env.DB;
+ if(!await selectApplication(db,id,a.id))return deny('application_not_found',404);
+ await db.batch(await memberWithdrawalStatements(db,a,id));
+ const verified=await db.prepare(`SELECT p.status,c.state FROM e2e_applications p JOIN e2e_registration_controls c ON c.application_id=p.id
+  WHERE p.id=? AND p.account_id=? AND EXISTS(SELECT 1 FROM e2e_staff_audit e WHERE e.target_id=p.id AND e.actor_role='member' AND e.result='success' AND json_extract(e.diff,'$.member_withdrawal')=1)`).bind(id,a.id).first();
+ if(verified?.status!=='withdrawn'||verified.state!=='deleted')return deny('readback_mismatch',503);
+ return json({ok:true,application_id:id,withdrawn:true,testOnly:true});
+}
+async function closeMemberAccount(env,a){
+ if(!requireRole(a,'member'))return deny('member_only',403);
+ const db=env.DB;
+ if(!await managedEraseAvailable(db))return deny('member_withdrawal_unavailable',503);
+ const tables=new Set((await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('e2e_password_accounts','e2e_public_signup_accounts')").all()).results.map(x=>x.name));
+ const mail=a.mailboxFingerprint||(a.email?await sign(env,'email:'+a.email):null);
+ const retired=await sign(env,'retired-test-account:'+uuid());
+ const statements=await memberWithdrawalStatements(db,a);
+ if(tables.has('e2e_password_accounts'))statements.push(db.prepare('DELETE FROM e2e_password_accounts WHERE account_id=?').bind(a.id));
+ if(tables.has('e2e_public_signup_accounts'))statements.push(db.prepare('DELETE FROM e2e_public_signup_accounts WHERE account_id=?').bind(a.id));
+ if(mail)statements.push(db.prepare("DELETE FROM e2e_email_challenges WHERE kind='member' AND email_fingerprint=?").bind(mail));
+ statements.push(db.prepare('DELETE FROM e2e_sessions WHERE account_id=?').bind(a.id));
+ // Keep an unloginable internal reference for existing contest history.
+ statements.push(db.prepare("UPDATE e2e_accounts SET email_fingerprint=?,email_hint='closed TEST account',verified_at=NULL WHERE id=? AND role='member'").bind(retired,a.id));
+ await db.batch(statements);
+ const check=await db.prepare('SELECT email_fingerprint,verified_at FROM e2e_accounts WHERE id=?').bind(a.id).first();
+ const sessions=await db.prepare('SELECT COUNT(*) n FROM e2e_sessions WHERE account_id=?').bind(a.id).first();
+ if(check?.email_fingerprint!==retired||check.verified_at!==null||Number(sessions?.n)!==0)return deny('readback_mismatch',503);
+ return json({ok:true,closedTestAccount:true,retainedContestHistory:true,testOnly:true},200,{'Set-Cookie':cookie('',0)});
+}
 async function eraseMember(env,a){
  if(!requireRole(a,'member'))return deny('member_only',403);
  const rows=await env.DB.prepare('SELECT media_key,eligibility_key,receipt_key FROM e2e_applications WHERE account_id=?').bind(a.id).all();
@@ -581,13 +663,16 @@ export async function handleE2E(request,env){
  if(isPost&&!sameOrigin(request))return deny('origin_not_allowed',403);
  if(!['GET','POST'].includes(request.method))return deny('method_not_allowed',405);
  try{
+  if(pathname==='/api/e2e/registration-window'&&!isPost)return json({ok:true,...registrationWindow(env)},200,{'Cache-Control':'no-store'});
   if(pathname==='/api/e2e/staff-login-config'&&!isPost)return json({ok:true,testOnly:true,...await staffLoginConfig(env)});
   if(pathname==='/api/e2e/signup-config'&&!isPost){
-   const ready=await publicSignupReady(env);
+   const ready=await publicSignupReady(env)&&registrationWindow(env).testSubmissionsAllowed;
    return json(ready?{ok:true,testOnly:true,mode:'public_test',siteKey:env.STAGING_TURNSTILE_SITE_KEY}:
     {ok:true,testOnly:true,mode:'invited'});
   }
   if(pathname==='/api/e2e/password-config'&&!isPost){const ready=await passwordModeReady(env);return json(ready?{ok:true,enabled:true,siteKey:env.STAGING_TURNSTILE_SITE_KEY,testOnly:true}:{ok:true,enabled:false,testOnly:true});}
+  if(pathname==='/api/e2e/password-register'&&isPost&&!registrationWindow(env).testSubmissionsAllowed)
+   return deny('registration_window_closed',403);
   if(['/api/e2e/password-register','/api/e2e/password-login','/api/e2e/password-recover'].includes(pathname)&&isPost)
    return await passwordRequest(request,env,{json,deny,uuid,NOW,bodyJSON,sign,newSession,cookie});
   if(pathname==='/api/e2e/request-code'&&isPost)return await requestCode(request,env);
@@ -634,12 +719,14 @@ export async function handleE2E(request,env){
    return response;
   }
     if(pathname==='/api/e2e/update-application'&&isPost)return await updateApplication(request,env,a,supplements);
-    if(pathname==='/api/e2e/delete-application'&&isPost)return await deleteApplication(request,env,a,supplements);
+    if(pathname==='/api/e2e/delete-application'&&isPost)return await deleteApplication(request,env,a);
   if(pathname==='/api/e2e/mock-payment'&&isPost)return await mockPayment(request,env,a);
   if(pathname==='/api/e2e/demo-upload'&&isPost)return await mediaUpload(request,env,a);
   if(pathname==='/api/e2e/demo-download'&&!isPost)return await streamMedia(request,env,a);
   if(pathname==='/api/e2e/reviewer-queue'&&!isPost)return await judgeQueue(env,a);
   if(pathname==='/api/e2e/score'&&isPost)return await submitScore(request,env,a);
+  if(pathname==='/api/e2e/withdraw-entry'&&isPost)return await withdrawMemberEntry(request,env,a);
+  if(pathname==='/api/e2e/close-my-account'&&isPost)return await closeMemberAccount(env,a);
   if(pathname==='/api/e2e/delete-my-data'&&isPost)return await eraseMember(env,a);
   return deny('not_found',404);
  }catch{return deny('temporary_service_error',503)}

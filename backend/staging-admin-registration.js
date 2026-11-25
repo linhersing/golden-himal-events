@@ -78,7 +78,7 @@ async function changeRegistration(db,actor,body,event){
  classified AS (
   SELECT a.*,r.action,r.name,r.affiliation AS new_affiliation,
    CASE WHEN a.id IS NULL THEN 'missing'
-    WHEN a.protected=1 THEN 'protected'
+    WHEN a.protected=1 OR EXISTS(SELECT 1 FROM e2e_staff_audit e WHERE e.target_id=a.id AND e.actor_role='member' AND e.result='success' AND json_extract(e.diff,'$.member_withdrawal')=1) THEN 'protected'
     WHEN a.version<>r.version OR a.updated_at<>r.updated_at THEN 'conflict'
     WHEN r.action IN ('edit','disable') AND a.state<>'active' THEN 'conflict'
     WHEN r.action='delete' AND a.state='deleted' THEN 'conflict'
@@ -134,11 +134,11 @@ export async function handleAdminRegistration(request,env,actor,{json,deny,NOW,u
  if(path===searchPath){
   const search=(url.searchParams.get('q')||'').trim(),state=url.searchParams.get('state')||'active';
   const offset=Number(url.searchParams.get('offset')||0);
-  if(search.length>100||!['active','disabled','deleted','all'].includes(state)||!Number.isInteger(offset)||offset<0||offset>10000)
+  if(search.length>100||!['available','active','disabled','deleted','all'].includes(state)||!Number.isInteger(offset)||offset<0||offset>10000)
    return deny('invalid_admin_filter',422);
-  const rows=await db.prepare(`SELECT * FROM e2e_admin_registrations WHERE (?='all' OR state=?)
+  const rows=await db.prepare(`SELECT r.*,CASE WHEN EXISTS(SELECT 1 FROM e2e_staff_audit e WHERE e.target_id=r.id AND e.actor_role='member' AND e.result='success' AND json_extract(e.diff,'$.member_withdrawal')=1) THEN 1 ELSE 0 END AS member_withdrawn FROM e2e_admin_registrations r WHERE (?='all' OR (?='available' AND state IN ('active','disabled')) OR state=?)
    AND (?='' OR instr(lower(stage_name),lower(?))>0 OR instr(lower(song_title),lower(?))>0 OR instr(id,lower(?))>0)
-   ORDER BY updated_at DESC,id ASC LIMIT 26 OFFSET ?`).bind(state,state,search,search,search,search,offset).all();
+   ORDER BY updated_at DESC,id ASC LIMIT 26 OFFSET ?`).bind(state,state,state,search,search,search,search,offset).all();
   await writeEvent(db,actor,{...event,result:'success'});
   return json({ok:true,testOnly:true,registrations:rows.results.slice(0,25),next_offset:rows.results.length>25?offset+25:null});
  }

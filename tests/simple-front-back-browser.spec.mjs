@@ -81,7 +81,7 @@ test('member can view own stored entry, edit and delete its unpaid data in guard
   if(path==='me')result={ok:true,account:{id:'test-member',role:'member'}};
   else if(path==='applications'&&method==='GET')result={ok:true,applications:entries};
   else if(path==='update-application'){requests.push(body);entries=entries.map(e=>e.id===body.application_id?{...e,...body}:e);result={ok:true}}
-  else if(path==='delete-application'){requests.push(body);entries=[];result={ok:true}}
+  else if(path==='delete-application'){requests.push(body);entries=[];result={ok:true,deleted_application_id:body.application_id,testOnly:true}}
   else if(path==='logout'){result={ok:true}};
   await route.fulfill({status:200,json:result});
  });

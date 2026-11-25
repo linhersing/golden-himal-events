@@ -210,3 +210,23 @@ test('five demo submission through authenticated member and organizer routes',as
  await call('logout','organizer',{});
  assert.equal((await call('organizer-queue','organizer')).status,401);
 });
+
+
+for(const state of ['pending','expired','submitted'])test('member can delete and reapply independently of correction deadline: '+state,async t=>{
+ const {db,call}=await fixture(t,{supplements:true});
+ const created=await call('applications','member',entry);assert.equal(created.status,201);
+ const {application_id}=await created.json(),request={application_id};
+ assert.equal((await call('request-video-supplement','organizer',request)).status,200);
+ if(state==='expired')db.prepare('UPDATE e2e_test_video_supplements SET requested_at=1 WHERE application_id=?').run(application_id);
+ if(state==='submitted')assert.equal((await call('submit-video-supplement','member',{...request,demo_url:'https://youtu.be/test-replacement'})).status,200);
+ const [before]=(await (await call('applications','member')).json()).applications;
+ assert.equal(before.video_supplement_state,state);assert.equal(before.can_edit,0);assert.equal(before.can_delete,1);
+ if(state==='expired')assert.equal((await call('submit-video-supplement','member',{...request,demo_url:'https://youtu.be/test-replacement'})).status,409);
+ assert.equal((await call('delete-application','reviewer',request)).status,403);
+ const removed=await call('delete-application','member',request);assert.equal(removed.status,200,await removed.clone().text());
+ assert.equal((await removed.json()).deleted_application_id,application_id);
+ assert.equal(db.prepare('SELECT COUNT(*) n FROM e2e_test_video_supplements WHERE application_id=?').get(application_id).n,0);
+ assert.equal((await (await call('applications','member')).json()).applications.length,0);
+ const reapplied=await call('applications','member',entry);assert.equal(reapplied.status,201,await reapplied.clone().text());
+ assert.notEqual((await reapplied.json()).application_id,application_id);
+});
