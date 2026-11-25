@@ -1,3 +1,4 @@
+import {overviewOf} from './fixtures/organizer-overview.mjs';
 import {test,expect} from '@playwright/test';
 
 // Strictly synthetic, no personal data and no actual Cloudflare/Resend calls.
@@ -77,7 +78,7 @@ test('125 organizer entries filter 63 Nepali / 62 English, maintain payment 0 an
  await page.route('**/api/e2e/**',route=>{
   const action=new URL(route.request().url()).pathname.split('/').pop();
   const result=action==='me'?{ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'FICTIONAL-ORG',role:'organizer',available_roles:['organizer']}}:
-   action==='organizer-queue'?{ok:true,applications:entries}:{ok:true};
+   action==='organizer-queue'?{ok:true,applications:entries,overview:overviewOf(entries)}:{ok:true};
   return route.fulfill({status:200,json:result});
  });
  await page.setViewportSize({width:1280,height:850});await page.goto('/backoffice.html');

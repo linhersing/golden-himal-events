@@ -1,3 +1,4 @@
+import {overviewOf} from './fixtures/organizer-overview.mjs';
 import {test,expect} from '@playwright/test';
 
 const account={id:'synthetic-organizer-session',role:'organizer',available_roles:['organizer']};
@@ -10,7 +11,7 @@ async function mock(page,options={}){
     :path==='organizer-queue'
      ?options.queue401
        ?{status:401,json:{ok:false,error:'login_required'}}
-       :{status:200,json:{ok:true,applications:[]}}
+       :{status:200,json:{ok:true,applications:[],overview:overviewOf([])}}
      :{status:200,json:{ok:true,required:false}};
   await route.fulfill(data);
  });
@@ -43,8 +44,8 @@ test('mobile organizer preview packs search and filters into one line and two-co
  for(const width of [280,320,375,390,430,768]){
   await page.setViewportSize({width,height:760});
   const summary=page.locator('.staff-mobile-summary');
-  // The approved overview deliberately exposes all four registration status cards.
-  await expect(summary.locator('.dash-stat:visible')).toHaveCount(4);
+  // The approved overview deliberately exposes all five registration status cards.
+  await expect(summary.locator('.dash-stat:visible')).toHaveCount(5);
   for(const id of ['pending-count','organizer-pending-count','organizer-supplement-count','organizer-approved-count']){
    await expect(summary.locator('#'+id)).toBeVisible();
    await expect(summary.locator('#'+id)).toHaveText('0');

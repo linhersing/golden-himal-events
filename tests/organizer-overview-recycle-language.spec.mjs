@@ -1,3 +1,4 @@
+import {overviewOf} from './fixtures/organizer-overview.mjs';
 import {test,expect} from '@playwright/test';
 
 test('organizer entry review totals are consistent and three languages update in place',async({page})=>{
@@ -11,7 +12,7 @@ test('organizer entry review totals are consistent and three languages update in
  await page.route('**/api/e2e/**',route=>{
   const key=new URL(route.request().url()).pathname.split('/').at(-1);
   const json=key==='me'?{ok:true,account:{id:'test-organizer',role:'organizer',available_roles:['organizer']},judging_policy:{mode:'final_only'}}
-  :key==='organizer-queue'?{ok:true,applications:entries,registration_management_enabled:true,judging_policy:{mode:'final_only'}}
+  :key==='organizer-queue'?{ok:true,applications:entries,overview:overviewOf(entries),registration_management_enabled:true,judging_policy:{mode:'final_only'}}
   :key==='organizer-corrections'?{ok:true,enabled:true,requests:[]}
   :key==='organizer-registrations'?{ok:true,registrations:[],next_offset:null}:{ok:true};
   return route.fulfill({json});
@@ -34,6 +35,14 @@ test('organizer entry review totals are consistent and three languages update in
  for(const [lang,title,trash] of [['en','Entry review overview','Recycle bin'],['ne','आवेदन समीक्षा सारांश','रिसाइकल बिन'],['zh','報名工作總覽','資源回收桶']]){
   await page.locator('[data-lang='+lang+']').click();
   await expect(page.locator('#organizer-overview-title')).toHaveText(title);
+  await expect(page.locator('#organizer-review-chart-title')).toHaveText({
+   en:'Entries by review status',ne:'समीक्षा अवस्थाअनुसार आवेदन',zh:'報名審核分布'
+  }[lang]);
+  await expect(page.locator('[data-review-state=supplement] dd')).toContainText('%');
+  await expect(page.locator('[data-region=A] progress')).toHaveJSProperty('value',5);
+  await expect(page.locator('[data-region=B] progress')).toHaveJSProperty('value',0);
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.locator('html').evaluate(el=>el.scrollWidth)).toBeLessThanOrEqual(390);
   await expect(page.locator('#staff-trash-open')).toHaveText(trash);
   await expect(page.locator('#organizer-approved-count')).toHaveText('2');
   await expect(page.locator('#organizer-count')).toContainText('2 / 5');
@@ -58,11 +67,24 @@ test('review actions distinguish normal pending, correction open, expired and su
    expect(id).toBe('submitted');entries.find(e=>e.id===id).approval_state='approved';
    return route.fulfill({json:{ok:true,testOnly:true,approval_state:'approved'}});
   }
-  return route.fulfill({json:key==='me'?{ok:true,account:{id:'test-organizer',role:'organizer',available_roles:['organizer']}}:key==='organizer-queue'?{ok:true,applications:entries}: {ok:true}});
+  return route.fulfill({json:key==='me'?{ok:true,account:{id:'test-organizer',role:'organizer',available_roles:['organizer']}}:key==='organizer-queue'?{ok:true,applications:entries,overview:overviewOf(entries)}: {ok:true}});
  });
  await page.goto('/backoffice.html');await page.locator('[data-lang=zh]').click();
  await expect(page.locator('#organizer-pending-count')).toHaveText('2');
- await expect(page.locator('#organizer-supplement-count')).toHaveText('2');
+ await expect(page.locator('#organizer-supplement-count')).toHaveText('1');
+ await expect(page.locator('#organizer-expired-count')).toHaveText('1');
+ await page.locator('[data-overview-filter=supplement]').click();
+ await expect(page.locator('[data-application-id="open"]')).toBeVisible();
+ await expect(page.locator('[data-application-id="expired"]')).toHaveCount(0);
+ await page.locator('[data-overview-filter=expired]').click();
+ await expect(page.locator('[data-application-id="expired"]')).toBeVisible();
+ await expect(page.locator('[data-application-id="open"]')).toHaveCount(0);
+ for(const [lang,label] of [['en','Correction deadline expired'],['ne','सुधारको समय सकियो'],['zh','補件已逾期']]){
+  await page.locator('[data-lang='+lang+']').click();
+  await expect(page.locator('[data-overview-filter=expired]')).toContainText(label);
+  await expect(page.locator('[data-application-id="expired"]')).toBeVisible();
+ }
+ await page.locator('[data-overview-filter=""]').click();
  const detail=page.locator('#organizer-entry-content');
  for(const [id,label,approve,request] of [['normal','待審核',true,true],['expired','補件已逾期',false,false],['open','待補件',false,false],['submitted','待審核',true,false]]){
   await page.locator('[data-application-id="'+id+'"]').click();
@@ -81,4 +103,37 @@ test('review actions distinguish normal pending, correction open, expired and su
  }
  await expect(page.locator('#organizer-approved-count')).toHaveText('1');
  await expect(page.locator('#organizer-pending-count')).toHaveText('1');
+});
+
+
+test('failed full database statistics never display a zero total',async({page})=>{
+ await page.route('**/api/e2e/**',route=>{
+  const key=new URL(route.request().url()).pathname.split('/').at(-1);
+  if(key==='organizer-queue')return route.fulfill({status:503,json:{ok:false,error:'test_data_unavailable'}});
+  return route.fulfill({json:key==='me'?{ok:true,account:{id:'test-organizer',role:'organizer'}}:{ok:true}});
+ });
+ await page.goto('/backoffice.html');
+ await expect(page.locator('#organizer-overview-error')).toBeVisible();
+ await expect(page.locator('#pending-count')).toHaveText('—');
+ await expect(page.locator('#organizer-charts')).toBeHidden();
+});
+
+test('an expired record beyond the first 500 is reached from the statistics card',async({page})=>{
+ const first={id:'first',stage_name:'First TEST',approval_state:'pending'};
+ const expired={id:'expired-after-limit',stage_name:'Expired TEST',approval_state:'pending',video_supplement_state:'expired'};
+ const overview={total:501,status:{pending:500,supplement:0,expired:1,approved:0,unverified:0},regions:{A:250,B:250,other:1}};
+ await page.route('**/api/e2e/**',route=>{
+  const {pathname,searchParams}=new URL(route.request().url());
+  const key=pathname.split('/').at(-1);
+  if(key==='organizer-queue')return route.fulfill({json:{ok:true,overview,applications:searchParams.get('status')==='expired'?[expired]:[first]}});
+  return route.fulfill({json:key==='me'?{ok:true,account:{id:'test-organizer',role:'organizer'}}:{ok:true}});
+ });
+ await page.goto('/backoffice.html');
+ await expect(page.locator('#pending-count')).toHaveText('501');
+ await expect(page.locator('#organizer-expired-count')).toHaveText('1');
+ await page.locator('[data-overview-filter=expired]').click();
+ await expect(page.locator('[data-application-id=expired-after-limit]')).toBeVisible();
+ await expect(page.locator('[data-application-id=first]')).toHaveCount(0);
+ await page.locator('[data-overview-filter=""]').click();
+ await expect(page.locator('[data-application-id=first]')).toBeVisible();
 });

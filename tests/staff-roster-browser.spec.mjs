@@ -1,3 +1,4 @@
+import {overviewOf} from './fixtures/organizer-overview.mjs';
 import {test,expect} from '@playwright/test';
 
 test('organizer explicitly approves a test entry and member sees pending until approval',async({page})=>{
@@ -94,7 +95,7 @@ test('organizer filters language, category and scoring with 133 synthetic entrie
  await page.route('**/api/e2e/**',async route=>{
   const key=new URL(route.request().url()).pathname.split('/').pop();
   const data=key==='me'?{ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'organizer-1',role:'organizer',available_roles:['organizer']}}:
-  key==='organizer-queue'?{ok:true,applications:entries}:{ok:true};
+  key==='organizer-queue'?{ok:true,applications:entries,overview:overviewOf(entries)}:{ok:true};
   await route.fulfill({status:200,json:data});
  });
  await page.setViewportSize({width:1280,height:900});await page.goto('/backoffice.html');
@@ -184,13 +185,13 @@ test('staff dashboard shows consistent review totals and hides payment info and 
   const p=new URL(route.request().url()).pathname.split('/').at(-1);
   await route.fulfill({status:200,json:p==='me'?
    {ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'staff-synthetic',role:'organizer',available_roles:['organizer']}}
-   :p==='organizer-queue'?{ok:true,applications:[]}:{ok:true}});
+   :p==='organizer-queue'?{ok:true,applications:[],overview:overviewOf([])}:{ok:true}});
  });
  await page.setViewportSize({width:375,height:812});
  await page.goto('/backoffice.html');
  for(const id of ['pending-count','organizer-pending-count','organizer-supplement-count','organizer-approved-count'])await expect(page.locator('#'+id)).toHaveText('0');
  await expect(page.locator('#organizer-unverified-stat')).toBeHidden();
- await expect(page.locator('[data-overview-filter]:visible')).toHaveCount(4);
+ await expect(page.locator('[data-overview-filter]:visible')).toHaveCount(5);
  await expect(page.locator('#staff-management-actions')).toBeHidden(); // mock has no management permission
  await expect(page.locator('#paid-count')).toBeHidden();
  await expect(page.locator('#paid-count')).toHaveText('0');
@@ -213,7 +214,7 @@ for(const [device,width] of [['desktop',1280],['mobile',375]]){
    let json={ok:true};
    if(path==='me')json={ok:true,judging_policy:{mode:'all_stages_test'},account:{id:'organizer-fictional',role:'organizer',available_roles:['organizer']}};
    if(path==='staff-login-config')json={ok:true,required:false};
-   if(path==='organizer-queue')json={ok:true,applications:[],registration_management_enabled:true};
+   if(path==='organizer-queue')json={ok:true,applications:[],overview:overviewOf([]),registration_management_enabled:true};
    if(path==='organizer-registrations'){
     const filter=url.searchParams.get('state'),query=url.searchParams.get('q');
     json={ok:true,registrations:(filter==='all'||filter==='available'&&row.state!=='deleted'||filter===row.state)&&(!query||row.stage_name.includes(query)||row.id.includes(query))?[row]:[],next_offset:null};
