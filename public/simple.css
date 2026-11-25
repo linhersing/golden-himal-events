@@ -2288,3 +2288,23 @@ body[data-page="back"] .organizer-management-actions>.btn{flex:1 1 135px;min-hei
 body[data-page="back"] .organizer-management-actions>p{flex:1 0 100%;margin:0}
 body[data-page="back"] #staff-trash-open,body[data-page="back"] #admin-trash-tab{border-color:#a58d6f;background:#f8f3e9}
 body[data-page="back"] .organizer-management-actions [aria-pressed="true"]{background:#594534!important;color:#fff;border-color:#594534}
+
+/* Compact organizer overview preserves the existing desktop workbench. */
+body[data-page="back"] .organizer-mobile-nav{display:none}
+.organizer-roster-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.organizer-chart-panel{margin-top:12px;border-top:1px solid #e2d4bf}
+.organizer-chart-panel summary{cursor:pointer;line-height:1.5;padding:12px 0;font-weight:700}
+.organizer-chart-panel .organizer-charts{margin-top:0}
+@media(max-width:600px){
+ body[data-page="back"] .organizer-mobile-nav{display:inline-flex;min-height:46px;padding:8px 12px}
+ #organizer-dashboard[data-mobile-view="summary"]>#organizer-roster-panel{display:none}
+ #organizer-dashboard[data-mobile-view="roster"]>:is(.organizer-overview,.staff-tools,.organizer-management-actions){display:none}
+ body[data-page="back"] .organizer-overview-header{padding:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+ body[data-page="back"] .organizer-overview-header h2{font-size:1.13rem}
+ body[data-page="back"] .organizer-overview .organizer-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ body[data-page="back"] .organizer-overview .organizer-stat{min-height:48px;padding:7px 8px;gap:4px;flex-direction:row;align-items:center;justify-content:space-between}
+ body[data-page="back"] .organizer-overview .organizer-stat small{font-size:.81rem}
+ body[data-page="back"] .organizer-overview .organizer-stat .dashboard-number{font-size:1.25rem}
+ body[data-page="back"] .organizer-overview .organizer-stat>span{display:none}
+ body[data-page="back"] .organizer-chart-panel summary{min-height:46px}
+}

@@ -29,6 +29,7 @@ try {
   const context=await runtime.injectContext(browser,'organizer',options);
   const page=await context.newPage();
   await page.goto(url);
+  if(device==='mobile')await page.locator('#organizer-roster-open').click();
   const root=page.locator('#admin-apps'),detail=page.locator('#organizer-entry-dialog');
   await expect(root.locator('.organizer-record-row')).toHaveCount(12);
   await expect(root).not.toContainText('TEST Song');

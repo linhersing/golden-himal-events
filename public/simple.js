@@ -41,9 +41,9 @@ Object.assign(translations.en,{"rewardsTop":"All 10 contestants in the April 14 
 Object.assign(translations.ne,{"rewardsTop":"अप्रिल १४ को फाइनलमा पुग्ने १० जनाले जनही NPR 20,000 फाइनलिस्ट नगद पुरस्कार पाउँछन् (जम्मा NPR 200,000)। तिनै १० जनालाई फाइनलको नतिजाअनुसार एउटै समूहमा क्रमबद्ध गरिन्छ; शीर्ष ९ जनाले थप स्थान पुरस्कार पाउँछन्: पहिलो स्थान १ जनालाई NPR 50,000, दोस्रो स्थान ३ जनालाई जनही NPR 30,000 र तेस्रो स्थान ५ जनालाई जनही NPR 15,000 (स्थान पुरस्कार जम्मा NPR 215,000)। कुल नगद पुरस्कार NPR 415,000।","rewardFinalist":"फाइनलका सबै १० जना · प्रत्येकलाई"});
 
 /* 2026-11-17 public five-stage schedule. Display-only; undecided scoring and billing stay private. */
-Object.assign(translations.zh,{"journeyStatus":"目前為網站預覽測試階段，正式報名尚未開放。","journeyEyebrow":"2027 · 5 個賽事階段","journeyHeading":"從報名到決賽，5 步看懂","journeyLead":"1月上傳演唱影片、2月及3月參加分區選拔、4月由10位決賽選手登台。","journeyRegionTitle":"分區說明","journeyRegionA":"A 區｜Lumbini（藍毗尼）","journeyRegionB":"B 區｜Bagmati（巴格馬蒂）","journeyRegionNote":"只有一個競賽組別。A、B 是現場參賽地區，不是兩種選手組別；其他地區符合資格者也可選擇一區。","journeyDate1":"1月1日－31日","journeyChannel1":"線上進行","journeyTitle1":"線上海選","journeyDesc1":"提交演唱影片，每人最多5支，每支60–90秒；由專業評審評選。","journeyDate2":"2月12日","journeyChannel2":"A、B 兩區分別進行","journeyTitle2":"第一次初選","journeyDesc2":"海選入選者回到自己選定的地區，現場個人演唱，由專業評審評選。","journeyDate3":"3月5日","journeyChannel3":"A、B 兩區分別進行","journeyTitle3":"第二次初選","journeyDesc3":"獲選者可個人或組隊現場演唱，由專業評審選出晉級者。","journeyDate4":"3月12日","journeyChannel4":"A、B 兩區分別進行","journeyTitle4":"晉級賽","journeyDesc4":"各區選出5位優勝者，合計10位選手進入總決賽。","journeyDate5":"4月14日","journeyChannel5":"Golden Himal Palace","journeyTitle5":"季度總決賽","journeyDesc5":"兩區10強同台競賽，最終成績由官網有效投票51%與專業評審49%組成；社群按讚不計入正式票數。","journeyTraining":"3月中旬起規劃自願參加的賽前音樂培訓，不是另一場淘汰賽；不參加也保留總決賽資格。","journeyNotice":"以上為2027年預定賽程；確切時間、地點與名額依主辦單位公告。所有日期及時間以尼泊爾當地時間為準。","journeyDetails":"查看詳細參賽規則 →"});
-Object.assign(translations.en,{"journeyStatus":"TEST preview only. Official registration is not yet open.","journeyEyebrow":"2027 · 5 competition stages","journeyHeading":"Your journey to the final, in 5 steps","journeyLead":"Submit a video in January, compete in your selected area in February and March, and watch 10 finalists perform in April.","journeyRegionTitle":"Competition areas","journeyRegionA":"Area A · Lumbini","journeyRegionB":"Area B · Bagmati","journeyRegionNote":"There is only one competition division. A and B are in-person competition areas, not separate singer categories. Eligible entrants from other provinces may choose either area.","journeyDate1":"Jan 1–31","journeyChannel1":"Online","journeyTitle1":"Online audition","journeyDesc1":"Submit up to 5 singing videos per person, 60–90 seconds each. Professional judges review them.","journeyDate2":"Feb 12","journeyChannel2":"Held separately in Areas A & B","journeyTitle2":"First selection","journeyDesc2":"Selected singers perform individually in their chosen area before professional judges.","journeyDate3":"Mar 5","journeyChannel3":"Held separately in Areas A & B","journeyTitle3":"Second selection","journeyDesc3":"Qualified singers may perform solo or in a team. Professional judges select those who advance.","journeyDate4":"Mar 12","journeyChannel4":"Held separately in Areas A & B","journeyTitle4":"Advancement round","journeyDesc4":"Five singers advance from each area, making 10 finalists in total.","journeyDate5":"Apr 14","journeyChannel5":"Golden Himal Palace","journeyTitle5":"Quarterly grand final","journeyDesc5":"Ten finalists compete in person. Valid votes on the official website count for 51% and professional judges for 49%; social-media likes are not official votes.","journeyTraining":"Optional music training is planned from mid-March. It is not another elimination round; finalists keep their place even if they do not attend.","journeyNotice":"These are planned 2027 dates. Exact times, venues and quotas will be confirmed by the organizer. All times are in Nepal local time.","journeyDetails":"Read the full competition rules →"});
-Object.assign(translations.ne,{"journeyStatus":"यो परीक्षण वेबसाइट हो। आधिकारिक दर्ता अझै खुलेको छैन।","journeyEyebrow":"२०२७ · प्रतियोगिताका ५ चरण","journeyHeading":"दर्तादेखि फाइनलसम्म: ५ सजिला चरण","journeyLead":"जनवरीमा गायन भिडियो पठाउनुहोस्, फेब्रुअरी–मार्चमा क्षेत्रीय छनोट, अप्रिलमा १० जनाको फाइनल।","journeyRegionTitle":"प्रतियोगिता क्षेत्र","journeyRegionA":"क्षेत्र A · लुम्बिनी (Lumbini)","journeyRegionB":"क्षेत्र B · बागमती (Bagmati)","journeyRegionNote":"प्रतियोगिता समूह एउटै हो। A र B फरक गायन समूह होइनन्, प्रत्यक्ष प्रतिस्पर्धा हुने क्षेत्र मात्र हुन्। अन्य प्रदेशका योग्य व्यक्तिले पनि एउटा क्षेत्र रोज्न सक्छन्।","journeyDate1":"जनवरी १–३१","journeyChannel1":"अनलाइन","journeyTitle1":"अनलाइन अडिसन","journeyDesc1":"प्रति व्यक्ति बढीमा ५ गायन भिडियो, प्रत्येक ६०–९० सेकेन्ड। पेशेवर निर्णायकले मूल्याङ्कन गर्छन्।","journeyDate2":"फेब्रुअरी १२","journeyChannel2":"A र B क्षेत्रमा छुट्टाछुट्टै","journeyTitle2":"पहिलो छनोट","journeyDesc2":"छानिएका गायकले आफूले रोजेको क्षेत्रमा एकल प्रस्तुति दिन्छन्। पेशेवर निर्णायकले मूल्याङ्कन गर्छन्।","journeyDate3":"मार्च ५","journeyChannel3":"A र B क्षेत्रमा छुट्टाछुट्टै","journeyTitle3":"दोस्रो छनोट","journeyDesc3":"छानिएका गायकले एकल वा टोलीमा प्रस्तुति दिन सक्छन्। निर्णायकले अर्को चरणका लागि छान्छन्।","journeyDate4":"मार्च १२","journeyChannel4":"A र B क्षेत्रमा छुट्टाछुट्टै","journeyTitle4":"अर्को चरणको छनोट","journeyDesc4":"प्रत्येक क्षेत्रबाट ५ जना छानिन्छन्। कुल १० जना फाइनलमा पुग्छन्।","journeyDate5":"अप्रिल १४","journeyChannel5":"Golden Himal Palace","journeyTitle5":"त्रैमासिक ग्रान्ड फाइनल","journeyDesc5":"१० फाइनलिस्टले प्रत्यक्ष प्रस्तुति दिन्छन्। आधिकारिक वेबसाइटको मान्य मत ५१% र पेशेवर निर्णायकको अंक ४९% हुन्छ। सामाजिक सञ्जालका लाइक आधिकारिक मत होइनन्।","journeyTraining":"मार्चको मध्यदेखि स्वेच्छिक संगीत प्रशिक्षण योजना छ। यो अर्को छनोट होइन; सहभागी नभए पनि फाइनलको योग्यता कायम रहन्छ।","journeyNotice":"यी २०२७ का प्रस्तावित मिति हुन्। अन्तिम समय, स्थान र संख्या आयोजकले घोषणा गर्नेछ। सबै समय नेपालको स्थानीय समयअनुसार हुनेछ।","journeyDetails":"सम्पूर्ण प्रतियोगिता नियम हेर्नुहोस् →"});
+Object.assign(translations.zh,{"journeyStatus":"目前為網站預覽測試階段，正式報名尚未開放。","journeyEyebrow":"2027 · 5 個賽事階段","journeyHeading":"從報名到決賽，5 步看懂","journeyLead":"1月上傳演唱影片、2月及3月參加分區選拔、4月由10位決賽選手登台。","journeyRegionTitle":"分區說明","journeyRegionA":"A 區｜Lumbini（藍毗尼）","journeyRegionB":"B 區｜Bagmati（巴格馬蒂）","journeyRegionNote":"只有一個競賽組別。A、B 是現場參賽地區，不是兩種選手組別；其他地區符合資格者也可選擇一區。","journeyDate1":"1月1日－31日","journeyChannel1":"線上進行","journeyTitle1":"線上海選","journeyDesc1":"提交演唱影片，每人最多5支，每支60–90秒；由專業評審評選。","journeyDate2":"2月12日","journeyChannel2":"A、B 兩區分別進行","journeyTitle2":"第一次初選","journeyDesc2":"海選入選者回原賽區，個人演唱自選曲，每人 90 秒。各區晉級名額於賽前公告。","journeyDate3":"3月5日","journeyChannel3":"A、B 兩區分別進行","journeyTitle3":"第二次初選","journeyDesc3":"第一次初選獲選者留在原賽區，可個人或組隊演唱。依參賽單位整體總分排名，獲選隊伍全員一同晉級。各區合計晉級 10 人，演唱時間與場地待公告。","journeyDate4":"3月12日","journeyChannel4":"A、B 兩區分別進行","journeyTitle4":"晉級賽","journeyDesc4":"各區 10 人以個人身分參賽，分為五對。每對勝者晉級，兩區共 10 人進入總決賽。配對、場地與演唱時間待公告。","journeyDate5":"4月14日","journeyChannel5":"Golden Himal Palace","journeyTitle5":"季度總決賽","journeyDesc5":"兩區10強同台競賽，最終成績由官網有效投票51%與專業評審49%組成；社群按讚不計入正式票數。","journeyTraining":"3月中旬起規劃自願參加的賽前音樂培訓，不是另一場淘汰賽；不參加也保留總決賽資格。","journeyNotice":"以上為2027年預定賽程；確切時間、地點與名額依主辦單位公告。所有日期及時間以尼泊爾當地時間為準。","journeyDetails":"查看詳細參賽規則 →","journeyShirt":"第一次初選晉級者贈送活動 T-shirt。領取時間與方式待主辦公告。","journeyShirtImage":"活動 T-shirt 正反面設計示意","journeyPosterTitle":"查看活動海報","journeyPosterNote":"宣傳設計預覽。正式報名時間以官網公告為準。"});
+Object.assign(translations.en,{"journeyStatus":"TEST preview only. Official registration is not yet open.","journeyEyebrow":"2027 · 5 competition stages","journeyHeading":"Your journey to the final, in 5 steps","journeyLead":"Submit a video in January, compete in your selected area in February and March, and watch 10 finalists perform in April.","journeyRegionTitle":"Competition areas","journeyRegionA":"Area A · Lumbini","journeyRegionB":"Area B · Bagmati","journeyRegionNote":"There is only one competition division. A and B are in-person competition areas, not separate singer categories. Eligible entrants from other provinces may choose either area.","journeyDate1":"Jan 1–31","journeyChannel1":"Online","journeyTitle1":"Online audition","journeyDesc1":"Submit up to 5 singing videos per person, 60–90 seconds each. Professional judges review them.","journeyDate2":"Feb 12","journeyChannel2":"Held separately in Areas A & B","journeyTitle2":"First selection","journeyDesc2":"Audition qualifiers return to their chosen area and perform a solo song of their choice, up to 90 seconds. The organizer will announce how many contestants advance from each area.","journeyDate3":"Mar 5","journeyChannel3":"Held separately in Areas A & B","journeyTitle3":"Second selection","journeyDesc3":"Qualifiers compete in their original area as soloists or teams. Entries are ranked by overall performance, and all members of a qualifying team advance together. Ten people advance from each area. Venue and performance time limits will be announced.","journeyDate4":"Mar 12","journeyChannel4":"Held separately in Areas A & B","journeyTitle4":"Advancement round","journeyDesc4":"Ten solo contestants in each area compete in five pairs. The winner of each pair advances, for ten finalists across both areas. Pairings, venues and performance time limits will be announced.","journeyDate5":"Apr 14","journeyChannel5":"Golden Himal Palace","journeyTitle5":"Quarterly grand final","journeyDesc5":"Ten finalists compete in person. Valid votes on the official website count for 51% and professional judges for 49%; social-media likes are not official votes.","journeyTraining":"Optional music training is planned from mid-March. It is not another elimination round; finalists keep their place even if they do not attend.","journeyNotice":"These are planned 2027 dates. Exact times, venues and quotas will be confirmed by the organizer. All times are in Nepal local time.","journeyDetails":"Read the full competition rules →","journeyShirt":"Contestants who advance from the first selection receive an event T-shirt. The organizer will announce when and how to collect it.","journeyShirtImage":"Event T-shirt concept, front and back","journeyPosterTitle":"View event poster","journeyPosterNote":"Promotional design preview. See the official website announcement for registration dates."});
+Object.assign(translations.ne,{"journeyStatus":"यो परीक्षण वेबसाइट हो। आधिकारिक दर्ता अझै खुलेको छैन।","journeyEyebrow":"२०२७ · प्रतियोगिताका ५ चरण","journeyHeading":"दर्तादेखि फाइनलसम्म: ५ सजिला चरण","journeyLead":"जनवरीमा गायन भिडियो पठाउनुहोस्, फेब्रुअरी–मार्चमा क्षेत्रीय छनोट, अप्रिलमा १० जनाको फाइनल।","journeyRegionTitle":"प्रतियोगिता क्षेत्र","journeyRegionA":"क्षेत्र A · लुम्बिनी (Lumbini)","journeyRegionB":"क्षेत्र B · बागमती (Bagmati)","journeyRegionNote":"प्रतियोगिता समूह एउटै हो। A र B फरक गायन समूह होइनन्, प्रत्यक्ष प्रतिस्पर्धा हुने क्षेत्र मात्र हुन्। अन्य प्रदेशका योग्य व्यक्तिले पनि एउटा क्षेत्र रोज्न सक्छन्।","journeyDate1":"जनवरी १–३१","journeyChannel1":"अनलाइन","journeyTitle1":"अनलाइन अडिसन","journeyDesc1":"प्रति व्यक्ति बढीमा ५ गायन भिडियो, प्रत्येक ६०–९० सेकेन्ड। पेशेवर निर्णायकले मूल्याङ्कन गर्छन्।","journeyDate2":"फेब्रुअरी १२","journeyChannel2":"A र B क्षेत्रमा छुट्टाछुट्टै","journeyTitle2":"पहिलो छनोट","journeyDesc2":"अडिसनबाट छानिएका प्रतियोगीले आफूले रोजेको क्षेत्रमा आफूले छानेको गीत एकल रूपमा प्रस्तुत गर्छन्। प्रत्येकलाई बढीमा ९० सेकेन्ड दिइन्छ। हरेक क्षेत्रबाट कति जना अघि बढ्छन् भन्ने कुरा आयोजकले घोषणा गर्नेछ।","journeyDate3":"मार्च ५","journeyChannel3":"A र B क्षेत्रमा छुट्टाछुट्टै","journeyTitle3":"दोस्रो छनोट","journeyDesc3":"पहिलो छनोटबाट छानिएकाहरूले आफ्नै क्षेत्रमा एकल वा समूहमा गाउन सक्छन्। समग्र अङ्कका आधारमा क्रम निर्धारण हुन्छ। छानिएको समूहका सबै सदस्य सँगै अघि बढ्छन्। प्रत्येक क्षेत्रबाट १० जना अघि बढ्छन्। प्रस्तुति अवधि र स्थान पछि घोषणा गरिनेछ।","journeyDate4":"मार्च १२","journeyChannel4":"A र B क्षेत्रमा छुट्टाछुट्टै","journeyTitle4":"अर्को चरणको छनोट","journeyDesc4":"प्रत्येक क्षेत्रका १० जना एकल प्रतियोगीलाई पाँच जोडीमा बाँडिन्छ। हरेक जोडीको विजेता अघि बढ्छ। दुवै क्षेत्रबाट जम्मा १० जना फाइनलमा पुग्छन्। जोडी, स्थान र प्रस्तुति अवधि पछि घोषणा गरिनेछ।","journeyDate5":"अप्रिल १४","journeyChannel5":"Golden Himal Palace","journeyTitle5":"त्रैमासिक ग्रान्ड फाइनल","journeyDesc5":"१० फाइनलिस्टले प्रत्यक्ष प्रस्तुति दिन्छन्। आधिकारिक वेबसाइटको मान्य मत ५१% र पेशेवर निर्णायकको अंक ४९% हुन्छ। सामाजिक सञ्जालका लाइक आधिकारिक मत होइनन्।","journeyTraining":"मार्चको मध्यदेखि स्वेच्छिक संगीत प्रशिक्षण योजना छ। यो अर्को छनोट होइन; सहभागी नभए पनि फाइनलको योग्यता कायम रहन्छ।","journeyNotice":"यी २०२७ का प्रस्तावित मिति हुन्। अन्तिम समय, स्थान र संख्या आयोजकले घोषणा गर्नेछ। सबै समय नेपालको स्थानीय समयअनुसार हुनेछ।","journeyDetails":"सम्पूर्ण प्रतियोगिता नियम हेर्नुहोस् →","journeyShirt":"पहिलो छनोटबाट अर्को चरणमा पुग्ने प्रतियोगीले कार्यक्रमको टी-सर्ट पाउँछन्। कहिले र कसरी लिन सकिन्छ भन्ने कुरा आयोजकले घोषणा गर्नेछ।","journeyShirtImage":"कार्यक्रमको टी-सर्टको अगाडि र पछाडिको नमुना","journeyPosterTitle":"कार्यक्रमको पोस्टर हेर्नुहोस्","journeyPosterNote":"यो प्रचार सामग्रीको नमुना हो। आधिकारिक दर्ताको मिति वेबसाइटमा घोषणा गरिनेछ।"});
 
 
 /* 2026-11-18 Muse/Alan public policy: no entry-fee or payment copy in UI.
@@ -73,6 +73,10 @@ Object.assign(translations.ne,{
  entryFeeNote:'प्रति व्यक्ति बढीमा पाँच ६०–९० सेकेन्डका डेमो। भिडियो र योग्यता नियम जाँच्नुहोस्।',
  entryFeeStatus:'परीक्षण वेबसाइट मात्र। आधिकारिक दर्ता खुलेको छैन।'
 });
+if(document.getElementById('contest-journey')){
+ const stages=Array.from(document.querySelectorAll('details[name="ghv-stage"]'));
+ for(const stage of stages)stage.addEventListener('toggle',()=>{if(stage.open)for(const other of stages)if(other!==stage)other.open=false});
+}
 if(page==='home'){
  let lang='zh',homeState='anonymous';
  try{const stored=localStorage.getItem('ghv_ui_language_v1');if(translations[stored])lang=stored}catch{}
@@ -1495,7 +1499,7 @@ function paintOrganizerOverview(overview){
  }
  $('organizer-unverified-stat').hidden=!counts?.unverified;
  $('organizer-overview-error').hidden=Boolean(overview);
- $('organizer-charts').hidden=!overview;
+ $('organizer-chart-panel').hidden=!overview;
  if(!overview)return;
  const locale=window.GHVLocale?.lang||'zh';
  const number=new Intl.NumberFormat({zh:'zh-TW',en:'en',ne:'ne-NP'}[locale]);
@@ -1542,6 +1546,25 @@ async function renderOrganizer(){
   return;
  }
  const apps=v.applications||[];
+ const mobileLayout=matchMedia('(max-width: 600px)');
+ const charts=$('organizer-chart-panel');
+ charts.open=!mobileLayout.matches;
+ let rosterTrigger;
+ dashboard.dataset.mobileView='summary';
+ function mobileRoster(button){
+  if(!mobileLayout.matches)return false;
+  rosterTrigger=button;
+  dashboard.dataset.mobileView='roster';
+  const heading=$('organizer-roster-heading');
+  heading.focus({preventScroll:true});
+  heading.scrollIntoView({block:'start'});
+  return true;
+ }
+ $('organizer-summary-back').onclick=()=>{
+  dashboard.dataset.mobileView='summary';
+  rosterTrigger?.focus({preventScroll:true});
+  $('organizer-overview-title').scrollIntoView({block:'nearest'});
+ };
  let overview=v.overview,batchFilter='',batchOffset=0,reviewReadback;
  if(!account||role!=='organizer')return;
  applyStaffJudgingPolicy(v);staffTabs();
@@ -1797,20 +1820,21 @@ async function renderOrganizer(){
  }
  search.oninput=()=>{pageNo=1;paint()};
  for(const control of [language,category])control.onchange=search.oninput;
- async function showFilter(next,fromCard=false){
+ async function showFilter(next,trigger){
   const filter=Object.hasOwn(organizerReviewLabels,next)?next:'';
   if((overview?.total>batchSize||batchFilter||batchOffset)&&(filter!==batchFilter||batchOffset)){
    statusFilter.value=dashboard.querySelector('[data-overview-filter][aria-pressed="true"]')?.dataset.overviewFilter||'';
    if(!await loadBatch(filter,0))return;
   }
   statusFilter.value=next;
-  if(fromCard){search.value='';language.value='';category.value=''}
+  if(trigger){search.value='';language.value='';category.value=''}
   pageNo=1;paint();
-  if(fromCard){statusFilter.focus({preventScroll:true});summary.scrollIntoView({block:'nearest'});}
+  if(trigger&&!mobileRoster(trigger)){statusFilter.focus({preventScroll:true});summary.scrollIntoView({block:'nearest'});}
  }
+ $('organizer-roster-open').onclick=()=>run(()=>showFilter('',$('organizer-roster-open')));
  statusFilter.onchange=()=>run(()=>showFilter(statusFilter.value));
  dashboard.querySelectorAll('[data-overview-filter]').forEach(button=>{
-  button.onclick=()=>run(()=>showFilter(button.dataset.overviewFilter,true));
+  button.onclick=()=>run(()=>showFilter(button.dataset.overviewFilter,button));
  });
  paint();
  const correctionPanel=$('organizer-corrections'),correctionList=$('organizer-correction-list');

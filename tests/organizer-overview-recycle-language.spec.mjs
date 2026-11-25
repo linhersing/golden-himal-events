@@ -41,8 +41,6 @@ test('organizer entry review totals are consistent and three languages update in
   await expect(page.locator('[data-review-state=supplement] dd')).toContainText('%');
   await expect(page.locator('[data-region=A] progress')).toHaveJSProperty('value',5);
   await expect(page.locator('[data-region=B] progress')).toHaveJSProperty('value',0);
-  await page.setViewportSize({width:390,height:844});
-  expect(await page.locator('html').evaluate(el=>el.scrollWidth)).toBeLessThanOrEqual(390);
   await expect(page.locator('#staff-trash-open')).toHaveText(trash);
   await expect(page.locator('#organizer-approved-count')).toHaveText('2');
   await expect(page.locator('#organizer-count')).toContainText('2 / 5');
@@ -136,4 +134,57 @@ test('an expired record beyond the first 500 is reached from the statistics card
  await expect(page.locator('[data-application-id=first]')).toHaveCount(0);
  await page.locator('[data-overview-filter=""]').click();
  await expect(page.locator('[data-application-id=first]')).toBeVisible();
+});
+
+
+test('mobile overview offers compact cards and opens the filtered roster separately',async({page})=>{
+ const entries=[{id:'entry-expired',stage_name:'Fictional Entry',approval_state:'pending',video_supplement_state:'expired'}];
+ await page.setViewportSize({width:320,height:800});
+ await page.route('**/api/e2e/**',route=>{
+  const key=new URL(route.request().url()).pathname.split('/').at(-1);
+  return route.fulfill({json:key==='me'?{ok:true,account:{id:'fictional-organizer',role:'organizer'}}:
+   key==='organizer-queue'?{ok:true,applications:entries,overview:overviewOf(entries)}:{ok:true}});
+ });
+ await page.goto('/backoffice.html');
+ const roster=page.locator('#organizer-roster-panel'),charts=page.locator('#organizer-charts');
+ await expect(page.locator('#organizer-roster-open')).toBeVisible();
+ await expect(roster).toBeHidden();await expect(charts).toBeHidden();
+ await page.locator('#organizer-chart-panel summary').click();
+ await expect(charts).toBeVisible();
+ await page.locator('#organizer-chart-panel summary').click();
+ for(const [lang,label] of [['zh','查看選手名冊'],['en','View contestant roster'],['ne','प्रतियोगी सूची हेर्नुहोस्']]){
+  await page.locator('[data-lang='+lang+']').click();
+  await expect(page.locator('#organizer-roster-open')).toHaveText(label);
+  expect(await page.locator('html').evaluate(el=>el.scrollWidth)).toBeLessThanOrEqual(320);
+ }
+ const expired=page.locator('[data-overview-filter=expired]');
+ await expired.click();
+ await expect(roster).toBeVisible();await expect(page.locator('.organizer-overview')).toBeHidden();
+ await expect(page.locator('[data-application-id=entry-expired]')).toBeVisible();
+ await expect(page.locator('#organizer-roster-heading')).toBeFocused();
+ await page.locator('#organizer-summary-back').click();
+ await expect(roster).toBeHidden();await expect(expired).toBeFocused();
+});
+
+test('public stage details translate, open one at a time and locate the shirt only in the first selection',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/voice.html');
+ const stages=page.locator('details[name=ghv-stage]');
+ await expect(stages).toHaveCount(5);
+ await expect(stages.locator('img')).toHaveCount(1);
+ await stages.nth(1).locator('summary').click();
+ const shirt=stages.nth(1).locator('img');
+ await expect(shirt).toBeVisible();
+ await expect.poll(()=>shirt.evaluate(el=>el.naturalWidth)).toBeGreaterThan(0);
+ for(const [lang,word] of [['zh','晉級者'],['en','advance from the first selection'],['ne','टी-सर्ट']]){
+  await page.locator('[data-lang='+lang+']').first().click();
+  await expect(stages.nth(1).locator('.ghv-journey-gift')).toContainText(word);
+ }
+ await stages.nth(2).locator('summary').click();
+ await expect(stages.nth(1)).not.toHaveAttribute('open','');
+ await expect(stages.nth(2).locator('p')).toContainText('समूह');
+ await expect(shirt).toBeHidden();
+ await page.locator('.ghv-journey-poster summary').click();
+ await expect(page.locator('.ghv-journey-poster img')).toBeVisible();
+ expect(await page.locator('html').evaluate(el=>el.scrollWidth)).toBeLessThanOrEqual(390);
 });

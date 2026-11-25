@@ -1,6 +1,10 @@
 
 (()=>{'use strict';
 const words={
+ "報名名單分頁":["Roster pages","आवेदन सूचीका पृष्ठहरू"],
+ "查看選手名冊":["View contestant roster","प्रतियोगी सूची हेर्नुहोस्"],
+ "查看審核分布與賽區":["View review and region charts","समीक्षा र क्षेत्रका चार्ट हेर्नुहोस्"],
+ "返回報名總覽":["Back to entry overview","आवेदन सारांशमा फर्कनुहोस्"],
  "已移除的選手可在資源回收桶內還原。":["Restore removed contestants from the recycle bin.","हटाइएका प्रतियोगीलाई रिसाइकल बिनबाट फर्काउन सकिन्छ।"],
  "資源回收桶目前沒有資料。":["The recycle bin is empty.","रिसाइकल बिन अहिले खाली छ।"],
  "測試階段｜全庫有效報名":["Test mode · All active entries","परीक्षण चरण · सबै सक्रिय आवेदन"],
@@ -275,6 +279,7 @@ function t(key){
  return (lang==='en'?words[key]?.[0]:lang==='ne'?words[key]?.[1]:null)||key;
 }
 function apply(){
+ document.querySelectorAll('[data-staff-aria]').forEach(element=>element.setAttribute('aria-label',t(element.dataset.staffAria)));
  document.querySelectorAll('[data-staff-text]').forEach(element=>{element.textContent=t(element.dataset.staffText)});
  document.querySelectorAll('[data-staff-placeholder]').forEach(element=>{element.placeholder=t(element.dataset.staffPlaceholder)});
 }
