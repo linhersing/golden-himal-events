@@ -46,6 +46,7 @@ async function serveOrganizer(page,{lookup}={}){
 test('20 applications with one, three, and five songs stay compact and retain filters, page and same-name position',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  const {entries,requests}=await serveOrganizer(page);
+ await page.locator('#organizer-roster-open').click();
  const list=page.locator('#admin-apps'),cards=list.locator('.organizer-record-row');
  const detail=page.locator('#organizer-entry-dialog'),search=page.locator('#organizer-search');
  await expect(cards).toHaveCount(12);
@@ -195,6 +196,7 @@ test('switching to reviewer clears loaded organizer management and audit DOM',as
 test('approved mobile hierarchy keeps exactly four top-level cards, never stacks hidden sections',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  const {entries,requests}=await serveOrganizer(page);
+ await page.locator('#organizer-roster-open').click();
  const roster=page.locator('#admin-apps');
  const workspace=page.locator('#organizer-entry-dialog');
  const content=page.locator('#organizer-entry-content');

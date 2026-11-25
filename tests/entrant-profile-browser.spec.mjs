@@ -61,6 +61,7 @@ test('organizer loads only the selected entrant photo; reviewer workspace omits 
  });
  await page.setViewportSize({width:375,height:812});
  await page.goto('/backoffice.html');
+ await page.locator('#organizer-roster-open').click();
  await expect(page.locator('#admin-apps .organizer-record-row')).toHaveCount(2);
  await expect(page.locator('#admin-apps img')).toHaveCount(0);
  expect(profileReads).toHaveLength(0);

@@ -197,6 +197,7 @@ test('staff dashboard shows consistent review totals and hides payment info and 
  await expect(page.locator('#paid-count')).toHaveText('0');
  await expect(page.locator('.staff-system-note')).not.toHaveAttribute('open','');
  await expect(page.locator('#organizer-language')).toBeHidden();
+ await page.locator('#organizer-roster-open').click();
  await expect(page.locator('#organizer-search')).toBeVisible();
  await page.locator('.organizer-filter-panel summary').click();
  await expect(page.locator('#organizer-language')).toBeVisible();

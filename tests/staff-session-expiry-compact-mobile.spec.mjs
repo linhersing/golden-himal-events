@@ -53,6 +53,7 @@ test('mobile organizer preview packs search and filters into one line and two-co
   await expect(page.locator('#scores-count').locator('..')).toBeHidden();
   await expect(page.locator('#organizer-status option[value=scored]')).toHaveAttribute('hidden','');
   expect(await page.locator('#organizer-status option[value=scored]').evaluate(el=>el.disabled)).toBe(true);
+  if(width<=600)await page.locator('#organizer-roster-open').click();
   const search=page.locator('#organizer-search');
   const filters=page.locator('.organizer-filter-panel');
   await expect(search).toBeVisible();await expect(filters).toBeVisible();
@@ -64,6 +65,7 @@ test('mobile organizer preview packs search and filters into one line and two-co
   if(width>=320)expect(Math.abs(fields[0].top-fields[1].top),'two filters in row at '+width).toBeLessThan(2);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),'no horizontal scrolling '+width).toBeLessThanOrEqual(1);
   await filters.evaluate(el=>{el.open=false});
+  if(width<=600)await page.locator('#organizer-summary-back').click();
  }
 });
 
