@@ -95,18 +95,18 @@ test('staff OTP waits up to ten minutes then clearly asks for a fresh code',asyn
 });
 
 
-test('staff code entry stays neutral until authentication, with separate delivery help',async({page})=>{
- let signedIn=false, invited=false;
+test('staff login rejects unapproved addresses and guides invited staff to code entry',async({page})=>{
+ let signedIn=false, rejectCode=true;
  await page.route('**/api/e2e/**',route=>{
   const endpoint=new URL(route.request().url()).pathname.split('/').at(-1);
   if(endpoint==='me')return route.fulfill(signedIn?{json:{ok:true,account}}:{status:401,json:{ok:false,error:'login_required'}});
   if(endpoint==='staff-login-config')return route.fulfill({json:{ok:true,required:false}});
   if(endpoint==='request-code'){
-   invited=route.request().postDataJSON().email==='invited@example.invalid';
+   if(route.request().postDataJSON().email!=='invited@example.invalid')return route.fulfill({status:403,json:{ok:false,error:'not_on_test_allowlist'}});
    return route.fulfill({json:{ok:true,challenge_id:'synthetic-otp'}});
   }
   if(endpoint==='verify-code'){
-   if(!invited)return route.fulfill({status:400,json:{ok:false,error:'expired_or_invalid_code'}});
+   if(rejectCode)return route.fulfill({status:400,json:{ok:false,error:'expired_or_invalid_code'}});
    signedIn=true;
   }
   if(endpoint==='organizer-queue')return route.fulfill({json:{ok:true,applications:[],overview:overviewOf([])}});
@@ -124,8 +124,17 @@ test('staff code entry stays neutral until authentication, with separate deliver
   await page.locator('#back-code-form [name=code]').fill('123456');
   await page.locator('#back-code-form [type=submit]').click();
  };
- await request('uninvited@example.invalid');
- await expect(page.locator('#staff-code-instructions')).toContainText('收到');
+ await page.locator('#back-email-form [name=email]').fill('uninvited@example.invalid');
+ await page.locator('#back-email-form [type=submit]').click();
+ await expect(page.locator('#back-status.error')).toHaveText('此 Email 未獲核准。');
+ await expect(page.locator('#back-code-form')).toBeHidden();
+ await page.locator('[data-lang=en]').click();
+ await expect(page.locator('#back-status.error')).toHaveText('This email is not approved.');
+ await page.locator('[data-lang=ne]').click();
+ await expect(page.locator('#back-status.error')).toHaveText('यो इमेल स्वीकृत छैन।');
+ await page.locator('[data-lang=zh]').click();
+ await request('invited@example.invalid');
+ await expect(page.locator('#staff-code-instructions')).toHaveText('此 Email 已核准，請輸入驗證碼。');
  const help=page.locator('#staff-no-code');
  await expect(help).not.toHaveAttribute('open','');
  await help.locator('summary').click();
@@ -138,6 +147,7 @@ test('staff code entry stays neutral until authentication, with separate deliver
  await verify();
  await expect(page.locator('#back-status.error')).toContainText('未能登入');
  await expect(page.locator('#back-dashboard')).toBeHidden();
+ rejectCode=false;
  await page.locator('#back-change').click();
  await request('invited@example.invalid');
  await expect(help).not.toHaveAttribute('open','');

@@ -754,6 +754,10 @@ mailForm.addEventListener('submit',e=>{e.preventDefault();run(async()=>{
   const v=await api('request-code',payload);
   challenge=v.challenge_id;
   challengeEmail=publicTest?email:undefined;
+ }catch(error){
+  if(!staff||error.message!=='not_on_test_allowlist')throw error;
+  localizedStatus('staffEmailNotApproved',true);
+  return;
  }finally{
   if(payload.turnstile_token){
    clearHumanToken();
