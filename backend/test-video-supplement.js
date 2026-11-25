@@ -18,11 +18,13 @@ export function supplementGuard(enabled,alias,unsubmittedOnly=false){
  return enabled?` AND NOT EXISTS(SELECT 1 FROM ${table} s WHERE s.application_id=${alias}.id${unsubmittedOnly?' AND s.submitted_at IS NULL':''})`:'';
 }
 
+export const supplementState=enabled=>enabled?`CASE WHEN s.submitted_at IS NOT NULL THEN 'submitted'
+ WHEN s.requested_at+${duration}<=unixepoch() THEN 'expired'
+ WHEN s.application_id IS NOT NULL THEN 'pending' END`:'NULL';
+
 export const supplementColumns=enabled=>enabled?`, s.requested_at AS video_supplement_requested_at,
  s.requested_at+${duration} AS video_supplement_deadline,
- CASE WHEN s.submitted_at IS NOT NULL THEN 'submitted'
-      WHEN s.requested_at+${duration}<=unixepoch() THEN 'expired'
-      WHEN s.application_id IS NOT NULL THEN 'pending' END AS video_supplement_state,
+ ${supplementState(true)} AS video_supplement_state,
  CASE WHEN s.application_id IS NULL AND ${eligible} THEN 1 ELSE 0 END AS video_supplement_available`:'';
 export const supplementJoin=enabled=>enabled?` LEFT JOIN ${table} s ON s.application_id=p.id`:'';
 

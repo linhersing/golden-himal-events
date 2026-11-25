@@ -1487,11 +1487,62 @@ const contactViews={
  address:['地址',{city:'城市',street_address:'街道／Tol 地址'}],
  background:['學歷與背景',{educational_background:'教育背景',short_description:'簡介',musical_training:'音樂訓練'}]
 };
+const organizerReviewLabels={pending:'待審核',supplement:'待補件',expired:'補件已逾期',approved:'已核准',unverified:'待核對'};
+function paintOrganizerOverview(overview){
+ const {total,status:counts,regions}=overview||{};
+ for(const [id,value] of [['pending-count',total],...Object.keys(organizerReviewLabels).map(key=>['organizer-'+key+'-count',counts?.[key]])]){
+  $(id).textContent=String(value??'—');
+ }
+ $('organizer-unverified-stat').hidden=!counts?.unverified;
+ $('organizer-overview-error').hidden=Boolean(overview);
+ $('organizer-charts').hidden=!overview;
+ if(!overview)return;
+ const locale=window.GHVLocale?.lang||'zh';
+ const number=new Intl.NumberFormat({zh:'zh-TW',en:'en',ne:'ne-NP'}[locale]);
+ const ring=$('organizer-review-ring'),legend=$('organizer-review-legend');
+ $('organizer-review-total').textContent=number.format(total);
+ const segments=[];
+ let processed=0;
+ legend.replaceChildren();
+ for(const [key,label] of Object.entries(organizerReviewLabels)){
+  const value=counts[key],pct=total?value/total*100:0;
+  if(value>0){
+   segments.push(`var(--review-${key}) ${processed/total*100}% ${(processed+value)/total*100}%`);
+   processed+=value;
+  }
+  const row=node('div');
+  row.dataset.reviewState=key;
+  if(key==='unverified'&&!value)row.hidden=true;
+  row.append(node('dt',sw(label)),node('dd',number.format(value)+' · '+number.format(Math.round(pct))+'%'));
+  legend.append(row);
+ }
+ ring.style.setProperty('--review-chart',segments.length?'conic-gradient('+segments.join(',')+')':'var(--chart-track)');
+ const bars=$('organizer-region-bars');
+ bars.replaceChildren();
+ for(const [key,label] of Object.entries({A:translations[locale].journeyRegionA,B:translations[locale].journeyRegionB,other:sw('未指定賽區')})){
+  const row=node('div',undefined,'organizer-region-row');
+  row.dataset.region=key;
+  const caption=node('div');
+  caption.append(node('span',label),node('strong',number.format(regions[key])));
+  const bar=node('progress');
+  bar.value=regions[key];bar.max=total||1;bar.setAttribute('aria-label',label);
+  row.append(caption,bar);bars.append(row);
+ }
+}
 async function renderOrganizer(){
  clearStaffWorkspace();
  const dashboard=$('organizer-dashboard');
  dashboard.hidden=false;$('judge-dashboard').hidden=true;
- const v=await api('organizer-queue?view=workbench'),apps=v.applications||[];
+ paintOrganizerOverview(null);$('organizer-overview-error').hidden=true;
+ let v;
+ try{v=await api('organizer-queue?view=workbench')}
+ catch(error){
+  if(!account||role!=='organizer')throw error;
+  $('organizer-overview-error').hidden=false;
+  return;
+ }
+ const apps=v.applications||[];
+ let overview=v.overview,batchFilter='',batchOffset=0,reviewReadback;
  if(!account||role!=='organizer')return;
  applyStaffJudgingPolicy(v);staffTabs();
  showAdminRegistrations(v.registration_management_enabled===true);
@@ -1500,19 +1551,6 @@ async function renderOrganizer(){
  if(!january.hidden){
   january.ontoggle=()=>{if(january.open)run(renderJanuaryRoster)};
  }
- function refreshOverview(){
-  const counts={'待審核':0,'待補件':0,'補件已逾期':0,'已核准':0,'待核對':0};
-  for(const entry of apps)counts[organizerState(entry)]++;
-  for(const [id,value] of [['pending-count',apps.length],['organizer-pending-count',counts['待審核']],['organizer-supplement-count',counts['待補件']],['organizer-approved-count',counts['已核准']],['organizer-unverified-count',counts['待核對']],['scores-count',apps.reduce((n,a)=>n+Number(a.demo_judges||0)+Number(a.live_judges||0),0)]]){
-   $(id).textContent=String(value);
-  }
-  $('organizer-unverified-stat').hidden=!counts['待核對'];
-  $('organizer-expired-count').textContent=String(counts['補件已逾期']);
-  $('organizer-expired-stat').hidden=!counts['補件已逾期'];
-  $('organizer-overview-limit').hidden=apps.length<500;
-  $('paid-count').textContent='0';
- }
- refreshOverview();
  let toolArea=dashboard.querySelector('.staff-tools');
  if(!toolArea){
   toolArea=node('div',undefined,'staff-tools');
@@ -1544,11 +1582,26 @@ async function renderOrganizer(){
   managementRows.set(row.id,row);
   if(replace)nav.replace('management-entry',row.id);else nav.go('management-entry',row.id);
  };
+ const batchSize=500;
+ function queuePath(filter,offset){
+  return 'organizer-queue?'+new URLSearchParams({view:'workbench',...(filter?{status:filter}:{}),...(offset?{offset}:{})});
+ }
+ function updateQueue(fresh){
+  overview=fresh.overview;
+  apps.splice(0,apps.length,...fresh.applications||[]);
+ }
+ async function loadBatch(filter,offset){
+  const fresh=await api(queuePath(filter,offset));
+  if(!account||role!=='organizer'||staffRoute!==nav)return false;
+  updateQueue(fresh);
+  batchFilter=filter;batchOffset=offset;pageNo=1;
+  return true;
+ }
  staffManageChanged=async()=>{
-  const fresh=await api('organizer-queue?view=workbench');
+  const fresh=await api(queuePath(batchFilter,batchOffset));
   if(!account||role!=='organizer'||staffRoute!==nav)return;
   $('admin-registration-list').replaceChildren();$('admin-registration-pager').replaceChildren();
-  apps.splice(0,apps.length,...fresh.applications||[]);paint();
+  updateQueue(fresh);paint();
   if(staffManageReload)await staffManageReload();
  };
  const tools=$('staff-management-open'),trash=$('staff-trash-open');
@@ -1595,7 +1648,7 @@ async function renderOrganizer(){
    }
    return;
   }
-  const entry=apps.find(item=>item.id===route.id);
+  const entry=apps.find(item=>item.id===route.id)||(reviewReadback?.id===route.id?reviewReadback:null);
   if(!entry){panel.append(node('p',sw('沒有符合條件的資料。')));return;}
   const works=staffWorks(entry),step=route.view;
   const title=step==='contact-group'?contactViews[route.detail]?.[0]:viewLabels[step];
@@ -1664,12 +1717,15 @@ async function renderOrganizer(){
    else if(entry.approval_state!=='approved')panel.append(node('p',sw('目前未取得核准狀態，請重新整理或聯絡管理員確認。'),'notice'));
    const actions=node('div',undefined,'organizer-roster-actions');
    async function refresh(message){
-    const current=(await api('organizer-queue?view=workbench')).applications?.find(item=>item.id===entry.id);
+    const fullRoster=overview?.total>batchSize;
+    const fresh=await api(queuePath('',0)+(fullRoster?'&id='+encodeURIComponent(entry.id):''));
+    const current=fresh.applications?.find(item=>item.id===entry.id);
     if(!account||role!=='organizer'||staffRoute!==nav)return;
     if(!current)throw Error('approval_readback_failed');
     if(message==='已核准測試報名。'&&current.approval_state!=='approved')throw Error('approval_readback_failed');
     if(message==='已開放補正。'&&current.video_supplement_state!=='pending')throw Error('approval_readback_failed');
-    Object.assign(entry,current);
+    if(fullRoster){if(!await loadBatch(batchFilter,batchOffset))return;reviewReadback=current}
+    else{overview=fresh.overview;Object.assign(entry,current)}
     paint();
     if(nav.state()?.id===entry.id)nav.display({focus:false});
     status(sw(message));
@@ -1694,7 +1750,8 @@ async function renderOrganizer(){
   }
  }
  function paint(){
-  refreshOverview();
+  paintOrganizerOverview(overview);
+  $('scores-count').textContent=String(overview?.scores??'—');
   const q=search.value.trim().toLowerCase(),lang=language.value,cat=category.value,st=statusFilter.value;
   dashboard.querySelectorAll('[data-overview-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.overviewFilter===st)));
   const found=apps.filter(entry=>{
@@ -1705,8 +1762,7 @@ async function renderOrganizer(){
    const judged=Number(entry.demo_judges||0)+Number(entry.live_judges||0)>0;
    if(st==='scored')return judged;
    if(st==='unscored')return !judged;
-   const filterStates={pending:'待審核',approved:'已核准',supplement:'待補件',expired:'補件已逾期',unverified:'待核對'};
-   return !Object.hasOwn(filterStates,st)||organizerState(entry)===filterStates[st];
+   return !Object.hasOwn(organizerReviewLabels,st)||organizerState(entry)===organizerReviewLabels[st];
   });
   const pages=Math.max(1,Math.ceil(found.length/perPage));
   pageNo=staffListPages.organizer=Math.min(pageNo,pages);holder.replaceChildren();
@@ -1726,14 +1782,35 @@ async function renderOrganizer(){
    card.append(open,side);holder.append(card);
   }
   makeRosterPager(pager,pageNo,pages,p=>{pageNo=p;paint()});
+  const total=batchFilter?overview?.status[batchFilter]:overview?.total;
+  const batches=$('organizer-roster-batches');
+  batches.hidden=$('organizer-roster-range').hidden=!(total>batchSize);
+  batches.replaceChildren();
+  if(!batches.hidden){
+   for(const [label,offset,disabled] of [['上一批',batchOffset-batchSize,batchOffset===0],['下一批',batchOffset+batchSize,batchOffset+batchSize>=total]]){
+    const button=staffButton(sw(label),'btn btn-soft',()=>run(async()=>{
+     if(await loadBatch(batchFilter,offset))paint();
+    }));
+    button.disabled=disabled;batches.append(button);
+   }
+  }
  }
  search.oninput=()=>{pageNo=1;paint()};
- for(const control of [language,category,statusFilter])control.onchange=search.oninput;
+ for(const control of [language,category])control.onchange=search.oninput;
+ async function showFilter(next,fromCard=false){
+  const filter=Object.hasOwn(organizerReviewLabels,next)?next:'';
+  if((overview?.total>batchSize||batchFilter||batchOffset)&&(filter!==batchFilter||batchOffset)){
+   statusFilter.value=dashboard.querySelector('[data-overview-filter][aria-pressed="true"]')?.dataset.overviewFilter||'';
+   if(!await loadBatch(filter,0))return;
+  }
+  statusFilter.value=next;
+  if(fromCard){search.value='';language.value='';category.value=''}
+  pageNo=1;paint();
+  if(fromCard){statusFilter.focus({preventScroll:true});summary.scrollIntoView({block:'nearest'});}
+ }
+ statusFilter.onchange=()=>run(()=>showFilter(statusFilter.value));
  dashboard.querySelectorAll('[data-overview-filter]').forEach(button=>{
-  button.onclick=()=>{
-   search.value='';language.value='';category.value='';statusFilter.value=button.dataset.overviewFilter;
-   pageNo=1;paint();holder.scrollIntoView({block:'nearest',behavior:'smooth'});
-  };
+  button.onclick=()=>run(()=>showFilter(button.dataset.overviewFilter,true));
  });
  paint();
  const correctionPanel=$('organizer-corrections'),correctionList=$('organizer-correction-list');

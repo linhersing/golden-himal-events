@@ -2,10 +2,10 @@ import {museAuditionReady} from './muse-audition.js';
 import {adminManagementReady} from './staging-admin-registration.js';
 import {attachJanuaryScores,januaryDemoReady,januaryRoster,submitJanuaryScore} from './january-demo-test.js';
 import {attachFiveDemos,fiveDemoReady,fiveDemoRehearsal} from './demo-five-2027.js';
-import {approvalColumn,approvalGuard,approveTestApplication} from './test-application-approval.js';
+import {approvalColumn,approvalGuard,hasTestApproval,approveTestApplication} from './test-application-approval.js';
 import {entrantLocationsReady,entrantLocationFields,entrantLocationJoin} from './entrant-location.js';
 import {frontline2027Ready,frontlineJoin} from './frontline-2027.js';
-import {supplementColumns,supplementGuard,supplementJoin} from './test-video-supplement.js';
+import {supplementColumns,supplementGuard,supplementJoin,supplementState} from './test-video-supplement.js';
 import {onlineJudgingPolicy,earlierOnlineJudging,onlineStageAllowed,judgingPhaseGuard} from './online-judging-policy.js';
 
 const workbenchRegionColumn=ready=>ready?',fr.competition_region':',NULL AS competition_region';
@@ -116,6 +116,23 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    const {photo_url_1,photo_url_2,photo_url_3}=profile;
    return json({ok:true,profile:{...entry,photo_url_1,photo_url_2,photo_url_3},testOnly:true});
   }
+  const statuses=['pending','supplement','expired','approved','unverified'];
+  const filter=workbench?url.searchParams.get('status')||'':'';
+  const id=workbench?url.searchParams.get('id'):null;
+  const offset=workbench?Number(url.searchParams.get('offset')||0):0;
+  if((filter&&!statuses.includes(filter))||(id!==null&&!validApplicationId(id))||
+     !Number.isSafeInteger(offset)||offset<0)return deny('invalid_roster_filter',422);
+  const reviewState=`CASE (${supplementState(supplements)})
+   WHEN 'expired' THEN 'expired' WHEN 'pending' THEN 'supplement'
+   ELSE ${approval?`CASE WHEN ${hasTestApproval('p')} THEN 'approved' ELSE 'pending' END`:"'unverified'"} END`;
+  const overview=workbench&&id===null?await db.prepare(`SELECT COUNT(*) AS total,
+   ${statuses.map(state=>`COUNT(CASE WHEN review_state='${state}' THEN 1 END) AS ${state}`).join(',')},
+   COUNT(CASE WHEN region='A' THEN 1 END) AS a,
+   COUNT(CASE WHEN region='B' THEN 1 END) AS b,COALESCE(SUM(scores),0) AS scores
+   FROM (SELECT ${reviewState} AS review_state,${frontline?'fr.competition_region':'NULL'} AS region,
+         ${earlierOnlineJudging(env)?`(SELECT COUNT(*) FROM e2e_judge_scores d WHERE d.application_id=p.id)
+          +(SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase)`:'0'} AS scores
+         FROM e2e_applications p${supplementJoin(supplements)}${frontlineJoin(frontline)} WHERE ${active})`).first():null;
   const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.original_artist,p.demo_url,p.phase,p.status,p.payment_status,${entrantLocationFields(locations,!workbench)},p.location_basis,
    p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,
    p.receipt_key IS NOT NULL AS has_receipt_file,
@@ -124,10 +141,12 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_judges,
    (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}${supplementColumns(supplements)}${workbench?workbenchRegionColumn(frontline):''}
    FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)}${frontlineJoin(frontline)}
-   WHERE ${active}
-   ORDER BY p.created_at ASC LIMIT 500`).all();
+   WHERE ${active}${filter?` AND (${reviewState})=?`:''}${id?' AND p.id=?':''}
+   ORDER BY p.created_at ASC,p.id ASC LIMIT 500 OFFSET ?`).bind(...(filter?[filter]:[]),...(id?[id]:[]),offset).all();
   const entries=r.results||[];
-  return json({ok:true,applications:await attachFiveDemos(env,workbench?entries:await attachProfiles(env,entries),workbench),judging_policy:onlineJudgingPolicy(env),january_roster_enabled:perVideo&&earlierOnlineJudging(env),registration_management_enabled:registrationManagement,contact_storage_enabled:await museAuditionReady(env),testOnly:true});
+  const totals=overview?{total:overview.total,scores:overview.scores,status:Object.fromEntries(statuses.map(state=>[state,overview[state]])),
+   regions:{A:overview.a,B:overview.b,other:overview.total-overview.a-overview.b}}:null;
+  return json({ok:true,...(totals?{overview:totals}:{}),applications:await attachFiveDemos(env,workbench?entries:await attachProfiles(env,entries),workbench),judging_policy:onlineJudgingPolicy(env),january_roster_enabled:perVideo&&earlierOnlineJudging(env),registration_management_enabled:registrationManagement,contact_storage_enabled:await museAuditionReady(env),testOnly:true});
  }
  if(path==='/api/e2e/organizer-promote'&&post){
   if(forbidden('organizer'))return forbidden('organizer');
