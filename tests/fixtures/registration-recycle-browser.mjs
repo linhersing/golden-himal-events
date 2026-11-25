@@ -82,6 +82,10 @@ export async function checkRecycle(runtime,browser,evidence,expect){
    await page.screenshot({path:join(evidence,'recycle-selected-restored-'+device+'.png')});
    await frame.locator('#organizer-entry-close').click();
    await expect(frame).toBeHidden();
+   if(device==='mobile'){
+    await expect(page.locator('#organizer-roster-open')).toBeVisible();
+    await page.locator('#organizer-roster-open').click();
+   }
    await expect(page.locator('#admin-apps')).toBeVisible();
    results.push({device,selected:2,protectedKept:true,recordsPreserved:true,viewports:widths,recycleAndRestore:true});
   }finally{await context.close()}
