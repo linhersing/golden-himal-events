@@ -797,11 +797,11 @@ function memberCanDelete(a){
  if(a.can_delete!==undefined)return a.can_delete===true||a.can_delete===1||a.can_delete==='1';
  return a.payment_status==='unpaid'&&a.status==='submitted'&&a.phase==='demo'&&memberCanEdit(a)&&!a.has_uploaded_file&&!a.has_eligibility_file&&!a.has_receipt_file&&a.approval_state!=='approved'&&!a.video_supplement_state;
 }
-function editLockMessage(a){
- if(a.member_withdrawn)return mt('voluntaryWithdrawnHelp');
- if(a.status==='withdrawn')return mt('entryWithdrawnHelp');
- if(a.approval_state==='approved'&&a.phase==='demo'&&['submitted','under_review'].includes(a.status))return mt('editApprovedLock');
- return a.approval_state==='pending'?mt('entryPendingLockedHelp'):mt('editLockedAfterReview');
+function editLockKey(a){
+ if(a.member_withdrawn)return 'voluntaryWithdrawnHelp';
+ if(a.status==='withdrawn')return 'entryWithdrawnHelp';
+ if(a.approval_state==='approved'&&a.phase==='demo'&&['submitted','under_review'].includes(a.status))return 'editApprovedLock';
+ return a.approval_state==='pending'?'entryPendingLockedHelp':'editLockedAfterReview';
 }
 function supplementDeadline(a){
  const lang=window.GHVLocale?.lang||'zh';
@@ -884,7 +884,7 @@ function drawEntry(a,withdrawalEnabled=false){
     if(result.deleted_application_id!==a.id||result.testOnly!==true)throw Error('readback_mismatch');
     const remaining=await renderMember();
     if(remaining.some(row=>row.id===a.id))throw Error('readback_mismatch');
-    status(mt('deleted'));
+    localizedStatus('deleted');
    });
   };
   // Public checkout is disabled under the 2026-11-18 Muse/Alan policy.
@@ -897,11 +897,11 @@ function drawEntry(a,withdrawalEnabled=false){
    const result=await api('withdraw-entry',{application_id:a.id});
    if(result.application_id!==a.id||result.withdrawn!==true||result.testOnly!==true)throw Error('readback_mismatch');
    const rows=await renderMember();if(!rows.some(row=>row.id===a.id&&row.member_withdrawn&&row.status==='withdrawn'))throw Error('readback_mismatch');
-   status(mt('withdrawSuccess'));
+   localizedStatus('withdrawSuccess');
   });};actions.append(withdraw);
  }
  box.append(actions);
- if(!memberCanEdit(a)&&!a.video_supplement_state)box.append(node('p',editLockMessage(a),'minor'));
+ if(!memberCanEdit(a)&&!a.video_supplement_state)box.append(memberNode('p',editLockKey(a),'minor'));
  return box;
 }
 async function renderMember(){
@@ -925,10 +925,13 @@ async function renderMember(){
   manageEdit.textContent=mt(manageEdit.dataset.l);
   manageEdit.onclick=editable?()=>showEdit(editable):correctable?()=>showCorrection(correctable):null;
  }
- if(manageNote)manageNote.textContent=editable?mt('accountEditable'):hasEntries?editLockMessage(correctable||first):mt('accountNoEntry');
+ if(manageNote){
+  const key=editable?'accountEditable':hasEntries?editLockKey(correctable||first):'accountNoEntry';
+  manageNote.replaceChildren(memberNode('span',key));
+  if(v.account_erase_allowed===false)manageNote.append(' ',memberNode('span','accountProtectedHelp'));
+ }
  const close=$('member-manage-close');if(close)close.hidden=v.member_withdrawal_enabled!==true;
  const erase=$('member-manage-delete');if(erase){erase.disabled=v.account_erase_allowed===false;erase.title=erase.disabled?mt('accountProtectedHelp'):'';}
- if(manageNote&&v.account_erase_allowed===false)manageNote.textContent+=' '+mt('accountProtectedHelp');
 
  // The API must explicitly open the later TEST round; a January entry alone is not permission.
  const secondAudition=hasEntries&&v.next_audition_round==='2027-04';
@@ -976,7 +979,8 @@ async function renderMember(){
   $('member-quick-edit').onclick=()=>showEdit(first);
   const editReason=$('member-edit-lock-reason');
   editReason.hidden=memberCanEdit(first);
-  editReason.textContent=editReason.hidden?'':editLockMessage(first);
+  if(editReason.hidden){delete editReason.dataset.l;editReason.textContent='';}
+  else localizeMember(editReason,editLockKey(first));
   const video=$('member-view-video'),link=safeLink(first.demo_url);
   video.hidden=!link;if(link)video.href=link;else video.removeAttribute('href');
   $('member-show-details').onclick=()=>document.getElementById('member-entry-overview').scrollIntoView({behavior:'smooth',block:'start'});
@@ -1040,7 +1044,7 @@ async function showCorrection(a){
  box.append(form);form.querySelector('input')?.focus({preventScroll:true});
 }
 function showEdit(a){
- if(!memberCanEdit(a)){status(editLockMessage(a),true);return;}
+ if(!memberCanEdit(a)){localizedStatus(editLockKey(a),true);return;}
  const holder=$('member-edit-panel');holder.replaceChildren();holder.hidden=false;
  const box=node('div',undefined,'member-edit-box');box.dataset.editing='true';
  const heading=node('h3',mt('editHeader'));heading.dataset.l='editHeader';
@@ -1987,15 +1991,17 @@ if(page==='member'){
   if(!account||account.role!=='member'){status(mt('errLogin'),true);return;}
   if(!confirm(mt('accountEraseConfirm')))return;
   const phrase=prompt(mt('accountErasePhrase'));
-  if(phrase!=='DELETE'){status(mt('accountCanceled'));return;}
+  if(phrase!=='DELETE'){localizedStatus('accountCanceled');return;}
   run(async()=>{
    const result=await api('delete-my-data',{});
    if(result.deletedTestData!==true)throw Error('readback_mismatch');
    account=null;challenge=null;authUI(false);authForms(true);
-   status(mt('accountErased'));
+   localizedStatus('accountErased');
   });
  });
  window.addEventListener('ghv:languagechange',()=>{
+  const erase=$('member-manage-delete');
+  if(erase?.disabled)erase.title=mt('accountProtectedHelp');
   document.querySelectorAll('.song-language-other').forEach(input=>{
    input.setAttribute('aria-label',mt('songLangOtherLabel'));
   });
@@ -2004,8 +2010,8 @@ if(page==='member'){
  $('member-manage-close')?.addEventListener('click',()=>{
   if(!account||account.role!=='member'){status(mt('errLogin'),true);return;}
   if(!confirm(mt('accountCloseConfirm')))return;
-  if(prompt(mt('accountClosePhrase'))!=='CLOSE'){status(mt('accountCanceled'));return;}
-  run(async()=>{const result=await api('close-my-account',{});if(result.closedTestAccount!==true||result.retainedContestHistory!==true)throw Error('readback_mismatch');account=null;challenge=null;authUI(false);authForms(true);status(mt('accountClosed'));});
+  if(prompt(mt('accountClosePhrase'))!=='CLOSE'){localizedStatus('accountCanceled');return;}
+  run(async()=>{const result=await api('close-my-account',{});if(result.closedTestAccount!==true||result.retainedContestHistory!==true)throw Error('readback_mismatch');account=null;challenge=null;authUI(false);authForms(true);localizedStatus('accountClosed');});
  });
  $('eligibility-upload-submit')?.addEventListener('click',()=>{
   const file=$('eligibility-upload-file')?.files?.[0];
