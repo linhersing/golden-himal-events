@@ -139,7 +139,6 @@ async function requestCode(request,env){
   const allowed=await reserveStaffAttempt(env.DB,'request',await sign(env,'staff-source:'+source),NOW());
   if(!allowed)return deny('too_many_code_requests',429);
   if(!await humanSignupSource(request,env,b.turnstile_token,'ghv_staff_login'))return deny('human_check_required',403);
-  if(!invited)return codeRequested(uuid());
  }
  if(!invited&&!publicTest)return deny('not_on_test_allowlist',403);
  if(publicTest&&!emailAddress(email))return deny('invalid_email');

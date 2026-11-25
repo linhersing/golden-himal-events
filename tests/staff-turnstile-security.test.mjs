@@ -65,6 +65,13 @@ test('required staff Turnstile fails closed, checks hostname and staff action fo
   denied=await handleE2E(post('/api/e2e/request-code',{email:'boss@example.invalid',role:'staff',turnstile_token:'valid-staff'}),env);
   assert.equal(denied.status,403,'wrong domain token is rejected');
   hostname=new URL(host).hostname;
+  for(const [token,want] of [['invalid','human_check_required'],['valid-staff','not_on_test_allowlist']]){
+   const response=await handleE2E(post('/api/e2e/request-code',{email:'uninvited@example.invalid',role:'staff',turnstile_token:token}),env);
+   assert.equal(response.status,403);
+   assert.deepEqual(await response.json(),{ok:false,error:want});
+  }
+  assert.equal(inbox.length,0);
+
   for(const [email,role] of [['boss@example.invalid','organizer'],['judge@example.invalid','reviewer']]){
    const issued=await handleE2E(post('/api/e2e/request-code',{email,role:'staff',turnstile_token:'valid-staff'}),env);
    assert.equal(issued.status,200,await issued.clone().text());
@@ -135,7 +142,9 @@ test('protected staff attempts are source-limited; legacy OTPs and sessions are 
   assert.equal((await handleE2E(withCookie('/api/e2e/organizer-queue'),env)).status,401);
   const unknown='no-staff@example.invalid';
   const limits=await Promise.all(Array.from({length:13},()=>start(unknown,'198.51.100.44')));
-  assert.equal(limits.filter(r=>r.status===200).length,12);
+  const rejected=limits.filter(r=>r.status===403);
+  assert.equal(rejected.length,12);
+  for(const response of rejected)assert.equal((await response.json()).error,'not_on_test_allowlist');
   assert.equal(limits.filter(r=>r.status===429).length,1);
   assert.equal(inbox.length,2);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM e2e_staff_auth_attempts WHERE kind='request'").get().n,12);

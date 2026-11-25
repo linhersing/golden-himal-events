@@ -2072,6 +2072,10 @@ body[data-page="back"] .staff-secondary>summary{
 }
 
 
+body[data-page="back"] #staff-code-instructions{margin:.4rem 0 .65rem;color:#4d3d31}
+body[data-page="back"] #staff-no-code{margin-top:.65rem;border-top:1px solid #e0d2bc;color:#5d4531}
+body[data-page="back"] #staff-no-code summary{min-height:44px;padding:.65rem 0;cursor:pointer;font-weight:700}
+body[data-page="back"] #staff-no-code p{margin:0 0 .4rem;font-size:.92rem}
 body[data-page="back"] .staff-otp-expiry{
  padding:.55rem .7rem;margin:.4rem 0 .6rem;
  font-size:.92rem;line-height:1.45;
