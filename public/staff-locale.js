@@ -1,6 +1,11 @@
 
 (()=>{'use strict';
 const words={
+ "匯出選手資料 Excel（含個資）":["Export contestant Excel (includes personal data)","प्रतियोगीको Excel निकाल्नुहोस् (व्यक्तिगत विवरणसहित)"],
+ "匯出評審名冊 Excel":["Export judging roster to Excel","निर्णायकको सूची Excel मा निकाल्नुहोस्"],
+ "已開始下載 Excel。":["Excel download started.","Excel डाउनलोड सुरु भयो।"],
+ "目前無法匯出 Excel，請稍後再試。":["Could not export Excel. Try again later.","Excel निकाल्न सकिएन। केही समयपछि फेरि प्रयास गर्नुहोस्।"],
+ "名冊超過 2,000 筆，未匯出任何資料。":["The roster exceeds 2,000 entries. No data was exported.","सूचीमा २,००० भन्दा बढी आवेदन छन्। कुनै विवरण निकालिएको छैन।"],
  "報名名單分頁":["Roster pages","आवेदन सूचीका पृष्ठहरू"],
  "查看選手名冊":["View contestant roster","प्रतियोगी सूची हेर्नुहोस्"],
  "查看審核分布與賽區":["View review and region charts","समीक्षा र क्षेत्रका चार्ट हेर्नुहोस्"],
