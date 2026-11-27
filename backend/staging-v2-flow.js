@@ -1,4 +1,6 @@
-import {museAuditionReady} from './muse-audition.js';
+import {MUSE_FIELDS,museAuditionReady} from './muse-audition.js';
+import {buildStaffWorkbook} from './staff-xlsx.js';
+import {profileReady} from './entrant-profile.js';
 import {adminManagementReady} from './staging-admin-registration.js';
 import {attachJanuaryScores,januaryDemoReady,januaryRoster,submitJanuaryScore} from './january-demo-test.js';
 import {attachFiveDemos,fiveDemoReady,fiveDemoRehearsal} from './demo-five-2027.js';
@@ -10,12 +12,30 @@ import {onlineJudgingPolicy,earlierOnlineJudging,onlineStageAllowed,judgingPhase
 
 const workbenchRegionColumn=ready=>ready?',fr.competition_region':',NULL AS competition_region';
 const validApplicationId=id=>/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id||'');
+const exportLimit=2000;
+
+async function staffExcel(db,actor,entries,{deny,NOW,uuid,locale}){
+ const time=NOW();
+ const bytes=buildStaffWorkbook({role:actor.role,entries,exportedAt:time,locale});
+ const audit=await db.prepare(`INSERT INTO e2e_staff_audit(id,actor_id,actor_role,target_id,action,result,occurred_at,diff)
+  VALUES(?,?,?,NULL,'audit_read','success',?,?)`)
+  .bind(uuid(),actor.id,actor.role,time,JSON.stringify({access:'staff_excel_export',entries:entries.length})).run();
+ if(audit.meta?.changes!==1)return deny('staff_excel_export_unavailable',503);
+ return new Response(bytes,{headers:{
+  'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'Content-Disposition':`attachment; filename="Golden-Himal-Voice-${actor.role}.xlsx"`,
+  'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'
+ }});
+}
 
 // Alan V2 competition logic, STAGING ONLY. Called only after verified session,
 // same-origin checks and configured() gate in staging-e2e.js.
 export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,ownsApplication,attachProfiles,approval=false,supplements=false}){
  const url=new URL(request.url),path=url.pathname,post=request.method==='POST';
  const view=url.searchParams.get('view');
+ const organizerExport=path==='/api/e2e/organizer-export'&&post;
+ const reviewerExport=path==='/api/e2e/reviewer-export'&&post;
+ const excelContext={deny,NOW,uuid,locale:url.searchParams.get('lang')};
  const db=env.DB;
  // Explicit closed rehearsal: link evidence is not identity or payment verification.
  const links=env.STAGING_SUBMISSION_MODE==='links';
@@ -49,10 +69,11 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    WHERE f.application_id=p.id AND p.round_code='2027-01' AND p.phase='demo')`:'';
   return approveTestApplication(request,db,a,{json,deny,NOW,bodyJSON},supplementGuard(supplements,'p',true)+rosterGuard);
  }
- if(path==='/api/e2e/reviewer-queue'&&!post){
+ if(reviewerExport||(path==='/api/e2e/reviewer-queue'&&!post)){
   if(forbidden('reviewer'))return forbidden('reviewer');
-  const workbench=view==='workbench';
-  const id=workbench?url.searchParams.get('id'):null;
+  if(reviewerExport&&!await adminManagementReady(env))return deny('staff_excel_export_unavailable',503);
+  const workbench=reviewerExport||view==='workbench';
+  const id=workbench&&!reviewerExport?url.searchParams.get('id'):null;
   if(id!==null&&!validApplicationId(id))return deny('invalid_application_id',422);
   const frontline=workbench&&await frontline2027Ready(db);
   const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.original_artist,p.demo_url,p.phase,
@@ -64,10 +85,13 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    LEFT JOIN e2e_live_scores l ON l.application_id=p.id AND l.reviewer_id=? AND l.stage=p.phase
    WHERE ${reviewablePayment} AND ${evidence}${approved}
     AND p.status NOT IN ('withdrawn','rejected')${judgingPhaseGuard(env)}${id?' AND p.id=?':''}
-   ORDER BY p.created_at DESC LIMIT 500`).bind(a.id,a.id,...(id?[id]:[])).all();
+   ORDER BY p.created_at DESC,p.id DESC LIMIT ${reviewerExport?exportLimit+1:500}`).bind(a.id,a.id,...(id?[id]:[])).all();
   const entries=r.results||[];
+  if(reviewerExport&&entries.length>exportLimit)return deny('staff_excel_export_too_large',413);
   const queue=await attachFiveDemos(env,workbench?entries:await attachProfiles(env,entries),workbench);
-  return json({ok:true,queue:perVideo?await attachJanuaryScores(env,queue,a.id):queue,judging_policy:onlineJudgingPolicy(env),testOnly:true});
+  const ownScores=perVideo?await attachJanuaryScores(env,queue,a.id,reviewerExport):queue;
+  if(reviewerExport)return staffExcel(db,a,ownScores,excelContext);
+  return json({ok:true,queue:ownScores,judging_policy:onlineJudgingPolicy(env),testOnly:true});
  }
  if(path==='/api/e2e/score'&&post){
   if(forbidden('reviewer'))return forbidden('reviewer');
@@ -97,16 +121,22 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    .bind(NOW(),app.id,app.phase).run();
   return json({ok:true,phase:app.phase,score:inputs.reduce((x,y)=>x+y,0),storedIn:'cloudflare-d1-staging',official:false});
  }
- if(path==='/api/e2e/organizer-queue'&&!post){
+ if(organizerExport||(path==='/api/e2e/organizer-queue'&&!post)){
   if(forbidden('organizer'))return forbidden('organizer');
   const locations=await entrantLocationsReady(db);
   const registrationManagement=await adminManagementReady(env);
-  const workbench=view==='workbench';
+  const workbench=organizerExport||view==='workbench';
   const frontline=(workbench||view==='profile')&&await frontline2027Ready(db);
+  const contacts=organizerExport&&await museAuditionReady(env);
+  const profiles=organizerExport&&await profileReady(env);
+  if(organizerExport&&(!registrationManagement||(env.STAGING_MUSE_AUDITION_ENABLED==='true'&&!contacts)
+    ||(env.STAGING_PROFILE_URLS_ENABLED==='true'&&!profiles))){
+   return deny('staff_excel_export_unavailable',503);
+  }
   const active=registrationManagement
    ? "NOT EXISTS(SELECT 1 FROM e2e_registration_controls c WHERE c.application_id=p.id AND c.state<>'active')"
    : '1=1';
-  if(view==='profile'){
+  if(!organizerExport&&view==='profile'){
    const id=url.searchParams.get('id');
    if(!validApplicationId(id))return deny('invalid_application_id',422);
    const entry=await db.prepare(`SELECT p.id,p.stage_name,p.round_code,p.category,${entrantLocationFields(locations,false)}${workbenchRegionColumn(frontline)}
@@ -117,15 +147,15 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
    return json({ok:true,profile:{...entry,photo_url_1,photo_url_2,photo_url_3},testOnly:true});
   }
   const statuses=['pending','supplement','expired','approved','unverified'];
-  const filter=workbench?url.searchParams.get('status')||'':'';
-  const id=workbench?url.searchParams.get('id'):null;
-  const offset=workbench?Number(url.searchParams.get('offset')||0):0;
+  const filter=workbench&&!organizerExport?url.searchParams.get('status')||'':'';
+  const id=workbench&&!organizerExport?url.searchParams.get('id'):null;
+  const offset=workbench&&!organizerExport?Number(url.searchParams.get('offset')||0):0;
   if((filter&&!statuses.includes(filter))||(id!==null&&!validApplicationId(id))||
      !Number.isSafeInteger(offset)||offset<0)return deny('invalid_roster_filter',422);
   const reviewState=`CASE (${supplementState(supplements)})
    WHEN 'expired' THEN 'expired' WHEN 'pending' THEN 'supplement'
    ELSE ${approval?`CASE WHEN ${hasTestApproval('p')} THEN 'approved' ELSE 'pending' END`:"'unverified'"} END`;
-  const overview=workbench&&id===null?await db.prepare(`SELECT COUNT(*) AS total,
+  const overview=workbench&&!organizerExport&&id===null?await db.prepare(`SELECT COUNT(*) AS total,
    ${statuses.map(state=>`COUNT(CASE WHEN review_state='${state}' THEN 1 END) AS ${state}`).join(',')},
    COUNT(CASE WHEN region='A' THEN 1 END) AS a,
    COUNT(CASE WHEN region='B' THEN 1 END) AS b,COALESCE(SUM(scores),0) AS scores
@@ -133,17 +163,26 @@ export async function handleV2Route(request,env,a,{json,deny,uuid,NOW,bodyJSON,o
          ${earlierOnlineJudging(env)?`(SELECT COUNT(*) FROM e2e_judge_scores d WHERE d.application_id=p.id)
           +(SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase)`:'0'} AS scores
          FROM e2e_applications p${supplementJoin(supplements)}${frontlineJoin(frontline)} WHERE ${active})`).first():null;
-  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.original_artist,p.demo_url,p.phase,p.status,p.payment_status,${entrantLocationFields(locations,!workbench)},p.location_basis,
+  const exportFields=organizerExport?',p.affiliation,p.song_key,p.created_at'+(frontline?',fr.eligibility_basis':''):'';
+  const privateFields=contacts?','+MUSE_FIELDS.map(field=>'m.'+field).join(','):'';
+  const profileFields=profiles?',ep.gender,ep.photo_url_1,ep.photo_url_2,ep.photo_url_3,ep.consent_at AS photo_consent_at':'';
+  const r=await db.prepare(`SELECT p.id,p.round_code,p.category,p.stage_name,p.song_title,p.song_language,p.original_artist,p.demo_url,p.phase,p.status,p.payment_status,${entrantLocationFields(locations,!workbench||organizerExport)},p.location_basis,
    p.media_key IS NOT NULL AS has_uploaded_file,p.eligibility_key IS NOT NULL AS has_eligibility_file,
    p.receipt_key IS NOT NULL AS has_receipt_file,
    (SELECT COUNT(*) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_judges,
    (SELECT ROUND(AVG(technique+interpretation),2) FROM e2e_judge_scores d WHERE d.application_id=p.id) AS demo_mean,
    (SELECT COUNT(*) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_judges,
-   (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}${supplementColumns(supplements)}${workbench?workbenchRegionColumn(frontline):''}
+   (SELECT ROUND(AVG(technique+interpretation+stage_presence+appearance),2) FROM e2e_live_scores l WHERE l.application_id=p.id AND l.stage=p.phase) AS live_mean${approvalColumn(approval)}${supplementColumns(supplements)}${workbench?workbenchRegionColumn(frontline):''}${exportFields}${privateFields}${profileFields}
    FROM e2e_applications p${entrantLocationJoin(locations)}${supplementJoin(supplements)}${frontlineJoin(frontline)}
+   ${contacts?'LEFT JOIN e2e_muse_audition_details m ON m.application_id=p.id':''}
+   ${profiles?'LEFT JOIN e2e_application_profiles ep ON ep.application_id=p.id':''}
    WHERE ${active}${filter?` AND (${reviewState})=?`:''}${id?' AND p.id=?':''}
-   ORDER BY p.created_at ASC,p.id ASC LIMIT 500 OFFSET ?`).bind(...(filter?[filter]:[]),...(id?[id]:[]),offset).all();
+   ORDER BY p.created_at ASC,p.id ASC LIMIT ${organizerExport?exportLimit+1:500} OFFSET ?`).bind(...(filter?[filter]:[]),...(id?[id]:[]),offset).all();
   const entries=r.results||[];
+  if(organizerExport){
+   if(entries.length>exportLimit)return deny('staff_excel_export_too_large',413);
+   return staffExcel(db,a,await attachFiveDemos(env,entries,true),excelContext);
+  }
   const totals=overview?{total:overview.total,scores:overview.scores,status:Object.fromEntries(statuses.map(state=>[state,overview[state]])),
    regions:{A:overview.a,B:overview.b,other:overview.total-overview.a-overview.b}}:null;
   return json({ok:true,...(totals?{overview:totals}:{}),applications:await attachFiveDemos(env,workbench?entries:await attachProfiles(env,entries),workbench),judging_policy:onlineJudgingPolicy(env),january_roster_enabled:perVideo&&earlierOnlineJudging(env),registration_management_enabled:registrationManagement,contact_storage_enabled:await museAuditionReady(env),testOnly:true});

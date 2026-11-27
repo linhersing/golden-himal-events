@@ -18,14 +18,22 @@ export async function januaryDemoReady(env){
 export const januaryDemoEligible = alias => `${alias}.round_code='2027-01' AND ${alias}.phase='demo'
  AND ${alias}.status NOT IN ('withdrawn','rejected') AND ${hasTestApproval(alias)}`;
 
-export async function attachJanuaryScores(env,rows,reviewerId){
+export async function attachJanuaryScores(env,rows,reviewerId,exporting=false){
  const active=rows.filter(row=>row.round_code==='2027-01'&&row.phase==='demo'&&row.demo_entries?.length);
+ const queries=[];
+ const byId=new Map(active.map(row=>[row.id,row]));
  for(let i=0;i<active.length;i+=75){
-  const chunk=active.slice(i,i+75),byId=new Map(chunk.map(row=>[row.id,row]));
-  const r=await env.DB.prepare(`SELECT application_id,position,technique,interpretation
+  const chunk=active.slice(i,i+75);
+  queries.push(env.DB.prepare(`SELECT application_id,position,technique,interpretation
    FROM e2e_demo_2027_scores WHERE reviewer_id=? AND application_id IN (${chunk.map(()=>'?').join(',')})`)
-   .bind(reviewerId,...byId.keys()).all();
-  for(const row of chunk)row.per_video_scoring=true;
+   .bind(reviewerId,...chunk.map(row=>row.id)));
+ }
+ if(!queries.length)return rows;
+ const results=[];
+ if(exporting)results.push(...await env.DB.batch(queries));
+ else for(const query of queries)results.push(await query.all());
+ for(const row of active)row.per_video_scoring=true;
+ for(const r of results){
   for(const score of r.results||[]){
    const demo=byId.get(score.application_id)?.demo_entries[score.position-1];
    if(demo)demo.my_score={technique:score.technique,interpretation:score.interpretation};

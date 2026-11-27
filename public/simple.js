@@ -377,6 +377,35 @@ async function api(path,body){
  }finally{clearTimeout(timer)}
 }
 async function run(fn){if(busy)return;busy=true;document.body.classList.add('requesting');try{await fn()}catch(e){status(friendlyError(e),true)}finally{busy=false;document.body.classList.remove('requesting')}}
+async function downloadStaffExcel(scope,button){
+ if(account?.role!==scope||button.disabled)return;
+ button.disabled=true;
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),30000);
+ try{
+  const locale=encodeURIComponent(window.GHVLocale?.lang||'en');
+  const response=await fetch('/api/e2e/'+scope+'-export?lang='+locale,{
+   method:'POST',headers:{'Content-Type':'application/json'},body:'{}',
+   credentials:'same-origin',cache:'no-store',signal:controller.signal
+  });
+  if(response.status===401){expireStaffSession();return}
+  if(response.status===413){status(sw('名冊超過 2,000 筆，未匯出任何資料。'),true);return}
+  if(!response.ok||!response.headers.get('content-type')?.startsWith('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')){
+   throw new Error('Excel export failed');
+  }
+  const file=await response.blob();
+  if(account?.role!==scope)return;
+  const link=document.createElement('a');
+  link.href=URL.createObjectURL(file);
+  link.download='Golden-Himal-Voice-'+scope+'.xlsx';
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+  status(sw('已開始下載 Excel。'));
+ }catch{status(sw('目前無法匯出 Excel，請稍後再試。'),true)}
+ finally{clearTimeout(timeout);button.disabled=false;}
+}
 function clearStaffContact(){
  document.querySelectorAll('[data-staff-contact]').forEach(item=>item.remove());
 }
@@ -2184,6 +2213,9 @@ const application=$('application-form'),details=$('application-details'),start=$
 }else if(page==='back'){
  window.addEventListener('ghv:languagechange',()=>{applyStaffJudgingPolicy();staffTabs();if(account)window.staffRelocalize?.()});
  setupAuth();staffTabs();document.querySelectorAll('[data-role-tab]').forEach(button=>button.addEventListener('click',()=>{const next=button.dataset.roleTab;if(next===role||!account)return;run(async()=>{const v=await api('switch-role',{role:next});const updated=await api('me');account=updated.account||v.account;role=account.role;trackStaffSession(updated);staffTabs();await dashboard();status('已切換為'+(role==='organizer'?'主辦方':'評審')+'。')})}));loadSession();
+ for(const button of document.querySelectorAll('[data-staff-excel]')){
+  button.addEventListener('click',()=>downloadStaffExcel(button.dataset.staffExcel,button));
+ }
 }
 // Deep links to a rules topic should open it, rather than show a closed summary.
 function setupRuleNavigation(){
