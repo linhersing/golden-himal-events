@@ -175,6 +175,7 @@ test('public stage details translate, open one at a time and locate the shirt on
  await stages.nth(1).locator('summary').click();
  const shirt=stages.nth(1).locator('img');
  await expect(shirt).toBeVisible();
+ await expect(shirt).toHaveAttribute('src','./images/ghp-20261127-shirt.webp');
  await expect.poll(()=>shirt.evaluate(el=>el.naturalWidth)).toBeGreaterThan(0);
  for(const [lang,word] of [['zh','晉級者'],['en','advance from the first selection'],['ne','टी-सर्ट']]){
   await page.locator('[data-lang='+lang+']').first().click();
@@ -184,7 +185,25 @@ test('public stage details translate, open one at a time and locate the shirt on
  await expect(stages.nth(1)).not.toHaveAttribute('open','');
  await expect(stages.nth(2).locator('p')).toContainText('समूह');
  await expect(shirt).toBeHidden();
- await page.locator('.ghv-journey-poster summary').click();
- await expect(page.locator('.ghv-journey-poster img')).toBeVisible();
- expect(await page.locator('html').evaluate(el=>el.scrollWidth)).toBeLessThanOrEqual(390);
+ const bilingual=page.locator('#ghv-poster-bilingual');
+ const english=page.locator('#ghv-poster-english');
+ const card=page.locator('#ghv-business-card');
+ for(const [control,file,width] of [
+  [bilingual,'poster-bilingual',1055],[english,'poster-en',1024],[card,'business-card',1448]
+ ]){
+  await control.click();
+  const image=control.locator('..').locator('img');
+  await expect(image).toBeVisible();
+  await expect(image).toHaveAttribute('src','./images/ghp-20261127-'+file+'.webp');
+  await expect.poll(()=>image.evaluate(el=>el.naturalWidth)).toBe(width);
+ }
+ await expect(bilingual.locator('..')).not.toHaveAttribute('open','');
+ for(const [lang,copy] of [['zh','查看英文版海報'],['en','View the English poster'],['ne','अङ्ग्रेजी पोस्टर हेर्नुहोस्']]){
+  await page.locator('[data-lang='+lang+']').first().click();
+  await expect(english).toHaveText(copy);
+ }
+ for(const width of [320,390,1365]){
+  await page.setViewportSize({width,height:844});
+  expect(await page.locator('html').evaluate(el=>el.scrollWidth)).toBeLessThanOrEqual(width);
+ }
 });
