@@ -14,7 +14,7 @@ async function mockMemberApi(page,state){
    method=route.request().method();
   let result={ok:true},status=200;
   if(key==='me')result={ok:true,account:{id:'SYNTH-MEMBER-ACCOUNT',role:'member',available_roles:['member']},profile_enabled:state.profileEnabled??false,nepal_locations_enabled:state.locationsEnabled??false};
-  else if(key==='applications'&&method==='GET')result={ok:true,applications:state.entries,next_audition_round:state.nextAudition,member_withdrawal_enabled:state.withdrawalEnabled===true};
+  else if(key==='applications'&&method==='GET')result={ok:true,applications:state.entries,next_audition_round:state.nextAudition,member_withdrawal_enabled:state.withdrawalEnabled===true,account_erase_allowed:state.eraseAllowed};
   else if(key==='submit-video-supplement'&&method==='POST'){
    const payload=route.request().postDataJSON();
    writes.push(payload);
@@ -255,20 +255,41 @@ test('scored contestant can withdraw and account management is fully translated 
  await expect(page.locator('#member-state-payment')).toHaveText('已自行棄權');
  await page.screenshot({path:'test-results/ghv-member-home-v2/withdrawal-confirmed-zh.png',fullPage:true});
  await expect(withdraw).toHaveCount(0);expect(writes).toEqual([{application_id:entry.id}]);
+ await page.locator('[data-lang=en]').click();
+ await expect(page.getByText('Withdrawal confirmed. History retained.',{exact:true})).toBeVisible();
+ await page.locator('[data-lang=ne]').click();
+ await expect(page.getByText('आवेदन फिर्ता भएको पुष्टि भयो। अभिलेख सुरक्षित छ।',{exact:true})).toBeVisible();
+ expect(writes).toHaveLength(1);
 });
 
 
 test('correction request form relocalizes its labels without discarding user input',async({page})=>{
- const state={entries:[{...entry,status:'scored',approval_state:'approved',can_edit:0,can_delete:0}],withdrawalEnabled:true};
+ const state={entries:[{...entry,status:'scored',approval_state:'approved',can_edit:0,can_delete:0}],withdrawalEnabled:true,eraseAllowed:false};
  await mockMemberApi(page,state);
  await page.route('**/api/e2e/member-corrections',r=>r.fulfill({json:{ok:true,enabled:true,requests:[],testOnly:true}}));
  await page.goto('/member.html#login');await page.locator('#member-manage-edit').click();
  const panel=page.locator('#member-edit-panel');
  await expect(panel).toContainText('申請更正基本資料');
  const reason=panel.locator('[name=reason]');await reason.fill('TEST correction explanation');
- await page.locator('[data-lang=ne]').click();await expect(panel).toContainText('अङ्क दिइसकिएको आवेदन');
- await expect(reason).toHaveValue('TEST correction explanation');
- await page.screenshot({path:'test-results/ghv-member-home-v2/correction-form-ne.png',fullPage:true});
- await page.locator('[data-lang=en]').click();await expect(panel).toContainText('Scored entry: request a correction');
- await expect(reason).toHaveValue('TEST correction explanation');
+ const tools=page.locator('#member-account-tools');
+ await page.setViewportSize({width:390,height:844});
+ for(const [lang,formText,protectedText] of [
+  ['ne','अङ्क दिइसकिएको आवेदन','यस खातामा सुरक्षित प्रतियोगिता अभिलेख छन्।'],
+  ['en','Scored entry: request a correction','This account has protected contest records.'],
+  ['zh','已評分報名｜申請更正基本資料','此帳號有受保護的參賽紀錄'],
+ ]){
+  await page.locator('[data-lang='+lang+']').click();
+  await expect(panel).toContainText(formText);
+  await expect(reason).toHaveValue('TEST correction explanation');
+  await expect(tools.locator('#member-manage-note')).toContainText(protectedText);
+  const words=await tools.innerText();
+  if(lang!=='zh')expect(words).not.toMatch(/[\u3400-\u9fff]/u);
+  if(lang!=='ne')expect(words).not.toMatch(/[\u0900-\u097f]/u);
+  if(lang==='ne')expect(words).not.toMatch(/\b(TEST|account|permanent|correction)\b/i);
+  await expect(tools.locator('#member-manage-delete')).toBeDisabled();
+  await expect(tools.locator('#member-manage-close')).toBeVisible();
+  await expect(tools.locator('#member-manage-delete')).toHaveAttribute('title',new RegExp(protectedText.replaceAll('.','\\.')));
+  expect(await tools.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+  await tools.screenshot({path:'test-results/member-account-'+lang+'.png'});
+ }
 });
